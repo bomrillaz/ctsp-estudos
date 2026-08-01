@@ -1672,6 +1672,32 @@ let alertaConexao=false;
 function chaveEspelho(){return 'ctsp_prog_'+(currentUser?currentUser.uid:'anon');}
 function gravarEspelho(){try{localStorage.setItem(chaveEspelho(),JSON.stringify(userStats));}catch(e){}}
 function lerEspelho(){try{const r=localStorage.getItem(chaveEspelho());return r?JSON.parse(r):null;}catch(e){return null;}}
+// item 2/auditoria jul/26: espelho local de userCards — flashcards passam a sobreviver
+// offline (antes só existiam no Firebase; nota se perdia sem conexão). Simétrico ao de progresso.
+function chaveEspelhoCards(){return 'ctsp_cards_'+(currentUser?currentUser.uid:'anon');}
+function gravarEspelhoCards(){try{localStorage.setItem(chaveEspelhoCards(),JSON.stringify(userCards));}catch(e){}}
+function lerEspelhoCards(){try{const r=localStorage.getItem(chaveEspelhoCards());return r?JSON.parse(r):null;}catch(e){return null;}}
+// item C6/auditoria jul/26: REFLUSH de cards sujos. Card rateado offline é marcado
+// como "sujo"; na reconexão, só os sujos sobem — NUNCA o acervo inteiro (evita
+// write-amplification). O conjunto sujo é espelhado local p/ sobreviver a reload.
+let _cardsSujos={};
+function chaveCardsSujos(){return 'ctsp_cards_dirty_'+(currentUser?currentUser.uid:'anon');}
+function gravarCardsSujos(){try{localStorage.setItem(chaveCardsSujos(),JSON.stringify(Object.keys(_cardsSujos)));}catch(e){}}
+function lerCardsSujos(){try{const r=localStorage.getItem(chaveCardsSujos());if(r)JSON.parse(r).forEach(id=>{_cardsSujos[id]=true;});}catch(e){}}
+// PURA (testável no harness): monta o patch só com os ids sujos que existem em memória.
+function _patchCardsSujos(ids,cards){const p={};(ids||[]).forEach(id=>{if(cards&&cards[id])p[id]=cards[id];});return p;}
+async function flushCardsSujos(){
+  if(!currentUser||!dataLoaded)return;
+  const ids=Object.keys(_cardsSujos);
+  if(!ids.length)return;
+  const patch=_patchCardsSujos(ids,userCards);
+  if(!Object.keys(patch).length){_cardsSujos={};gravarCardsSujos();return;}
+  try{
+    await db.ref('cards/'+currentUser.uid).update(patch);   // só os sujos, merge por id
+    Object.keys(patch).forEach(id=>{delete _cardsSujos[id];});
+    gravarCardsSujos();
+  }catch(e){console.warn('flushCardsSujos adiado (segue offline):',e.message);}
+}
 // ── S47 RECONCILIAÇÃO: nunca sobrescrever progresso bom com um estado defasado ──
 // Mede "quão avançado" está um snapshot. rev é a chave primária (monotônica);
 // updatedAt desempata; o volume de dados é fallback p/ snapshots legados sem rev.
@@ -1690,6 +1716,125 @@ function progMaisAvancado(a,b){
   if(sa.vol!==sb.vol)return sa.vol>sb.vol?a:b;
   return b;
 }
+
+// ═══════════════════════════════
+// C1 — MERGE POR CAMPO (item 1/auditoria jul/26): reconciliação NA ESCRITA
+// ═══════════════════════════════
+// O `progMaisAvancado` acima escolhe UM snapshot inteiro (tudo-ou-nada) — usado no
+// LOAD, permanece intacto. Mas na ESCRITA isso descartaria a sessão do aparelho mais
+// fraco. `mergeProgresso` combina os dois lados por campo, política UNIÃO/MÁXIMO:
+//   • nunca perde o que já foi visto (seenIds/history/foco em união);
+//   • no MÁXIMO subconta um contador numa concorrência de milissegundos (raríssima),
+//     JAMAIS infla (decisão C1 aprovada pelo João).
+// `_meuUltimoRev` = rev do último write DESTE aparelho — usado pelo listener pós-load
+// para ignorar o eco do próprio write e só reagir a escrita de OUTRO aparelho.
+let _meuUltimoRev=0;
+function _mergeMapaMax(a,b,campos){
+  const out={...(a||{})};
+  for(const [k,v] of Object.entries(b||{})){
+    if(!out[k]){out[k]={...v};continue;}
+    const o={...out[k]};
+    campos.forEach(c=>{o[c]=Math.max((out[k]&&out[k][c])||0,(v&&v[c])||0);});
+    out[k]=o;
+  }
+  return out;
+}
+function _mergePorLast(a,b){ // por chave, mantém o registro com `last` mais recente
+  const out={...(a||{})};
+  for(const [k,v] of Object.entries(b||{})){
+    const cur=out[k];
+    out[k]=(!cur||((v&&v.last)||0)>=((cur&&cur.last)||0))?v:cur;
+  }
+  return out;
+}
+function _umPorLast(a,b){ if(!a)return b; if(!b)return a; return ((b.last||0)>=(a.last||0))?b:a; }
+function _mergePorReps(a,b){ // questoesSM2 legado: mais revisões (reps) vence
+  const out={...(a||{})};
+  for(const [k,v] of Object.entries(b||{})){
+    const cur=out[k];
+    out[k]=(!cur||((v&&v.reps)||0)>=((cur&&cur.reps)||0))?v:cur;
+  }
+  return out;
+}
+function _mergeErro(a,b){ // erroHistorico: count máximo, last mais recente
+  const out={...(a||{})};
+  for(const [k,v] of Object.entries(b||{})){
+    const cur=out[k];
+    if(!cur){out[k]={...v};continue;}
+    out[k]={count:Math.max(cur.count||0,v.count||0),last:Math.max(cur.last||0,v.last||0)};
+  }
+  return out;
+}
+function _mergeHistory(a,b){ // por data, máximo de cada campo numérico
+  const map={};
+  [...(a||[]),...(b||[])].forEach(e=>{
+    if(!e||!e.date)return;
+    const cur=map[e.date]||{date:e.date};
+    ['n','c','w','fc','rs'].forEach(f=>{cur[f]=Math.max(cur[f]||0,e[f]||0);});
+    map[e.date]=cur;
+  });
+  return Object.values(map).sort((x,y)=>x.date<y.date?-1:x.date>y.date?1:0);
+}
+function _mergeSemanas(a,b){ // por semana ISO, áreas por máximo
+  const map={};
+  [...(a||[]),...(b||[])].forEach(w=>{
+    if(!w||!w.s)return;
+    const cur=map[w.s]||{s:w.s,areas:{}};
+    for(const [ar,v] of Object.entries(w.areas||{})){
+      const o=cur.areas[ar]||{c:0,w:0};
+      cur.areas[ar]={c:Math.max(o.c||0,(v&&v.c)||0),w:Math.max(o.w||0,(v&&v.w)||0)};
+    }
+    map[w.s]=cur;
+  });
+  return Object.values(map);
+}
+function _mergeSimHist(a,b){ // união por instante `data`, últimas 20
+  const map={};
+  [...(a||[]),...(b||[])].forEach(h=>{if(h&&h.data!=null)map[h.data]=h;});
+  return Object.values(map).sort((x,y)=>(x.data||0)-(y.data||0)).slice(-20);
+}
+function _mergeFoco(a,b){ // por tópico: r em união, fc/q máximo, done OR
+  const out={...(a||{})};
+  for(const [k,v] of Object.entries(b||{})){
+    const cur=out[k];
+    if(!cur){out[k]={...v};continue;}
+    const r=Array.from(new Set([...(cur.r||[]),...(v.r||[])]));
+    const curProg=(cur.r?cur.r.length:0)+(cur.fc||0)+(cur.q||0);
+    const vProg=(v.r?v.r.length:0)+(v.fc||0)+(v.q||0);
+    out[k]={r,fc:Math.max(cur.fc||0,v.fc||0),q:Math.max(cur.q||0,v.q||0),
+      done:!!(cur.done||v.done),pL:(vProg>=curProg?v.pL:cur.pL)};
+  }
+  return out;
+}
+// Mescla `local` (memória, autoridade de settings recém-mexidos) com `remoto` (leitura fresca).
+// Base {...remoto,...local}: escalares/settings seguem o local; progresso é mesclado simétrico.
+function mergeProgresso(local,remoto){
+  if(!local)return remoto?{...remoto}:{};
+  if(!remoto)return {...local};
+  const out={...remoto,...local};
+  out.correct=Math.max(local.correct||0,remoto.correct||0);
+  out.wrong=Math.max(local.wrong||0,remoto.wrong||0);
+  out.streak=Math.max(local.streak||0,remoto.streak||0);
+  out.cardStreak=Math.max(local.cardStreak||0,remoto.cardStreak||0);
+  out.byArea=_mergeMapaMax(local.byArea,remoto.byArea,['correct','wrong']);
+  out.seenIds=Array.from(new Set([...(local.seenIds||[]),...(remoto.seenIds||[])]));
+  out.history=_mergeHistory(local.history,remoto.history);
+  out.semanas=_mergeSemanas(local.semanas,remoto.semanas);
+  out.simHistorico=_mergeSimHist(local.simHistorico,remoto.simHistorico);
+  out.bkt=_mergePorLast(local.bkt,remoto.bkt);
+  out.questoesFSRS=_mergePorLast(local.questoesFSRS,remoto.questoesFSRS);
+  out.questoesSM2=_mergePorReps(local.questoesSM2,remoto.questoesSM2);
+  out.erroHistorico=_mergeErro(local.erroHistorico,remoto.erroHistorico);
+  out.foco=_mergeFoco(local.foco,remoto.foco);
+  out.fmt=_mergeMapaMax(local.fmt,remoto.fmt,['c','w']);
+  for(const k of Object.keys(out)) if(k.indexOf('resumo_')===0) out[k]=_umPorLast(local[k],remoto[k]);
+  out.diagFeito=!!(local.diagFeito||remoto.diagFeito);
+  const datas=[local.diagData,remoto.diagData].filter(x=>x>0);
+  out.diagData=datas.length?Math.min(...datas):(local.diagData||remoto.diagData||0);
+  out.rev=Math.max(local.rev||0,remoto.rev||0);
+  return out;
+}
+
 function mostrarAlertaConexao(on){
   alertaConexao=on;
   const el=document.getElementById('dash-reload-alert');if(!el)return;
@@ -2391,12 +2536,16 @@ async function loadUserData(){
       else escolhido=remoto||local||{...PROG_DEFAULT};
       userStats=escolhido;
       dataLoaded=true;gravarEspelho(); // S30: leitura confirmada — gravações liberadas
+      _meuUltimoRev=userStats.rev||0;  // C1: baseline p/ o listener ignorar o eco do load
       // S47: se o espelho local venceu o servidor (ex.: quiz de hoje vs Firebase defasado), empurrar de volta
       if(local&&escolhido===local&&remoto!==local){
         try{await db.ref('progresso/'+currentUser.uid).set(bktParaFirebase(userStats));}catch(e){}
       }
       const cs=await withTimeout(db.ref('cards/'+currentUser.uid).get(),attempt*8000);
-      if(cs.exists())userCards=cs.val();
+      const espCards=lerEspelhoCards();
+      // merge por `last`: nota rateada offline (espelho) não é apagada por um servidor defasado
+      userCards=_mergePorLast(espCards||{},cs.exists()?cs.val():{});
+      gravarEspelhoCards();
       break; // sucesso
     }catch(e){
       console.warn('loadUserData tentativa '+attempt+':',e.message);
@@ -2407,11 +2556,25 @@ async function loadUserData(){
   if(!dataLoaded){
     const esp=lerEspelho();
     if(esp){userStats={...PROG_DEFAULT,...esp};progressoLocalOk=true;showToast('Sem conexão — usando dados salvos no aparelho');}
+    const espCards=lerEspelhoCards();
+    if(espCards)userCards=espCards; // flashcards do espelho local enquanto offline
     mostrarAlertaConexao(true);
   }
-  // Listener: usado apenas para RECUPERAÇÃO do load inicial; após dataLoaded, a memória é a fonte de verdade.
+  lerCardsSujos();          // C6: restaura marcas de cards rateados offline em sessão anterior
+  flushCardsSujos();        // e tenta subi-los agora (no-op se online já os limpou / se offline)
+  // Listener: RECUPERAÇÃO do load inicial +, após dataLoaded, SYNC AO VIVO (C1/item 4).
   db.ref('progresso/'+currentUser.uid).on('value',s=>{
-    if(dataLoaded)return;
+    if(dataLoaded){
+      // C1 pós-load: reage só a escrita de OUTRO aparelho e mescla por campo na memória.
+      if(!s.exists())return;
+      const remoto={...PROG_DEFAULT,...bktDoFirebase(s.val())};
+      if((remoto.rev||0)<=(_meuUltimoRev||0))return;   // eco do meu próprio write, ou mais antigo
+      userStats=mergeProgresso(userStats,remoto);
+      userStats.rev=Math.max(userStats.rev||0,(remoto.rev||0));
+      _meuUltimoRev=userStats.rev;
+      gravarEspelho();renderDashboard();updateBadges();
+      return;
+    }
     if(savePendente&&progressoLocalOk){
       // Progresso local (espelho + sessão) vence: este aparelho tinha o último estado bom.
       dataLoaded=true;savePendente=false;mostrarAlertaConexao(false);
@@ -2436,11 +2599,17 @@ async function loadUserData(){
   });
   // Flush de pendências quando a conexão volta
   db.ref('.info/connected').on('value',s=>{
-    if(s.val()===true&&dataLoaded&&savePendente){savePendente=false;saveProg();}
+    if(s.val()===true&&dataLoaded){
+      if(savePendente){savePendente=false;saveProg();}
+      flushCardsSujos();   // C6: sobe cards rateados offline (só os sujos)
+    }
   });
-  db.ref('cards/'+currentUser.uid).on('value',s=>{if(s.exists()){userCards=s.val();renderCards();updateBadges();}});
+  db.ref('cards/'+currentUser.uid).on('value',s=>{if(s.exists()){userCards=_mergePorLast(userCards,s.val());gravarEspelhoCards();renderCards();updateBadges();}});
 }
 
+// C1: mutex leve — serializa escritas concorrentes (respostas rápidas) e coalesce
+// a última. Sem isso, dois saveProg sobrepostos fariam read-merge-write intercalado.
+let _saveEmCurso=false,_saveDeNovo=false;
 async function saveProg(){
   userStats.rev=(userStats.rev||0)+1;       // S47: carimbo monotônico p/ reconciliação
   userStats.updatedAt=Date.now();
@@ -2449,15 +2618,47 @@ async function saveProg(){
     if(progressoLocalOk)savePendente=true; // estado confiável deste aparelho → sincroniza depois
     return; // S30 BUG-DATA: jamais gravar no servidor antes da leitura confirmada
   }
-  const payload=bktParaFirebase(userStats);   // S48: chaves do BKT sem "."
-  try{await db.ref('progresso/'+currentUser.uid).set(payload);flashSalvo();}
-  catch(e){
+  if(_saveEmCurso){_saveDeNovo=true;return;} // já há um write em curso → coalesce
+  _saveEmCurso=true;
+  const ref=db.ref('progresso/'+currentUser.uid);
+  try{
+    // C1: relê o remoto e MESCLA por campo antes de gravar — nunca sobrescreve às cegas
+    // o que outro aparelho salvou. Se a leitura falhar, grava o estado atual (como antes).
+    try{
+      const snap=await withTimeout(ref.get(),8000);
+      if(snap.exists()){
+        const remoto={...PROG_DEFAULT,...bktDoFirebase(snap.val())};
+        userStats=mergeProgresso(userStats,remoto);
+        userStats.rev=Math.max(userStats.rev,(remoto.rev||0)+1);
+        userStats.updatedAt=Date.now();
+        gravarEspelho();
+      }
+    }catch(eLeitura){console.warn('saveProg merge (leitura falhou, grava local):',eLeitura.message);}
+    await ref.set(bktParaFirebase(userStats));   // S48: chaves do BKT sem "."
+    _meuUltimoRev=userStats.rev;
+    flashSalvo();
+  }catch(e){
     console.warn('saveProg 1ª tentativa:',e.message);
-    try{await db.ref('progresso/'+currentUser.uid).set(payload);}
+    try{await ref.set(bktParaFirebase(userStats));_meuUltimoRev=userStats.rev;}
     catch(e2){savePendente=true;showToast('Sem conexão — progresso guardado no aparelho');}
+  }finally{
+    _saveEmCurso=false;
+    if(_saveDeNovo){_saveDeNovo=false;saveProg();} // houve mudança durante o write → grava de novo
   }
 }
-async function saveCard(id,data){userCards[id]=data;await db.ref('cards/'+currentUser.uid+'/'+id).set(data);}
+async function saveCard(id,data){
+  userCards[id]=data;                                    // memória é a fonte da verdade da sessão
+  gravarEspelhoCards();                                  // espelho local sempre (durável offline)
+  try{
+    await db.ref('cards/'+currentUser.uid+'/'+id).set(data);
+    if(_cardsSujos[id]){delete _cardsSujos[id];gravarCardsSujos();}   // subiu: limpa a marca
+  }catch(e){
+    _cardsSujos[id]=true;gravarCardsSujos();                          // C6: marca p/ reflush na reconexão
+    console.warn('saveCard offline (card marcado p/ reflush):',e.message);
+  }
+  // (item 2/auditoria jul/26: nunca propagar a exceção — senão avaliarCard abortava
+  //  antes de avançar o card. Espelho durável + reflush conservador na reconexão.)
+}
 
 // Indicador discreto de progresso salvo
 function flashSalvo(){
@@ -3494,33 +3695,12 @@ function iniciarDiagnostico(){
 }
 
 function iniciarInterleaving(){
-  // Intercalação inteligente: alterna pares de áreas relacionadas
-  // AT1↔AT3 (legislação + APH), AT2↔AT4 (técnico + institucional), AT5 intercalada
-  const pares=[
-    ['AT1','AT3'],
-    ['AT2','AT4'],
-    ['AT1','AT5'],
-    ['AT3','AT2'],
-    ['AT4','AT1']
-  ];
+  // Intercalação: 1 questão de cada área por rodada (4 rodadas = 20 questões),
+  // priorizando as vencidas pelo SM-2. Alternância deliberada de áreas.
+  // (S1/auditoria jul/26: removidos `pares`, `queue` e `byArea` — eram montados e
+  //  descartados; a fila sempre saiu de `final`. Comportamento idêntico, sem varreduras extras.)
   const sm2=userStats.questoesSM2||{};
   const agora=Date.now();
-  const queue=[];
-  // Pegar 2-3 questões de cada área do par, priorizando vencidas pelo SM2
-  pares.forEach(([a1,a2])=>{
-    [a1,a2].forEach(area=>{
-      const qs=Object.values(allQuestoes).filter(q=>q.area===area);
-      const vencidas=qs.filter(q=>!sm2[q.id]||sm2[q.id].next<=agora);
-      const restantes=qs.filter(q=>sm2[q.id]&&sm2[q.id].next>agora);
-      const pool=[...shuffle(vencidas),...shuffle(restantes)];
-      queue.push(...pool.slice(0,2));
-    });
-  });
-  // Embaralhar mantendo a alternância: pegar 1 de cada área em sequência
-  const byArea={};
-  Object.keys(AI).forEach(k=>{
-    byArea[k]=shuffle(Object.values(allQuestoes).filter(q=>q.area===k));
-  });
   const areas=Object.keys(AI);
   const final=[];
   const perArea=4; // 4 de cada = 20 questões
@@ -3818,6 +3998,7 @@ function flipCard(){
 
 async function avaliarCard(dif){
   const fc=cardQueue[cardIdx];
+  if(!fc)return;                       // fila já esgotada — nada a avaliar
   const existing=userCards[fc.id]||{};
   const updated=fsrsCardUpdate(existing,dif);
   await saveCard(fc.id,updated);
