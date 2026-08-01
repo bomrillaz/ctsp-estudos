@@ -81,6 +81,10 @@ function extractBalanced(name, open, close) {
 const QI  = eval('(' + extractBalanced('QI', '{', '}') + ')');
 const FCI = eval('(' + extractBalanced('FCI', '[', ']') + ')');
 const RES = eval('(' + extractBalanced('RESUMOS_BANCO', '[', ']') + ')');
+const TOPsrc = extractBalanced('TOPICOS', '{', '}');
+const TOP = TOPsrc ? eval('(' + TOPsrc + ')') : {};
+const INCsrc = extractBalanced('INCIDENCIA', '[', ']');
+const INC = INCsrc ? eval('(' + INCsrc + ')') : [];
 let totalQ = 0, ids = new Set(), semTopico = [];
 for (const [area, qs] of Object.entries(QI)) {
   totalQ += qs.length;
@@ -93,6 +97,28 @@ console.log('sem_topico=' + (semTopico.length ? semTopico.join(',') : '0'));
 console.log('flashcards=' + FCI.length);
 console.log('resumos=' + RES.length);
 console.log('por_area=' + Object.entries(QI).map(([k, v]) => k + ':' + v.length).join(' '));
+
+// ── Integridade da chave de resposta (auditoria jul/26, item 3) ──
+// verify não pegava: nº de opções, range do gabarito, topico inválido, ids fantasma
+// no INCIDENCIA. Uma questão sem ops/g quebraria renderQuizQ/renderSimQ sem guard.
+let opsRuim = [], gRuim = [], topInvalido = [];
+for (const qs of Object.values(QI)) {
+  for (const q of qs) {
+    if (!Array.isArray(q.ops) || q.ops.length !== 5)
+      opsRuim.push(q.id + '(' + (Array.isArray(q.ops) ? q.ops.length : 'sem ops') + ')');
+    if (!Number.isInteger(q.g) || q.g < 0 || (Array.isArray(q.ops) && q.g >= q.ops.length))
+      gRuim.push(q.id + '(g=' + q.g + ')');
+    if (q.topico && !(q.topico in TOP)) topInvalido.push(q.id + '->' + q.topico);
+  }
+}
+let incFantasma = [];
+for (const item of INC)
+  for (const qid of (item.qs || []))
+    if (!ids.has(qid)) incFantasma.push((item.assunto || '?') + '->' + qid);
+console.log('ops_diferente_de_5=' + (opsRuim.length ? opsRuim.join(',') : '0'));
+console.log('gabarito_fora_do_range=' + (gRuim.length ? gRuim.join(',') : '0'));
+console.log('topico_invalido=' + (topInvalido.length ? topInvalido.join(',') : '0'));
+console.log('incidencia_ids_fantasma=' + (incFantasma.length ? incFantasma.join(',') : '0'));
 EOF
 node _count.js
 echo "=== FIM - comparar com o ultimo historico ==="
