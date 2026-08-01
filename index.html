@@ -1811,6 +1811,18 @@ function _mergeFoco(a,b){ // por tópico: r em união, fc/q máximo, done OR
 function mergeProgresso(local,remoto){
   if(!local)return remoto?{...remoto}:{};
   if(!remoto)return {...local};
+  // GERAÇÃO DE ZERAGEM (wipe): um REINICIAR carimba `wipe`=agora. Qualquer estado cuja
+  // atividade é ANTERIOR ao wipe mais recente é considerado da geração velha e é DESCARTADO
+  // — senão o merge união/máximo ressuscitaria justamente o que o usuário acabou de zerar.
+  // Lados "vivos" na geração atual (declaram o wipe mais novo, ou têm atividade >= ele) são
+  // preservados; se os dois estão vivos, cai no merge normal (progresso pós-zeragem soma).
+  const wipe=Math.max(local.wipe||0,remoto.wipe||0);
+  if(wipe){
+    const lVivo=(local.wipe||0)>=wipe||(local.updatedAt||0)>=wipe;
+    const rVivo=(remoto.wipe||0)>=wipe||(remoto.updatedAt||0)>=wipe;
+    if(lVivo&&!rVivo)return {...local};
+    if(rVivo&&!lVivo)return {...remoto};
+  }
   const out={...remoto,...local};
   out.correct=Math.max(local.correct||0,remoto.correct||0);
   out.wrong=Math.max(local.wrong||0,remoto.wrong||0);
@@ -1832,7 +1844,23 @@ function mergeProgresso(local,remoto){
   const datas=[local.diagData,remoto.diagData].filter(x=>x>0);
   out.diagData=datas.length?Math.min(...datas):(local.diagData||remoto.diagData||0);
   out.rev=Math.max(local.rev||0,remoto.rev||0);
+  out.wipe=Math.max(local.wipe||0,remoto.wipe||0);   // preserva a geração de zeragem mais recente
   return out;
+}
+
+// Reconciliação de LOAD: honra o wipe (geração de zeragem); sem ele, mantém o
+// comportamento antigo (progMaisAvancado). Senão o load compararia por `rev` e poderia
+// ressuscitar a geração velha de um aparelho que ainda não tinha zerado.
+function reconciliarLoad(remoto,local){
+  const wl=(local&&local.wipe)||0,wr=(remoto&&remoto.wipe)||0,w=Math.max(wl,wr);
+  if(w&&remoto&&local){
+    const lVivo=wl>=w||(local.updatedAt||0)>=w;
+    const rVivo=wr>=w||(remoto.updatedAt||0)>=w;
+    if(rVivo&&!lVivo)return remoto;
+    if(lVivo&&!rVivo)return local;
+  }
+  if(remoto&&local)return progMaisAvancado(remoto,local);
+  return remoto||local||{...PROG_DEFAULT};
 }
 
 function mostrarAlertaConexao(on){
@@ -2531,9 +2559,7 @@ async function loadUserData(){
       const remoto=snap.exists()?{...PROG_DEFAULT,...bktDoFirebase(snap.val())}:null;
       const espLocal=lerEspelho();
       const local=espLocal?{...PROG_DEFAULT,...espLocal}:null;
-      let escolhido;
-      if(remoto&&local)escolhido=progMaisAvancado(remoto,local);
-      else escolhido=remoto||local||{...PROG_DEFAULT};
+      let escolhido=reconciliarLoad(remoto,local);   // honra o wipe (reset) além do rev/updatedAt
       userStats=escolhido;
       dataLoaded=true;gravarEspelho(); // S30: leitura confirmada — gravações liberadas
       _meuUltimoRev=userStats.rev||0;  // C1: baseline p/ o listener ignorar o eco do load
@@ -2565,14 +2591,22 @@ async function loadUserData(){
   // Listener: RECUPERAÇÃO do load inicial +, após dataLoaded, SYNC AO VIVO (C1/item 4).
   db.ref('progresso/'+currentUser.uid).on('value',s=>{
     if(dataLoaded){
-      // C1 pós-load: reage só a escrita de OUTRO aparelho e mescla por campo na memória.
+      // C1 pós-load: reage à escrita de OUTRO aparelho e mescla por campo na memória.
       if(!s.exists())return;
       const remoto={...PROG_DEFAULT,...bktDoFirebase(s.val())};
-      if((remoto.rev||0)<=(_meuUltimoRev||0))return;   // eco do meu próprio write, ou mais antigo
+      const wipeNovo=(remoto.wipe||0)>(userStats.wipe||0);
+      // ignora o eco do próprio write; MAS um wipe novo é sempre processado (mesmo com rev baixa)
+      if((remoto.rev||0)<=(_meuUltimoRev||0)&&!wipeNovo)return;
       userStats=mergeProgresso(userStats,remoto);
       userStats.rev=Math.max(userStats.rev||0,(remoto.rev||0));
       _meuUltimoRev=userStats.rev;
+      if(wipeNovo){                              // outro aparelho zerou → zera os cards daqui também
+        userCards={};_cardsSujos={};
+        try{localStorage.removeItem(chaveEspelhoCards());}catch(e){}
+        try{localStorage.removeItem(chaveCardsSujos());}catch(e){}
+      }
       gravarEspelho();renderDashboard();updateBadges();
+      if(wipeNovo&&typeof renderCards==='function')renderCards();
       return;
     }
     if(savePendente&&progressoLocalOk){
@@ -2586,9 +2620,7 @@ async function loadUserData(){
       const remoto=s.exists()?{...PROG_DEFAULT,...bktDoFirebase(s.val())}:null;
       const espLocal=lerEspelho();
       const local=espLocal?{...PROG_DEFAULT,...espLocal}:null;
-      let escolhido;
-      if(remoto&&local)escolhido=progMaisAvancado(remoto,local);
-      else escolhido=remoto||local||{...PROG_DEFAULT};
+      let escolhido=reconciliarLoad(remoto,local);   // honra o wipe (reset) além do rev/updatedAt
       userStats=escolhido;
       dataLoaded=true;gravarEspelho();mostrarAlertaConexao(false);
       if(local&&escolhido===local&&remoto!==local){saveProg();}
@@ -2740,7 +2772,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.95';
+const APP_VERSAO='v1.96';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5009,13 +5041,20 @@ async function reiniciarEstudos(){
   if((c||'').trim().toUpperCase()!=='REINICIAR'){showToast('Confirmação incorreta — nada foi apagado.');return;}
   try{
     showToast('Reiniciando...');
-    await db.ref('progresso/'+currentUser.uid).remove();
-    await db.ref('cards/'+currentUser.uid).remove();
-    // memória local vira "conta nova" (dataLoaded permanece true: o listener não re-sobrescreve)
-    userStats={...PROG_DEFAULT};
-    userCards={};
+    const agora=Date.now();
+    // memória vira "conta nova" COM carimbo de zeragem (wipe). O wipe se propaga aos
+    // outros aparelhos e faz o merge descartar a geração velha em vez de ressuscitá-la.
+    userStats={...PROG_DEFAULT,wipe:agora,updatedAt:agora,rev:(userStats.rev||0)+1};
+    userCards={};_cardsSujos={};
     try{localStorage.removeItem(chaveEspelho());}catch(e){}
+    try{localStorage.removeItem(chaveEspelhoCards());}catch(e){}   // C6: espelho de cards
+    try{localStorage.removeItem(chaveCardsSujos());}catch(e){}      // C6: fila de reflush
     gravarEspelho();
+    _meuUltimoRev=userStats.rev;
+    // autoritativo no remoto: set do estado zerado COM wipe (não .remove — o wipe precisa
+    // chegar aos outros aparelhos para eles descartarem a geração velha).
+    await db.ref('progresso/'+currentUser.uid).set(bktParaFirebase(userStats));
+    await db.ref('cards/'+currentUser.uid).remove();
     // re-render defensivo
     if(typeof renderDashboard==='function')renderDashboard();
     if(typeof renderHoje==='function')renderHoje();
