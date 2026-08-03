@@ -1955,21 +1955,33 @@ const BKT_P={L0:0.30,T:0.15,S:0.10,G:0.20}; // G≈1/5 opções
 // S52 DECAIMENTO TEMPORAL (bloco31) — domínio envelhece quando não se revisa.
 // Problema que isso resolve: quem acertou um tópico em maio aparecia com domínio
 // alto em julho sem ter revisado nada. O BKT puro só se move quando há resposta.
-// Modelo: o excedente sobre o prior L0 decai por MEIA-VIDA (30 dias).
-//   pL_efetivo = L0 + (pL - L0) * 0,5^(dias/30)
-// Regras deliberadas:
+// Modelo: o excedente sobre o prior L0 decai por MEIA-VIDA.
+//   pL_efetivo = L0 + (pL - L0) * 0,5^(dias / meia_vida)
+//
+// BLOCO 43 — MEIA-VIDA POR CONSOLIDAÇÃO (antes era fixa em 30 dias para todo tópico).
+// O ritmo de esquecer NÃO é o mesmo para um tópico visto 1 vez e outro treinado 10x —
+// cada recuperação bem-sucedida aumenta a estabilidade (mesma base do FSRS das questões).
+// Então a meia-vida cresce com o nº de respostas (b.n): 7 dias por resposta, piso 10,
+// teto 90. Visto 1x esfria em ~10 dias (reaparece logo); bem treinado segura ~90 dias.
+// ⚠ 10/7/90 são defaults RACIOCINADOS, não calibrados com dados reais — ajustáveis aqui.
+// Regras deliberadas (inalteradas):
 //   • só decai PARA BAIXO, e nunca abaixo de L0 — ficar sem estudar não pode
 //     "melhorar" um tópico ruim (se pL <= L0, devolve pL intacto);
 //   • é PURO: não reescreve o que está gravado. O banco guarda pL cru + `last`;
 //     o decaimento é aplicado só na LEITURA. Assim nada é perdido e é reversível.
 //   • sem `last` (registro antigo) não decai — não inventar histórico.
-const BKT_MEIA_VIDA_MS = 30 * 24 * 60 * 60 * 1000;
+const BKT_MV_PISO_D=10, BKT_MV_TETO_D=90, BKT_MV_POR_RESP_D=7;
+function bktMeiaVidaMs(b){
+  const reps=(b&&b.n)||0;
+  const dias=Math.min(BKT_MV_TETO_D,Math.max(BKT_MV_PISO_D,BKT_MV_POR_RESP_D*reps));
+  return dias*24*60*60*1000;
+}
 function bktPLefetivo(b) {
   if (!b || typeof b.pL !== 'number') return BKT_P.L0;
   if (!b.last || b.pL <= BKT_P.L0) return b.pL;
   const decorrido = Date.now() - b.last;
   if (!(decorrido > 0)) return b.pL;                     // relógio adiantado: ignora
-  const fator = Math.pow(0.5, decorrido / BKT_MEIA_VIDA_MS);
+  const fator = Math.pow(0.5, decorrido / bktMeiaVidaMs(b));
   return Math.max(BKT_P.L0, BKT_P.L0 + (b.pL - BKT_P.L0) * fator);
 }
 function bktUpdate(topico,acertou){
@@ -2843,7 +2855,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.98';
+const APP_VERSAO='v1.99';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
