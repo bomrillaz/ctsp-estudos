@@ -1096,18 +1096,22 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           </div>
           <div id="foco-fila"></div>
         </div>
-        <!-- Quick actions -->
+        <!-- BLOCO 43: caminho de ouro. "Treino do dia" é a porta principal (revisão
+             vencida + ponto fraco + cobertura por peso do edital); substitui o antigo
+             "Treino Adaptativo", agora embutido nele. Estudo Rápido/Focado viram atalhos
+             secundários; o Simulado completo já é a aba própria na barra inferior. -->
         <div class="sec-title">Estudar agora</div>
-        <div class="adapt-btn" onclick="iniciarEstudoAdaptativo()">
+        <div class="adapt-btn" onclick="irTreinoDoDia()" style="border:2px solid var(--blue);">
           <div class="adapt-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></div>
           <div class="adapt-btn-info">
-            <div class="adapt-btn-title">Treino Adaptativo</div>
-            <div class="adapt-btn-sub">12 questões · prioriza seus tópicos mais fracos</div>
+            <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);margin-bottom:2px">Recomendado agora</div>
+            <div class="adapt-btn-title">Treino do dia</div>
+            <div class="adapt-btn-sub">Revisão vencida + ponto fraco + assunto novo</div>
           </div>
           <div class="adapt-btn-arrow">→</div>
         </div>
         <div class="quick-grid">
-          <div class="quick-btn destaque" onclick="iniciarEstudoRapido()">
+          <div class="quick-btn" onclick="iniciarEstudoRapido()">
             <div class="quick-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
             <div class="quick-btn-title">Estudo Rápido</div>
             <div class="quick-btn-sub" id="quick-sub">5 questões soltas</div>
@@ -2166,17 +2170,6 @@ function selecionarAdaptativo(limite=12){
   for(const it of pool){if(seen.has(it.q.id))continue;seen.add(it.q.id);out.push(it.q);if(out.length>=limite)break;}
   return interleavePorTopico(out); // S34: intercala tópicos em vez de embaralhar
 }
-function iniciarEstudoAdaptativo(){
-  if(!allQuestoes||!Object.keys(allQuestoes).length){showToast('Banco ainda carregando, tente em instantes.');return;}
-  const fila=selecionarAdaptativo(12);
-  if(!fila.length){showToast('Sem questões disponíveis para o modo adaptativo.');return;}
-  const topFraco=perfilTopicos().filter(p=>p.nQ>0).sort((a,b)=>a.pL-b.pL)[0];
-  quizQueue=fila;quizArea='ADAPTATIVO';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;
-  document.getElementById('quiz-home-view').classList.add('hidden');
-  document.getElementById('quiz-running-view').classList.remove('hidden');
-  document.getElementById('quiz-area-tag').textContent='Adaptativo'+(topFraco?' · foco '+topFraco.t:'');
-  navTo('quiz');renderQuizQ();
-}
 
 // ── S34 REV-HOJE: revisões vencidas (FSRS) ──
 function questoesDueHoje(){
@@ -2194,6 +2187,84 @@ function iniciarRevisaoDue(){
   document.getElementById('quiz-home-view').classList.add('hidden');
   document.getElementById('quiz-running-view').classList.remove('hidden');
   document.getElementById('quiz-area-tag').textContent='Revisão do dia · FSRS';
+  navTo('quiz');renderQuizQ();
+}
+
+// ── BLOCO 43: TREINO DO DIA (caminho de ouro + camada de cobertura) ──
+// Uma fila diária única que decide, nesta prioridade:
+//  (1) revisão VENCIDA (FSRS) — memória em risco, entra primeiro (com teto p/ não
+//      tomar a fila inteira);
+//  (2) tópico FRACO (BKT) — consolida o que já foi tocado (via selecionarAdaptativo);
+//  (3) assunto NOVO por peso do edital + incidência — a CAMADA DE COBERTURA. É o furo
+//      que o João intuiu: um tópico com 0 respostas fica invisível nas telas que exigem
+//      amostra mínima; aqui ele é empurrado proporcional à cota da prova.
+const TREINO_TAM=12;      // questões por treino
+const TREINO_TETO_DUE=6;  // revisão não ocupa mais que metade
+const TREINO_MIN_NOVO=3;  // reserva de cobertura quando há material intocado
+
+function questaoEhNova(q){
+  const f=userStats.questoesFSRS||{};
+  const seen=userStats.seenIds||[];
+  return !f[q.id] && !seen.includes(q.id) && !seen.includes(q.id+'_E');
+}
+
+// Questões nunca respondidas, escolhidas por PESO DO EDITAL (AI[a].n) e, dentro da
+// área, por incidência nas provas. Garante que AT1/AT3 (14 cada) apareçam mais que AT2 (8).
+function novasPorCobertura(limite){
+  if(limite<=0)return [];
+  const cotaDe=a=>(AI[a]&&AI[a].n)||0;
+  const inc=setTopicosIncidencia();
+  const porArea={};
+  Object.values(allQuestoes).forEach(q=>{
+    if(!questaoEhNova(q)||!cotaDe(q.area))return;
+    (porArea[q.area]=porArea[q.area]||[]).push(q);
+  });
+  const areas=Object.keys(porArea);
+  if(!areas.length)return [];
+  areas.forEach(a=>{ // incidência primeiro dentro da área
+    porArea[a]=shuffle(porArea[a]).sort((x,y)=>(inc.has(y.topico)?1:0)-(inc.has(x.topico)?1:0));
+  });
+  const somaCotas=areas.reduce((s,a)=>s+cotaDe(a),0)||1;
+  const out=[];
+  areas.forEach(a=>{
+    const alvo=Math.max(0,Math.round(limite*cotaDe(a)/somaCotas));
+    out.push(...porArea[a].splice(0,alvo));
+  });
+  if(out.length<limite){ // áreas esgotadas: completa com o que sobrou, ainda por incidência
+    const resto=shuffle(areas.flatMap(a=>porArea[a]))
+      .sort((x,y)=>(inc.has(y.topico)?1:0)-(inc.has(x.topico)?1:0));
+    out.push(...resto.slice(0,limite-out.length));
+  }
+  return out.slice(0,limite);
+}
+
+function montarTreinoDoDia(tam=TREINO_TAM){
+  const out=[],seen=new Set();
+  const add=(arr,cap)=>{
+    let n=0;
+    for(const q of (arr||[])){
+      if(out.length>=tam||(cap!=null&&n>=cap))break;
+      if(!q||seen.has(q.id))continue;
+      seen.add(q.id);out.push(q);n++;
+    }
+  };
+  add(questoesDueHoje(),TREINO_TETO_DUE);                 // (1) revisão vencida, com teto
+  const reservaNovo=Math.min(TREINO_MIN_NOVO,tam-out.length);
+  add(selecionarAdaptativo(tam),tam-out.length-reservaNovo); // (2) fraco, deixando a reserva
+  add(novasPorCobertura(tam-out.length));                 // (3) cobertura por edital
+  if(out.length<tam)add(selecionarAdaptativo(tam));       // completa se novo/fraco acabaram
+  if(out.length<tam)add(shuffle(Object.values(allQuestoes)));
+  return interleavePorTopico(out);
+}
+
+function irTreinoDoDia(){
+  if(!allQuestoes||!Object.keys(allQuestoes).length){showToast('Banco ainda carregando, tente em instantes.');return;}
+  const fila=montarTreinoDoDia(TREINO_TAM);
+  if(!fila.length){showToast('Sem questões disponíveis agora.');return;}
+  quizQueue=fila;quizArea='TREINO';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;
+  document.getElementById('quiz-home-view').classList.add('hidden');
+  document.getElementById('quiz-running-view').classList.remove('hidden');
+  document.getElementById('quiz-area-tag').textContent='Treino do dia';
   navTo('quiz');renderQuizQ();
 }
 
@@ -2772,7 +2843,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.97';
+const APP_VERSAO='v1.98';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -3568,23 +3639,30 @@ function renderAreaEvolution(){
   el.innerHTML=html;
 }
 
-// BLOCO B: os badges passam a mostrar A DOSE DO DIA, não o acervo.
-// Um badge com "70" no primeiro acesso é o pior sinal possível para quem tem 45 min por dia.
+// BLOCO 43: o badge mostra O QUE FALTA DA DOSE DO DIA, não o acervo nem a dose cheia.
+// Antes era min(acervo, dose): com backlog grande nunca zerava (fazia 3, voltava 3).
+// Agora desconta o que já foi AVALIADO hoje (hj.fc/hj.rs) — bater a meta do dia zera o
+// badge, igual ao anel do painel. Ler um resumo NÃO conta: só a avaliação (Difícil/
+// Médio/Fácil) incrementa hj, que é justamente o gesto que agenda a próxima revisão.
+// doseExtra ("Fazer mais") é voluntário e não ressuscita o badge.
 function updateBadges(){
-  // Cards — dose do dia
+  const hj=entradaHoje();
+  // Cards — falta da dose do dia
   const acervoC=cardsPendentes(null).todos.length;
-  const due=Math.min(acervoC,dose('cards')+doseExtra.cards);
+  const restaC=Math.max(0,dose('cards')-(hj.fc||0));
+  const due=Math.min(acervoC,restaC);
   const bc=document.getElementById('badge-cards');
   if(due>0){bc.classList.remove('hidden');bc.textContent=due;}else bc.classList.add('hidden');
-  document.getElementById('cards-due').textContent=due;
-  document.getElementById('cards-total-n').textContent=Object.keys(allFlashcards).length;
+  const cdEl=document.getElementById('cards-due');if(cdEl)cdEl.textContent=due;
+  const ctEl=document.getElementById('cards-total-n');if(ctEl)ctEl.textContent=Object.keys(allFlashcards).length;
 
-  // Resumos — dose do dia
+  // Resumos — falta da dose do dia
   const acervoR=resumosPendentes().length;
-  const dueR=Math.min(acervoR,dose('resumos')+doseExtra.resumos);
+  const restaR=Math.max(0,dose('resumos')-(hj.rs||0));
+  const dueR=Math.min(acervoR,restaR);
   const br=document.getElementById('badge-resumos');
   if(dueR>0){br.classList.remove('hidden');br.textContent=dueR;}else br.classList.add('hidden');
-  document.getElementById('resumos-fila').textContent=dueR;
+  const rfEl=document.getElementById('resumos-fila');if(rfEl)rfEl.textContent=dueR;
 }
 
 // ═══════════════════════════════
@@ -4038,6 +4116,7 @@ async function avaliarCard(dif){
   else userStats.cardStreak=0;
   registrarAtividadeCard(); // S62: alimenta o anel de meta de flashcards
   saveProg();
+  updateBadges();           // BLOCO 43: baixa o badge ao vivo conforme a dose do dia é cumprida
   cardIdx++;
   renderCard();
 }
@@ -4093,6 +4172,7 @@ function renderResumos(){
       <button class="resumo-audio-btn" id="resumo-audio-btn" onclick="ouvirResumo('${r.id}')">▶ Ouvir este resumo</button>
       <div class="resumo-avaliar">
         <div class="resumo-avaliar-title">Como foi? (agenda próxima revisão)</div>
+        <div style="font-size:11.5px;color:var(--text3);margin:-4px 0 8px">Toque uma opção para concluir — só ler não baixa a fila do dia.</div>
         <div class="resumo-btns">
           <button class="resumo-btn dif" onclick="avaliarResumo('dif')">Difícil<br><small>Em breve</small></button>
           <button class="resumo-btn med" onclick="avaliarResumo('med')">Médio<br><small>Em 3 dias</small></button>
@@ -4170,6 +4250,7 @@ function mostrarResumoDirecto(id){
       <button class="resumo-audio-btn" id="resumo-audio-btn" onclick="ouvirResumo('${r.id}')">▶ Ouvir este resumo</button>
       <div class="resumo-avaliar">
         <div class="resumo-avaliar-title">Como foi?</div>
+        <div style="font-size:11.5px;color:var(--text3);margin:-4px 0 8px">Toque uma opção para concluir — só ler não baixa a fila do dia.</div>
         <div class="resumo-btns">
           <button class="resumo-btn dif" onclick="avaliarResumo('dif')">Difícil</button>
           <button class="resumo-btn med" onclick="avaliarResumo('med')">Médio</button>
@@ -4415,51 +4496,25 @@ function gerarDiagnostico(pct,byArea){
   const fortes=linhas.filter(l=>l.pct>=75).map(l=>l.nome);
   const mantem=fortes.length?` Mantenha ${fortes.join(', ')} com revisão espaçada.`:'';
 
-  const acao=focos.length?' Refaça as questões do Caderno de Erros e comece pelo material abaixo.':'';
-  const prosa=`Diagnóstico: ${pct}% de acerto. ${leitura} ${alvo}${mantem}${acao}`;
+  const prosa=`Diagnóstico: ${pct}% de acerto. ${leitura} ${alvo}${mantem}`;
 
-  // BLOCO B: o diagnóstico deixa de dizer "revise os resumos dessas áreas" e passa
-  // a listar os resumos e cards EXATOS, priorizados por pendência, prob e tópico fraco.
-  const areasFoco=focos.map(l=>l.k);
-  const mats=areasFoco.length?materialParaAreas(areasFoco,4):[];
+  // BLOCO 43: o fim do simulado NÃO empurra mais material para consumir na hora — isso
+  // contraria o efeito de espaçamento (reestudar tudo logo após dá fluência ilusória).
+  // O feedback por questão (imediato) já aconteceu durante o simulado; a REVISÃO do
+  // assunto rende mais nos próximos dias. Então a tela vira: diagnóstico + o que o
+  // Treino do dia vai priorizar + um atalho OPCIONAL de refazer os erros (retrieval).
+  const nomesFoco=focos.map(l=>l.nome);
   let html=`<div>${sanitize(prosa)}</div>`;
-  if(mats.length){
-    html+=`<div class="weak-material-title" style="margin-top:12px">Comece por aqui</div>`;
-    mats.forEach(r=>{
-      const t=topicoDe(r);
-      html+=`<div class="weak-mat-item" onclick="abrirResumoDoPainel('${r.id}')">
-        <span class="weak-mat-tag">${r.prob==='alta'?'ALTA INCID.':'RESUMO'}</span>
-        <span class="weak-mat-txt">${sanitize(r.titulo)}</span></div>`;
-      const nc=t?materialDoTopico(t).cards.length:0;
-      if(nc)html+=`<div class="weak-mat-item" onclick="revisarCardsDoTopico('${t}')">
-        <span class="weak-mat-tag">CARDS</span>
-        <span class="weak-mat-txt">${nc} flashcard${nc!==1?'s':''} de ${sanitize(nomeTopico(t))}</span></div>`;
-    });
-  }
+  const plano=nomesFoco.length
+    ? `Seu Treino do dia já vai priorizar ${nomesFoco.join(' e ')} nos próximos dias. Revisar espaçado fixa mais do que reestudar tudo agora.`
+    : `Sem área com perda relevante hoje. Seu Treino do dia mantém a revisão espaçada em dia.`;
+  html+=`<div style="margin-top:12px;padding:11px 13px;background:var(--blue-light);border-radius:10px;font-size:13px;color:var(--text);line-height:1.5">${sanitize(plano)}</div>`;
+  html+=`<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+    <button class="btn-weak" onclick="irTreinoDoDia()">Ver meu Treino do dia →</button>`;
+  const nErr=Object.values(allQuestoes).filter(q=>userStats.seenIds?.includes(q.id+'_E')).length;
+  if(nErr)html+=`<button class="btn-weak" style="background:var(--paper-2);color:var(--text2)" onclick="iniciarModoErro()">Refazer os ${nErr} erro${nErr!==1?'s':''} agora · opcional</button>`;
+  html+=`</div>`;
   el.innerHTML=html;
-}
-
-// Resumos mais úteis para um conjunto de áreas: pendentes primeiro, depois prob alta,
-// depois tópico fraco pelo BKT, depois assunto de alta incidência.
-function materialParaAreas(areas,limite=4){
-  const now=Date.now();
-  const fracos=setTopicosFracos();
-  const inc=setTopicosIncidencia();
-  const score=r=>{
-    let p=0;
-    const ur=userStats['resumo_'+r.id];
-    if(!ur||!ur.next||ur.next<=now)p+=50;
-    if(r.prob==='alta')p+=20;
-    const t=topicoDe(r);
-    if(t&&fracos.has(t))p+=10;
-    if(t&&inc.has(t))p+=1;
-    return p;
-  };
-  return RESUMOS_BANCO.filter(r=>areas.includes(r.area))
-    .map(r=>({r,p:score(r)}))
-    .sort((a,b)=>b.p-a.p)
-    .slice(0,limite)
-    .map(o=>o.r);
 }
 
 function voltarSimHome(){
