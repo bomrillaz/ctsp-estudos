@@ -2885,7 +2885,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.109';
+const APP_VERSAO='v1.110';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5474,21 +5474,23 @@ window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();def
 // Cole o valor abaixo (é público, pode ficar no código).
 const VAPID_KEY='BJlUzu2NTP8rxI_Mas03DotSKNiiUQ-noWRvUf-qtZc4CYKJOMzF5IaaJ98DPf1I5xqJhvjkQsMzEl9VRgA83nw';
 let fcmMessaging=null, fcmSuportado=false;
-if(typeof firebase!=='undefined' && firebase.messaging){
+// Checagem DIRETA das capacidades. O isSupported() do SDK é conservador e dá falso
+// negativo em PWA no iOS (mesmo iOS 16.4+ standalone). O que realmente decide o
+// getToken é: Notification + serviceWorker + PushManager presentes.
+function pushCapaz(){
+  return typeof firebase!=='undefined' && !!firebase.messaging
+    && ('Notification' in window) && ('serviceWorker' in navigator) && ('PushManager' in window);
+}
+if(pushCapaz()){
   try{
-    firebase.messaging.isSupported().then(function(ok){
-      fcmSuportado=!!ok;
-      if(ok){
-        fcmMessaging=firebase.messaging();
-        // App ABERTO: o SW não dispara notificação em foreground; mostramos um toast.
-        fcmMessaging.onMessage(function(payload){
-          var n=(payload&&payload.notification)||{};
-          if(n.title)showToast(n.title+(n.body?' — '+n.body:''));
-        });
-      }
-      atualizarBotaoNotif();
-    }).catch(function(){});
-  }catch(_){}
+    fcmMessaging=firebase.messaging();
+    fcmSuportado=true;
+    // App ABERTO: o SW não dispara notificação em foreground; mostramos um toast.
+    fcmMessaging.onMessage(function(payload){
+      var n=(payload&&payload.notification)||{};
+      if(n.title)showToast(n.title+(n.body?' — '+n.body:''));
+    });
+  }catch(_){ fcmMessaging=null; fcmSuportado=false; }
 }
 function estadoNotif(){
   if(!fcmSuportado||!('Notification'in window))return 'indisponivel';
