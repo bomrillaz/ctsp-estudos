@@ -2054,6 +2054,12 @@ function registrarRespostaAdaptativa(q,acertou){
   bktUpdate(q.topico,acertou);
   if(!userStats.questoesFSRS)userStats.questoesFSRS={};
   userStats.questoesFSRS[q.id]=fsrsUpdate(userStats.questoesFSRS[q.id],acertou);
+  // BLOCO 43 — INSTRUMENTAÇÃO: acerto/total por questão (semente da dificuldade de item).
+  // Grava no blob do usuário; a dificuldade GLOBAL sai depois, agregando os blobs (o admin
+  // já lê todos). Chave do id é a1_25/b3_47 (sem ponto) — válida no RTDB, sem encode.
+  if(!userStats.itemStats)userStats.itemStats={};
+  const is=userStats.itemStats[q.id]||{t:0,c:0};
+  userStats.itemStats[q.id]={t:(is.t||0)+1,c:(is.c||0)+(acertou?1:0)};
 }
 
 // ── F2.1 Perfil de domínio por tópico ──
@@ -2878,7 +2884,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.101';
+const APP_VERSAO='v1.102';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
