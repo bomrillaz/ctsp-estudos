@@ -1909,16 +1909,9 @@ let simQuestoes=[],simRespostas={},simOrdem={},simIdx=0,simTimer=null,simTempo=1
 let resumosQueue=[],resumoAtualIdx=0;
 
 // ═══════════════════════════════
-// SM-2
+// SM-2 (questões) — APOSENTADO na Fase 5 (v1.107): o agendamento de questão é só FSRS.
+// A leitura de dados SM-2 legados segue no `questaoDue` (fallback) e no merge de sync.
 // ═══════════════════════════════
-function sm2Update(card,q){
-  let{interval=1,reps=0,ef=2.5}=card;
-  if(q>=3){interval=reps===0?1:reps===1?6:Math.round(interval*ef);reps++;}
-  else{interval=1;reps=0;}
-  ef=Math.max(1.3,ef+0.1-(5-q)*(0.08+(5-q)*0.02));
-  return{interval,reps,ef,next:Date.now()+interval*86400000};
-}
-function sm2Resumo(card,dif){const q=dif==='dif'?1:dif==='med'?3:5;return sm2Update(card,q);}
 // ── FSRS-lite para flashcards (graus Difícil/Médio/Fácil); migra cards SM-2 antigos ──
 function fsrsCardUpdate(card,dif){
   const now=Date.now();card=card||{};
@@ -2884,7 +2877,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.106';
+const APP_VERSAO='v1.107';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -3745,11 +3738,10 @@ function renderAreaList(){
 function classeQuestao(q){
   const seen=userStats.seenIds||[];
   if(seen.includes(q.id+'_E'))return 'errado';                 // marcada errada e ainda não corrigida
-  const sm2=(userStats.questoesSM2||{})[q.id];
-  const visto=!!sm2||seen.includes(q.id+'_C')||seen.includes(q.id+'_E');
+  const due=questaoDue(q.id);                                  // FSRS -> SM-2 legado -> 0 (fonte única)
+  const visto=due>0||seen.includes(q.id+'_C');
   if(!visto)return 'novo';                                     // nunca respondida
-  if(!sm2)return 'revisar';                                    // respondida mas sem agendamento → revisar
-  if((sm2.next||0)<=Date.now())return 'revisar';               // vista, revisão vencida
+  if(due<=Date.now())return 'revisar';                         // sem agendamento (0) ou revisão vencida
   return 'dominado';                                           // vista, revisão no futuro
 }
 // Monta fila ~60% novas + 40% revisão (erros primeiro, depois vencidas), dedup e corte em n.
@@ -3850,7 +3842,6 @@ function iniciarInterleaving(){
   // priorizando as vencidas pelo SM-2. Alternância deliberada de áreas.
   // (S1/auditoria jul/26: removidos `pares`, `queue` e `byArea` — eram montados e
   //  descartados; a fila sempre saiu de `final`. Comportamento idêntico, sem varreduras extras.)
-  const sm2=userStats.questoesSM2||{};
   const agora=Date.now();
   const areas=Object.keys(AI);
   const final=[];
@@ -3858,8 +3849,8 @@ function iniciarInterleaving(){
   for(let i=0;i<perArea;i++){
     areas.forEach(area=>{
       const qs=Object.values(allQuestoes).filter(q=>q.area===area);
-      const vencidas=qs.filter(q=>!sm2[q.id]||sm2[q.id].next<=agora);
-      const restantes=qs.filter(q=>sm2[q.id]&&sm2[q.id].next>agora);
+      const vencidas=qs.filter(q=>questaoDue(q.id)<=agora);   // 0 = nunca vista = vencida
+      const restantes=qs.filter(q=>questaoDue(q.id)>agora);
       const pool=[...shuffle(vencidas),...shuffle(restantes)];
       if(pool[i])final.push(pool[i]);
     });
@@ -3978,13 +3969,8 @@ async function responderQuiz(idx){
 
   registrarAtividade(acertou);
 
-  // SM-2 por questão
-  if(!userStats.questoesSM2)userStats.questoesSM2={};
-  const cardAtual=userStats.questoesSM2[q.id]||{interval:1,reps:0,ef:2.5};
-  const qSM2=acertou?5:1;
-  userStats.questoesSM2[q.id]=sm2Update(cardAtual,qSM2);
-
-  // FASE 2 — BKT por tópico + FSRS-lite por questão
+  // Fase 5: o agendamento da questão é só FSRS agora (SM-2 duplicado aposentado).
+  // registrarRespostaAdaptativa grava BKT + FSRS + itemStats numa passada só.
   registrarRespostaAdaptativa(q,acertou);
 
   saveProg();
