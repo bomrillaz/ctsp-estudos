@@ -36,6 +36,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet"/>
@@ -1591,6 +1592,13 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
     <div class="config-row">
       <div>
+        <div class="config-label">Notificações de revisão</div>
+        <div class="config-sub" id="config-notif-sub">Lembrete diário das revisões vencidas</div>
+      </div>
+      <button class="btn-config-reset" id="config-notif-btn" onclick="ativarNotificacoes()">Ativar</button>
+    </div>
+    <div class="config-row">
+      <div>
         <div class="config-label">Backup do progresso</div>
         <div class="config-sub">Exportar ou restaurar (.json)</div>
       </div>
@@ -2877,7 +2885,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.107';
+const APP_VERSAO='v1.108';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5066,6 +5074,7 @@ function abrirModalConfig(){
   if(drInp)drInp.value=dose('resumos');
   const provaInp=document.getElementById('config-prova-input');
   if(provaInp)provaInp.value=userStats.dataProva||'';
+  atualizarBotaoNotif();
   document.getElementById('modal-config').classList.remove('hidden');
 }
 
@@ -5458,6 +5467,60 @@ function avaliarConviteInstalar(){
   else if(ehIOS()){if(btn)btn.style.display='none';if(sub)sub.innerHTML='Toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.';el.style.display='flex';}
 }
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredPrompt=e;avaliarConviteInstalar();});
+
+// ── Fase 4: notificações push (FCM) ──────────────────────────────
+// VAPID: chave PÚBLICA do par "Certificados push da Web". Firebase Console →
+// Configurações do projeto → Cloud Messaging → Configuração da Web → Gerar par de chaves.
+// Cole o valor abaixo (é público, pode ficar no código).
+const VAPID_KEY='BJlUzu2NTP8rxI_Mas03DotSKNiiUQ-noWRvUf-qtZc4CYKJOMzF5IaaJ98DPf1I5xqJhvjkQsMzEl9VRgA83nw';
+let fcmMessaging=null, fcmSuportado=false;
+if(typeof firebase!=='undefined' && firebase.messaging){
+  try{
+    firebase.messaging.isSupported().then(function(ok){
+      fcmSuportado=!!ok;
+      if(ok){
+        fcmMessaging=firebase.messaging();
+        // App ABERTO: o SW não dispara notificação em foreground; mostramos um toast.
+        fcmMessaging.onMessage(function(payload){
+          var n=(payload&&payload.notification)||{};
+          if(n.title)showToast(n.title+(n.body?' — '+n.body:''));
+        });
+      }
+      atualizarBotaoNotif();
+    }).catch(function(){});
+  }catch(_){}
+}
+function estadoNotif(){
+  if(!fcmSuportado||!('Notification'in window))return 'indisponivel';
+  return Notification.permission; // 'default' | 'granted' | 'denied'
+}
+function atualizarBotaoNotif(){
+  var btn=document.getElementById('config-notif-btn'),sub=document.getElementById('config-notif-sub');
+  if(!btn)return;
+  var st=estadoNotif();
+  if(st==='indisponivel'){btn.textContent='Indisponível';btn.disabled=true;if(sub)sub.textContent='Este navegador não suporta (no iPhone, instale o app na tela inicial primeiro).';return;}
+  btn.disabled=false;
+  if(st==='granted'){btn.textContent='Ativado';btn.disabled=true;if(sub)sub.textContent='Você receberá o lembrete diário de revisões.';}
+  else if(st==='denied'){btn.textContent='Bloqueado';btn.disabled=true;if(sub)sub.textContent='Permissão negada — libere nas configurações do navegador.';}
+  else{btn.textContent='Ativar';if(sub)sub.textContent='Lembrete diário das revisões vencidas';}
+}
+async function ativarNotificacoes(){
+  if(!fcmSuportado||!fcmMessaging){showToast('Notificações indisponíveis neste navegador.');return;}
+  if(VAPID_KEY.indexOf('COLE_A_CHAVE')===0){showToast('Push ainda não configurado (falta a chave VAPID).');return;}
+  if(!currentUser||!dataLoaded){showToast('Aguarde os dados carregarem antes de ativar.');return;}
+  try{
+    var perm=await Notification.requestPermission();
+    if(perm!=='granted'){atualizarBotaoNotif();return;}
+    var reg=swReg||await navigator.serviceWorker.ready;
+    var token=await fcmMessaging.getToken({vapidKey:VAPID_KEY,serviceWorkerRegistration:reg});
+    if(!token){showToast('Não foi possível gerar o token de notificação.');return;}
+    // Token é o valor REAL (o servidor precisa dele); a chave é só sanitizada p/ o RTDB.
+    var chave=token.replace(/[.#$/\[\]]/g,'_');
+    await db.ref('push/'+currentUser.uid+'/'+chave).set({token:token,ts:Date.now(),ua:(navigator.userAgent||'').slice(0,120)});
+    showToast('Notificações ativadas!');
+    atualizarBotaoNotif();
+  }catch(e){showToast('Falha ao ativar: '+(e&&e.message?e.message:'erro'));}
+}
 window.addEventListener('appinstalled',function(){deferredPrompt=null;var el=document.getElementById('install-banner');if(el)el.style.display='none';try{localStorage.setItem('installDismiss',String(Date.now()));}catch(_){}});
 window.addEventListener('load',function(){setTimeout(avaliarConviteInstalar,3000);});
 </script>

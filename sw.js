@@ -8,7 +8,34 @@
    Atualizacao: skipWaiting no install (hotfix chega automatico); no controllerchange
    o app recarrega UMA vez (guard de 1a instalacao no index).
    OBS: ao mudar o ?v= do data.js, atualizar a URL abaixo. */
-const CACHE = 'ctsp-cache-v3';
+
+/* ── Fase 4: FCM em background (SW ÚNICO, sem guerra de escopo) ──
+   Importamos SÓ app+messaging (NUNCA database) — a regra de ouro continua valendo:
+   este SW não toca o RTDB dinâmico. onBackgroundMessage usa o evento 'push', não
+   intercepta o fetch handler abaixo. Se o gstatic estiver fora do ar no start do SW,
+   o try/catch evita que a falha derrube o resto (cache/offline seguem funcionando). */
+try {
+  importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+  importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
+  firebase.initializeApp({
+    apiKey: 'AIzaSyCnwg94KLWwyFB2-bzJOqRotsaSICdFtoM',
+    authDomain: 'ctsp-estudos.firebaseapp.com',
+    projectId: 'ctsp-estudos',
+    messagingSenderId: '267159679171',
+    appId: '1:267159679171:web:1ffb1853f07aff3ae2b276'
+  });
+  firebase.messaging().onBackgroundMessage((payload) => {
+    const n = (payload && payload.notification) || {};
+    self.registration.showNotification(n.title || 'Bombeiro CTSP', {
+      body: n.body || '',
+      icon: 'assets/icon-192.png',
+      badge: 'assets/icon-192.png',
+      data: (payload && payload.data) || {}
+    });
+  });
+} catch (_) {}
+
+const CACHE = 'ctsp-cache-v4';
 const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
@@ -17,7 +44,8 @@ const SAME = [
 const CROSS = [
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js',
-  'https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js'
+  'https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js',
+  'https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js'
 ];
 
 self.addEventListener('install', (e) => {
