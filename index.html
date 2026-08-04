@@ -2884,7 +2884,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.104';
+const APP_VERSAO='v1.105';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5456,10 +5456,37 @@ if('serviceWorker' in navigator){
     }).catch(function(){});
   });
 }
+
+// ── Fase 3: convite de instalação (Android beforeinstallprompt + instrução iOS) ──
+let deferredPrompt=null;
+function ehStandalone(){return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true;}
+function ehIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent||'');}
+function conviteDispensado(){try{var t=localStorage.getItem('installDismiss');return !!t&&(Date.now()-(+t)<2592000000);}catch(_){return false;}}
+function dispensarInstalar(){try{localStorage.setItem('installDismiss',String(Date.now()));}catch(_){}var el=document.getElementById('install-banner');if(el)el.style.display='none';}
+function instalarApp(){var el=document.getElementById('install-banner');if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.finally(function(){deferredPrompt=null;if(el)el.style.display='none';});}}
+function avaliarConviteInstalar(){
+  if(ehStandalone()||conviteDispensado())return;
+  var el=document.getElementById('install-banner');if(!el)return;
+  var btn=document.getElementById('install-btn'),sub=document.getElementById('install-sub');
+  if(deferredPrompt){if(btn)btn.style.display='';el.style.display='flex';}
+  else if(ehIOS()){if(btn)btn.style.display='none';if(sub)sub.innerHTML='Toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.';el.style.display='flex';}
+}
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredPrompt=e;avaliarConviteInstalar();});
+window.addEventListener('appinstalled',function(){deferredPrompt=null;var el=document.getElementById('install-banner');if(el)el.style.display='none';try{localStorage.setItem('installDismiss',String(Date.now()));}catch(_){}});
+window.addEventListener('load',function(){setTimeout(avaliarConviteInstalar,3000);});
 </script>
 <div id="sw-update" role="status" style="display:none;position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:200;background:var(--navy-2);color:#fff;border:1px solid var(--ember);border-radius:12px;padding:10px 14px;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 8px 24px rgba(11,20,48,.4);">
   <span style="font-size:13px;font-weight:600">Nova versão disponível</span>
   <button onclick="aplicarAtualizacao()" style="background:var(--ember);color:#1C1206;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer">Atualizar</button>
+</div>
+<div id="install-banner" style="display:none;position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:200;background:var(--navy-2);color:#fff;border:1px solid rgba(240,136,60,.4);border-radius:14px;padding:12px 14px;gap:12px;align-items:center;box-shadow:0 8px 24px rgba(11,20,48,.4);">
+  <img src="assets/icon-192.png" alt="" style="width:40px;height:40px;border-radius:10px;flex-shrink:0"/>
+  <div style="flex:1;min-width:0">
+    <div style="font-size:13px;font-weight:700">Instalar o app na tela inicial</div>
+    <div id="install-sub" style="font-size:12px;color:rgba(255,255,255,.75);line-height:1.4">Acesso rápido, tela cheia e funciona offline.</div>
+  </div>
+  <button id="install-btn" onclick="instalarApp()" style="display:none;background:var(--ember);color:#1C1206;border:none;border-radius:9px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">Instalar</button>
+  <button onclick="dispensarInstalar()" aria-label="Dispensar" style="background:transparent;border:none;color:rgba(255,255,255,.6);font-size:22px;line-height:1;cursor:pointer;flex-shrink:0;padding:0 2px">×</button>
 </div>
 </body>
 </html>
