@@ -2884,7 +2884,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.102';
+const APP_VERSAO='v1.103';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5426,6 +5426,40 @@ document.addEventListener('keydown',e=>{
     }
   }
 });
+
+// ── Fase 2: registro do Service Worker (offline + aviso de nova versao) ──
+let swReg=null, swRecarregando=false;
+function aplicarAtualizacao(){
+  var el=document.getElementById('sw-update'); if(el)el.style.display='none';
+  if(swReg&&swReg.waiting)swReg.waiting.postMessage({type:'SKIP_WAITING'});
+}
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    // Guarda se JÁ havia um SW controlando: se não havia, o primeiro controllerchange
+    // é só a instalação inicial (clients.claim) e NÃO deve recarregar a página.
+    var tinhaControlador=!!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange',function(){
+      if(swRecarregando)return;
+      if(!tinhaControlador){tinhaControlador=true;return;} // 1a instalação: não recarrega
+      swRecarregando=true; location.reload();
+    });
+    navigator.serviceWorker.register('sw.js').then(function(reg){
+      swReg=reg;
+      reg.addEventListener('updatefound',function(){
+        var nw=reg.installing; if(!nw)return;
+        nw.addEventListener('statechange',function(){
+          if(nw.state==='installed'&&navigator.serviceWorker.controller){
+            var el=document.getElementById('sw-update'); if(el)el.style.display='flex';
+          }
+        });
+      });
+    }).catch(function(){});
+  });
+}
 </script>
+<div id="sw-update" role="status" style="display:none;position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:200;background:var(--navy-2);color:#fff;border:1px solid var(--ember);border-radius:12px;padding:10px 14px;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 8px 24px rgba(11,20,48,.4);">
+  <span style="font-size:13px;font-weight:600">Nova versão disponível</span>
+  <button onclick="aplicarAtualizacao()" style="background:var(--ember);color:#1C1206;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer">Atualizar</button>
+</div>
 </body>
 </html>
