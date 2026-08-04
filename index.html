@@ -2050,6 +2050,23 @@ function questaoDue(id){
   if(s&&s.next)return s.next;
   return 0; // nunca vista → vencida
 }
+// ── Push condicional (Fase 4c): menor "next" entre as revisões AGENDADAS (FSRS).
+// 0 = nenhuma revisão marcada (questão nunca vista NÃO conta como revisão vencida).
+// O servidor só dispara nos horários agendados se prox>0 && prox<=agora. Gravamos a
+// data ABSOLUTA (não uma contagem) — assim não envelhece: continua válida com o tempo.
+function proximaRevisaoTs(){
+  const f=userStats.questoesFSRS||{};
+  let min=Infinity;
+  for(const id in f){const n=f[id]&&f[id].next;if(n&&n<min)min=n;}
+  return min===Infinity?0:min;
+}
+function sincronizarAgendaPush(){
+  try{
+    if(!currentUser||!dataLoaded)return;
+    if(!('Notification'in window)||Notification.permission!=='granted')return;
+    db.ref('push/'+currentUser.uid+'/_agenda').set({prox:proximaRevisaoTs(),ts:Date.now()});
+  }catch(_){}
+}
 function registrarRespostaAdaptativa(q,acertou){
   if(!q)return;
   bktUpdate(q.topico,acertou);
@@ -2788,6 +2805,7 @@ async function saveProg(){
     catch(e2){savePendente=true;showToast('Sem conexão — progresso guardado no aparelho');}
   }finally{
     _saveEmCurso=false;
+    sincronizarAgendaPush(); // atualiza a data da próxima revisão p/ o push condicional
     if(_saveDeNovo){_saveDeNovo=false;saveProg();} // houve mudança durante o write → grava de novo
   }
 }
@@ -2885,7 +2903,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.110';
+const APP_VERSAO='v1.111';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5519,6 +5537,7 @@ async function ativarNotificacoes(){
     // Token é o valor REAL (o servidor precisa dele); a chave é só sanitizada p/ o RTDB.
     var chave=token.replace(/[.#$/\[\]]/g,'_');
     await db.ref('push/'+currentUser.uid+'/'+chave).set({token:token,ts:Date.now(),ua:(navigator.userAgent||'').slice(0,120)});
+    sincronizarAgendaPush(); // já popula a data da próxima revisão p/ o push condicional
     showToast('Notificações ativadas!');
     atualizarBotaoNotif();
   }catch(e){showToast('Falha ao ativar: '+(e&&e.message?e.message:'erro'));}

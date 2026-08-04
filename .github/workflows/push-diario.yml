@@ -1,7 +1,7 @@
 name: Push diário CTSP
 
-# Fase 4c. Começa em disparo MANUAL (workflow_dispatch) para testar a entrega.
-# Depois que o teste chegar no aparelho, descomentar o "schedule" abaixo para o cron.
+# Fase 4c. Disparo MANUAL (workflow_dispatch) = teste/aviso, força envio a todos.
+# Disparo AGENDADO (schedule) = condicional: só quem tem revisão vencida.
 on:
   workflow_dispatch:
     inputs:
@@ -13,8 +13,9 @@ on:
         description: 'Texto da notificação (opcional)'
         required: false
         default: ''
-  # schedule:
-  #   - cron: '0 10 * * *'   # 10:00 UTC = 07:00 (horário de Brasília). Habilitar após o teste.
+  schedule:
+    - cron: '0 11 * * *'    # 08:00 (horário de Brasília, UTC-3) — manhã
+    - cron: '0 22 * * *'    # 19:00 (horário de Brasília) — início da noite
 
 jobs:
   enviar:

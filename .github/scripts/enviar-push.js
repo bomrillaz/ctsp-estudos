@@ -27,26 +27,50 @@ admin.initializeApp({
 const db = admin.database();
 const msg = admin.messaging();
 
-const TITULO = (process.env.PUSH_TITULO || '').trim() || 'Bombeiro CTSP';
-const CORPO = (process.env.PUSH_CORPO || '').trim() || 'Hora de revisar — suas questões estão te esperando.';
+// Rotação de mensagem por horário (Brasília, UTC-3, sem horário de verão), pra não
+// soar repetido nos 3 disparos diários. Se o workflow passar PUSH_TITULO/PUSH_CORPO
+// (disparo manual), esses prevalecem.
+function mensagemPorHorario() {
+  const h = new Date(Date.now() - 3 * 3600 * 1000).getUTCHours();
+  if (h < 12) return { titulo: 'Bombeiro CTSP', corpo: 'Bom dia! Comece adiantando suas revisões de hoje.' };
+  if (h < 18) return { titulo: 'Bombeiro CTSP', corpo: 'Pausa produtiva: 10 minutos de questões agora já contam.' };
+  return { titulo: 'Bombeiro CTSP', corpo: 'Antes de encerrar o dia, feche suas revisões pendentes.' };
+}
+const _rot = mensagemPorHorario();
+const TITULO = (process.env.PUSH_TITULO || '').trim() || _rot.titulo;
+const CORPO = (process.env.PUSH_CORPO || '').trim() || _rot.corpo;
 const LINK = 'https://jhoonnvictor.github.io/ctsp-estudos/';
 
 (async () => {
   const snap = await db.ref('push').get();
   const val = snap.val() || {};
 
-  // push/{uid}/{chave} = {token, ts, ua}
+  const agora = Date.now();
+  // Disparo agendado (cron) = CONDICIONAL: só quem tem revisão vencida.
+  // Disparo manual (workflow_dispatch) = FORÇADO: envia a todos (teste/aviso).
+  const forcar = (process.env.GITHUB_EVENT_NAME || '') !== 'schedule';
+
+  // push/{uid}/{chave} = {token, ts, ua} · push/{uid}/_agenda = {prox, ts}
   const alvos = [];
+  let pulados = 0;
   for (const uid of Object.keys(val)) {
-    const tokens = val[uid] || {};
-    for (const chave of Object.keys(tokens)) {
-      const t = tokens[chave] && tokens[chave].token;
+    const noh = val[uid] || {};
+    if (!forcar) {
+      const ag = noh._agenda;
+      const vencido = ag && typeof ag.prox === 'number' && ag.prox > 0 && ag.prox <= agora;
+      if (!vencido) { pulados++; continue; } // sem revisão vencida → não incomoda
+    }
+    for (const chave of Object.keys(noh)) {
+      if (chave === '_agenda') continue; // metadado, não é token
+      const t = noh[chave] && noh[chave].token;
       if (t) alvos.push({ uid, chave, token: t });
     }
   }
 
+  console.log(forcar ? 'Modo: FORCADO (manual)' : 'Modo: CONDICIONAL (agendado)', '· usuarios pulados:', pulados);
+
   if (!alvos.length) {
-    console.log('Nenhum token registrado. Nada a enviar.');
+    console.log('Nenhum token elegivel. Nada a enviar.');
     process.exit(0);
   }
   console.log('Tokens alvo:', alvos.length);
