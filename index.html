@@ -8,7 +8,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="CTSP"/>
 <meta name="theme-color" content="#101B3D"/>
-<link rel="apple-touch-icon" href="img/icon.png"/>
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png"/>
 <!-- BLOCO 34 (item 2) — manifest de PWA.
      LIMITE CONHECIDO, registrado para não ser reaberto: isto NÃO faz o QR abrir
      dentro do atalho da tela inicial no iPhone. No iOS, link vindo de fora (câmera,
@@ -942,7 +944,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <div class="auth-bg"></div>
   <div class="auth-content">
     <div class="auth-hero">
-      <img class="logo" src="img/logo.png" onerror="this.style.background='var(--red)'" alt="CBMRS">
+      <img class="logo" src="assets/icon-512.png" onerror="this.style.background='var(--red)'" alt="Bombeiro CTSP">
       <h1>Bombeiro CTSP</h1>
       <p>CBMRS · CTSP 2026</p>
     </div>
@@ -2876,7 +2878,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.100';
+const APP_VERSAO='v1.101';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
