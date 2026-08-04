@@ -1,0 +1,39 @@
+name: Push diário CTSP
+
+# Fase 4c. Começa em disparo MANUAL (workflow_dispatch) para testar a entrega.
+# Depois que o teste chegar no aparelho, descomentar o "schedule" abaixo para o cron.
+on:
+  workflow_dispatch:
+    inputs:
+      titulo:
+        description: 'Título da notificação (opcional)'
+        required: false
+        default: ''
+      corpo:
+        description: 'Texto da notificação (opcional)'
+        required: false
+        default: ''
+  # schedule:
+  #   - cron: '0 10 * * *'   # 10:00 UTC = 07:00 (horário de Brasília). Habilitar após o teste.
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências
+        working-directory: .github/scripts
+        run: npm install --no-audit --no-fund
+
+      - name: Enviar push
+        working-directory: .github/scripts
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          PUSH_TITULO: ${{ github.event.inputs.titulo }}
+          PUSH_CORPO: ${{ github.event.inputs.corpo }}
+        run: node enviar-push.js

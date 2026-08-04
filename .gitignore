@@ -1,2 +1,4 @@
 .verify_tmp/
 materiais/
+.github/scripts/node_modules/
+.github/scripts/package-lock.json

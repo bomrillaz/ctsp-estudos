@@ -1,0 +1,9 @@
+{
+  "name": "ctsp-push",
+  "private": true,
+  "type": "commonjs",
+  "description": "Remetente de push do Bombeiro CTSP (GitHub Actions).",
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  }
+}
