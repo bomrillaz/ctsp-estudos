@@ -599,6 +599,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 /* ═══ RESUMOS ═══ */
 .resumos-screen{padding:16px;background:transparent;}
 .resumos-header{background:linear-gradient(160deg,var(--navy-2),var(--navy));border-radius:18px;padding:16px;color:white;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:var(--shadow-md);}
+.busca-grupo{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:8px;}
+mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px;}
 .resumos-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--fire-line);opacity:.85;}
 .resumos-queue{display:flex;align-items:center;gap:8px;margin-top:10px;}
 .resumo-queue-n{background:rgba(240,136,60,.16);border:1px solid rgba(240,136,60,.35);color:var(--ember);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;}
@@ -1406,6 +1408,11 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <div class="resumos-queue"><span style="font-size:12px;opacity:.75;">Para revisão:</span><span class="resumo-queue-n" id="resumos-fila">0</span></div>
           </div>
         </div>
+        <div style="margin-bottom:14px">
+          <input type="search" id="busca-conteudo" placeholder="🔎 Buscar em resumos e flashcards…" autocomplete="off" oninput="onBuscaConteudo(this.value)"
+            style="width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--line-soft);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;box-sizing:border-box">
+        </div>
+        <div id="busca-resultados" class="hidden"></div>
         <div id="resumos-content"></div>
       </div>
     </div>
@@ -2972,7 +2979,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.116';
+const APP_VERSAO='v1.117';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -3067,7 +3074,7 @@ function navTo(s){
   if(s==='inicio'){renderDashboard();atualizarCardTreino();}
   if(s==='quiz'){renderAreaList();}
   if(s==='cards'){renderCards();}
-  if(s==='resumos'){renderResumos();updateBadges();}
+  if(s==='resumos'){resetBusca();renderResumos();updateBadges();}
   if(s==='padroes'){renderPadroes();}
   if(s==='foco'){renderFoco();}
   if(s==='admin'&&isAdmin()){loadAdminUsers();loadReportes();}
@@ -4363,6 +4370,91 @@ function resumosDose(){
   const now=Date.now();
   const ehVencido=r=>{const ur=userStats['resumo_'+r.id];return !!(ur&&ur.reps>0&&ur.next&&ur.next<=now);};
   return priorizarPorMalha(resumosPendentes(),ehVencido).slice(0,dose('resumos')+doseExtra.resumos);
+}
+
+// ── Busca de conteúdo (resumos + flashcards; NÃO questões) ──────────────────────
+// Consulta pontual: sem acento, sem maiúscula, múltiplas palavras (TODAS precisam
+// casar). Título/frente pesa mais que corpo/verso no ranqueamento. Roda 100% local.
+function normBusca(s){return fmtSemAcento(String(s||'')).toLowerCase();}
+const _STOP_BUSCA=new Set(['de','da','do','dos','das','e','o','a','os','as','em','no','na','nos','nas','um','uma','uns','para','com','que','por','ao','aos','se','ou']);
+// Tokens significativos: descarta palavras vazias (de, dos, que…) e monossílabos, mas
+// mantém números (ex.: "9"). Se não sobrar nada, usa os tokens crus (buscar "de" ainda vale).
+function tokensBusca(q){
+  const all=normBusca(q).split(/\s+/).filter(Boolean);
+  const sig=all.filter(t=>/\d/.test(t)||(t.length>=2&&!_STOP_BUSCA.has(t)));
+  return sig.length?sig:all;
+}
+function buscarConteudo(q){
+  const tokens=tokensBusca(q);
+  if(!tokens.length)return{resumos:[],cards:[]};
+  const avalia=(princ,sec)=>{
+    const nP=normBusca(princ),nT=nP+' '+normBusca(sec);
+    if(!tokens.every(t=>nT.includes(t)))return -1;
+    return tokens.filter(t=>nP.includes(t)).length; // peso extra se casa no título/frente
+  };
+  const resumos=[],cards=[];
+  RESUMOS_BANCO.forEach(r=>{const rk=avalia(r.titulo,r.texto);if(rk>=0)resumos.push({o:r,rk});});
+  Object.values(allFlashcards).forEach(fc=>{const rk=avalia(fc.f,fc.v);if(rk>=0)cards.push({o:fc,rk});});
+  resumos.sort((a,b)=>b.rk-a.rk);cards.sort((a,b)=>b.rk-a.rk);
+  return{resumos:resumos.map(x=>x.o),cards:cards.map(x=>x.o)};
+}
+// Destaca os termos no texto JÁ sanitizado (o conteúdo é texto puro, sem HTML).
+function destacarBusca(texto,q){
+  let html=sanitize(String(texto||''));
+  const sig=new Set(tokensBusca(q));
+  const palavras=String(q||'').trim().split(/\s+/).filter(w=>sig.has(normBusca(w))).map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+  if(palavras.length){try{html=html.replace(new RegExp('('+palavras.join('|')+')','gi'),'<mark>$1</mark>');}catch(_){}}
+  return html;
+}
+// Trecho do resumo ao redor do 1º casamento (normBusca preserva comprimento p/ acentos pt-BR).
+function snippetResumo(r,q){
+  const texto=String(r.texto||''),nTexto=normBusca(texto);
+  let pos=-1;tokensBusca(q).forEach(t=>{const i=nTexto.indexOf(t);if(i>=0&&(pos<0||i<pos))pos=i;});
+  if(pos<0)pos=0;
+  const start=Math.max(0,pos-40);
+  let snip=texto.slice(start,start+160).trim();
+  if(start>0)snip='…'+snip;if(start+160<texto.length)snip+='…';
+  return snip;
+}
+function renderBuscaResultados(q,resumos,cards){
+  if(!resumos.length&&!cards.length){
+    return `<div style="text-align:center;padding:30px 16px;color:var(--text2)">Nada encontrado para “<b>${sanitize(q)}</b>”.<br><span style="font-size:12.5px;color:var(--text3)">Tente outra palavra — o assunto, não a pergunta inteira.</span></div>`;
+  }
+  const item=(titulo,corpo,tag,onclick)=>`<div class="resumo-list-item"${onclick?` onclick="${onclick}" style="cursor:pointer"`:' style="border-left:3px solid var(--blue)"'}>
+      <div style="font-weight:700;font-size:14px">${titulo}</div>
+      <div style="font-size:12.5px;color:var(--text2);margin-top:3px;line-height:1.5">${corpo}</div>
+      ${tag?`<div style="font-size:10.5px;color:var(--text3);margin-top:4px">${sanitize(nomeTopico(tag))}</div>`:''}
+    </div>`;
+  let h='';
+  if(resumos.length){
+    h+=`<div class="busca-grupo">Resumos · ${resumos.length}</div>`;
+    h+=resumos.map(r=>item(destacarBusca(r.titulo,q),destacarBusca(snippetResumo(r,q),q),topicoDe(r),`abrirResumoBusca('${r.id}')`)).join('');
+  }
+  if(cards.length){
+    h+=`<div class="busca-grupo" style="margin-top:14px">Flashcards · ${cards.length}</div>`;
+    h+=cards.map(fc=>item(destacarBusca(fc.f,q),destacarBusca(fc.v,q),topicoDe(fc),null)).join('');
+  }
+  return h;
+}
+function onBuscaConteudo(q){
+  const cont=document.getElementById('resumos-content'),res=document.getElementById('busca-resultados');
+  if(!cont||!res)return;
+  const query=(q||'').trim();
+  if(query.length<2){res.classList.add('hidden');res.innerHTML='';cont.classList.remove('hidden');return;}
+  cont.classList.add('hidden');res.classList.remove('hidden');
+  const {resumos,cards}=buscarConteudo(query);
+  res.innerHTML=renderBuscaResultados(query,resumos,cards);
+}
+function abrirResumoBusca(id){
+  const bi=document.getElementById('busca-conteudo');if(bi)bi.value='';
+  const res=document.getElementById('busca-resultados');if(res){res.classList.add('hidden');res.innerHTML='';}
+  document.getElementById('resumos-content').classList.remove('hidden');
+  mostrarResumoDirecto(id);
+}
+function resetBusca(){
+  const bi=document.getElementById('busca-conteudo');if(bi)bi.value='';
+  const res=document.getElementById('busca-resultados');if(res){res.classList.add('hidden');res.innerHTML='';}
+  const cont=document.getElementById('resumos-content');if(cont)cont.classList.remove('hidden');
 }
 
 function renderResumos(){
