@@ -2050,21 +2050,24 @@ function questaoDue(id){
   if(s&&s.next)return s.next;
   return 0; // nunca vista → vencida
 }
-// ── Push condicional (Fase 4c): menor "next" entre as revisões AGENDADAS (FSRS).
-// 0 = nenhuma revisão marcada (questão nunca vista NÃO conta como revisão vencida).
-// O servidor só dispara nos horários agendados se prox>0 && prox<=agora. Gravamos a
-// data ABSOLUTA (não uma contagem) — assim não envelhece: continua válida com o tempo.
-function proximaRevisaoTs(){
+// ── Push condicional (Fase 4c/45): agenda das revisões AGENDADAS (FSRS).
+// Guardamos o ARRAY ORDENADO de "next" (datas ABSOLUTAS), não uma contagem: o servidor
+// conta quantos <= agora no disparo → a contagem nunca envelhece (revisões futuras
+// amadurecem sozinhas). `prox` (= 1º do array) permanece p/ o gate condicional legado.
+// Questão nunca vista NÃO entra (não tem "next") → não vira revisão vencida.
+function agendaRevisoesTs(){
   const f=userStats.questoesFSRS||{};
-  let min=Infinity;
-  for(const id in f){const n=f[id]&&f[id].next;if(n&&n<min)min=n;}
-  return min===Infinity?0:min;
+  const arr=[];
+  for(const id in f){const n=f[id]&&f[id].next;if(n)arr.push(n);}
+  arr.sort((a,b)=>a-b);
+  return arr;
 }
 function sincronizarAgendaPush(){
   try{
     if(!currentUser||!dataLoaded)return;
     if(!('Notification'in window)||Notification.permission!=='granted')return;
-    db.ref('push/'+currentUser.uid+'/_agenda').set({prox:proximaRevisaoTs(),ts:Date.now()});
+    const ag=agendaRevisoesTs();
+    db.ref('push/'+currentUser.uid+'/_agenda').set({prox:ag[0]||0,agenda:ag,ts:Date.now()});
   }catch(_){}
 }
 function registrarRespostaAdaptativa(q,acertou){
@@ -2903,7 +2906,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.111';
+const APP_VERSAO='v1.112';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
