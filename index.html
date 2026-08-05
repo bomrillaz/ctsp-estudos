@@ -1077,7 +1077,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           </div>
         </div>
         <!-- FEAT-01: Simulado de nivelamento (onboarding) -->
-        <div id="diag-card" class="diag-card hidden" onclick="iniciarDiagnostico()">
+        <div id="diag-card" class="diag-card hidden" onclick="abrirIntro('diagnostico')">
           <div class="diag-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.2 7.8 14.3 14.3 7.8 16.2 9.7 9.7 16.2 7.8"/></svg></div>
           <div class="diag-card-info">
             <div class="diag-card-tag">Comece por aqui</div>
@@ -1104,12 +1104,12 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
              "Treino Adaptativo", agora embutido nele. Estudo Rápido/Focado viram atalhos
              secundários; o Simulado completo já é a aba própria na barra inferior. -->
         <div class="sec-title">Estudar agora</div>
-        <div class="adapt-btn" onclick="irTreinoDoDia()" style="border:2px solid var(--blue);">
+        <div class="adapt-btn" onclick="abrirIntro('treino')" style="border:2px solid var(--blue);">
           <div class="adapt-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></div>
           <div class="adapt-btn-info">
-            <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);margin-bottom:2px">Recomendado agora</div>
+            <div id="treino-badge" style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);margin-bottom:2px">Recomendado agora</div>
             <div class="adapt-btn-title">Treino do dia</div>
-            <div class="adapt-btn-sub">Revisão vencida + ponto fraco + assunto novo</div>
+            <div id="treino-sub" class="adapt-btn-sub">Revisão vencida + ponto fraco + assunto novo</div>
           </div>
           <div class="adapt-btn-arrow">→</div>
         </div>
@@ -1303,7 +1303,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <div class="quiz-meta">
             <button class="btn-voltar-quiz" onclick="voltarMenuQuiz()">← Voltar</button>
             <div class="quiz-area-tag" id="quiz-area-tag">Quiz</div>
-            <div class="quiz-score-box"><div class="quiz-score-v" id="quiz-score-v">0/0</div><div class="quiz-score-l">Acertos</div></div>
+            <div class="quiz-score-box"><div class="quiz-score-v" id="quiz-score-v">0/0</div><div class="quiz-score-l">Respondidas</div></div>
           </div>
           <div class="quiz-prog"><div class="quiz-prog-fill" id="quiz-prog-fill" style="width:0%"></div></div>
         </div>
@@ -1508,6 +1508,27 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 </div>
 
 <!-- Modal Meta Diária -->
+<div class="modal-overlay hidden" id="modal-intro" onclick="fecharIntro(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title" id="intro-title">Treino do dia</div>
+    <div class="modal-sub" id="intro-sub"></div>
+    <div id="intro-body" style="margin:10px 0 4px"></div>
+    <button class="btn-primary" id="intro-start" style="width:100%;margin-top:16px" onclick="introComecar()">Começar</button>
+    <button class="btn-weak" onclick="fecharIntro()" style="width:100%;margin-top:8px;background:var(--bg);color:var(--text2)">Agora não</button>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="modal-fim" onclick="fecharFim(event)">
+  <div class="modal-box" onclick="event.stopPropagation()" style="text-align:center">
+    <div style="width:56px;height:56px;margin:0 auto 12px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;font-size:30px;font-weight:800">✓</div>
+    <div class="modal-title" id="fim-title">Treino do dia concluído!</div>
+    <div class="modal-sub" id="fim-sub"></div>
+    <div id="fim-score" style="font-family:var(--font-display);font-size:26px;font-weight:800;margin:8px 0 2px"></div>
+    <div id="fim-score-l" style="font-size:12px;color:var(--text3);margin-bottom:18px"></div>
+    <div id="fim-acoes" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+</div>
+
 <div class="modal-overlay hidden" id="modal-meta" onclick="fecharModalMeta(event)">
   <div class="modal-box" onclick="event.stopPropagation()">
     <div class="modal-title">Meta Diária</div>
@@ -1887,6 +1908,12 @@ function mostrarAlertaConexao(on){
 let userCards={};
 let allQuestoes={},allFlashcards={};
 let quizQueue=[],quizIdx=0,quizArea='TODAS',quizSessao={c:0,t:0},quizAnswered=false,quizModoErro=false;
+// 'quiz' enquanto um resumo/flashcard está aberto como REFORÇO de uma questão errada,
+// para devolver o usuário à questão (e não ao carrossel de resumos/cards) ao concluir.
+let origemReforco=null;
+// Ids já re-expostos NESTA sessão de treino (reaprendizado dentro da sessão) —
+// garante que a questão errada volte só UMA vez, sem loop. Zera a cada nova sessão.
+let quizReexpostas=new Set();
 
 // S53 TEMPO POR QUESTÃO (bloco31) — a prova dá 3 min por questão (60Q em 3h).
 // Mede o ritmo real para o militar saber se cabe no orçamento de tempo da prova.
@@ -2317,6 +2344,45 @@ function montarTreinoDoDia(tam=TREINO_TAM){
   if(out.length<tam)add(selecionarAdaptativo(tam));       // completa se novo/fraco acabaram
   if(out.length<tam)add(shuffle(Object.values(allQuestoes)));
   return interleavePorTopico(out);
+}
+
+// ── Tela-intro: apresenta a sessão ANTES de cair na 1ª questão (o que é, quantas,
+// só questões, o que acontece ao errar e ao terminar). Uma vez, um toque para começar.
+let _introAcao=null;
+function abrirIntro(tipo){
+  const g=id=>document.getElementById(id);
+  let titulo,sub,itens,btn,acao;
+  if(tipo==='diagnostico'){
+    titulo='Simulado de Nivelamento';
+    sub='Vamos medir seu ponto de partida.';
+    itens=[['15 questões','pelas 5 áreas do edital'],
+           ['Só questões','sem resumo ou flashcard nesta etapa'],
+           ['Errou? Tudo bem','o reforço aparece na hora'],
+           ['No fim','seu perfil de domínio é montado e o app passa a adaptar seus estudos']];
+    btn='Começar o nivelamento'; acao=iniciarDiagnostico;
+  } else {
+    titulo='Treino do dia';
+    sub='Sua sessão de hoje, montada para você.';
+    itens=[['Até '+TREINO_TAM+' questões','revisão vencida + seus pontos fracos + cobertura do edital'],
+           ['Só questões','resumo e flashcard aparecem quando você erra'],
+           ['Errou?','o reforço vem na hora e a questão volta uma vez perto do fim'],
+           ['Ao terminar','seu dia fica registrado como concluído']];
+    btn='Começar o treino'; acao=irTreinoDoDia;
+  }
+  g('intro-title').textContent=titulo;
+  g('intro-sub').textContent=sub;
+  g('intro-body').innerHTML=itens.map(([t,d])=>`<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)"><span style="color:var(--red);font-weight:800;flex-shrink:0">›</span><span><b style="font-size:14px">${sanitize(t)}</b><br><span style="font-size:12.5px;color:var(--text2)">${sanitize(d)}</span></span></div>`).join('');
+  g('intro-start').textContent=btn;
+  _introAcao=acao;
+  g('modal-intro').classList.remove('hidden');
+}
+function fecharIntro(e){
+  if(e&&e.target!==e.currentTarget)return; // clique dentro do box não fecha
+  document.getElementById('modal-intro').classList.add('hidden');
+}
+function introComecar(){
+  document.getElementById('modal-intro').classList.add('hidden');
+  const a=_introAcao;_introAcao=null;if(typeof a==='function')a();
 }
 
 function irTreinoDoDia(){
@@ -2906,7 +2972,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.115';
+const APP_VERSAO='v1.116';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -2951,6 +3017,24 @@ function entradaHoje(){
   return e;
 }
 
+// ── Fechamento do dia: as TRÊS metas (questões, flashcards, resumos) batidas = uma
+// celebração única no dia. Base comportamental: efeito Zeigarnik (fechar loops alivia) +
+// gradiente de meta (fechar o ciclo motiva e vira hábito). Só dispara uma vez por dia.
+function diaCompleto(){
+  const today=diaLocal();
+  const meta=userStats.metaDiaria||10;
+  const hj=(userStats.history||[]).find(h=>h.date===today)||{};
+  const d=userStats.dose||{};
+  return (hj.n||0)>=meta && (hj.fc||0)>=(d.cards||DOSE_PADRAO.cards) && (hj.rs||0)>=(d.resumos||DOSE_PADRAO.resumos);
+}
+function checarDiaCompleto(){
+  if(!dataLoaded)return;
+  if(userStats.diaCelebrado===diaLocal())return;
+  if(!diaCompleto())return;
+  userStats.diaCelebrado=diaLocal();
+  saveProg();
+  showToast('🎉 Dia concluído! As três metas de hoje foram batidas — questões, flashcards e resumos.');
+}
 function registrarAtividade(acertou){
   const todayEntry=entradaHoje();
   todayEntry.n=(todayEntry.n||0)+1;
@@ -2958,14 +3042,18 @@ function registrarAtividade(acertou){
   else if(acertou===false)todayEntry.w=(todayEntry.w||0)+1;
   const el=document.getElementById('hdr-streak-n');
   if(el)el.textContent=(userStats.streak||0);
+  checarDiaCompleto();
 }
-function registrarAtividadeCard(){const e=entradaHoje();e.fc=(e.fc||0)+1;}
-function registrarAtividadeResumo(){const e=entradaHoje();e.rs=(e.rs||0)+1;}
+function registrarAtividadeCard(){const e=entradaHoje();e.fc=(e.fc||0)+1;checarDiaCompleto();}
+function registrarAtividadeResumo(){const e=entradaHoje();e.rs=(e.rs||0)+1;checarDiaCompleto();}
 
 // ═══════════════════════════════
 // NAV
 // ═══════════════════════════════
 function navTo(s){
+  // Qualquer navegação por MENU encerra o vínculo com a questão do reforço. O reforço e
+  // o retorno usam _ativarTelaLocal (não navTo), então este clear não os atrapalha.
+  origemReforco=null;
   document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   const sc=document.getElementById('screen-'+s);
@@ -2976,7 +3064,7 @@ function navTo(s){
   // Voltar ao painel encerra o ciclo de foco — senão a barra flutuante ficaria
   // pendurada para sempre, já que só `sairDoFoco()` a limparia.
   if(s==='inicio')focoAtivo=null;
-  if(s==='inicio'){renderDashboard();}
+  if(s==='inicio'){renderDashboard();atualizarCardTreino();}
   if(s==='quiz'){renderAreaList();}
   if(s==='cards'){renderCards();}
   if(s==='resumos'){renderResumos();updateBadges();}
@@ -3253,8 +3341,15 @@ function renderFilaFoco(){
       cta:'REVISAR',acao:'iniciarRevisaoDue()'});
   }
 
-  // (3) Caderno de erros — idem, é transversal.
-  const erros=Object.values(allQuestoes).filter(q=>userStats.seenIds?.includes(q.id+'_E')).length;
+  // (3) Caderno de erros — transversal. Só entram erros de DIAS ANTERIORES: o erro
+  // fresco (de hoje) não vira nudge de refazer imediato — ele volta espaçado pelo FSRS
+  // (linha "Revisar hoje", +1 dia). Refazer na hora não é revisão. Base: espaçamento.
+  const _t0Hoje=new Date();_t0Hoje.setHours(0,0,0,0);const t0Hoje=_t0Hoje.getTime();
+  const erros=Object.values(allQuestoes).filter(q=>{
+    if(!userStats.seenIds?.includes(q.id+'_E'))return false;
+    const h=userStats.erroHistorico&&userStats.erroHistorico[q.id];
+    return !h||!h.last||h.last<t0Hoje; // erro de hoje fica de fora até amadurecer
+  }).length;
   if(erros){
     notas.push({cor:'var(--red)',titulo:'Caderno de erros',
       sub:erros+(erros===1?' questão pendente':' questões pendentes')+' · prioriza as mais erradas',
@@ -3576,6 +3671,32 @@ function abrirPorCodigo(){
 function abrirResumoDoPainel(id){
   navTo('resumos');
   mostrarResumoDirecto(id);
+}
+
+// Troca de tela SEM passar por navTo — navTo limpa origemReforco (qualquer navegação por
+// menu encerra o vínculo com a questão), então o reforço e o retorno ativam a tela na mão.
+function _ativarTelaLocal(screenId){
+  document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  const sc=document.getElementById(screenId);if(sc)sc.classList.add('active');
+  window.scrollTo(0,0);
+}
+// Reforço a partir de uma questão errada: marca a ORIGEM para devolver à questão
+// (não ao carrossel) quando o usuário concluir a leitura/revisão.
+function reforcoAbrirResumo(id){origemReforco='quiz';_ativarTelaLocal('screen-resumos');mostrarResumoDirecto(id);}
+function reforcoAbrirCards(t){
+  const m=materialDoTopico(t);
+  if(!m.cards.length){showToast('Este tópico ainda não tem flashcards.');return;}
+  origemReforco='quiz';cardsFiltroTopico=t;_ativarTelaLocal('screen-cards');renderCards();
+}
+// Volta à questão de origem SEM re-renderizar o quiz (preserva o feedback e o botão
+// "Próxima →" que já estavam na tela). navTo('quiz') não serve: ele abre o MENU do quiz.
+function voltarAoQuizDoReforco(){
+  origemReforco=null;
+  _ativarTelaLocal('screen-quiz');
+  document.getElementById('quiz-home-view').classList.add('hidden');
+  document.getElementById('quiz-running-view').classList.remove('hidden');
+  atualizarBarraFoco();
 }
 
 function estudarFraco(){
@@ -3913,13 +4034,14 @@ function renderQuizQ(){
   if(quizIdx>=quizQueue.length){finishQuiz();return;}
   const q=quizQueue[quizIdx];
   quizAnswered=false;
+  if(quizIdx===0)quizReexpostas=new Set(); // início de sessão: zera as re-exposições
   const tot=quizQueue.length;
   document.getElementById('quiz-q-num').textContent=`Questão ${quizIdx+1} de ${tot}`;
   renderQuizBadge(q);  // S47: selo de status
   document.getElementById('quiz-q-text').textContent=q.e;
   document.getElementById('quiz-q-doc').textContent=q.doc||'';questaoAtualId=q.id;
   document.getElementById('quiz-prog-fill').style.width=(quizIdx/tot*100)+'%';
-  document.getElementById('quiz-score-v').textContent=quizSessao.c+'/'+quizSessao.t;
+  document.getElementById('quiz-score-v').textContent=quizSessao.t+'/'+quizQueue.length;
   quizQT0=Date.now(); // S53: começa a cronometrar esta questão
   const opts=document.getElementById('quiz-opts');
   const letras=['A','B','C','D','E'];
@@ -3989,6 +4111,9 @@ async function responderQuiz(idx){
     if(!userStats.erroHistorico)userStats.erroHistorico={};
     const h=userStats.erroHistorico[q.id]||{count:0,last:0};
     userStats.erroHistorico[q.id]={count:h.count+1,last:Date.now()};
+    // Reaprendizado NA sessão: no treino, a questão errada volta UMA vez perto do fim
+    // (re-exposição enquanto está fresca), antes de o FSRS espaçá-la para +1 dia.
+    if(quizArea==='TREINO'&&!quizReexpostas.has(q.id)){quizReexpostas.add(q.id);quizQueue.push(q);}
   } else {
     // Acertou: zerar histórico de erro dessa questão
     if(userStats.erroHistorico&&userStats.erroHistorico[q.id]){
@@ -4033,20 +4158,49 @@ async function responderQuiz(idx){
     const m=q.topico?materialDoTopico(q.topico):{resumos:[],cards:[]};
     if(!acertou&&(m.cards.length||m.resumos.length)){
       let h=`<div class="rf-txt">Reforço de ${sanitize(nomeTopico(q.topico))}</div>`;
-      if(m.cards.length)h+=`<button class="inc-btn praticar" onclick="revisarCardsDoTopico('${q.topico}')">Revisar ${m.cards.length} flashcard${m.cards.length!==1?'s':''}</button>`;
-      if(m.resumos.length)h+=`<button class="inc-btn revisar" onclick="abrirResumoDoPainel('${m.resumos[0].id}')">Ler o resumo</button>`;
+      if(m.cards.length)h+=`<button class="inc-btn praticar" onclick="reforcoAbrirCards('${q.topico}')">Revisar ${m.cards.length} flashcard${m.cards.length!==1?'s':''}</button>`;
+      if(m.resumos.length)h+=`<button class="inc-btn revisar" onclick="reforcoAbrirResumo('${m.resumos[0].id}')">Ler o resumo</button>`;
       rf.innerHTML=h;rf.classList.remove('hidden');
     } else {rf.innerHTML='';rf.classList.add('hidden');}
   }
 
   document.getElementById('quiz-next-btn').classList.add('show');
-  document.getElementById('quiz-score-v').textContent=quizSessao.c+'/'+quizSessao.t;
+  document.getElementById('quiz-score-v').textContent=quizSessao.t+'/'+quizQueue.length;
 }
 
 function nextQuiz(){
   quizIdx++;
   if(quizIdx>=quizQueue.length)finishQuiz();
   else renderQuizQ();
+}
+
+// Chave de dia em horário LOCAL (não UTC) — evita "virar o dia" à meia-noite errada.
+function diaKeyHoje(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function treinoFeitoHoje(){return userStats.treinoDia===diaKeyHoje();}
+// Reflete no card da home se o treino do dia já foi concluído (fechamento do objetivo).
+function atualizarCardTreino(){
+  const tb=document.getElementById('treino-badge'),tsub=document.getElementById('treino-sub');
+  if(!tb||!tsub)return;
+  if(treinoFeitoHoje()){tb.textContent='✓ Concluído hoje';tb.style.color='var(--green)';tsub.textContent='Objetivo do dia cumprido — refaça se quiser';}
+  else{tb.textContent='Recomendado agora';tb.style.color='var(--blue)';tsub.textContent='Revisão vencida + ponto fraco + assunto novo';}
+}
+function fecharFim(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('modal-fim').classList.add('hidden');}
+function fimIr(fn){document.getElementById('modal-fim').classList.add('hidden');if(typeof fn==='function')fn();}
+// Tela de conclusão do treino: fecha o objetivo do dia, revela o aproveitamento (só aqui,
+// não durante) e conduz ao próximo passo em vez de largar o usuário num menu.
+function mostrarFimTreino(){
+  const c=quizSessao.c,t=quizSessao.t,pct=t?Math.round(c/t*100):0;
+  const g=id=>document.getElementById(id);
+  g('fim-title').textContent='Treino do dia concluído!';
+  g('fim-sub').textContent=pct>=70?'Mandou bem. Objetivo do dia cumprido.':pct>=50?'Bom trabalho — o reforço fixa o resto.':'O que vale é a constância; o que você errou volta espaçado.';
+  g('fim-score').textContent=c+' de '+t;
+  g('fim-score-l').textContent='aproveitamento '+pct+'%';
+  g('fim-acoes').innerHTML=`
+    <button class="btn-primary" onclick="fimIr(iniciarEstudoRapido)">Continuar com Estudo rápido</button>
+    <button class="btn-weak" onclick="fimIr(estudarFraco)">Treino focado no ponto fraco</button>
+    <button class="btn-weak" onclick="fimIr(irTreinoDoDia)">Refazer o treino</button>
+    <button class="btn-weak" onclick="fecharFim()" style="background:var(--bg);color:var(--text2)">Voltar ao início</button>`;
+  g('modal-fim').classList.remove('hidden');
 }
 
 function finishQuiz(){
@@ -4061,6 +4215,14 @@ function finishQuiz(){
     renderDashboard();        // reflete o domínio recém-gerado
     navTo('inicio');
     showToast(`✅ Nivelamento concluído: ${quizSessao.c}/${quizSessao.t}. Seu perfil de domínio está pronto!`);
+    return;
+  }
+  if(quizArea==='TREINO'){
+    userStats.treinoDia=diaKeyHoje();   // marca o objetivo do dia como cumprido
+    saveProg();
+    renderDashboard();
+    atualizarCardTreino();
+    mostrarFimTreino();                 // tela de conclusão + próximos passos
     return;
   }
   renderDashboard();
@@ -4101,10 +4263,12 @@ function renderCards(){
     const filtro=cardsFiltroTopico;
     body.innerHTML=`<div class="cards-done">
       <div class="cards-done-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.5 13l1.5 8-5-3-5 3 1.5-8"/></svg></div>
-      <div class="cards-done-title">${restam>0?'Dose do dia concluída!':'Revisão concluída!'}</div>
-      <div class="cards-done-sub">${restam>0?`Ainda restam ${restam} card${restam!==1?'s':''} no acervo. Você já fez o que o dia pedia.`:(filtro?'Todos os cards deste tópico foram revisados.':'Todos os cards revisados. Continue praticando no Quiz.')}</div>
-      ${restam>0?`<button class="btn-weak" style="margin-top:12px" onclick="maisCards()">Fazer mais ${Math.min(dose('cards'),restam)}</button>`:''}
-      ${filtro?`<button class="btn-weak" style="margin-top:8px;background:var(--paper-2);color:var(--text2)" onclick="limparFiltroCards()">Ver todos os tópicos</button>`:''}
+      <div class="cards-done-title">${restam>0?'✓ Meta de flashcards concluída':'Revisão concluída!'}</div>
+      <div class="cards-done-sub">${restam>0?`Memória ativada. Agora fixe respondendo — recuperar em prova consolida ainda mais.`:(filtro?'Todos os cards deste tópico foram revisados.':'Todos os cards revisados. Fixe com questões no Treino.')}</div>
+      ${origemReforco==='quiz'?`<button class="btn-weak" style="margin-top:12px" onclick="voltarAoQuizDoReforco()">← Voltar à questão</button>`:''}
+      ${origemReforco!=='quiz'?`<button class="btn-primary" style="margin-top:12px;width:100%" onclick="abrirIntro('treino')">Fixar no Treino do dia →</button>`:''}
+      ${restam>0&&origemReforco!=='quiz'?`<button class="btn-weak" style="margin-top:8px" onclick="maisCards()">Fazer mais ${Math.min(dose('cards'),restam)}</button>`:''}
+      ${filtro&&origemReforco!=='quiz'?`<button class="btn-weak" style="margin-top:8px;background:var(--paper-2);color:var(--text2)" onclick="limparFiltroCards()">Ver todos os tópicos</button>`:''}
     </div>`;
     return;
   }
@@ -4128,6 +4292,7 @@ function renderCard(){
   const acervo=cardsPendentes().todos.length;
   const tFc=topicoDe(fc);
   body.innerHTML=`
+    ${origemReforco==='quiz'?`<button onclick="voltarAoQuizDoReforco()" style="width:100%;margin-bottom:10px;padding:9px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:700;color:var(--text2)">← Voltar à questão</button>`:''}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <span style="font-size:13px;color:var(--text2)">${remaining} card${remaining!==1?'s':''} restante${remaining!==1?'s':''} <span class="q-badge ${ehNovo?'badge-nova':'badge-rev'}">${ehNovo?'NOVO':'REVISÃO'}</span></span>
       <span style="font-size:11px;font-weight:700;color:var(--text3)">Toque para virar</span>
@@ -4209,9 +4374,17 @@ function renderResumos(){
   const content=document.getElementById('resumos-content');
   if(!fila.length){
     content.innerHTML=(acervo>0
-      ? `<div style="text-align:center;padding:24px;color:var(--text2);font-size:14px;margin-bottom:8px;">Dose do dia concluída.<br><span style="font-size:12.5px;color:var(--text3)">Ainda restam ${acervo} resumo${acervo!==1?'s':''} no acervo — mas você já fez o que o dia pedia.</span></div>
-         <div style="text-align:center;margin-bottom:16px"><button class="btn-weak" onclick="maisResumos()">Ler mais ${Math.min(dose('resumos'),acervo)}</button></div>`
-      : `<div style="text-align:center;padding:24px;color:var(--text2);font-size:14px;margin-bottom:16px;">Todos em dia! Próximas revisões agendadas.</div>`)
+      ? `<div style="text-align:center;padding:22px 12px 8px;">
+           <div style="font-size:15px;font-weight:800;color:var(--green);margin-bottom:4px">✓ Meta de resumos concluída</div>
+           <div style="font-size:12.5px;color:var(--text2)">Terreno preparado. Agora <b>teste o que leu</b> — recuperar fixa muito mais que reler.</div>
+         </div>
+         <div style="text-align:center;margin-bottom:10px"><button class="btn-primary" style="width:100%" onclick="abrirIntro('treino')">Testar no Treino do dia →</button></div>
+         <div style="text-align:center;margin-bottom:16px"><button class="btn-weak" onclick="maisResumos()">Ler mais ${Math.min(dose('resumos'),acervo)} resumo${Math.min(dose('resumos'),acervo)!==1?'s':''}</button></div>`
+      : `<div style="text-align:center;padding:22px 12px 8px;">
+           <div style="font-size:15px;font-weight:800;color:var(--green);margin-bottom:4px">✓ Resumos em dia</div>
+           <div style="font-size:12.5px;color:var(--text2)">Próximas revisões já agendadas. Que tal fixar com questões?</div>
+         </div>
+         <div style="text-align:center;margin-bottom:16px"><button class="btn-primary" style="width:100%" onclick="abrirIntro('treino')">Ir para o Treino do dia →</button></div>`)
     +renderResumoLista();
     return;
   }
@@ -4317,7 +4490,7 @@ function mostrarResumoDirecto(id){
         </div>
       </div>
       <button class="rep-link" onclick="abrirReporte('resumo','${r.id}')">⚐ Reportar erro neste resumo</button>
-      <button onclick="renderResumos()" style="width:100%;margin-top:12px;padding:10px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:600;color:var(--text2);">← Voltar à fila</button>
+      <button onclick="${origemReforco==='quiz'?'voltarAoQuizDoReforco()':'renderResumos()'}" style="width:100%;margin-top:12px;padding:10px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:600;color:var(--text2);">${origemReforco==='quiz'?'← Voltar à questão':'← Voltar à fila'}</button>
     </div>
     ${blocoPraticarTopico(topicoDe(r))}`;
 }
@@ -4332,9 +4505,10 @@ async function avaliarResumo(dif){
   userStats[key]=updated;
   registrarAtividadeResumo(); // S62: alimenta o anel de meta de resumos
   saveProg();
-  renderResumos();
   updateBadges();
   showToast('Revisão em '+updated.interval+(updated.interval===1?' dia':' dias'));
+  if(origemReforco==='quiz'){voltarAoQuizDoReforco();return;} // reforço de erro: volta à questão, não ao carrossel
+  renderResumos();
 }
 
 function ouvirResumo(id){
@@ -4569,7 +4743,7 @@ function gerarDiagnostico(pct,byArea){
     : `Sem área com perda relevante hoje. Seu Treino do dia mantém a revisão espaçada em dia.`;
   html+=`<div style="margin-top:12px;padding:11px 13px;background:var(--blue-light);border-radius:10px;font-size:13px;color:var(--text);line-height:1.5">${sanitize(plano)}</div>`;
   html+=`<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
-    <button class="btn-weak" onclick="irTreinoDoDia()">Ver meu Treino do dia →</button>`;
+    <button class="btn-weak" onclick="abrirIntro('treino')">Ver meu Treino do dia →</button>`;
   const nErr=Object.values(allQuestoes).filter(q=>userStats.seenIds?.includes(q.id+'_E')).length;
   if(nErr)html+=`<button class="btn-weak" style="background:var(--paper-2);color:var(--text2)" onclick="iniciarModoErro()">Refazer os ${nErr} erro${nErr!==1?'s':''} agora · opcional</button>`;
   html+=`</div>`;
