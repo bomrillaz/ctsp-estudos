@@ -995,6 +995,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
     <div class="header-right">
       <div class="streak-badge" id="hdr-streak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1.5 3.5 5 5.2 5 9a5 5 0 0 1-10 0c0-2 .9-3.4 1.8-4.7.4 1.2 1.2 2 2.2 2.5C10.6 6.7 11 4.4 12 2z"/></svg><span id="hdr-streak-n">0</span></div>
+      <button class="btn-logout" onclick="abrirBuscaGlobal()" title="Buscar" aria-label="Buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></button>
       <div class="header-menu-wrap" id="header-menu-wrap">
         <button class="btn-logout" onclick="abrirModalConfig()" title="Configurações" aria-label="Configurações"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h.01a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg></button>
         <button class="btn-header-menu" onclick="toggleHeaderMenu()" title="Menu" aria-label="Menu">
@@ -1408,11 +1409,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <div class="resumos-queue"><span style="font-size:12px;opacity:.75;">Para revisão:</span><span class="resumo-queue-n" id="resumos-fila">0</span></div>
           </div>
         </div>
-        <div style="margin-bottom:14px">
-          <input type="search" id="busca-conteudo" placeholder="🔎 Buscar em resumos e flashcards…" autocomplete="off" oninput="onBuscaConteudo(this.value)"
-            style="width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--line-soft);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;box-sizing:border-box">
-        </div>
-        <div id="busca-resultados" class="hidden"></div>
         <div id="resumos-content"></div>
       </div>
     </div>
@@ -1515,6 +1511,17 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 </div>
 
 <!-- Modal Meta Diária -->
+<div class="modal-overlay hidden" id="modal-busca" onclick="fecharBuscaGlobal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:540px;width:94%;max-height:82vh;display:flex;flex-direction:column">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+      <input type="search" id="busca-global-input" placeholder="🔎 Buscar em resumos e flashcards…" autocomplete="off" oninput="onBuscaGlobal(this.value)"
+        style="flex:1;padding:11px 14px;border-radius:12px;border:1px solid var(--line-soft);background:var(--surface);color:var(--text);font-size:15px;font-family:inherit;box-sizing:border-box">
+      <button class="btn-weak" onclick="fecharBuscaGlobal()" style="background:var(--bg);color:var(--text2);padding:10px 12px;border-radius:10px;font-weight:700">Fechar</button>
+    </div>
+    <div id="busca-global-resultados" style="overflow-y:auto;flex:1;min-height:0"></div>
+  </div>
+</div>
+
 <div class="modal-overlay hidden" id="modal-intro" onclick="fecharIntro(event)">
   <div class="modal-box" onclick="event.stopPropagation()">
     <div class="modal-title" id="intro-title">Treino do dia</div>
@@ -2979,7 +2986,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.117';
+const APP_VERSAO='v1.118';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4432,28 +4439,44 @@ function renderBuscaResultados(q,resumos,cards){
   }
   if(cards.length){
     h+=`<div class="busca-grupo" style="margin-top:14px">Flashcards · ${cards.length}</div>`;
-    h+=cards.map(fc=>item(destacarBusca(fc.f,q),destacarBusca(fc.v,q),topicoDe(fc),null)).join('');
+    h+=cards.map(fc=>item(destacarBusca(fc.f,q),destacarBusca(fc.v,q),topicoDe(fc),`abrirFlashcardBusca('${fc.id}')`)).join('');
   }
   return h;
 }
-function onBuscaConteudo(q){
-  const cont=document.getElementById('resumos-content'),res=document.getElementById('busca-resultados');
-  if(!cont||!res)return;
+// Busca global (lupa no cabeçalho, overlay #modal-busca) — reaproveita buscarConteudo/renderBuscaResultados.
+const _BUSCA_HINT=`<div style="text-align:center;padding:26px 16px;color:var(--text3);font-size:12.5px;line-height:1.6">Digite um assunto — <b>o tema, não a pergunta inteira</b>.<br>Ex.: torniquete · regra dos 9 · vencimentos · comandante geral</div>`;
+function abrirBuscaGlobal(){
+  const m=document.getElementById('modal-busca');if(!m)return;
+  const i=document.getElementById('busca-global-input');if(i)i.value='';
+  const r=document.getElementById('busca-global-resultados');if(r)r.innerHTML=_BUSCA_HINT;
+  m.classList.remove('hidden');
+  setTimeout(()=>{if(i)i.focus();},60);
+}
+function fecharBuscaGlobal(e){
+  if(e&&e.target!==e.currentTarget)return; // clique dentro do box não fecha
+  const m=document.getElementById('modal-busca');if(m)m.classList.add('hidden');
+}
+function onBuscaGlobal(q){
+  const r=document.getElementById('busca-global-resultados');if(!r)return;
   const query=(q||'').trim();
-  if(query.length<2){res.classList.add('hidden');res.innerHTML='';cont.classList.remove('hidden');return;}
-  cont.classList.add('hidden');res.classList.remove('hidden');
+  if(query.length<2){r.innerHTML=_BUSCA_HINT;return;}
   const {resumos,cards}=buscarConteudo(query);
-  res.innerHTML=renderBuscaResultados(query,resumos,cards);
+  r.innerHTML=renderBuscaResultados(query,resumos,cards);
 }
 function abrirResumoBusca(id){
-  const bi=document.getElementById('busca-conteudo');if(bi)bi.value='';
-  const res=document.getElementById('busca-resultados');if(res){res.classList.add('hidden');res.innerHTML='';}
-  document.getElementById('resumos-content').classList.remove('hidden');
+  fecharBuscaGlobal();
+  navTo('resumos');
   mostrarResumoDirecto(id);
 }
+function abrirFlashcardBusca(id){
+  const fc=allFlashcards[id]||Object.values(allFlashcards).find(x=>x.id===id);
+  if(!fc)return;
+  fecharBuscaGlobal();
+  navTo('cards');            // ativa a tela; renderCards monta a fila da dose
+  cardQueue=[fc];cardIdx=0;renderCard(); // sobrescreve com só o card buscado
+}
+// Compat: navTo('resumos') ainda chama resetBusca (agora a busca é global; nada a limpar na aba).
 function resetBusca(){
-  const bi=document.getElementById('busca-conteudo');if(bi)bi.value='';
-  const res=document.getElementById('busca-resultados');if(res){res.classList.add('hidden');res.innerHTML='';}
   const cont=document.getElementById('resumos-content');if(cont)cont.classList.remove('hidden');
 }
 
