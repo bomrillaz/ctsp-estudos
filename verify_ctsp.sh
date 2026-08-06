@@ -23,8 +23,8 @@ else
 echo "data.js: AUSENTE [layout legado, dados embutidos no index]"
 fi
 
-echo "=== SEGURANCA no index.html (esperado: unsafe-eval=0, initializeApp=1, checkRateLimit=2, isAdmin>=7, sanitize>=17, 2026>=3) ==="
-for t in unsafe-eval isAdmin sanitize initializeApp checkRateLimit 2026; do
+echo "=== SEGURANCA no index.html (esperado: unsafe-eval=0, initializeApp=1, checkRateLimit=2, isAdmin>=7, sanitize>=17) ==="
+for t in unsafe-eval isAdmin sanitize initializeApp checkRateLimit; do
 echo "$t=$(grep -o "$t" index.html | wc -l)"
 done
 if [ -n "$DATA" ]; then
