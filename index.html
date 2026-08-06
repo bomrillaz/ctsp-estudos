@@ -292,6 +292,23 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .dash-statline-light .dash-stat-v{color:var(--text);}
 .dash-statline-light .dash-stat-l{color:var(--text2);}
 .dash-statline-light .dash-stat-div{background:var(--line-soft);}
+/* Meta do dia — faixa compacta (substituiu os 3 anéis grandes) */
+.metas-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:11px;position:relative;z-index:1;}
+.metas-row{display:flex;align-items:center;gap:11px;}
+.metas-ic{width:24px;flex-shrink:0;color:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;}
+.metas-ic svg{width:18px;height:18px;}
+.metas-mid{flex:1;min-width:0;}
+.metas-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
+.metas-nome{font-size:12.5px;font-weight:700;color:#fff;}
+.metas-num{font-size:11px;font-weight:700;color:rgba(255,255,255,.6);font-variant-numeric:tabular-nums;}
+.metas-track{height:7px;background:rgba(255,255,255,.14);border-radius:5px;overflow:hidden;}
+.metas-fill{height:100%;width:0;border-radius:5px;transition:width .7s var(--ease-out);}
+.metas-fill.mq{background:linear-gradient(90deg,var(--red),var(--ember));}
+.metas-fill.mc{background:#5EA5DA;}
+.metas-fill.mr{background:#46C07A;}
+.metas-fill.done{background:#46C07A;}
+.metas-pct{font-size:12.5px;font-weight:800;color:#fff;min-width:30px;text-align:right;font-variant-numeric:tabular-nums;}
+.metas-row.batido .metas-pct{color:#46C07A;}
 /* S30: seletor de tema */
 .theme-seg{display:flex;background:var(--paper-2);border:1px solid var(--border);border-radius:11px;padding:3px;gap:2px;}
 .theme-seg button{font-size:11px;font-weight:700;padding:7px 11px;border-radius:8px;background:transparent;color:var(--text2);transition:all .15s;}
@@ -1073,30 +1090,31 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <!-- S62: as três metas do dia lado a lado. Antes só existia o anel de questões,
              encostado na saudação; três anéis ali espremeriam o nome no celular, então
              ganharam uma linha própria, que também deixa as três metas com o mesmo peso. -->
-        <div class="dash-metas">
-          <div class="dash-ring-wrap" id="meta-q">
-            <div class="ring-box">
-              <svg class="ring-svg" viewBox="0 0 60 60"><circle class="ring-bg" cx="30" cy="30" r="27"/><circle class="ring-fg" id="dash-ring" cx="30" cy="30" r="27" stroke-dasharray="169.6" stroke-dashoffset="169.6"/></svg>
-              <div class="ring-center"><div class="ring-pct" id="dash-ring-pct">0%</div></div>
+        <!-- Meta do dia: faixa compacta com 3 mini-progressos (substituiu os 3 anéis grandes) -->
+        <div class="metas-card">
+          <div class="metas-row" id="meta-q">
+            <span class="metas-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+            <div class="metas-mid">
+              <div class="metas-top"><span class="metas-nome">Questões</span><span class="metas-num" id="dash-ring-label">0/10</span></div>
+              <div class="metas-track"><div class="metas-fill mq" id="dash-ring"></div></div>
             </div>
-            <div class="dash-ring-nome">Questões</div>
-            <div class="dash-ring-label" id="dash-ring-label">0/10</div>
+            <span class="metas-pct" id="dash-ring-pct">0%</span>
           </div>
-          <div class="dash-ring-wrap" id="meta-fc">
-            <div class="ring-box">
-              <svg class="ring-svg" viewBox="0 0 60 60"><circle class="ring-bg" cx="30" cy="30" r="27"/><circle class="ring-fg ring-fc" id="ring-fc" cx="30" cy="30" r="27" stroke-dasharray="169.6" stroke-dashoffset="169.6"/></svg>
-              <div class="ring-center"><div class="ring-pct" id="ring-fc-pct">0%</div></div>
+          <div class="metas-row" id="meta-fc">
+            <span class="metas-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>
+            <div class="metas-mid">
+              <div class="metas-top"><span class="metas-nome">Cards</span><span class="metas-num" id="ring-fc-lbl">0/15</span></div>
+              <div class="metas-track"><div class="metas-fill mc" id="ring-fc"></div></div>
             </div>
-            <div class="dash-ring-nome">Cards</div>
-            <div class="dash-ring-label" id="ring-fc-lbl">0/15</div>
+            <span class="metas-pct" id="ring-fc-pct">0%</span>
           </div>
-          <div class="dash-ring-wrap" id="meta-rs">
-            <div class="ring-box">
-              <svg class="ring-svg" viewBox="0 0 60 60"><circle class="ring-bg" cx="30" cy="30" r="27"/><circle class="ring-fg ring-rs" id="ring-rs" cx="30" cy="30" r="27" stroke-dasharray="169.6" stroke-dashoffset="169.6"/></svg>
-              <div class="ring-center"><div class="ring-pct" id="ring-rs-pct">0%</div></div>
+          <div class="metas-row" id="meta-rs">
+            <span class="metas-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+            <div class="metas-mid">
+              <div class="metas-top"><span class="metas-nome">Resumos</span><span class="metas-num" id="ring-rs-lbl">0/3</span></div>
+              <div class="metas-track"><div class="metas-fill mr" id="ring-rs"></div></div>
             </div>
-            <div class="dash-ring-nome">Resumos</div>
-            <div class="dash-ring-label" id="ring-rs-lbl">0/3</div>
+            <span class="metas-pct" id="ring-rs-pct">0%</span>
           </div>
         </div>
         <!-- números acumulados movidos para "Meu progresso → Números gerais" (menos redundância no topo) -->
@@ -1125,7 +1143,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
              Fila vazia = o bloco inteiro some (não deixa moldura órfã no painel). -->
         <div id="foco-bloco" class="foco-bloco hidden">
           <div class="foco-bloco-head">
-            <span class="sec-title" style="margin:0">Seu foco agora</span>
+            <span class="sec-title" style="margin:0">Seu foco</span>
             <span class="foco-bloco-n" id="foco-bloco-n"></span>
           </div>
           <div id="foco-fila"></div>
@@ -2347,7 +2365,9 @@ function revisarCardsDoTopico(t){
   if(!m.cards.length){showToast('Este tópico ainda não tem flashcards.');return;}
   cardsFiltroTopico=t;
   navTo('cards');
-  renderCards();
+  // Entra direto no modo estudo com o filtro do tópico (o hub ignoraria o filtro).
+  cardsModo='estudo';cardsUnico=false;
+  _estudoCards();
 }
 
 // ── S34 INTERLEAVE: alternância deliberada de tópicos (prática intercalada) ──
@@ -3093,7 +3113,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.126';
+const APP_VERSAO='v1.128';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -3172,14 +3192,12 @@ function registrarAtividadeResumo(){const e=entradaHoje();e.rs=(e.rs||0)+1;checa
 // NAV
 // ═══════════════════════════════
 function navTo(s){
-  // Transição moderna entre telas (View Transitions API) onde suportado; senão, troca direta.
-  // prefers-reduced-motion desliga o efeito — o corpo (_navToInner) roda igual nos dois casos.
-  const rm=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(document.startViewTransition&&!rm){
-    document.startViewTransition(()=>_navToInner(s,true)); // VT já anima a tela → pula o stagger dos filhos
-  }else{
-    _navToInner(s,false);
-  }
+  // Navegação SÍNCRONA por design. Várias telas fazem `navTo('x'); <ação>` (busca abre um
+  // item, início de quiz renderiza a 1ª questão, deep-link de tópico etc.), e a <ação> tem de
+  // rodar DEPOIS da troca de tela. O View Transitions executava o corpo de forma assíncrona,
+  // então a ação corria antes e era sobrescrita — era o motivo de a busca não abrir o resumo.
+  // A entrada escalonada (animateScreenEntrance) mantém a transição moderna, e de forma síncrona.
+  _navToInner(s,false);
 }
 function _navToInner(s,skipStagger){
   // Qualquer navegação por MENU encerra o vínculo com a questão do reforço. O reforço e
@@ -3315,18 +3333,17 @@ function renderDashboard(){
   // ponto — o esforço extra sumia. Ao superar a meta o anel fica cheio e o número dá
   // lugar a um "✓", com o quanto passou logo abaixo.
   const hj=(userStats.history||[]).find(h=>h.date===today)||{};
-  const desenharMeta=(idAnel,idPct,idLbl,feito,alvo,nome)=>{
-    const circ=169.6;
+  const desenharMeta=(idFill,idPct,idLbl,feito,alvo,nome)=>{
     const p=alvo>0?Math.min(100,Math.round(feito/alvo*100)):0;
-    const anel=document.getElementById(idAnel);
-    if(anel)anel.style.strokeDashoffset=circ-(circ*p/100);
+    const bateu=alvo>0&&feito>=alvo;
+    const fill=document.getElementById(idFill);
+    if(fill){fill.style.width=p+'%';fill.classList.toggle('done',bateu);}
     const el=document.getElementById(idPct);
     if(el){
-      const bateu=alvo>0&&feito>=alvo;
       el.textContent=bateu?'✓':p+'%';
-      el.style.fontSize=bateu?'17px':'';
       el.setAttribute('aria-label',bateu?`Meta de ${nome} batida: ${feito} de ${alvo} hoje`
                                         :`${p}% da meta de ${nome} de hoje`);
+      const row=el.closest('.metas-row');if(row)row.classList.toggle('batido',bateu);
     }
     const lbl=document.getElementById(idLbl);
     if(lbl)lbl.textContent=feito+'/'+alvo;
@@ -4687,8 +4704,8 @@ function abrirFlashcardBusca(id){
   const fc=allFlashcards[id]||Object.values(allFlashcards).find(x=>x.id===id);
   if(!fc)return;
   fecharBuscaGlobal();
-  navTo('cards');            // ativa a tela; renderCards monta a fila da dose
-  cardQueue=[fc];cardIdx=0;renderCard(); // sobrescreve com só o card buscado
+  navTo('cards');            // troca de tela (síncrona) para o hub de cards
+  estudarCardUnico(id);      // abre só o card buscado, em modo estudo, com "← Flashcards"
 }
 // ── Sub-abas da tela Consulta: Glossário | Normas ──
 let _consultaSub='glossario';
