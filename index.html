@@ -367,6 +367,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .mp-item.open .mp-chev{transform:rotate(180deg);}
 .mp-body{display:none;padding:0 14px 14px;}
 .mp-item.open .mp-body{display:block;}
+.mp-sublabel{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin:2px 0 8px;}
+/* Atalho da home para a aba "Meu progresso" */
+.ver-progresso{width:100%;display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 14px;cursor:pointer;text-align:left;margin-top:4px;}
+.ver-progresso:focus-visible{outline:3px solid var(--ember);outline-offset:-3px;}
+.ver-progresso-ic{width:34px;height:34px;border-radius:9px;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ver-progresso-ic svg{width:18px;height:18px;}
+.ver-progresso-txt{flex:1;min-width:0;display:flex;flex-direction:column;}
+.ver-progresso-t{font-size:14px;font-weight:700;color:var(--text);}
+.ver-progresso-s{font-size:11.5px;color:var(--text3);}
+.ver-progresso-arw{color:var(--text3);font-size:18px;flex-shrink:0;}
 
 /* Ring SVG */
 .ring-svg{transform:rotate(-90deg);}
@@ -1225,145 +1235,12 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <div class="quick-btn-sub">15 questões · pontos fracos</div>
           </div>
         </div>
-        <!-- PAINEL DO DIA — desceu para baixo do Treino: é feedback do dia, não a 1ª ação -->
-        <div class="hoje-card" id="hoje-card">
-          <div class="hoje-head"><span class="hoje-titulo">Hoje</span><span class="hoje-data" id="hoje-data"></span></div>
-          <div class="hoje-stats">
-            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-q">0</div><div class="hoje-stat-l">Questões</div></div>
-            <div class="hoje-sep"></div>
-            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-acertos" style="color:var(--green)">0</div><div class="hoje-stat-l">Acertos</div></div>
-            <div class="hoje-sep"></div>
-            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-erros" style="color:var(--red)">0</div><div class="hoje-stat-l">Erros</div></div>
-            <div class="hoje-sep"></div>
-            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-pct">—</div><div class="hoje-stat-l">Aproveit.</div></div>
-          </div>
-        </div>
-        <!-- ═══ MEU PROGRESSO — acordeão dos painéis de análise ═══ -->
-        <div class="sec-title" style="margin-top:6px">Meu progresso</div>
-        <!-- Números gerais (acumulado) — veio do topo do painel para reduzir a redundância -->
-        <div class="mp-item">
-          <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
-            <span class="mp-title">Números gerais</span>
-            <span class="mp-right"><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
-          </div>
-          <div class="mp-body">
-            <div class="dash-statline dash-statline-light">
-              <div class="dash-stat"><div class="dash-stat-v" id="dash-total">0</div><div class="dash-stat-l">Questões</div></div>
-              <div class="dash-stat-div"></div>
-              <div class="dash-stat"><div class="dash-stat-v" id="dash-pct">0%</div><div class="dash-stat-l">Acertos</div></div>
-              <div class="dash-stat-div"></div>
-              <div class="dash-stat"><div class="dash-stat-v" id="dash-cards">0</div><div class="dash-stat-l">Revisados</div></div>
-              <div class="dash-stat-div"></div>
-              <div class="dash-stat"><div class="dash-stat-v" style="display:flex;align-items:center;justify-content:center;gap:3px"><span id="dash-streak">0</span><svg style="width:13px;height:13px;color:var(--ember)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1.5 3.5 5 5.2 5 9a5 5 0 0 1-10 0c0-2 .9-3.4 1.8-4.7.4 1.2 1.2 2 2.2 2.5C10.6 6.7 11 4.4 12 2z"/></svg></div><div class="dash-stat-l">Dias</div></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Painel 0 (bloco 34): projeção para a prova.
-             Estava solta no corpo do painel, disputando atenção com o que é ACIONÁVEL.
-             Projeção é análise, não tarefa — desceu para o acordeão, fechada por padrão. -->
-        <div class="mp-item" id="mp-pront">
-          <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
-            <span class="mp-title">Projeção para a prova <span class="info-btn" onclick="event.stopPropagation();showInfo('prontidao')" aria-label="Mais informações">?</span></span>
-            <span class="mp-right"><span class="mp-glance" id="glance-pront">—</span><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
-          </div>
-          <div class="mp-body">
-            <div id="dash-pront" class="chart-wrap hidden">
-              <div style="display:flex;align-items:center;justify-content:flex-end;">
-                <span style="font-size:12px;font-weight:700;color:var(--ember);" id="pront-dias"></span>
-              </div>
-              <div style="display:flex;align-items:baseline;gap:6px;margin-top:6px;">
-                <span style="font-size:30px;font-weight:800;color:var(--ember);" id="pront-num">—</span>
-                <span style="font-size:13px;color:var(--text2);">de 60 questões (estimativa)</span>
-              </div>
-              <div style="height:8px;background:var(--paper-2);border-radius:6px;overflow:hidden;margin-top:8px;"><div id="pront-bar" style="height:100%;width:0%;background:var(--fire-line);border-radius:6px;transition:width .5s;"></div></div>
-              <div style="font-size:11px;color:var(--text3);margin-top:6px;" id="pront-detalhe"></div>
-              <div id="pront-aviso" style="display:none;font-size:11px;color:var(--ember-deep);background:var(--amber-light);border-radius:8px;padding:7px 9px;margin-top:8px;line-height:1.4;"><svg style="width:13px;height:13px;vertical-align:-1px;margin-right:3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Estimativa preliminar — baseada em poucas respostas. Vai ficar mais precisa conforme você estuda.</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Painel 1: Índice de Domínio Real (aberto por padrão) -->
-        <div class="mp-item open">
-          <div class="mp-head" role="button" tabindex="0" aria-expanded="true" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
-            <span class="mp-title">Índice de domínio real <span class="info-btn" onclick="event.stopPropagation();showInfo('dominio')" aria-label="Mais informações">?</span></span>
-            <span class="mp-right"><span class="mp-glance" id="glance-dominio">—</span><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
-          </div>
-          <div class="mp-body">
-            <div class="dominio-card" id="dominio-card">
-              <div class="dominio-geral-wrap">
-                <div class="dominio-geral-info">
-                  <div class="dominio-geral-pct" id="dominio-geral-num">0%</div>
-                  <div class="dominio-geral-label">de domínio geral</div>
-                  <div style="display:flex;gap:12px;margin-top:6px;">
-                    <span class="dominio-badge" style="background:var(--blue-light);color:var(--blue)">Quiz 50%</span>
-                    <span class="dominio-badge" style="background:var(--green-light);color:var(--green)">Cards 30%</span>
-                    <span class="dominio-badge" style="background:var(--amber-light);color:var(--amber)">Resumos 20%</span>
-                  </div>
-                </div>
-              </div>
-              <div id="dominio-areas"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Painel 2: Cobertura do Edital -->
-        <div class="mp-item">
-          <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
-            <span class="mp-title">Cobertura do edital <span class="info-btn" onclick="event.stopPropagation();showInfo('cobertura')" aria-label="Mais informações">?</span></span>
-            <span class="mp-right"><span class="mp-glance" id="glance-cobertura">—</span><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
-          </div>
-          <div class="mp-body">
-            <div class="dominio-card">
-              <div style="font-size:11px;color:var(--text2);margin-bottom:12px;">Quanto do conteúdo de cada área você já percorreu (questões + cards + resumos).</div>
-              <div id="cobertura-areas"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Painel 3: Histórico de acertos por área -->
-        <div class="mp-item">
-          <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
-            <span class="mp-title">Histórico de acertos por área <span class="info-btn" onclick="event.stopPropagation();showInfo('desempenho')" aria-label="Mais informações">?</span></span>
-            <span class="mp-right"><span class="mp-glance" id="glance-acertos">—</span><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
-          </div>
-          <div class="mp-body">
-            <div class="area-grid" id="dash-areas"></div>
-          </div>
-        </div>
-
-        <!-- Painel 4: Evolução por área -->
-        <div class="mp-item">
-          <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
-            <span class="mp-title">Evolução por área <span class="info-btn" onclick="event.stopPropagation();showInfo('evolucao')" aria-label="Mais informações">?</span></span>
-            <span class="mp-right"><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
-          </div>
-          <div class="mp-body">
-            <div class="chart-wrap" id="area-evolution-wrap">
-              <div id="area-evolution"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Painel 5: Últimos 7 dias -->
-        <div class="mp-item">
-          <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
-            <span class="mp-title">Últimos 7 dias</span>
-            <span class="mp-right"><span class="mp-glance" id="glance-semana">—</span><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
-          </div>
-          <div class="mp-body">
-            <div class="chart-wrap">
-              <div style="display:flex;align-items:center;justify-content:space-between;">
-                <span style="font-size:12px;color:var(--text2);">Questões respondidas</span>
-                <span style="font-size:12px;font-weight:700;" id="chart-total-week">0 essa semana</span>
-              </div>
-              <div class="chart-bars" id="chart-bars"></div>
-            </div>
-          </div>
-        </div>
-        <!-- Objetivo da Semana -->
-        <div class="sec-title">Objetivo da semana</div>
-        <div id="dash-objetivo"></div>
+        <!-- Painéis de análise migraram para a aba "Meu progresso" (bottom sheet "Mais"). -->
+        <button class="ver-progresso" onclick="navTo('progresso')">
+          <span class="ver-progresso-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span>
+          <span class="ver-progresso-txt"><span class="ver-progresso-t">Meu progresso</span><span class="ver-progresso-s">Domínio, cobertura, evolução e projeção</span></span>
+          <span class="ver-progresso-arw">→</span>
+        </button>
       </div>
     </div>
 
@@ -1624,6 +1501,140 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       </div>
     </div>
 
+    <!-- MEU PROGRESSO — painéis de análise (migraram da home) -->
+    <div class="screen" id="screen-progresso">
+      <div style="padding:14px 14px 0">
+        <div class="tela-header">
+          <div class="tela-h-title">Meu progresso</div>
+          <div class="tela-h-sub">Domínio, cobertura, evolução e projeção para a prova</div>
+        </div>
+      </div>
+      <div class="dash-body">
+        <!-- Hoje -->
+        <div class="hoje-card" id="hoje-card">
+          <div class="hoje-head"><span class="hoje-titulo">Hoje</span><span class="hoje-data" id="hoje-data"></span></div>
+          <div class="hoje-stats">
+            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-q">0</div><div class="hoje-stat-l">Questões</div></div>
+            <div class="hoje-sep"></div>
+            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-acertos" style="color:var(--green)">0</div><div class="hoje-stat-l">Acertos</div></div>
+            <div class="hoje-sep"></div>
+            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-erros" style="color:var(--red)">0</div><div class="hoje-stat-l">Erros</div></div>
+            <div class="hoje-sep"></div>
+            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-pct">—</div><div class="hoje-stat-l">Aproveit.</div></div>
+          </div>
+        </div>
+<!-- Números gerais (acumulado) — veio do topo do painel para reduzir a redundância -->
+        <div class="mp-item">
+          <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
+            <span class="mp-title">Números gerais</span>
+            <span class="mp-right"><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
+          </div>
+          <div class="mp-body">
+            <div class="dash-statline dash-statline-light">
+              <div class="dash-stat"><div class="dash-stat-v" id="dash-total">0</div><div class="dash-stat-l">Questões</div></div>
+              <div class="dash-stat-div"></div>
+              <div class="dash-stat"><div class="dash-stat-v" id="dash-pct">0%</div><div class="dash-stat-l">Acertos</div></div>
+              <div class="dash-stat-div"></div>
+              <div class="dash-stat"><div class="dash-stat-v" id="dash-cards">0</div><div class="dash-stat-l">Revisados</div></div>
+              <div class="dash-stat-div"></div>
+              <div class="dash-stat"><div class="dash-stat-v" style="display:flex;align-items:center;justify-content:center;gap:3px"><span id="dash-streak">0</span><svg style="width:13px;height:13px;color:var(--ember)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1.5 3.5 5 5.2 5 9a5 5 0 0 1-10 0c0-2 .9-3.4 1.8-4.7.4 1.2 1.2 2 2.2 2.5C10.6 6.7 11 4.4 12 2z"/></svg></div><div class="dash-stat-l">Dias</div></div>
+            </div>
+          </div>
+        </div>
+<!-- Painel 0 (bloco 34): projeção para a prova.
+             Estava solta no corpo do painel, disputando atenção com o que é ACIONÁVEL.
+             Projeção é análise, não tarefa — desceu para o acordeão, fechada por padrão. -->
+        <div class="mp-item" id="mp-pront">
+          <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
+            <span class="mp-title">Projeção para a prova <span class="info-btn" onclick="event.stopPropagation();showInfo('prontidao')" aria-label="Mais informações">?</span></span>
+            <span class="mp-right"><span class="mp-glance" id="glance-pront">—</span><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
+          </div>
+          <div class="mp-body">
+            <div id="dash-pront" class="chart-wrap hidden">
+              <div style="display:flex;align-items:center;justify-content:flex-end;">
+                <span style="font-size:12px;font-weight:700;color:var(--ember);" id="pront-dias"></span>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:6px;margin-top:6px;">
+                <span style="font-size:30px;font-weight:800;color:var(--ember);" id="pront-num">—</span>
+                <span style="font-size:13px;color:var(--text2);">de 60 questões (estimativa)</span>
+              </div>
+              <div style="height:8px;background:var(--paper-2);border-radius:6px;overflow:hidden;margin-top:8px;"><div id="pront-bar" style="height:100%;width:0%;background:var(--fire-line);border-radius:6px;transition:width .5s;"></div></div>
+              <div style="font-size:11px;color:var(--text3);margin-top:6px;" id="pront-detalhe"></div>
+              <div id="pront-aviso" style="display:none;font-size:11px;color:var(--ember-deep);background:var(--amber-light);border-radius:8px;padding:7px 9px;margin-top:8px;line-height:1.4;"><svg style="width:13px;height:13px;vertical-align:-1px;margin-right:3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Estimativa preliminar — baseada em poucas respostas. Vai ficar mais precisa conforme você estuda.</div>
+            </div>
+          </div>
+        </div>
+<!-- Painel 1: Índice de Domínio Real (aberto por padrão) -->
+        <div class="mp-item open">
+          <div class="mp-head" role="button" tabindex="0" aria-expanded="true" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
+            <span class="mp-title">Índice de domínio real <span class="info-btn" onclick="event.stopPropagation();showInfo('dominio')" aria-label="Mais informações">?</span></span>
+            <span class="mp-right"><span class="mp-glance" id="glance-dominio">—</span><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
+          </div>
+          <div class="mp-body">
+            <div class="dominio-card" id="dominio-card">
+              <div class="dominio-geral-wrap">
+                <div class="dominio-geral-info">
+                  <div class="dominio-geral-pct" id="dominio-geral-num">0%</div>
+                  <div class="dominio-geral-label">de domínio geral</div>
+                  <div style="display:flex;gap:12px;margin-top:6px;">
+                    <span class="dominio-badge" style="background:var(--blue-light);color:var(--blue)">Quiz 50%</span>
+                    <span class="dominio-badge" style="background:var(--green-light);color:var(--green)">Cards 30%</span>
+                    <span class="dominio-badge" style="background:var(--amber-light);color:var(--amber)">Resumos 20%</span>
+                  </div>
+                </div>
+              </div>
+              <div id="dominio-areas"></div>
+            </div>
+          </div>
+        </div>
+<!-- Painel 2: Cobertura do Edital -->
+        <div class="mp-item">
+          <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
+            <span class="mp-title">Cobertura do edital <span class="info-btn" onclick="event.stopPropagation();showInfo('cobertura')" aria-label="Mais informações">?</span></span>
+            <span class="mp-right"><span class="mp-glance" id="glance-cobertura">—</span><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
+          </div>
+          <div class="mp-body">
+            <div class="dominio-card">
+              <div style="font-size:11px;color:var(--text2);margin-bottom:12px;">Quanto do conteúdo de cada área você já percorreu (questões + cards + resumos).</div>
+              <div id="cobertura-areas"></div>
+            </div>
+          </div>
+        </div>
+<!-- Desempenho por área (fusão Histórico + Evolução) -->
+        <div class="mp-item">
+          <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
+            <span class="mp-title">Desempenho por área <span class="info-btn" onclick="event.stopPropagation();showInfo('desempenho')" aria-label="Mais informações">?</span></span>
+            <span class="mp-right"><span class="mp-glance" id="glance-acertos">—</span><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
+          </div>
+          <div class="mp-body">
+            <div class="mp-sublabel">Acertos por área</div>
+            <div class="area-grid" id="dash-areas"></div>
+            <div class="mp-sublabel" style="margin-top:16px">Evolução recente</div>
+            <div class="chart-wrap" id="area-evolution-wrap"><div id="area-evolution"></div></div>
+          </div>
+        </div>
+<!-- Semana (fusão Últimos 7 dias + Objetivo) -->
+        <div class="mp-item">
+          <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
+            <span class="mp-title">Semana</span>
+            <span class="mp-right"><span class="mp-glance" id="glance-semana">—</span><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
+          </div>
+          <div class="mp-body">
+            <div class="mp-sublabel">Últimos 7 dias</div>
+            <div class="chart-wrap">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:12px;color:var(--text2);">Questões respondidas</span>
+                <span style="font-size:12px;font-weight:700;" id="chart-total-week">0 essa semana</span>
+              </div>
+              <div class="chart-bars" id="chart-bars"></div>
+            </div>
+            <div class="mp-sublabel" style="margin-top:16px">Objetivo da semana</div>
+            <div id="dash-objetivo"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- BOTTOM NAV -->
@@ -1664,6 +1675,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <button class="sheet-item" id="sheet-padroes" onclick="navMais('padroes')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         <div><div class="sheet-item-t">Padrões</div><div class="sheet-item-sub">Estatística das provas e seu domínio</div></div>
+      </button>
+      <button class="sheet-item" id="sheet-progresso" onclick="navMais('progresso')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
+        <div><div class="sheet-item-t">Meu progresso</div><div class="sheet-item-sub">Domínio, cobertura, evolução e projeção</div></div>
       </button>
     </div>
   </div>
@@ -3147,7 +3162,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.130';
+const APP_VERSAO='v1.131';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -3252,6 +3267,7 @@ function _navToInner(s,skipStagger){
   if(s==='resumos'){resumosModo='hub';renderResumos();updateBadges();}
   if(s==='consulta'){renderConsulta();}
   if(s==='padroes'){renderPadroes();}
+  if(s==='progresso'){renderDashboard();}
   if(s==='foco'){renderFoco();}
   if(s==='admin'&&isAdmin()){loadAdminUsers();loadReportes();}
   // BLOCO 34: a barra de retorno ao foco depende da tela ATUAL, então é atualizada
