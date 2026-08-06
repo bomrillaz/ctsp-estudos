@@ -237,9 +237,25 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .nav-item.active svg{animation:navPop .3s var(--ease-spring) both;}
 .nav-item svg{width:22px;height:22px;transition:transform .2s;}
 .nav-item:active svg{transform:scale(.88);}
-.nav-item::before{content:'';position:absolute;bottom:5px;left:50%;transform:translateX(-50%) scale(0);width:4px;height:4px;background:var(--ember);border-radius:50%;transition:transform .25s var(--ease-spring);}
-.nav-item.active::before{transform:translateX(-50%) scale(1);}
+/* pip aposentado — a pílula deslizante (.nav-indicator) é o indicador de ativo */
+.nav-indicator{position:absolute;top:8px;bottom:8px;left:4px;width:calc((100% - 8px) / 5);border-radius:16px;background:rgba(240,136,60,.15);border:1px solid rgba(240,136,60,.24);transition:transform .34s var(--ease-spring);pointer-events:none;z-index:0;}
+.nav-item{z-index:1;}
 .nav-badge{position:absolute;top:7px;right:calc(50% - 19px);background:var(--red);color:white;border-radius:10px;font-size:9px;font-weight:800;padding:1px 5px;min-width:16px;text-align:center;box-shadow:0 0 0 2px rgba(13,21,48,.96);}
+/* ── PAINEL "MAIS" (bottom sheet) ── */
+.sheet-overlay{position:fixed;inset:0;z-index:200;background:rgba(11,20,48,.45);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .25s;}
+.sheet-overlay.open{opacity:1;pointer-events:auto;}
+.sheet-panel{position:absolute;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:var(--surface);border-radius:22px 22px 0 0;padding:8px 14px calc(18px + env(safe-area-inset-bottom));transform:translateY(101%);transition:transform .34s var(--ease-spring);box-shadow:0 -10px 34px rgba(11,20,48,.30);}
+.sheet-overlay.open .sheet-panel{transform:translateY(0);}
+.sheet-handle{width:38px;height:4px;border-radius:3px;background:var(--border);margin:8px auto 10px;}
+.sheet-title{font-family:var(--font-display);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--text3);margin:0 6px 6px;}
+.sheet-item{display:flex;align-items:center;gap:14px;width:100%;padding:13px 12px;background:transparent;border:none;border-radius:14px;text-align:left;cursor:pointer;transition:background .15s;}
+.sheet-item:active{background:var(--paper-2);}
+.sheet-item.active{background:var(--red-light);}
+.sheet-item svg{width:22px;height:22px;flex-shrink:0;color:var(--text2);}
+.sheet-item.active svg{color:var(--red);}
+.sheet-item-t{font-size:15px;font-weight:700;color:var(--text);}
+.sheet-item.active .sheet-item-t{color:var(--red-dark);}
+.sheet-item-sub{font-size:11.5px;font-weight:600;color:var(--text3);margin-top:1px;}
 
 /* SCREENS */
 .screen{display:none;animation:none;}
@@ -897,7 +913,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   .nav-item{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;
     font-size:12.5px;letter-spacing:.04em;padding:12px 14px;border-radius:12px;}
   .nav-item.active{background:rgba(240,136,60,.12);}
-  .nav-item::before{display:none;} /* o pip inferior não faz sentido no rail vertical */
+  .nav-indicator{display:none;} /* pílula horizontal não faz sentido no rail vertical */
   .nav-badge{position:static;margin-left:auto;box-shadow:none;top:auto;right:auto;}
   .app-header{margin-left:232px;}
   .app-content{margin-left:232px;padding-bottom:40px;}
@@ -1521,6 +1537,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav" id="bottom-nav">
+    <div class="nav-indicator" id="nav-indicator"></div>
     <div class="nav-item active" id="nav-inicio" onclick="navTo('inicio')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Início
     </div>
@@ -1531,20 +1548,34 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Cards
       <span class="nav-badge hidden" id="badge-cards">0</span>
     </div>
-    <div class="nav-item" id="nav-simulado" onclick="navTo('simulado')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Simulado
-    </div>
     <div class="nav-item" id="nav-resumos" onclick="navTo('resumos')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Resumos
       <span class="nav-badge hidden" id="badge-resumos">0</span>
     </div>
-    <div class="nav-item" id="nav-consulta" onclick="navTo('consulta')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Consulta
-    </div>
-    <div class="nav-item" id="nav-padroes" onclick="navTo('padroes')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Padrões
+    <div class="nav-item" id="nav-mais" onclick="abrirMais()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Mais
     </div>
   </nav>
+
+  <!-- PAINEL "MAIS" — bottom sheet com os destinos de uso esporádico -->
+  <div class="sheet-overlay" id="mais-overlay" onclick="fecharMais(event)">
+    <div class="sheet-panel" id="mais-panel" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Mais</div>
+      <button class="sheet-item" id="sheet-simulado" onclick="navMais('simulado')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <div><div class="sheet-item-t">Simulado</div><div class="sheet-item-sub">60 questões na proporção do edital</div></div>
+      </button>
+      <button class="sheet-item" id="sheet-consulta" onclick="navMais('consulta')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        <div><div class="sheet-item-t">Consulta</div><div class="sheet-item-sub">Glossário e mapa das normas</div></div>
+      </button>
+      <button class="sheet-item" id="sheet-padroes" onclick="navMais('padroes')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <div><div class="sheet-item-t">Padrões</div><div class="sheet-item-sub">Estatística das provas e seu domínio</div></div>
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- Modal Meta Diária -->
@@ -2709,13 +2740,13 @@ async function initApp(){
   const nomeDisplay=userProfile.nome&&userProfile.nome!==currentUser.email?userProfile.nome.split(' ')[0]:(currentUser.email||'').split('@')[0];
   const hnEl=document.getElementById('hdr-nome');if(hnEl)hnEl.textContent=nomeDisplay||'Bombeiro';
   if(userProfile.admin||currentUser.email===ADMIN_EMAIL){
-    const nav=document.getElementById('bottom-nav');
-    if(!document.getElementById('nav-admin')){
-      const btn=document.createElement('div');
-      btn.className='nav-item';btn.id='nav-admin';
-      btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Admin';
-      btn.onclick=()=>navTo('admin');
-      nav.appendChild(btn);
+    const panel=document.getElementById('mais-panel');
+    if(panel&&!document.getElementById('sheet-admin')){
+      const btn=document.createElement('button');
+      btn.className='sheet-item';btn.id='sheet-admin';
+      btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><div><div class="sheet-item-t">Admin</div><div class="sheet-item-sub">Painel de gestão</div></div>';
+      btn.onclick=()=>navMais('admin');
+      panel.appendChild(btn);
     }
   }
   await loadUserData();
@@ -3023,7 +3054,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.123';
+const APP_VERSAO='v1.124';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -3119,8 +3150,7 @@ function _navToInner(s,skipStagger){
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   const sc=document.getElementById('screen-'+s);
   if(sc){sc.classList.add('active');if(!skipStagger)animateScreenEntrance(sc);}
-  const nav=document.getElementById('nav-'+s);
-  if(nav)nav.classList.add('active');
+  _marcarNav(s);
   window.scrollTo(0,0);
   // Voltar ao painel encerra o ciclo de foco — senão a barra flutuante ficaria
   // pendurada para sempre, já que só `sairDoFoco()` a limparia.
@@ -3138,6 +3168,21 @@ function _navToInner(s,skipStagger){
   atualizarBarraFoco();
 }
 
+// ── Barra: marca o item ativo, desliza a pílula e realça o item no painel "Mais" ──
+// Telas de uso esporádico (simulado/consulta/padroes/admin) acendem o botão "Mais".
+function _marcarNav(s){
+  const alvo=['inicio','quiz','cards','resumos'].includes(s)?s:'mais';
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  const nav=document.getElementById('nav-'+alvo);
+  if(nav)nav.classList.add('active');
+  const idx=['inicio','quiz','cards','resumos','mais'].indexOf(alvo);
+  const ind=document.getElementById('nav-indicator');
+  if(ind&&idx>=0)ind.style.transform='translateX('+(idx*100)+'%)';
+  document.querySelectorAll('.sheet-item').forEach(el=>el.classList.toggle('active',el.id==='sheet-'+s));
+}
+function abrirMais(){const o=document.getElementById('mais-overlay');if(o)o.classList.add('open');}
+function fecharMais(e){if(e&&e.target!==e.currentTarget)return;const o=document.getElementById('mais-overlay');if(o)o.classList.remove('open');}
+function navMais(s){const o=document.getElementById('mais-overlay');if(o)o.classList.remove('open');navTo(s);}
 function animateScreenEntrance(sc){
   // Staggered reveal nos cards filhos
   const items=sc.querySelectorAll('.area-card,.area-row,.quick-btn,.sim-card,.resumo-list-item,.padrao-card,.user-item,.obj-card');
