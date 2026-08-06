@@ -113,7 +113,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 /* Ícones inline do sistema */
 .ai-ic{width:1.05em;height:1.05em;display:inline-block;vertical-align:-0.16em;}
 /* Números técnicos */
-.num,.dash-stat-v,.sim-timer,.splash-dias,.quiz-score-v,.cards-h-stat-v,.dominio-geral-pct,.sim-result-score,.sim-hist-score,.ring-pct{font-variant-numeric:tabular-nums;}
+.num,.dash-stat-v,.sim-timer,.splash-dias,.quiz-score-v,.cards-h-stat-v,.tela-h-stat-v,.dominio-geral-pct,.sim-result-score,.sim-hist-score,.ring-pct{font-variant-numeric:tabular-nums;}
 
 /* LOADING */
 #loading{position:fixed;inset:0;background:var(--navy-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;}
@@ -569,6 +569,19 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .cards-h-stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 12px;text-align:center;}
 .cards-h-stat-v{font-family:var(--font-display);font-size:19px;font-weight:700;}
 .cards-h-stat-l{font-size:9px;opacity:.75;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+/* ── Cabeçalho de tela unificado (todas as abas) ── */
+.tela-header{background:linear-gradient(160deg,var(--navy-2),var(--navy));border-radius:18px;padding:16px;color:#fff;position:relative;overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow-md);}
+.tela-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--fire-line);opacity:.9;}
+.tela-h-title{font-family:var(--font-display);font-size:24px;font-weight:700;letter-spacing:.02em;line-height:1.05;}
+.tela-h-sub{font-size:12.5px;color:rgba(255,255,255,.62);margin-top:3px;}
+.tela-h-stats{display:flex;gap:10px;margin-top:14px;}
+.tela-h-stat{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:9px 8px;text-align:center;}
+.tela-h-stat-v{font-family:var(--font-display);font-size:20px;font-weight:700;line-height:1;}
+.tela-h-stat-l{font-size:9px;opacity:.72;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:3px;}
+/* Hub de estudo (Cards/Resumos): tela de entrada antes do modo imersivo */
+.hub-inicio{margin-bottom:16px;}
+.hub-hint{font-size:12px;color:var(--text3);text-align:center;margin-top:8px;line-height:1.45;}
+.hub-ok{font-size:15px;font-weight:800;color:var(--green);text-align:center;margin-bottom:8px;}
 .cards-body{padding:14px;}
 .card-flip-wrap{perspective:1000px;width:100%;margin:0 auto 16px;}
 .card-flip{width:100%;min-height:200px;position:relative;transform-style:preserve-3d;transition:transform .5s;cursor:pointer;}
@@ -1304,8 +1317,15 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="screen" id="screen-quiz">
       <div id="quiz-home-view">
         <div class="quiz-home">
-          <div class="quiz-home-title">Quiz</div>
-          <div class="quiz-home-sub">Escolha uma área ou modo especial</div>
+          <div class="tela-header">
+            <div class="tela-h-title">Quiz</div>
+            <div class="tela-h-sub">Escolha uma área ou modo especial</div>
+            <div class="tela-h-stats">
+              <div class="tela-h-stat"><div class="tela-h-stat-v" id="quiz-h-resp">0</div><div class="tela-h-stat-l">Respondidas</div></div>
+              <div class="tela-h-stat"><div class="tela-h-stat-v" id="quiz-h-acertos">—</div><div class="tela-h-stat-l">Acertos</div></div>
+              <div class="tela-h-stat"><div class="tela-h-stat-v" id="quiz-h-areas">0/5</div><div class="tela-h-stat-l">Áreas</div></div>
+            </div>
+          </div>
           <button class="erro-mode-btn" onclick="iniciarModoErro()">
             <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;flex:1">
               <span>Modo Erro — Revisar questões erradas</span>
@@ -1361,13 +1381,15 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 
     <!-- CARDS -->
     <div class="screen" id="screen-cards">
-      <div class="cards-header">
-        <div class="cards-h-title">Flashcards</div>
-        <div class="cards-h-sub">Memorização rápida — frente e verso</div>
-        <div class="cards-h-stats">
-          <div class="cards-h-stat"><div class="cards-h-stat-v" id="cards-due">0</div><div class="cards-h-stat-l">Para hoje</div></div>
-          <div class="cards-h-stat"><div class="cards-h-stat-v" id="cards-total-n">0</div><div class="cards-h-stat-l">Total</div></div>
-          <div class="cards-h-stat"><div class="cards-h-stat-v" id="cards-streak-n">0</div><div class="cards-h-stat-l">Sequência</div></div>
+      <div style="padding:14px 14px 0">
+        <div class="tela-header" style="margin-bottom:0">
+          <div class="tela-h-title">Flashcards</div>
+          <div class="tela-h-sub">Memorização rápida — frente e verso</div>
+          <div class="tela-h-stats">
+            <div class="tela-h-stat"><div class="tela-h-stat-v" id="cards-due">0</div><div class="tela-h-stat-l">Para hoje</div></div>
+            <div class="tela-h-stat"><div class="tela-h-stat-v" id="cards-total-n">0</div><div class="tela-h-stat-l">Total</div></div>
+            <div class="tela-h-stat"><div class="tela-h-stat-v" id="cards-streak-n">0</div><div class="tela-h-stat-l">Sequência</div></div>
+          </div>
         </div>
       </div>
       <div class="cards-body" id="cards-body"></div>
@@ -1377,8 +1399,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="screen" id="screen-simulado">
       <div id="sim-home-view">
         <div class="sim-home">
-          <h2>Simulado</h2>
-          <p>Escolha o modo de simulado</p>
+          <div class="tela-header">
+            <div class="tela-h-title">Simulado</div>
+            <div class="tela-h-sub">Escolha o modo de simulado</div>
+          </div>
           <div class="sim-cards">
             <div class="sim-card" onclick="iniciarSimulado('completo')">
               <div class="sim-card-icon" style="background:var(--red-light);color:var(--red);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
@@ -1431,13 +1455,13 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <!-- RESUMOS -->
     <div class="screen" id="screen-resumos">
       <div class="resumos-screen">
-        <div class="resumos-header">
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-            <div>
-              <div style="font-size:18px;font-weight:800;">Resumos</div>
-              <div style="font-size:12px;opacity:.75;">Revisão espaçada por dificuldade</div>
-            </div>
-            <div class="resumos-queue"><span style="font-size:12px;opacity:.75;">Para revisão:</span><span class="resumo-queue-n" id="resumos-fila">0</span></div>
+        <div class="tela-header">
+          <div class="tela-h-title">Resumos</div>
+          <div class="tela-h-sub">Revisão espaçada por dificuldade</div>
+          <div class="tela-h-stats">
+            <div class="tela-h-stat"><div class="tela-h-stat-v" id="resumos-fila">0</div><div class="tela-h-stat-l">Para hoje</div></div>
+            <div class="tela-h-stat"><div class="tela-h-stat-v" id="resumos-total">0</div><div class="tela-h-stat-l">Total</div></div>
+            <div class="tela-h-stat"><div class="tela-h-stat-v" id="resumos-revis">0</div><div class="tela-h-stat-l">Revisados</div></div>
           </div>
         </div>
         <div id="resumos-content"></div>
@@ -1446,12 +1470,12 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <!-- CONSULTA — Glossário + Mapa das Normas (referência) -->
     <div class="screen" id="screen-consulta">
       <div class="resumos-screen">
-        <div class="resumos-header">
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-            <div>
-              <div style="font-size:18px;font-weight:800;">Consulta</div>
-              <div style="font-size:12px;opacity:.75;">Glossário e mapa das normas do edital</div>
-            </div>
+        <div class="tela-header">
+          <div class="tela-h-title">Consulta</div>
+          <div class="tela-h-sub">Glossário e mapa das normas do edital</div>
+          <div class="tela-h-stats">
+            <div class="tela-h-stat"><div class="tela-h-stat-v" id="consulta-glo-n">0</div><div class="tela-h-stat-l">Termos</div></div>
+            <div class="tela-h-stat"><div class="tela-h-stat-v" id="consulta-nor-n">0</div><div class="tela-h-stat-l">Normas</div></div>
           </div>
         </div>
         <div class="sub-tabs" id="consulta-subtabs">
@@ -1465,9 +1489,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <!-- PADRÕES -->
     <div class="screen" id="screen-padroes">
       <div class="padroes-screen">
-        <div class="padroes-header">
-          <h2>Padrões das Provas</h2>
-          <p>Metodologia e tópicos de alta incidência CTSP 2024/2025</p>
+        <div class="tela-header">
+          <div class="tela-h-title">Padrões das Provas</div>
+          <div class="tela-h-sub">Metodologia e tópicos de alta incidência · CTSP 2024/2025</div>
         </div>
         <div class="sec-title">Tipos de questão</div>
         <div class="padroes-base">Medido nas <b>2 últimas provas</b> (109 questões): Caderno do Edital 004/2025 e a prova anterior. Duas provas são pouca base — onde a amostra não sustenta um percentual, mostramos a contagem crua.</div>
@@ -3054,7 +3078,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.124';
+const APP_VERSAO='v1.125';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -3156,9 +3180,9 @@ function _navToInner(s,skipStagger){
   // pendurada para sempre, já que só `sairDoFoco()` a limparia.
   if(s==='inicio')focoAtivo=null;
   if(s==='inicio'){renderDashboard();atualizarCardTreino();}
-  if(s==='quiz'){renderAreaList();}
-  if(s==='cards'){renderCards();}
-  if(s==='resumos'){renderResumos();updateBadges();}
+  if(s==='quiz'){renderAreaList();renderQuizHeader();}
+  if(s==='cards'){cardsModo='hub';renderCards();}
+  if(s==='resumos'){resumosModo='hub';renderResumos();updateBadges();}
   if(s==='consulta'){renderConsulta();}
   if(s==='padroes'){renderPadroes();}
   if(s==='foco'){renderFoco();}
@@ -3946,6 +3970,7 @@ function updateBadges(){
   if(due>0){bc.classList.remove('hidden');bc.textContent=due;}else bc.classList.add('hidden');
   const cdEl=document.getElementById('cards-due');if(cdEl)cdEl.textContent=due;
   const ctEl=document.getElementById('cards-total-n');if(ctEl)ctEl.textContent=Object.keys(allFlashcards).length;
+  const csEl=document.getElementById('cards-streak-n');if(csEl)csEl.textContent=userStats.cardStreak||0;
 
   // Resumos — falta da dose do dia
   const acervoR=resumosPendentes().length;
@@ -3954,6 +3979,8 @@ function updateBadges(){
   const br=document.getElementById('badge-resumos');
   if(dueR>0){br.classList.remove('hidden');br.textContent=dueR;}else br.classList.add('hidden');
   const rfEl=document.getElementById('resumos-fila');if(rfEl)rfEl.textContent=dueR;
+  const rtEl=document.getElementById('resumos-total');if(rtEl)rtEl.textContent=RESUMOS_BANCO.length;
+  const rvEl=document.getElementById('resumos-revis');if(rvEl)rvEl.textContent=RESUMOS_BANCO.filter(r=>{const u=userStats['resumo_'+r.id];return u&&u.reps>0;}).length;
 }
 
 // ═══════════════════════════════
@@ -4354,17 +4381,36 @@ function cardsPendentes(filtro){
   return{vencidos,novos,todos:[...vencidos,...novos]};
 }
 
+let cardsModo='hub', cardsUnico=false;
 function renderCards(){
+  // Reforço de erro entra direto no card; sessão em curso continua no modo estudo.
+  if(origemReforco==='quiz'||cardsModo==='estudo'){_estudoCards();return;}
+  _hubCards();
+}
+// Hub: tela de entrada (meta do dia + índice). Não joga o usuário direto no conteúdo.
+function _hubCards(){
+  updateBadges();
+  const hj=entradaHoje();
+  const acervo=cardsPendentes(null).todos.length;
+  const resta=Math.min(acervo,Math.max(0,dose('cards')-(hj.fc||0)));
+  const body=document.getElementById('cards-body');
+  const cta = resta>0
+    ? `<button class="btn-primary" style="width:100%" onclick="iniciarMetaCards()">Iniciar meta de hoje · ${resta} card${resta!==1?'s':''}</button>
+       <div class="hub-hint">Cards intercalados e espaçados. Ou toque um card abaixo para estudar avulso.</div>`
+    : `<div class="hub-ok">✓ Meta de flashcards concluída hoje</div>${acervo>0?`<button class="btn-weak" style="width:100%" onclick="iniciarMetaCards()">Revisar mais assim mesmo</button>`:`<div class="hub-hint">Tudo revisado. Fixe com questões no Treino.</div>`}`;
+  body.innerHTML=`<div class="hub-inicio">${cta}</div>`+renderCardLista();
+}
+function iniciarMetaCards(){cardsModo='estudo';cardsUnico=false;cardsFiltroTopico=null;_estudoCards();window.scrollTo(0,0);}
+function voltarHubCards(){cardsModo='hub';cardsUnico=false;renderCards();window.scrollTo(0,0);}
+// Modo estudo imersivo: um card por vez, sem o índice competindo pela atenção.
+function _estudoCards(){
   const now=Date.now();
   const ehVencido=fc=>{const uc=userCards[fc.id];return !!(uc&&uc.reps>0&&uc.next&&uc.next<=now);};
   const pend=cardsPendentes();
   const acervo=pend.todos.length;
-  // BLOCO B — DOSE DIÁRIA: a fila mostra a dose do dia, não o acervo.
-  // O acervo continua visível como informação secundária ("15 de 84").
   const limite=dose('cards')+doseExtra.cards;
   cardQueue=priorizarPorMalha(pend.todos,ehVencido).slice(0,limite);
   const body=document.getElementById('cards-body');
-  document.getElementById('cards-streak-n').textContent=userStats.cardStreak||0;
   if(!cardQueue.length){
     const restam=acervo;
     const filtro=cardsFiltroTopico;
@@ -4376,8 +4422,8 @@ function renderCards(){
       ${origemReforco!=='quiz'?`<button class="btn-primary" style="margin-top:12px;width:100%" onclick="abrirIntro('treino')">Fixar no Treino do dia →</button>`:''}
       ${restam>0&&origemReforco!=='quiz'?`<button class="btn-weak" style="margin-top:8px" onclick="maisCards()">Fazer mais ${Math.min(dose('cards'),restam)}</button>`:''}
       ${filtro&&origemReforco!=='quiz'?`<button class="btn-weak" style="margin-top:8px;background:var(--paper-2);color:var(--text2)" onclick="limparFiltroCards()">Ver todos os tópicos</button>`:''}
+      ${origemReforco!=='quiz'?`<button class="btn-weak" style="margin-top:8px" onclick="voltarHubCards()">← Voltar aos flashcards</button>`:''}
     </div>`;
-    if(origemReforco!=='quiz')body.innerHTML+=renderCardLista();
     return;
   }
   cardIdx=0;
@@ -4389,7 +4435,7 @@ function maisCards(){doseExtra.cards+=dose('cards');renderCards();}
 function limparFiltroCards(){cardsFiltroTopico=null;doseExtra.cards=0;renderCards();}
 
 function renderCard(){
-  if(cardIdx>=cardQueue.length){renderCards();return;}
+  if(cardIdx>=cardQueue.length){if(cardsUnico){cardsUnico=false;voltarHubCards();}else{renderCards();}return;}
   const fc=cardQueue[cardIdx];
   const area=fc.a||fc.area||'';
   const aInfo=AI[area]||{};
@@ -4400,7 +4446,7 @@ function renderCard(){
   const acervo=cardsPendentes().todos.length;
   const tFc=topicoDe(fc);
   body.innerHTML=`
-    ${origemReforco==='quiz'?`<button onclick="voltarAoQuizDoReforco()" style="width:100%;margin-bottom:10px;padding:9px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:700;color:var(--text2)">← Voltar à questão</button>`:''}
+    ${origemReforco==='quiz'?`<button onclick="voltarAoQuizDoReforco()" style="width:100%;margin-bottom:10px;padding:9px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:700;color:var(--text2)">← Voltar à questão</button>`:`<button onclick="voltarHubCards()" style="width:100%;margin-bottom:10px;padding:9px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:700;color:var(--text2)">← Flashcards</button>`}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <span style="font-size:13px;color:var(--text2)">${remaining} card${remaining!==1?'s':''} restante${remaining!==1?'s':''} <span class="q-badge ${ehNovo?'badge-nova':'badge-rev'}">${ehNovo?'NOVO':'REVISÃO'}</span></span>
       <span style="font-size:11px;font-weight:700;color:var(--text3)">Toque para virar</span>
@@ -4426,8 +4472,7 @@ function renderCard(){
       <button class="card-btn med" onclick="avaliarCard('med')">Médio</button>
       <button class="card-btn fac" onclick="avaliarCard('fac')">Fácil</button>
     </div>
-    <div style="text-align:center"><button class="rep-link" onclick="abrirReporte('flashcard','${fc.id}')">⚐ Reportar erro neste card</button></div>
-    ${origemReforco==='quiz'?'':renderCardLista()}`;
+    <div style="text-align:center"><button class="rep-link" onclick="abrirReporte('flashcard','${fc.id}')">⚐ Reportar erro neste card</button></div>`;
 }
 
 // Índice de TODOS os flashcards: chips de filtro por área + agrupado por Área → Tópico. Espelha a lista dos resumos.
@@ -4475,7 +4520,7 @@ function filtrarCardsLista(at){
 function estudarCardUnico(id){
   const fc=allFlashcards[id]||Object.values(allFlashcards).find(x=>x.id===id);
   if(!fc)return;
-  cardsFiltroTopico=null;
+  cardsModo='estudo';cardsUnico=true;cardsFiltroTopico=null;
   cardQueue=[fc];cardIdx=0;renderCard();
   window.scrollTo(0,0);
 }
@@ -4640,7 +4685,21 @@ function setConsultaSub(which){
   if(which==='glossario')renderGlossario();
   if(which==='normas')renderNormas();
 }
-function renderConsulta(){ setConsultaSub(_consultaSub||'glossario'); }
+function renderConsulta(){
+  const g=document.getElementById('consulta-glo-n');if(g&&typeof GLOSARIO!=='undefined')g.textContent=GLOSARIO.length;
+  const n=document.getElementById('consulta-nor-n');if(n&&typeof NORMAS!=='undefined')n.textContent=NORMAS.length;
+  setConsultaSub(_consultaSub||'glossario');
+}
+// Chips do cabeçalho do Quiz: respondidas, % de acertos e áreas tocadas (de userStats.byArea).
+function renderQuizHeader(){
+  const ba=userStats.byArea||{};
+  let c=0,t=0,areas=0;
+  Object.keys(AI).forEach(k=>{const cc=ba[k]?.correct||0,ww=ba[k]?.wrong||0;c+=cc;t+=cc+ww;if(cc+ww>0)areas++;});
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('quiz-h-resp',t);
+  set('quiz-h-acertos',t>0?Math.round(c/t*100)+'%':'—');
+  set('quiz-h-areas',areas+'/'+Object.keys(AI).length);
+}
 function gloCard(t){
   return `<div class="resumo-list-item" id="glo-${GLOSARIO.indexOf(t)}" style="border-left:3px solid var(--blue)">
     <div style="font-weight:800;font-size:14px">${sanitize(t.t)}${t.x?` <span style="font-weight:600;color:var(--text2);font-size:12.5px">— ${sanitize(t.x)}</span>`:''}</div>
@@ -4693,12 +4752,33 @@ function abrirNormaBusca(idx){
   setTimeout(()=>_realceBusca(document.getElementById('norma-'+idx)),80);
 }
 
+let resumosModo='hub', resumosUnico=false;
 function renderResumos(){
+  if(resumosModo==='estudo'){_estudoResumos();return;}
+  _hubResumos();
+}
+// Hub: meta do dia + índice por área/tópico. Não abre já lendo.
+function _hubResumos(){
+  updateBadges();
   const acervo=resumosPendentes().length;
-  // BLOCO B — DOSE DIÁRIA: o primeiro acesso deixa de abrir pedindo 70 resumos.
-  // Mostra 3; o acervo continua visível como informação secundária.
   const fila=resumosDose();
-  document.getElementById('resumos-fila').textContent=fila.length;
+  const rf=document.getElementById('resumos-fila');if(rf)rf.textContent=fila.length;
+  const content=document.getElementById('resumos-content');
+  const cta = fila.length>0
+    ? `<button class="btn-primary" style="width:100%" onclick="iniciarMetaResumos()">Iniciar meta de hoje · ${fila.length} resumo${fila.length!==1?'s':''}</button>
+       <div class="hub-hint">Leitura é preparo — o teste fica no Treino. Ou toque um resumo abaixo para ler avulso.</div>`
+    : (acervo>0
+        ? `<div class="hub-ok">✓ Meta de resumos concluída hoje</div><button class="btn-weak" style="width:100%" onclick="iniciarMetaResumos()">Ler mais assim mesmo</button>`
+        : `<div class="hub-ok">✓ Resumos em dia</div><div class="hub-hint">Próximas revisões já agendadas. Fixe com questões no Treino.</div>`);
+  content.innerHTML=`<div class="hub-inicio">${cta}</div>`+renderResumoLista();
+}
+function iniciarMetaResumos(){resumosModo='estudo';resumosUnico=false;_estudoResumos();window.scrollTo(0,0);}
+function voltarHubResumos(){resumosModo='hub';resumosUnico=false;renderResumos();window.scrollTo(0,0);}
+// Modo estudo imersivo: um resumo por vez, sem o índice competindo.
+function _estudoResumos(){
+  const acervo=resumosPendentes().length;
+  const fila=resumosDose();
+  const rf=document.getElementById('resumos-fila');if(rf)rf.textContent=fila.length;
   const content=document.getElementById('resumos-content');
   if(!fila.length){
     content.innerHTML=(acervo>0
@@ -4707,13 +4787,13 @@ function renderResumos(){
            <div style="font-size:12.5px;color:var(--text2)">Terreno preparado. Agora <b>teste o que leu</b> — recuperar fixa muito mais que reler.</div>
          </div>
          <div style="text-align:center;margin-bottom:10px"><button class="btn-primary" style="width:100%" onclick="abrirIntro('treino')">Testar no Treino do dia →</button></div>
-         <div style="text-align:center;margin-bottom:16px"><button class="btn-weak" onclick="maisResumos()">Ler mais ${Math.min(dose('resumos'),acervo)} resumo${Math.min(dose('resumos'),acervo)!==1?'s':''}</button></div>`
+         <div style="text-align:center;margin-bottom:10px"><button class="btn-weak" onclick="maisResumos()">Ler mais ${Math.min(dose('resumos'),acervo)} resumo${Math.min(dose('resumos'),acervo)!==1?'s':''}</button></div>`
       : `<div style="text-align:center;padding:22px 12px 8px;">
            <div style="font-size:15px;font-weight:800;color:var(--green);margin-bottom:4px">✓ Resumos em dia</div>
            <div style="font-size:12.5px;color:var(--text2)">Próximas revisões já agendadas. Que tal fixar com questões?</div>
          </div>
-         <div style="text-align:center;margin-bottom:16px"><button class="btn-primary" style="width:100%" onclick="abrirIntro('treino')">Ir para o Treino do dia →</button></div>`)
-    +renderResumoLista();
+         <div style="text-align:center;margin-bottom:10px"><button class="btn-primary" style="width:100%" onclick="abrirIntro('treino')">Ir para o Treino do dia →</button></div>`)
+    +`<div style="text-align:center"><button class="btn-weak" onclick="voltarHubResumos()">← Voltar aos resumos</button></div>`;
     return;
   }
   const r=fila[0];
@@ -4722,6 +4802,7 @@ function renderResumos(){
   const aInfo=AI[r.area]||{};
   const probLabel=r.prob==='alta'?'Alta probabilidade':r.prob==='media'?'Média':'Baixa';
   content.innerHTML=`
+    <button onclick="voltarHubResumos()" style="width:100%;margin-bottom:10px;padding:9px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:700;color:var(--text2)">← Resumos</button>
     <div class="resumo-card">
       <div class="resumo-card-top">
         <span class="resumo-area-tag" style="background:${aInfo.bg};color:${aInfo.color}">${aInfo.icon} ${r.area}</span>
@@ -4743,8 +4824,7 @@ function renderResumos(){
     ${blocoPraticarTopico(topicoDe(r))}
     <div style="text-align:center;color:var(--text2);font-size:13px;margin-bottom:12px;">
       Dose de hoje: ${fila.length} resumo${fila.length!==1?'s':''}${acervo>fila.length?` <span style="color:var(--text3)">· ${acervo} pendentes no total</span>`:''}
-    </div>
-    ${renderResumoLista()}`;
+    </div>`;
 }
 
 // Ponte resumo → questão: o elo que o Bloco A tornou possível.
@@ -4805,6 +4885,7 @@ function filtrarResumos(at){
 function mostrarResumoDirecto(id){
   const r=RESUMOS_BANCO.find(x=>x.id===id);
   if(!r)return;
+  resumosModo='estudo';resumosUnico=true;
   const aInfo=AI[r.area]||{};
   // Rótulos suportados: alta | media | baixa (o Bloco A usa só os dois primeiros).
   const probLabel=r.prob==='alta'?'Alta':r.prob==='baixa'?'Baixa':'Média';
@@ -4828,7 +4909,7 @@ function mostrarResumoDirecto(id){
         </div>
       </div>
       <button class="rep-link" onclick="abrirReporte('resumo','${r.id}')">⚐ Reportar erro neste resumo</button>
-      <button onclick="${origemReforco==='quiz'?'voltarAoQuizDoReforco()':'renderResumos()'}" style="width:100%;margin-top:12px;padding:10px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:600;color:var(--text2);">${origemReforco==='quiz'?'← Voltar à questão':'← Voltar à fila'}</button>
+      <button onclick="${origemReforco==='quiz'?'voltarAoQuizDoReforco()':'voltarHubResumos()'}" style="width:100%;margin-top:12px;padding:10px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:600;color:var(--text2);">${origemReforco==='quiz'?'← Voltar à questão':'← Voltar aos resumos'}</button>
     </div>
     ${blocoPraticarTopico(topicoDe(r))}`;
 }
@@ -4846,6 +4927,7 @@ async function avaliarResumo(dif){
   updateBadges();
   showToast('Revisão em '+updated.interval+(updated.interval===1?' dia':' dias'));
   if(origemReforco==='quiz'){voltarAoQuizDoReforco();return;} // reforço de erro: volta à questão, não ao carrossel
+  if(resumosUnico){voltarHubResumos();return;} // resumo avulso do índice: volta ao hub
   renderResumos();
 }
 
