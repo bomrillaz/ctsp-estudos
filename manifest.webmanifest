@@ -1,7 +1,7 @@
 {
-  "name": "Bombeiro CTSP 2026",
+  "name": "Plataforma CTSP - CBMRS",
   "short_name": "CTSP",
-  "description": "Plataforma de estudos para o CTSP 2026 do CBMRS: questoes auditadas contra a norma vigente, simulado no formato real da prova, flashcards com revisao espacada e diagnostico das areas fracas.",
+  "description": "Plataforma CTSP - CBMRS: questoes auditadas contra a norma vigente, simulado no formato real da prova, flashcards com revisao espacada e diagnostico das areas fracas.",
   "lang": "pt-BR",
   "dir": "ltr",
   "start_url": "./",
