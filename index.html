@@ -287,6 +287,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .dash-statline{display:flex;align-items:stretch;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px 4px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);position:relative;z-index:1;}
 .dash-statline .dash-stat{flex:1;background:none;border:none;border-radius:0;padding:0 4px;backdrop-filter:none;-webkit-backdrop-filter:none;}
 .dash-stat-div{width:1px;background:rgba(255,255,255,.13);margin:5px 0;flex-shrink:0;}
+/* Variante clara do resumo acumulado, agora dentro do acordeão "Meu progresso" */
+.dash-statline-light{background:transparent;border:none;padding:2px 0;backdrop-filter:none;-webkit-backdrop-filter:none;}
+.dash-statline-light .dash-stat-v{color:var(--text);}
+.dash-statline-light .dash-stat-l{color:var(--text2);}
+.dash-statline-light .dash-stat-div{background:var(--line-soft);}
 /* S30: seletor de tema */
 .theme-seg{display:flex;background:var(--paper-2);border:1px solid var(--border);border-radius:11px;padding:3px;gap:2px;}
 .theme-seg button{font-size:11px;font-weight:700;padding:7px 11px;border-radius:8px;background:transparent;color:var(--text2);transition:all .15s;}
@@ -1094,15 +1099,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <div class="dash-ring-label" id="ring-rs-lbl">0/3</div>
           </div>
         </div>
-        <div class="dash-statline">
-          <div class="dash-stat"><div class="dash-stat-v" id="dash-total">0</div><div class="dash-stat-l">Questões</div></div>
-          <div class="dash-stat-div"></div>
-          <div class="dash-stat"><div class="dash-stat-v" id="dash-pct">0%</div><div class="dash-stat-l">Acertos</div></div>
-          <div class="dash-stat-div"></div>
-          <div class="dash-stat"><div class="dash-stat-v" id="dash-cards">0</div><div class="dash-stat-l">Revisados</div></div>
-          <div class="dash-stat-div"></div>
-          <div class="dash-stat"><div class="dash-stat-v" style="display:flex;align-items:center;justify-content:center;gap:3px"><span id="dash-streak">0</span><svg style="width:13px;height:13px;color:var(--ember)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1.5 3.5 5 5.2 5 9a5 5 0 0 1-10 0c0-2 .9-3.4 1.8-4.7.4 1.2 1.2 2 2.2 2.5C10.6 6.7 11 4.4 12 2z"/></svg></div><div class="dash-stat-l">Dias</div></div>
-        </div>
+        <!-- números acumulados movidos para "Meu progresso → Números gerais" (menos redundância no topo) -->
       </div>
       <!-- Alerta dados não carregados -->
       <div id="dash-reload-alert" style="display:none;background:var(--red-light);border:1px solid var(--border);border-radius:12px;margin:12px 14px 0;padding:10px 14px;align-items:center;gap:10px;justify-content:space-between;">
@@ -1110,19 +1107,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <button onclick="location.reload()" style="background:var(--red);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">Recarregar</button>
       </div>
       <div class="dash-body">
-        <!-- PAINEL DO DIA -->
-        <div class="hoje-card" id="hoje-card">
-          <div class="hoje-head"><span class="hoje-titulo">Hoje</span><span class="hoje-data" id="hoje-data"></span></div>
-          <div class="hoje-stats">
-            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-q">0</div><div class="hoje-stat-l">Questões</div></div>
-            <div class="hoje-sep"></div>
-            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-acertos" style="color:var(--green)">0</div><div class="hoje-stat-l">Acertos</div></div>
-            <div class="hoje-sep"></div>
-            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-erros" style="color:var(--red)">0</div><div class="hoje-stat-l">Erros</div></div>
-            <div class="hoje-sep"></div>
-            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-pct">—</div><div class="hoje-stat-l">Aproveit.</div></div>
-          </div>
-        </div>
         <!-- FEAT-01: Simulado de nivelamento (onboarding) -->
         <div id="diag-card" class="diag-card hidden" onclick="abrirIntro('diagnostico')">
           <div class="diag-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.2 7.8 14.3 14.3 7.8 16.2 9.7 9.7 16.2 7.8"/></svg></div>
@@ -1173,8 +1157,39 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <div class="quick-btn-sub">15 questões · pontos fracos</div>
           </div>
         </div>
+        <!-- PAINEL DO DIA — desceu para baixo do Treino: é feedback do dia, não a 1ª ação -->
+        <div class="hoje-card" id="hoje-card">
+          <div class="hoje-head"><span class="hoje-titulo">Hoje</span><span class="hoje-data" id="hoje-data"></span></div>
+          <div class="hoje-stats">
+            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-q">0</div><div class="hoje-stat-l">Questões</div></div>
+            <div class="hoje-sep"></div>
+            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-acertos" style="color:var(--green)">0</div><div class="hoje-stat-l">Acertos</div></div>
+            <div class="hoje-sep"></div>
+            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-erros" style="color:var(--red)">0</div><div class="hoje-stat-l">Erros</div></div>
+            <div class="hoje-sep"></div>
+            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-pct">—</div><div class="hoje-stat-l">Aproveit.</div></div>
+          </div>
+        </div>
         <!-- ═══ MEU PROGRESSO — acordeão dos painéis de análise ═══ -->
         <div class="sec-title" style="margin-top:6px">Meu progresso</div>
+        <!-- Números gerais (acumulado) — veio do topo do painel para reduzir a redundância -->
+        <div class="mp-item">
+          <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
+            <span class="mp-title">Números gerais</span>
+            <span class="mp-right"><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
+          </div>
+          <div class="mp-body">
+            <div class="dash-statline dash-statline-light">
+              <div class="dash-stat"><div class="dash-stat-v" id="dash-total">0</div><div class="dash-stat-l">Questões</div></div>
+              <div class="dash-stat-div"></div>
+              <div class="dash-stat"><div class="dash-stat-v" id="dash-pct">0%</div><div class="dash-stat-l">Acertos</div></div>
+              <div class="dash-stat-div"></div>
+              <div class="dash-stat"><div class="dash-stat-v" id="dash-cards">0</div><div class="dash-stat-l">Revisados</div></div>
+              <div class="dash-stat-div"></div>
+              <div class="dash-stat"><div class="dash-stat-v" style="display:flex;align-items:center;justify-content:center;gap:3px"><span id="dash-streak">0</span><svg style="width:13px;height:13px;color:var(--ember)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1.5 3.5 5 5.2 5 9a5 5 0 0 1-10 0c0-2 .9-3.4 1.8-4.7.4 1.2 1.2 2 2.2 2.5C10.6 6.7 11 4.4 12 2z"/></svg></div><div class="dash-stat-l">Dias</div></div>
+            </div>
+          </div>
+        </div>
 
         <!-- Painel 0 (bloco 34): projeção para a prova.
              Estava solta no corpo do painel, disputando atenção com o que é ACIONÁVEL.
@@ -3078,7 +3093,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.125';
+const APP_VERSAO='v1.126';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
