@@ -172,6 +172,17 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media (prefers-reduced-motion: reduce){
 *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
 }
+/* ── Transição entre telas (View Transitions API) ── header e barra ficam ancorados (nome próprio),
+   só o conteúdo faz fade + leve deslize. Degrada para troca instantânea onde não há suporte. */
+.app-header{view-transition-name:ctsp-header;}
+.bottom-nav{view-transition-name:ctsp-nav;}
+@media (prefers-reduced-motion: no-preference){
+  ::view-transition-group(root){animation-duration:.30s;}
+  ::view-transition-old(root){animation:.22s var(--ease-out) both vt-old;}
+  ::view-transition-new(root){animation:.30s var(--ease-out) both vt-new;}
+}
+@keyframes vt-old{to{opacity:0;transform:translateY(-6px);}}
+@keyframes vt-new{from{opacity:0;transform:translateY(10px);}}
 
 /* AUTH */
 #auth-screen{display:none;min-height:100vh;position:relative;flex-direction:column;align-items:center;justify-content:flex-end;padding:0;}
@@ -3012,7 +3023,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.122';
+const APP_VERSAO='v1.123';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -3091,13 +3102,23 @@ function registrarAtividadeResumo(){const e=entradaHoje();e.rs=(e.rs||0)+1;checa
 // NAV
 // ═══════════════════════════════
 function navTo(s){
+  // Transição moderna entre telas (View Transitions API) onde suportado; senão, troca direta.
+  // prefers-reduced-motion desliga o efeito — o corpo (_navToInner) roda igual nos dois casos.
+  const rm=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(document.startViewTransition&&!rm){
+    document.startViewTransition(()=>_navToInner(s,true)); // VT já anima a tela → pula o stagger dos filhos
+  }else{
+    _navToInner(s,false);
+  }
+}
+function _navToInner(s,skipStagger){
   // Qualquer navegação por MENU encerra o vínculo com a questão do reforço. O reforço e
   // o retorno usam _ativarTelaLocal (não navTo), então este clear não os atrapalha.
   origemReforco=null;
   document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   const sc=document.getElementById('screen-'+s);
-  if(sc){sc.classList.add('active');animateScreenEntrance(sc);}
+  if(sc){sc.classList.add('active');if(!skipStagger)animateScreenEntrance(sc);}
   const nav=document.getElementById('nav-'+s);
   if(nav)nav.classList.add('active');
   window.scrollTo(0,0);
