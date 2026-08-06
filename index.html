@@ -1135,7 +1135,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
               <span class="metas-head-title">Meta do dia</span>
               <span class="metas-head-sub" id="metas-sub">0 de 3 concluídas</span>
             </span>
-            <span class="metas-dots" id="metas-dots"><span class="metas-dot" data-k="q"></span><span class="metas-dot" data-k="fc"></span><span class="metas-dot" data-k="rs"></span></span>
             <span class="metas-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
           </button>
           <div class="metas-body" id="metas-body">
@@ -1405,6 +1404,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <div class="tela-h-title">Quiz</div>
             <div class="tela-h-sub">Escolha uma área ou modo especial</div>
           </div>
+          <div class="hub-inicio" id="quiz-meta-cta"></div>
           <button class="erro-mode-btn" onclick="iniciarModoErro()">
             <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;flex:1">
               <span>Modo Erro — Revisar questões erradas</span>
@@ -1429,6 +1429,8 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           </div>
           <div class="sec-title" style="margin-top:4px">Escolha uma área</div>
           <div class="area-list" id="area-list"></div>
+          <div class="sec-title mt14">Praticar por tópico</div>
+          <div id="quiz-topicos"></div>
         </div>
       </div>
       <div id="quiz-running-view" class="hidden">
@@ -3145,7 +3147,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.129';
+const APP_VERSAO='v1.130';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -3245,7 +3247,7 @@ function _navToInner(s,skipStagger){
   // pendurada para sempre, já que só `sairDoFoco()` a limparia.
   if(s==='inicio')focoAtivo=null;
   if(s==='inicio'){renderDashboard();atualizarCardTreino();}
-  if(s==='quiz'){renderAreaList();renderQuizHeader();}
+  if(s==='quiz'){renderAreaList();renderQuizHeader();renderQuizHub();}
   if(s==='cards'){cardsModo='hub';renderCards();}
   if(s==='resumos'){resumosModo='hub';renderResumos();updateBadges();}
   if(s==='consulta'){renderConsulta();}
@@ -3365,7 +3367,6 @@ function _aplicarMetas(){
   const head=document.getElementById('metas-head');if(head)head.setAttribute('aria-expanded',exp);
   const sub=document.getElementById('metas-sub');
   if(sub)sub.textContent=todas?'Tudo concluído hoje':(nDone+' de 3 concluídas');
-  document.querySelectorAll('#metas-dots .metas-dot').forEach(dot=>{dot.classList.toggle('on',!!d[dot.dataset.k]);});
   const rows={q:'meta-q',fc:'meta-fc',rs:'meta-rs'};
   Object.keys(rows).forEach(k=>{
     const row=document.getElementById(rows[k]);if(!row)return;
@@ -4104,7 +4105,7 @@ function voltarMenuQuiz(){
   // BLOCO 34: se a sessão nasceu de um tópico em foco, "voltar" tem de devolver
   // à Tela de Foco. Cair no menu do quiz é justamente o desvio que este bloco corta.
   if(focoAtivo){navTo('foco');return;}
-  renderAreaList();
+  renderAreaList();renderQuizHub();
 }
 
 function renderAreaList(){
@@ -4125,6 +4126,60 @@ function renderAreaList(){
       <div class="area-row-pct" style="color:${t>0?a.color:'var(--text3)'}">${p}%</div>
     </div>`;
   });
+}
+// ── Hub do Quiz (S64): meta do dia + índice por Área→Tópico, como Cards/Resumos ──
+function renderQuizHub(){
+  const cta=document.getElementById('quiz-meta-cta');
+  if(cta){
+    const meta=userStats.metaDiaria||10;
+    const today=diaLocal();
+    const todayN=(userStats.history||[]).find(h=>h.date===today)?.n||0;
+    const resta=Math.max(0,meta-todayN);
+    cta.innerHTML = resta>0
+      ? `<button class="btn-primary" style="width:100%" onclick="iniciarMetaQuiz()">Iniciar meta de hoje · ${resta} quest${resta!==1?'ões':'ão'}</button>
+         <div class="hub-hint">Questões novas e revisões, na medida do dia. Ou escolha uma área ou tópico abaixo.</div>`
+      : `<div class="hub-ok">✓ Meta de questões concluída hoje</div><button class="btn-weak" style="width:100%" onclick="iniciarMetaQuiz()">Responder mais assim mesmo</button>`;
+  }
+  renderQuizTopicos();
+}
+function renderQuizTopicos(){
+  const cont=document.getElementById('quiz-topicos');
+  if(!cont)return;
+  const contQ={};
+  Object.values(allQuestoes).forEach(q=>{if(q.topico)contQ[q.topico]=(contQ[q.topico]||0)+1;});
+  const areas=Object.keys(AI).filter(a=>Object.keys(TOPICOS).some(t=>TOPICOS[t].a===a&&contQ[t]));
+  let html='';
+  areas.forEach(a=>{
+    const aInfo=AI[a]||{};
+    const tops=Object.keys(TOPICOS).filter(t=>TOPICOS[t].a===a&&contQ[t])
+      .sort((x,y)=>String(x).localeCompare(String(y),undefined,{numeric:true}));
+    if(!tops.length)return;
+    html+=`<div class="busca-grupo" style="margin-top:16px">${aInfo.icon||''} ${a} · ${sanitize(aInfo.nome||'')}</div>`;
+    html+='<div class="resumos-list">';
+    tops.forEach(t=>{
+      const n=contQ[t]||0;
+      html+=`<div class="resumo-list-item" onclick="praticarTopico('${t}')">
+        <div style="width:32px;height:32px;border-radius:8px;background:${aInfo.bg};color:${aInfo.color};display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${aInfo.icon}</div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:700">${sanitize(nomeTopico(t))}</div><div class="resumo-list-vence">${n} quest${n!==1?'ões':'ão'}</div></div>
+        <div style="color:var(--text3);font-size:18px">→</div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  cont.innerHTML=html||'<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Sem tópicos com questões ainda.</div>';
+}
+function iniciarMetaQuiz(){
+  const meta=userStats.metaDiaria||10;
+  const today=diaLocal();
+  const todayN=(userStats.history||[]).find(h=>h.date===today)?.n||0;
+  const n=Math.max(1,meta-todayN);
+  quizArea='META';quizModoErro=false;
+  quizQueue=montarFilaEstudo(Object.values(allQuestoes),n);
+  quizIdx=0;quizSessao={c:0,t:0};
+  document.getElementById('quiz-home-view').classList.add('hidden');
+  document.getElementById('quiz-running-view').classList.remove('hidden');
+  document.getElementById('quiz-area-tag').textContent='Meta do dia';
+  navTo('quiz');renderQuizQ();
 }
 
 // ── S47 CLASSIFICAÇÃO DE MATERIAL: novo / errado / revisar / dominado ──
