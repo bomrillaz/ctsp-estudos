@@ -292,11 +292,27 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .dash-statline-light .dash-stat-v{color:var(--text);}
 .dash-statline-light .dash-stat-l{color:var(--text2);}
 .dash-statline-light .dash-stat-div{background:var(--line-soft);}
-/* Meta do dia — faixa compacta (substituiu os 3 anéis grandes) */
-.metas-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:11px;position:relative;z-index:1;}
-.metas-row{display:flex;align-items:center;gap:11px;}
-.metas-ic{width:24px;flex-shrink:0;color:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;}
-.metas-ic svg{width:18px;height:18px;}
+/* Meta do dia — recolhível (padrão fechado; cada meta batida "brota" sozinha) */
+.metas-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:4px 6px;position:relative;z-index:1;}
+.metas-head{width:100%;background:none;border:none;color:inherit;display:flex;align-items:center;gap:10px;padding:9px 8px;cursor:pointer;text-align:left;border-radius:12px;}
+.metas-head:focus-visible{outline:2px solid var(--ember);outline-offset:-2px;}
+.metas-head-ic{width:22px;height:22px;flex-shrink:0;color:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;}
+.metas-head-ic svg{width:19px;height:19px;}
+.metas-head-txt{flex:1;min-width:0;display:flex;flex-direction:column;}
+.metas-head-title{font-size:13px;font-weight:700;color:#fff;}
+.metas-head-sub{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);}
+.metas-card.todas .metas-head-sub{color:#46C07A;}
+.metas-dots{display:flex;gap:4px;flex-shrink:0;}
+.metas-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.22);transition:background .3s;}
+.metas-dot.on{background:#46C07A;}
+.metas-chev{color:rgba(255,255,255,.5);display:flex;flex-shrink:0;transition:transform .25s ease;}
+.metas-chev svg{width:18px;height:18px;}
+.metas-card.expanded .metas-chev{transform:rotate(180deg);}
+.metas-body{padding:0 8px;}
+.metas-row{display:flex;align-items:center;gap:10px;max-height:0;opacity:0;overflow:hidden;margin:0;transition:max-height .5s var(--ease-out),opacity .4s,margin .4s;}
+.metas-row.vis{max-height:58px;opacity:1;margin:0 0 12px;}
+.metas-ic{width:22px;flex-shrink:0;color:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;}
+.metas-ic svg{width:17px;height:17px;}
 .metas-mid{flex:1;min-width:0;}
 .metas-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
 .metas-nome{font-size:12.5px;font-weight:700;color:#fff;}
@@ -309,6 +325,27 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .metas-fill.done{background:#46C07A;}
 .metas-pct{font-size:12.5px;font-weight:800;color:#fff;min-width:30px;text-align:right;font-variant-numeric:tabular-nums;}
 .metas-row.batido .metas-pct{color:#46C07A;}
+.metas-hide{display:none;flex-shrink:0;width:20px;height:20px;align-items:center;justify-content:center;background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;border-radius:6px;padding:0;}
+.metas-hide svg{width:13px;height:13px;}
+.metas-hide:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.08);}
+.metas-card:not(.expanded) .metas-row.vis .metas-hide{display:flex;}
+/* Consulta — acordeão de glossário/normas (só sigla/termo; expande no clique) */
+.acc-letra{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--red);letter-spacing:.1em;margin:16px 3px 7px;}
+.acc-letra:first-child{margin-top:4px;}
+.acc-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:12px;margin-bottom:8px;overflow:hidden;}
+.acc-head{width:100%;display:flex;align-items:center;gap:10px;padding:13px 14px;background:none;border:none;cursor:pointer;text-align:left;color:var(--text);}
+.acc-head:focus-visible{outline:2px solid var(--ember);outline-offset:-2px;}
+.acc-head-main{flex:1;min-width:0;}
+.acc-sigla{font-weight:800;font-size:14px;color:var(--text);}
+.acc-sigla small{font-weight:600;font-size:12px;color:var(--text2);font-style:italic;}
+.acc-nome{font-size:12px;color:var(--text2);margin-top:2px;font-style:italic;line-height:1.4;}
+.acc-chev{color:var(--text3);flex-shrink:0;display:flex;transition:transform .22s ease;}
+.acc-chev svg{width:18px;height:18px;}
+.acc-item.open .acc-chev{transform:rotate(180deg);}
+.acc-body{display:none;padding:2px 14px 14px;}
+.acc-item.open .acc-body{display:block;}
+.acc-def{font-size:13px;color:var(--text2);line-height:1.6;}
+.acc-fonte{font-size:10.5px;color:var(--text3);margin-top:8px;}
 /* S30: seletor de tema */
 .theme-seg{display:flex;background:var(--paper-2);border:1px solid var(--border);border-radius:11px;padding:3px;gap:2px;}
 .theme-seg button{font-size:11px;font-weight:700;padding:7px 11px;border-radius:8px;background:transparent;color:var(--text2);transition:all .15s;}
@@ -1091,30 +1128,44 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
              encostado na saudação; três anéis ali espremeriam o nome no celular, então
              ganharam uma linha própria, que também deixa as três metas com o mesmo peso. -->
         <!-- Meta do dia: faixa compacta com 3 mini-progressos (substituiu os 3 anéis grandes) -->
-        <div class="metas-card">
-          <div class="metas-row" id="meta-q">
-            <span class="metas-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
-            <div class="metas-mid">
-              <div class="metas-top"><span class="metas-nome">Questões</span><span class="metas-num" id="dash-ring-label">0/10</span></div>
-              <div class="metas-track"><div class="metas-fill mq" id="dash-ring"></div></div>
+        <div class="metas-card" id="metas-card">
+          <button class="metas-head" id="metas-head" aria-expanded="false" aria-controls="metas-body" onclick="toggleMetas()">
+            <span class="metas-head-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg></span>
+            <span class="metas-head-txt">
+              <span class="metas-head-title">Meta do dia</span>
+              <span class="metas-head-sub" id="metas-sub">0 de 3 concluídas</span>
+            </span>
+            <span class="metas-dots" id="metas-dots"><span class="metas-dot" data-k="q"></span><span class="metas-dot" data-k="fc"></span><span class="metas-dot" data-k="rs"></span></span>
+            <span class="metas-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+          </button>
+          <div class="metas-body" id="metas-body">
+            <div class="metas-row" id="meta-q">
+              <span class="metas-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+              <div class="metas-mid">
+                <div class="metas-top"><span class="metas-nome">Questões</span><span class="metas-num" id="dash-ring-label">0/10</span></div>
+                <div class="metas-track"><div class="metas-fill mq" id="dash-ring"></div></div>
+              </div>
+              <span class="metas-pct" id="dash-ring-pct">0%</span>
+              <button class="metas-hide" type="button" aria-label="Esconder a meta de questões" onclick="esconderMeta(event,'q')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
             </div>
-            <span class="metas-pct" id="dash-ring-pct">0%</span>
-          </div>
-          <div class="metas-row" id="meta-fc">
-            <span class="metas-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>
-            <div class="metas-mid">
-              <div class="metas-top"><span class="metas-nome">Cards</span><span class="metas-num" id="ring-fc-lbl">0/15</span></div>
-              <div class="metas-track"><div class="metas-fill mc" id="ring-fc"></div></div>
+            <div class="metas-row" id="meta-fc">
+              <span class="metas-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>
+              <div class="metas-mid">
+                <div class="metas-top"><span class="metas-nome">Cards</span><span class="metas-num" id="ring-fc-lbl">0/15</span></div>
+                <div class="metas-track"><div class="metas-fill mc" id="ring-fc"></div></div>
+              </div>
+              <span class="metas-pct" id="ring-fc-pct">0%</span>
+              <button class="metas-hide" type="button" aria-label="Esconder a meta de cards" onclick="esconderMeta(event,'fc')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
             </div>
-            <span class="metas-pct" id="ring-fc-pct">0%</span>
-          </div>
-          <div class="metas-row" id="meta-rs">
-            <span class="metas-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
-            <div class="metas-mid">
-              <div class="metas-top"><span class="metas-nome">Resumos</span><span class="metas-num" id="ring-rs-lbl">0/3</span></div>
-              <div class="metas-track"><div class="metas-fill mr" id="ring-rs"></div></div>
+            <div class="metas-row" id="meta-rs">
+              <span class="metas-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+              <div class="metas-mid">
+                <div class="metas-top"><span class="metas-nome">Resumos</span><span class="metas-num" id="ring-rs-lbl">0/3</span></div>
+                <div class="metas-track"><div class="metas-fill mr" id="ring-rs"></div></div>
+              </div>
+              <span class="metas-pct" id="ring-rs-pct">0%</span>
+              <button class="metas-hide" type="button" aria-label="Esconder a meta de resumos" onclick="esconderMeta(event,'rs')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
             </div>
-            <span class="metas-pct" id="ring-rs-pct">0%</span>
           </div>
         </div>
         <!-- números acumulados movidos para "Meu progresso → Números gerais" (menos redundância no topo) -->
@@ -1353,11 +1404,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <div class="tela-header">
             <div class="tela-h-title">Quiz</div>
             <div class="tela-h-sub">Escolha uma área ou modo especial</div>
-            <div class="tela-h-stats">
-              <div class="tela-h-stat"><div class="tela-h-stat-v" id="quiz-h-resp">0</div><div class="tela-h-stat-l">Respondidas</div></div>
-              <div class="tela-h-stat"><div class="tela-h-stat-v" id="quiz-h-acertos">—</div><div class="tela-h-stat-l">Acertos</div></div>
-              <div class="tela-h-stat"><div class="tela-h-stat-v" id="quiz-h-areas">0/5</div><div class="tela-h-stat-l">Áreas</div></div>
-            </div>
           </div>
           <button class="erro-mode-btn" onclick="iniciarModoErro()">
             <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;flex:1">
@@ -1418,11 +1464,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="tela-header" style="margin-bottom:0">
           <div class="tela-h-title">Flashcards</div>
           <div class="tela-h-sub">Memorização rápida — frente e verso</div>
-          <div class="tela-h-stats">
-            <div class="tela-h-stat"><div class="tela-h-stat-v" id="cards-due">0</div><div class="tela-h-stat-l">Para hoje</div></div>
-            <div class="tela-h-stat"><div class="tela-h-stat-v" id="cards-total-n">0</div><div class="tela-h-stat-l">Total</div></div>
-            <div class="tela-h-stat"><div class="tela-h-stat-v" id="cards-streak-n">0</div><div class="tela-h-stat-l">Sequência</div></div>
-          </div>
         </div>
       </div>
       <div class="cards-body" id="cards-body"></div>
@@ -1491,11 +1532,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="tela-header">
           <div class="tela-h-title">Resumos</div>
           <div class="tela-h-sub">Revisão espaçada por dificuldade</div>
-          <div class="tela-h-stats">
-            <div class="tela-h-stat"><div class="tela-h-stat-v" id="resumos-fila">0</div><div class="tela-h-stat-l">Para hoje</div></div>
-            <div class="tela-h-stat"><div class="tela-h-stat-v" id="resumos-total">0</div><div class="tela-h-stat-l">Total</div></div>
-            <div class="tela-h-stat"><div class="tela-h-stat-v" id="resumos-revis">0</div><div class="tela-h-stat-l">Revisados</div></div>
-          </div>
         </div>
         <div id="resumos-content"></div>
       </div>
@@ -1506,10 +1542,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="tela-header">
           <div class="tela-h-title">Consulta</div>
           <div class="tela-h-sub">Glossário e mapa das normas do edital</div>
-          <div class="tela-h-stats">
-            <div class="tela-h-stat"><div class="tela-h-stat-v" id="consulta-glo-n">0</div><div class="tela-h-stat-l">Termos</div></div>
-            <div class="tela-h-stat"><div class="tela-h-stat-v" id="consulta-nor-n">0</div><div class="tela-h-stat-l">Normas</div></div>
-          </div>
         </div>
         <div class="sub-tabs" id="consulta-subtabs">
           <button class="sub-tab active" data-sub="glossario" onclick="setConsultaSub('glossario')">Glossário</button>
@@ -3113,7 +3145,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.128';
+const APP_VERSAO='v1.129';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -3302,6 +3334,48 @@ function renderHoje(){
   const mt=document.getElementById('hoje-meta-txt');
   if(mt)mt.textContent=n>=meta?('Meta do dia batida \u00b7 '+n+'/'+meta):(n+'/'+meta+' da meta di\u00e1ria');
 }
+// ── Meta do dia recolhível (S63) ──────────────────────────────────────────
+// Recolhida por padrão. Cada meta batida "brota" sozinha mesmo fechada; o usuário
+// pode escondê-la (x) individualmente. Ao bater as 3 vira faixa fina de concluído.
+// Estado de expandir e de ocultas persistem em localStorage (ocultas resetam por dia).
+let _metasDone={q:false,fc:false,rs:false};
+function _metasExpandida(){try{return localStorage.getItem('metasExpandida')==='1';}catch(_){return false;}}
+function _metasOcultas(){try{return JSON.parse(localStorage.getItem('metasOcultas_'+diaLocal())||'[]');}catch(_){return [];}}
+function toggleMetas(){
+  const e=!_metasExpandida();
+  try{localStorage.setItem('metasExpandida',e?'1':'0');}catch(_){}
+  _aplicarMetas();
+}
+function esconderMeta(ev,k){
+  if(ev){ev.stopPropagation();}
+  const a=_metasOcultas();
+  if(!a.includes(k)){a.push(k);try{localStorage.setItem('metasOcultas_'+diaLocal(),JSON.stringify(a));}catch(_){}}
+  _aplicarMetas();
+}
+function sincronizarMetas(done){_metasDone=done||_metasDone;_aplicarMetas();}
+function _aplicarMetas(){
+  const card=document.getElementById('metas-card');if(!card)return;
+  const exp=_metasExpandida();
+  const ocult=_metasOcultas();
+  const d=_metasDone;
+  const nDone=(d.q?1:0)+(d.fc?1:0)+(d.rs?1:0);
+  const todas=nDone===3;
+  card.classList.toggle('expanded',exp);
+  card.classList.toggle('todas',todas);
+  const head=document.getElementById('metas-head');if(head)head.setAttribute('aria-expanded',exp);
+  const sub=document.getElementById('metas-sub');
+  if(sub)sub.textContent=todas?'Tudo concluído hoje':(nDone+' de 3 concluídas');
+  document.querySelectorAll('#metas-dots .metas-dot').forEach(dot=>{dot.classList.toggle('on',!!d[dot.dataset.k]);});
+  const rows={q:'meta-q',fc:'meta-fc',rs:'meta-rs'};
+  Object.keys(rows).forEach(k=>{
+    const row=document.getElementById(rows[k]);if(!row)return;
+    let vis;
+    if(exp)vis=true;               // aberto: mostra tudo
+    else if(todas)vis=false;       // 3/3 fechado: faixa fina de concluído
+    else vis=d[k]&&!ocult.includes(k); // fechado: só a meta batida e não escondida
+    row.classList.toggle('vis',vis);
+  });
+}
 function renderDashboard(){
   // S59: atualiza o retrato da semana ANTES de desenhar, para a variação semanal já
   // sair correta nesta passada. A função se protege sozinha se `dataLoaded` for false.
@@ -3347,13 +3421,16 @@ function renderDashboard(){
     }
     const lbl=document.getElementById(idLbl);
     if(lbl)lbl.textContent=feito+'/'+alvo;
+    return bateu;
   };
   // As metas de card/resumo vivem em `userStats.dose` (é o que a tela de Configurações
   // grava), com DOSE_PADRAO como piso — não inventar nome de campo aqui.
   const dose=userStats.dose||{};
-  desenharMeta('dash-ring','dash-ring-pct','dash-ring-label',todayN,meta,'questões');
-  desenharMeta('ring-fc','ring-fc-pct','ring-fc-lbl',hj.fc||0,dose.cards||DOSE_PADRAO.cards,'flashcards');
-  desenharMeta('ring-rs','ring-rs-pct','ring-rs-lbl',hj.rs||0,dose.resumos||DOSE_PADRAO.resumos,'resumos');
+  const dQ=desenharMeta('dash-ring','dash-ring-pct','dash-ring-label',todayN,meta,'questões');
+  const dFc=desenharMeta('ring-fc','ring-fc-pct','ring-fc-lbl',hj.fc||0,dose.cards||DOSE_PADRAO.cards,'flashcards');
+  const dRs=desenharMeta('ring-rs','ring-rs-pct','ring-rs-lbl',hj.rs||0,dose.resumos||DOSE_PADRAO.resumos,'resumos');
+  // Meta do dia recolhível: fecha por padrão; cada meta batida aparece sozinha (S63).
+  sincronizarMetas({q:dQ,fc:dFc,rs:dRs});
 
   // BLOCO 34: uma só chamada substitui renderPontoFraco + card de vencidas +
   // card de erros. Tudo virou fila de notificações compactas.
@@ -4732,40 +4809,61 @@ function renderQuizHeader(){
   set('quiz-h-acertos',t>0?Math.round(c/t*100)+'%':'—');
   set('quiz-h-areas',areas+'/'+Object.keys(AI).length);
 }
+const _CHEV_ACC='<span class="acc-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>';
+function toggleAcc(btn){const it=btn.closest('.acc-item');if(!it)return;const open=it.classList.toggle('open');btn.setAttribute('aria-expanded',open);}
 function gloCard(t){
-  return `<div class="resumo-list-item" id="glo-${GLOSARIO.indexOf(t)}" style="border-left:3px solid var(--blue)">
-    <div style="font-weight:800;font-size:14px">${sanitize(t.t)}${t.x?` <span style="font-weight:600;color:var(--text2);font-size:12.5px">— ${sanitize(t.x)}</span>`:''}</div>
-    <div style="font-size:12.5px;color:var(--text2);margin-top:4px;line-height:1.55">${sanitize(t.d)}</div>
-    ${t.f?`<div style="font-size:10.5px;color:var(--text3);margin-top:5px">Fonte: ${sanitize(t.f)}</div>`:''}
+  return `<div class="acc-item" id="glo-${GLOSARIO.indexOf(t)}">
+    <button class="acc-head" type="button" aria-expanded="false" onclick="toggleAcc(this)">
+      <span class="acc-head-main"><span class="acc-sigla">${sanitize(t.t)}${t.x?` <small>— ${sanitize(t.x)}</small>`:''}</span></span>
+      ${_CHEV_ACC}
+    </button>
+    <div class="acc-body">
+      <div class="acc-def">${sanitize(t.d)}</div>
+      ${t.f?`<div class="acc-fonte">Fonte: ${sanitize(t.f)}</div>`:''}
+    </div>
+  </div>`;
+}
+function normaCard(n){
+  return `<div class="acc-item" id="norma-${NORMAS.indexOf(n)}">
+    <button class="acc-head" type="button" aria-expanded="false" onclick="toggleAcc(this)">
+      <span class="acc-head-main"><span class="acc-sigla">${sanitize(n.s)}</span><span class="acc-nome">${sanitize(n.n)}</span></span>
+      ${_CHEV_ACC}
+    </button>
+    <div class="acc-body"><div class="acc-def">${sanitize(n.d)}</div></div>
   </div>`;
 }
 function renderGlossario(){
   const cont=document.getElementById('glossario-content');if(!cont)return;
   cont.innerHTML=`<input type="search" id="glo-filtro" placeholder="🔎 Filtrar termos…" autocomplete="off" oninput="filtrarGlossario(this.value)" style="width:100%;padding:10px 13px;border-radius:11px;border:1px solid var(--line-soft);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:10px">
-    <div id="glo-count" style="font-size:11.5px;color:var(--text3);margin-bottom:10px"></div>
+    <div id="glo-count" style="font-size:11.5px;color:var(--text3);margin-bottom:6px"></div>
     <div id="glo-lista"></div>`;
   filtrarGlossario('');
 }
 function filtrarGlossario(q){
   const termos=(typeof GLOSARIO!=='undefined')?GLOSARIO.slice().sort((a,b)=>a.t.localeCompare(b.t,'pt')):[];
   const f=normBusca(q||'');
-  const vis=f?termos.filter(t=>normBusca(t.t+' '+t.x+' '+t.d).includes(f)):termos;
+  const vis=f?termos.filter(t=>normBusca(t.t+' '+(t.x||'')+' '+t.d).includes(f)):termos;
   const lc=document.getElementById('glo-count');if(lc)lc.textContent=`${vis.length} de ${termos.length} termos`;
-  const ll=document.getElementById('glo-lista');if(ll)ll.innerHTML=vis.length?vis.map(gloCard).join(''):`<div style="text-align:center;padding:20px;color:var(--text2)">Nenhum termo encontrado.</div>`;
+  const ll=document.getElementById('glo-lista');if(!ll)return;
+  if(!vis.length){ll.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text2)">Nenhum termo encontrado.</div>`;return;}
+  // Índice alfabético: cabeçalho por letra inicial (A, B, C…).
+  let h='',letra='';
+  vis.forEach(t=>{
+    const L=(t.t||'').trim().charAt(0).toUpperCase();
+    if(L&&L!==letra){letra=L;h+=`<div class="acc-letra">${sanitize(letra)}</div>`;}
+    h+=gloCard(t);
+  });
+  ll.innerHTML=h;
 }
 function renderNormas(){
   const cont=document.getElementById('normas-content');if(!cont)return;
   const areas=[['AT1','Segurança Contra Incêndios'],['AT2','Combate a Incêndios'],['AT3','Buscas e Salvamentos'],['AT4','Direito'],['AT5','Normas e Doc. Técnica']];
   const lista=(typeof NORMAS!=='undefined')?NORMAS:[];
-  let h=`<div style="font-size:11.5px;color:var(--text3);margin-bottom:12px">O que cada norma do edital aborda — para situar as citações das questões.</div>`;
+  let h=`<div style="font-size:11.5px;color:var(--text3);margin-bottom:12px">O que cada norma do edital aborda — toque para ver o resumo.</div>`;
   areas.forEach(([a,nome])=>{
     const g=lista.filter(n=>n.a===a);if(!g.length)return;
     h+=`<div class="busca-grupo">${a} · ${sanitize(nome)}</div>`;
-    h+=g.map(n=>`<div class="resumo-list-item" id="norma-${NORMAS.indexOf(n)}" style="border-left:3px solid var(--blue)">
-      <div style="font-weight:800;font-size:14px">${sanitize(n.s)}</div>
-      <div style="font-size:12px;color:var(--text2);margin-top:1px;font-style:italic">${sanitize(n.n)}</div>
-      <div style="font-size:12.5px;color:var(--text2);margin-top:5px;line-height:1.55">${sanitize(n.d)}</div>
-    </div>`).join('');
+    h+=g.map(normaCard).join('');
   });
   cont.innerHTML=h;
 }
@@ -4775,13 +4873,19 @@ function _realceBusca(el){
   el.style.transition='background .3s';el.style.background='var(--amber-light)';
   setTimeout(()=>{el.style.background='';},1500);
 }
+function _abrirAcc(el){
+  if(!el)return;
+  el.classList.add('open');
+  const hd=el.querySelector('.acc-head');if(hd)hd.setAttribute('aria-expanded','true');
+  _realceBusca(el);
+}
 function abrirGlossarioBusca(idx){
   fecharBuscaGlobal();navTo('consulta');setConsultaSub('glossario');
-  setTimeout(()=>_realceBusca(document.getElementById('glo-'+idx)),80);
+  setTimeout(()=>_abrirAcc(document.getElementById('glo-'+idx)),80);
 }
 function abrirNormaBusca(idx){
   fecharBuscaGlobal();navTo('consulta');setConsultaSub('normas');
-  setTimeout(()=>_realceBusca(document.getElementById('norma-'+idx)),80);
+  setTimeout(()=>_abrirAcc(document.getElementById('norma-'+idx)),80);
 }
 
 let resumosModo='hub', resumosUnico=false;
