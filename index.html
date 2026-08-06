@@ -3012,7 +3012,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.121';
+const APP_VERSAO='v1.122';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4364,12 +4364,24 @@ function renderCard(){
     ${origemReforco==='quiz'?'':renderCardLista()}`;
 }
 
-// Índice de TODOS os flashcards, agrupado por Área → Tópico (sub-itens). Espelha a lista dos resumos.
+// Índice de TODOS os flashcards: chips de filtro por área + agrupado por Área → Tópico. Espelha a lista dos resumos.
+let cardsListaFiltroAT='todos';
 function renderCardLista(){
   const todos=Object.values(allFlashcards||{});
   if(!todos.length)return '';
   const areas=Object.keys(AI).filter(a=>todos.some(fc=>(fc.a||fc.area)===a));
-  let html='<div class="sec-title mt14">Todos os flashcards</div>';
+  if(cardsListaFiltroAT!=='todos'&&!areas.includes(cardsListaFiltroAT))cardsListaFiltroAT='todos';
+  let chips='<div class="resumo-filtros">';
+  chips+=`<button class="resumo-filtro${cardsListaFiltroAT==='todos'?' on':''}" data-at="todos" onclick="filtrarCardsLista('todos')">Todos</button>`;
+  areas.forEach(a=>{chips+=`<button class="resumo-filtro${cardsListaFiltroAT===a?' on':''}" data-at="${a}" onclick="filtrarCardsLista('${a}')">${a}</button>`;});
+  chips+='</div>';
+  return '<div class="sec-title mt14">Todos os flashcards</div>'+chips+'<div class="resumos-list" id="cards-lista-itens">'+cardListaItens()+'</div>';
+}
+function cardListaItens(){
+  const todos=Object.values(allFlashcards||{}).filter(fc=>cardsListaFiltroAT==='todos'||(fc.a||fc.area)===cardsListaFiltroAT);
+  if(!todos.length)return '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Nenhum flashcard nesta área.</div>';
+  const areas=Object.keys(AI).filter(a=>todos.some(fc=>(fc.a||fc.area)===a));
+  let html='';
   areas.forEach(a=>{
     const aInfo=AI[a]||{};
     const doArea=todos.filter(fc=>(fc.a||fc.area)===a);
@@ -4387,6 +4399,12 @@ function renderCardLista(){
     });
   });
   return html;
+}
+function filtrarCardsLista(at){
+  cardsListaFiltroAT=at;
+  const el=document.getElementById('cards-lista-itens');
+  if(el)el.innerHTML=cardListaItens();
+  document.querySelectorAll('#screen-cards .resumo-filtro').forEach(b=>b.classList.toggle('on',b.dataset.at===at));
 }
 function estudarCardUnico(id){
   const fc=allFlashcards[id]||Object.values(allFlashcards).find(x=>x.id===id);
@@ -4715,7 +4733,7 @@ function filtrarResumos(at){
   resumoFiltroAT=at;
   const el=document.getElementById('resumos-list-itens');
   if(el)el.innerHTML=resumoListaItens();
-  document.querySelectorAll('.resumo-filtro').forEach(b=>b.classList.toggle('on',b.dataset.at===at));
+  document.querySelectorAll('#screen-resumos .resumo-filtro').forEach(b=>b.classList.toggle('on',b.dataset.at===at));
 }
 
 function mostrarResumoDirecto(id){
