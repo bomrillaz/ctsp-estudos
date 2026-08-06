@@ -35,11 +35,11 @@ try {
   });
 } catch (_) {}
 
-const CACHE = 'ctsp-cache-v6';
+const CACHE = 'ctsp-cache-v7';
 const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
-  'data.js?v=184'
+  'data.js?v=185'
 ];
 const CROSS = [
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
