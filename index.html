@@ -377,6 +377,33 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .ver-progresso-t{font-size:14px;font-weight:700;color:var(--text);}
 .ver-progresso-s{font-size:11.5px;color:var(--text3);}
 .ver-progresso-arw{color:var(--text3);font-size:18px;flex-shrink:0;}
+/* Tela "Meu progresso" — placar, âncoras, módulos e lista unificada por área (S64) */
+.pg-placar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.pg-kpi{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);}
+.pg-kpi-v{font-family:var(--font-display);font-size:26px;font-weight:700;color:var(--text);line-height:1;display:flex;align-items:baseline;gap:6px;}
+.pg-kpi-l{font-size:10.5px;color:var(--text2);margin-top:4px;font-weight:600;}
+.pg-kpi-delta{font-size:11px;font-weight:800;}
+.pg-kpi-delta.up{color:var(--green);}
+.pg-kpi-delta.down{color:var(--red);}
+.pg-subline{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11.5px;color:var(--text2);margin-bottom:16px;padding:0 2px;}
+.pg-subline b{color:var(--text);font-variant-numeric:tabular-nums;}
+.pg-anchors{display:flex;gap:8px;margin-bottom:16px;}
+.pg-anchor{flex:1;font-size:12px;font-weight:700;color:var(--text2);background:var(--paper-2);border:1px solid var(--line-soft);border-radius:10px;padding:8px;cursor:pointer;}
+.pg-anchor:active{transform:scale(.97);}
+.pg-mod-h{font-family:var(--font-display);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text);margin:4px 0 10px;position:relative;padding-left:16px;}
+.pg-mod-h::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:10px;height:3px;border-radius:2px;background:var(--fire-line);}
+.pg-legend{display:flex;flex-direction:column;gap:5px;margin:12px 0;font-size:10.5px;color:var(--text2);line-height:1.4;}
+.pg-legend i{display:inline-block;width:16px;height:8px;border-radius:2px;margin-right:7px;vertical-align:-1px;flex-shrink:0;}
+.pg-area-row{display:flex;gap:10px;padding:11px 0;border-top:1px solid var(--line-soft);}
+.pg-area-row:first-of-type{border-top:none;}
+.pg-area-ic{font-size:15px;flex-shrink:0;padding-top:1px;line-height:1;}
+.pg-area-main{flex:1;min-width:0;}
+.pg-area-name{font-size:11.5px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.pg-area-line{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.pg-area-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);min-width:60px;}
+.pg-area-bar-wrap{flex:1;height:7px;background:var(--paper-2);border-radius:4px;overflow:hidden;}
+.pg-area-bar{height:100%;border-radius:4px;transition:width .4s;}
+.pg-area-val{font-size:10.5px;font-weight:800;min-width:70px;text-align:right;font-variant-numeric:tabular-nums;}
 
 /* Ring SVG */
 .ring-svg{transform:rotate(-90deg);}
@@ -880,19 +907,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .btn-voltar-quiz:active{opacity:.7;}
 
 /* PAINEL DO DIA + selo salvo */
-.hoje-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin:0 14px 12px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-.hoje-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-.hoje-titulo{font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ember);}
-.hoje-data{font-size:12px;color:var(--text3);font-variant-numeric:tabular-nums;}
-.hoje-stats{display:flex;align-items:center;justify-content:space-between;}
-.hoje-stat{flex:1;text-align:center;}
-.hoje-stat-v{font-size:22px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;line-height:1.1;}
-.hoje-stat-l{font-size:11px;color:var(--text2);margin-top:2px;}
-.hoje-sep{width:1px;height:28px;background:var(--border);}
-.hoje-meta{display:flex;align-items:center;gap:8px;margin-top:12px;}
-.hoje-meta-bar{flex:1;height:6px;background:var(--paper-2);border-radius:4px;overflow:hidden;}
-.hoje-meta-fill{height:100%;width:0;background:linear-gradient(90deg,var(--ember),var(--red));border-radius:4px;transition:width .4s ease;}
-.hoje-meta-txt{font-size:11px;color:var(--text2);white-space:nowrap;font-variant-numeric:tabular-nums;}
+/* (S64) CSS do card "Hoje" removido — o painel virou KPI no placar de "Meu progresso". */
 /* S47: selos de status da questão */
 .q-badge{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;vertical-align:middle;}
 .badge-nova{background:var(--green-light);color:var(--green);}
@@ -1208,6 +1223,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           </div>
           <div id="foco-fila"></div>
         </div>
+        <!-- Foco da semana (sistema define o tópico de menor domínio) — voltou da tela de
+             progresso para junto do "Seu foco": progresso é leitura, aqui é ação (S64). -->
+        <div id="dash-objetivo" style="margin-bottom:12px"></div>
         <!-- BLOCO 43: caminho de ouro. "Treino do dia" é a porta principal (revisão
              vencida + ponto fraco + cobertura por peso do edital); substitui o antigo
              "Treino Adaptativo", agora embutido nele. Estudo Rápido/Focado viram atalhos
@@ -1510,131 +1528,77 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         </div>
       </div>
       <div class="dash-body">
-        <!-- Hoje -->
-        <div class="hoje-card" id="hoje-card">
-          <div class="hoje-head"><span class="hoje-titulo">Hoje</span><span class="hoje-data" id="hoje-data"></span></div>
-          <div class="hoje-stats">
-            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-q">0</div><div class="hoje-stat-l">Questões</div></div>
-            <div class="hoje-sep"></div>
-            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-acertos" style="color:var(--green)">0</div><div class="hoje-stat-l">Acertos</div></div>
-            <div class="hoje-sep"></div>
-            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-erros" style="color:var(--red)">0</div><div class="hoje-stat-l">Erros</div></div>
-            <div class="hoje-sep"></div>
-            <div class="hoje-stat"><div class="hoje-stat-v" id="hoje-pct">—</div><div class="hoje-stat-l">Aproveit.</div></div>
+        <!-- PLACAR — sempre visível (resumo do estado) -->
+        <div class="pg-placar">
+          <div class="pg-kpi"><div class="pg-kpi-v" id="kpi-dominio">—</div><div class="pg-kpi-l">Domínio geral</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-v" id="kpi-projecao">—</div><div class="pg-kpi-l">Projeção · de 60</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-v" id="kpi-cobertura">—</div><div class="pg-kpi-l">Cobertura do edital</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-v"><span id="kpi-acuracia">—</span><span class="pg-kpi-delta" id="kpi-acuracia-delta"></span></div><div class="pg-kpi-l">Acurácia geral</div></div>
+        </div>
+        <div class="pg-subline">
+          <span><b id="kpi-respondidas">0</b> respondidas</span>
+          <span><b id="kpi-revisados">0</b> revisados</span>
+          <span><b id="kpi-streak">0</b> dias seguidos</span>
+          <span id="kpi-hoje">Hoje: 0</span>
+        </div>
+        <div class="pg-anchors">
+          <button class="pg-anchor" onclick="pgScroll('pg-projecao')">Projeção</button>
+          <button class="pg-anchor" onclick="pgScroll('pg-area')">Por área</button>
+          <button class="pg-anchor" onclick="pgScroll('pg-atividade')">Atividade</button>
+        </div>
+        <div id="pg-projecao">
+          <div class="pg-mod-h">Projeção para a prova <span class="info-btn" onclick="showInfo('prontidao')" aria-label="Mais informações">?</span></div>
+          <div id="dash-pront" class="chart-wrap hidden">
+            <div style="display:flex;align-items:center;justify-content:flex-end;">
+              <span style="font-size:12px;font-weight:700;color:var(--ember);" id="pront-dias"></span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:6px;margin-top:6px;">
+              <span style="font-size:30px;font-weight:800;color:var(--ember);" id="pront-num">—</span>
+              <span style="font-size:13px;color:var(--text2);">de 60 questões (estimativa)</span>
+            </div>
+            <div style="height:8px;background:var(--paper-2);border-radius:6px;overflow:hidden;margin-top:8px;"><div id="pront-bar" style="height:100%;width:0%;background:var(--fire-line);border-radius:6px;transition:width .5s;"></div></div>
+            <div style="font-size:11px;color:var(--text3);margin-top:6px;" id="pront-detalhe"></div>
+            <div id="pront-aviso" style="display:none;font-size:11px;color:var(--ember-deep);background:var(--amber-light);border-radius:8px;padding:7px 9px;margin-top:8px;line-height:1.4;"><svg style="width:13px;height:13px;vertical-align:-1px;margin-right:3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Estimativa preliminar — baseada em poucas respostas. Vai ficar mais precisa conforme você estuda.</div>
           </div>
         </div>
-<!-- Números gerais (acumulado) — veio do topo do painel para reduzir a redundância -->
-        <div class="mp-item">
-          <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
-            <span class="mp-title">Números gerais</span>
+        <div class="mp-item open" id="pg-area">
+          <div class="mp-head" role="button" tabindex="0" aria-expanded="true" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
+            <span class="mp-title">Por área <span class="info-btn" onclick="event.stopPropagation();showInfo('dominio')" aria-label="Mais informações">?</span></span>
             <span class="mp-right"><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
           </div>
           <div class="mp-body">
-            <div class="dash-statline dash-statline-light">
-              <div class="dash-stat"><div class="dash-stat-v" id="dash-total">0</div><div class="dash-stat-l">Questões</div></div>
-              <div class="dash-stat-div"></div>
-              <div class="dash-stat"><div class="dash-stat-v" id="dash-pct">0%</div><div class="dash-stat-l">Acertos</div></div>
-              <div class="dash-stat-div"></div>
-              <div class="dash-stat"><div class="dash-stat-v" id="dash-cards">0</div><div class="dash-stat-l">Revisados</div></div>
-              <div class="dash-stat-div"></div>
-              <div class="dash-stat"><div class="dash-stat-v" style="display:flex;align-items:center;justify-content:center;gap:3px"><span id="dash-streak">0</span><svg style="width:13px;height:13px;color:var(--ember)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1.5 3.5 5 5.2 5 9a5 5 0 0 1-10 0c0-2 .9-3.4 1.8-4.7.4 1.2 1.2 2 2.2 2.5C10.6 6.7 11 4.4 12 2z"/></svg></div><div class="dash-stat-l">Dias</div></div>
-            </div>
-          </div>
-        </div>
-<!-- Painel 0 (bloco 34): projeção para a prova.
-             Estava solta no corpo do painel, disputando atenção com o que é ACIONÁVEL.
-             Projeção é análise, não tarefa — desceu para o acordeão, fechada por padrão. -->
-        <div class="mp-item" id="mp-pront">
-          <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
-            <span class="mp-title">Projeção para a prova <span class="info-btn" onclick="event.stopPropagation();showInfo('prontidao')" aria-label="Mais informações">?</span></span>
-            <span class="mp-right"><span class="mp-glance" id="glance-pront">—</span><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
-          </div>
-          <div class="mp-body">
-            <div id="dash-pront" class="chart-wrap hidden">
-              <div style="display:flex;align-items:center;justify-content:flex-end;">
-                <span style="font-size:12px;font-weight:700;color:var(--ember);" id="pront-dias"></span>
-              </div>
-              <div style="display:flex;align-items:baseline;gap:6px;margin-top:6px;">
-                <span style="font-size:30px;font-weight:800;color:var(--ember);" id="pront-num">—</span>
-                <span style="font-size:13px;color:var(--text2);">de 60 questões (estimativa)</span>
-              </div>
-              <div style="height:8px;background:var(--paper-2);border-radius:6px;overflow:hidden;margin-top:8px;"><div id="pront-bar" style="height:100%;width:0%;background:var(--fire-line);border-radius:6px;transition:width .5s;"></div></div>
-              <div style="font-size:11px;color:var(--text3);margin-top:6px;" id="pront-detalhe"></div>
-              <div id="pront-aviso" style="display:none;font-size:11px;color:var(--ember-deep);background:var(--amber-light);border-radius:8px;padding:7px 9px;margin-top:8px;line-height:1.4;"><svg style="width:13px;height:13px;vertical-align:-1px;margin-right:3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Estimativa preliminar — baseada em poucas respostas. Vai ficar mais precisa conforme você estuda.</div>
-            </div>
-          </div>
-        </div>
-<!-- Painel 1: Índice de Domínio Real (aberto por padrão) -->
-        <div class="mp-item open">
-          <div class="mp-head" role="button" tabindex="0" aria-expanded="true" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
-            <span class="mp-title">Índice de domínio real <span class="info-btn" onclick="event.stopPropagation();showInfo('dominio')" aria-label="Mais informações">?</span></span>
-            <span class="mp-right"><span class="mp-glance" id="glance-dominio">—</span><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
-          </div>
-          <div class="mp-body">
-            <div class="dominio-card" id="dominio-card">
+            <div class="dominio-card">
               <div class="dominio-geral-wrap">
                 <div class="dominio-geral-info">
                   <div class="dominio-geral-pct" id="dominio-geral-num">0%</div>
                   <div class="dominio-geral-label">de domínio geral</div>
-                  <div style="display:flex;gap:12px;margin-top:6px;">
+                  <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
                     <span class="dominio-badge" style="background:var(--blue-light);color:var(--blue)">Quiz 50%</span>
                     <span class="dominio-badge" style="background:var(--green-light);color:var(--green)">Cards 30%</span>
                     <span class="dominio-badge" style="background:var(--amber-light);color:var(--amber)">Resumos 20%</span>
                   </div>
                 </div>
               </div>
-              <div id="dominio-areas"></div>
-            </div>
-          </div>
-        </div>
-<!-- Painel 2: Cobertura do Edital -->
-        <div class="mp-item">
-          <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
-            <span class="mp-title">Cobertura do edital <span class="info-btn" onclick="event.stopPropagation();showInfo('cobertura')" aria-label="Mais informações">?</span></span>
-            <span class="mp-right"><span class="mp-glance" id="glance-cobertura">—</span><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
-          </div>
-          <div class="mp-body">
-            <div class="dominio-card">
-              <div style="font-size:11px;color:var(--text2);margin-bottom:12px;">Quanto do conteúdo de cada área você já percorreu (questões + cards + resumos).</div>
-              <div id="cobertura-areas"></div>
-            </div>
-          </div>
-        </div>
-<!-- Desempenho por área (fusão Histórico + Evolução) -->
-        <div class="mp-item">
-          <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
-            <span class="mp-title">Desempenho por área <span class="info-btn" onclick="event.stopPropagation();showInfo('desempenho')" aria-label="Mais informações">?</span></span>
-            <span class="mp-right"><span class="mp-glance" id="glance-acertos">—</span><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
-          </div>
-          <div class="mp-body">
-            <div class="mp-sublabel">Acertos por área</div>
-            <div class="area-grid" id="dash-areas"></div>
-            <div class="mp-sublabel" style="margin-top:16px">Evolução recente</div>
-            <div class="chart-wrap" id="area-evolution-wrap"><div id="area-evolution"></div></div>
-          </div>
-        </div>
-<!-- Semana (fusão Últimos 7 dias + Objetivo) -->
-        <div class="mp-item">
-          <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
-            <span class="mp-title">Semana</span>
-            <span class="mp-right"><span class="mp-glance" id="glance-semana">—</span><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
-          </div>
-          <div class="mp-body">
-            <div class="mp-sublabel">Últimos 7 dias</div>
-            <div class="chart-wrap">
-              <div style="display:flex;align-items:center;justify-content:space-between;">
-                <span style="font-size:12px;color:var(--text2);">Questões respondidas</span>
-                <span style="font-size:12px;font-weight:700;" id="chart-total-week">0 essa semana</span>
+              <div class="pg-legend">
+                <span><i style="background:linear-gradient(90deg,var(--red),var(--amber),var(--green))"></i>Domínio — o quanto você acerta (verde = melhor)</span>
+                <span><i style="background:var(--blue)"></i>Cobertura — o quanto você já percorreu do edital</span>
               </div>
-              <div class="chart-bars" id="chart-bars"></div>
+              <div id="por-area-lista"></div>
             </div>
-            <div class="mp-sublabel" style="margin-top:16px">Objetivo da semana</div>
-            <div id="dash-objetivo"></div>
+          </div>
+        </div>
+        <div id="pg-atividade">
+          <div class="pg-mod-h">Atividade</div>
+          <div class="chart-wrap">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:12px;color:var(--text2);">Questões · últimos 7 dias</span>
+              <span style="font-size:12px;font-weight:700;" id="chart-total-week">0 essa semana</span>
+            </div>
+            <div class="chart-bars" id="chart-bars"></div>
           </div>
         </div>
       </div>
     </div>
-
   </main>
 
   <!-- BOTTOM NAV -->
@@ -2608,8 +2572,9 @@ function renderProntidao(){
   const el=document.getElementById('dash-pront');
   if(!el)return;
   const r=calcProntidao();
-  if(!r){el.classList.add('hidden');return;}
+  if(!r){el.classList.add('hidden');{const kp=document.getElementById('kpi-projecao');if(kp)kp.textContent='—';}return;}
   el.classList.remove('hidden');
+  {const kp=document.getElementById('kpi-projecao');if(kp)kp.textContent='~'+Math.round(r.total);}
   document.getElementById('pront-num').textContent='~'+Math.round(r.total);
   document.getElementById('pront-bar').style.width=Math.min(100,Math.round(r.total/60*100))+'%';
   document.getElementById('pront-detalhe').textContent=Object.entries(r.proj).map(([k,v])=>k+' '+v.toFixed(1).replace('.',',')).join(' · ');
@@ -3162,7 +3127,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.131';
+const APP_VERSAO='v1.132';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -3337,20 +3302,14 @@ function animateBars(container){
 // DASHBOARD
 // ═══════════════════════════════
 function renderHoje(){
+  // "Hoje" foi absorvido no placar da tela "Meu progresso" (S64): só o KPI resumido.
+  // A barra de meta diária foi removida (a Meta do dia da home já cobre) — código morto limpo.
   const today=diaLocal();
   const h=(userStats.history||[]).find(e=>e.date===today)||{n:0,c:0,w:0};
   const n=h.n||0,c=h.c||0,w=h.w||0,res=c+w;
   const pct=res>0?Math.round(c/res*100):null;
-  const meta=userStats.metaDiaria||10;
-  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
-  animateCount(document.getElementById('hoje-q'),n);animateCount(document.getElementById('hoje-acertos'),c);animateCount(document.getElementById('hoje-erros'),w);
-  const pe=document.getElementById('hoje-pct');if(pe){pe.textContent=pct===null?'—':pct+'%';pe.style.color=pct===null?'':(pct>=70?'var(--green)':pct>=50?'var(--amber)':'var(--red)');}
-  const dt=document.getElementById('hoje-data');
-  if(dt)dt.textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-  const fill=document.getElementById('hoje-meta-fill');
-  if(fill)fill.style.width=Math.min(100,Math.round(n/meta*100))+'%';
-  const mt=document.getElementById('hoje-meta-txt');
-  if(mt)mt.textContent=n>=meta?('Meta do dia batida \u00b7 '+n+'/'+meta):(n+'/'+meta+' da meta di\u00e1ria');
+  const kh=document.getElementById('kpi-hoje');
+  if(kh)kh.innerHTML='Hoje: <b>'+n+'</b>'+(pct===null?'':' · '+pct+'% acerto');
 }
 // ── Meta do dia recolhível (S63) ──────────────────────────────────────────
 // Recolhida por padrão. Cada meta batida "brota" sozinha mesmo fechada; o usuário
@@ -3412,11 +3371,14 @@ function renderDashboard(){
   const hh=new Date().getHours();
   const gEl=document.getElementById('dash-greeting');
   if(gEl)gEl.textContent=(hh<5?'Boa madrugada':hh<12?'Bom dia':hh<18?'Boa tarde':'Boa noite')+',';
-  animateCount(document.getElementById('dash-total'),total);
-  document.getElementById('dash-pct').textContent=pct+'%';
-  {const g=document.getElementById('glance-acertos');if(g)g.innerHTML=total>0?pct+'<small>%</small>':'—';}
-  animateCount(document.getElementById('dash-cards'),Object.keys(userCards).length);
-  const dsk=document.getElementById('dash-streak');if(dsk)dsk.textContent=(userStats.streak||0);
+  // Placar da tela "Meu progresso" (S64): acurácia geral + contadores + delta honesto.
+  {const el=document.getElementById('kpi-respondidas');if(el)el.textContent=total;}
+  {const el=document.getElementById('kpi-acuracia');if(el)el.textContent=total>0?pct+'%':'—';}
+  {const el=document.getElementById('kpi-acuracia-delta');if(el){const dd=deltaAcuraciaGeral();
+    if(dd===null||dd===0){el.textContent='';el.className='pg-kpi-delta';}
+    else{el.textContent=(dd>0?'▲':'▼')+Math.abs(dd)+'pp';el.className='pg-kpi-delta '+(dd>0?'up':'down');}}}
+  {const el=document.getElementById('kpi-revisados');if(el)el.textContent=Object.keys(userCards).length;}
+  {const el=document.getElementById('kpi-streak');if(el)el.textContent=(userStats.streak||0);}
   // (o rótulo "n/meta" passou a ser escrito por desenharMeta, no S62)
 
   // S62: as três metas do dia (questões, cards, resumos) desenhadas pela mesma função.
@@ -3460,27 +3422,8 @@ function renderDashboard(){
   const diagCard=document.getElementById('diag-card');
   if(diagCard)diagCard.classList.toggle('hidden', !!userStats.diagFeito);
 
-  // Áreas
-  const grid=document.getElementById('dash-areas');
-  grid.innerHTML='';
-  Object.entries(AI).forEach(([k,a])=>{
-    const ba=userStats.byArea||{};
-    const c=(ba[k]?.correct||0),w=(ba[k]?.wrong||0),t=c+w;
-    const p=t>0?Math.round(c/t*100):0;
-    const ca=contagemArea(k); // S47: novas vs a revisar
-    grid.innerHTML+=`<div class="area-card" onclick="iniciarQuiz('${k}')" style="--ac:${a.color};background:${a.bg};cursor:pointer">
-      <div class="area-card-top">
-        <div class="area-icon" style="background:${a.bg};color:${a.color}">${a.icon}</div>
-        <div><div class="area-card-name">${a.nome.split('—')[1]?.trim()||a.nome}</div><div class="area-card-code">${k}</div></div>
-      </div>
-      <div class="area-prog-bar"><div class="area-prog-fill" style="width:${p}%;background:${a.color}"></div></div>
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:11px;color:var(--text2)">${t} questões</span>
-        <span class="area-prog-pct" style="color:${t>0?a.color:'var(--text3)'}">${p}%</span>
-      </div>
-      <div class="area-card-counts">${ca.novas} nova${ca.novas!==1?'s':''} · ${ca.rev} a revisar</div>
-    </div>`;
-  });
+  // (S64) O grid de áreas clicável saiu da home/progresso: a ação "praticar área/tópico"
+  // já vive na aba Quiz ("Escolha uma área" + "Praticar por tópico"). Aqui é só leitura.
 
   // Alerta de dados vazios — sugere recarregar se tudo zerado
   const totalQ=Object.keys(allQuestoes).length;
@@ -4036,6 +3979,28 @@ function deltaSemanal(area,pctAtual){
   const a=ant.areas[area],t=a.c+a.w;
   if(t<MIN_RESP_CONF)return null;
   return pctAtual-Math.round(a.c/t*100);
+}
+
+// Delta honesto de acurácia GERAL vs. o retrato da semana anterior (S64).
+// Usa os snapshots já gravados (userStats.semanas). null = sem baseline (1ª semana).
+function deltaAcuraciaGeral(){
+  const h=userStats.semanas;
+  if(!Array.isArray(h)||h.length<2)return null;
+  const s=semanaISO(new Date());
+  const ant=[...h].reverse().find(x=>x.s!==s&&x.areas);
+  if(!ant)return null;
+  let c=0,t=0;Object.values(ant.areas).forEach(a=>{c+=a.c;t+=a.c+a.w;});
+  if(t<MIN_RESP_CONF)return null;
+  const pctAnt=Math.round(c/t*100);
+  const totalNow=(userStats.correct||0)+(userStats.wrong||0);
+  const pctNow=totalNow>0?Math.round((userStats.correct||0)/totalNow*100):0;
+  return pctNow-pctAnt;
+}
+// Índice/âncoras da tela "Meu progresso": rola até a seção (abre o acordeão se preciso).
+function pgScroll(id){
+  const el=document.getElementById(id);if(!el)return;
+  if(el.classList.contains('mp-item')&&!el.classList.contains('open')){el.classList.add('open');const hd=el.querySelector('.mp-head');if(hd)hd.setAttribute('aria-expanded','true');}
+  el.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function renderAreaEvolution(){
@@ -5699,61 +5664,32 @@ function toggleMp(el){
 }
 function renderDominio(){
   const dom=calcDominio();
-  // Geral só considera áreas COM confiança de quiz; sem nenhuma, mostra "—".
   const comConf=Object.values(dom).filter(d=>d.quizConf);
   const geral=comConf.length>0?Math.round(comConf.reduce((a,b)=>a+b.dominio,0)/comConf.length):null;
-
-  const ptEl=document.getElementById('dominio-geral-pct');
-  const numEl=document.getElementById('dominio-geral-num');
-  if(ptEl)ptEl.textContent=geral===null?'—':geral+'%';
-  if(numEl)numEl.textContent=geral===null?'ainda medindo':geral+'% de domínio';
-  {const gd=document.getElementById('glance-dominio');if(gd)gd.innerHTML=geral===null?'—':geral+'<small>%</small>';}
   let _cobV=0,_cobT=0;Object.values(dom).forEach(d=>{_cobV+=(d.cobVistos||0);_cobT+=(d.cobTotal||0);});
-  {const gc=document.getElementById('glance-cobertura');if(gc)gc.innerHTML=_cobT>0?Math.round(_cobV/_cobT*100)+'<small>%</small>':'—';}
-
-  // --- Barras de domínio por área (com confiança) ---
-  const areasEl=document.getElementById('dominio-areas');
-  if(!areasEl)return;
-  areasEl.innerHTML=Object.entries(AI).map(([k,a])=>{
-    const d=dom[k]||{dominio:0,quizConf:false,respondidas:0};
-    if(!d.quizConf){
-      // Sem evidência suficiente: não exibe % de domínio (evita inflar com amostra pequena).
-      return `<div class="dominio-area-row">
-        <div class="dominio-area-icon" style="color:${a.color}">${a.icon}</div>
-        <div class="dominio-area-info">
-          <div class="dominio-area-name">${k} — ${a.nome.split('—')[1]?.trim()||a.nome}</div>
-          <div class="dominio-area-bar-wrap"><div class="dominio-area-bar" style="width:0%;background:var(--line)"></div></div>
-        </div>
-        <div class="dominio-area-pct" style="color:var(--text3);font-size:10.5px;min-width:96px;">medindo (${d.respondidas}/${MIN_RESP_CONF})</div>
-      </div>`;
-    }
-    const cor=d.dominio>=80?'var(--green)':d.dominio>=60?'var(--amber)':'var(--red)';
-    return `<div class="dominio-area-row">
-      <div class="dominio-area-icon" style="color:${a.color}">${a.icon}</div>
-      <div class="dominio-area-info">
-        <div class="dominio-area-name">${k} — ${a.nome.split('—')[1]?.trim()||a.nome}</div>
-        <div class="dominio-area-bar-wrap"><div class="dominio-area-bar" style="width:${d.dominio}%;background:${cor}"></div></div>
+  const cobGeral=_cobT>0?Math.round(_cobV/_cobT*100):null;
+  {const el=document.getElementById('kpi-dominio');if(el)el.textContent=geral===null?'—':geral+'%';}
+  {const el=document.getElementById('kpi-cobertura');if(el)el.textContent=cobGeral===null?'—':cobGeral+'%';}
+  {const el=document.getElementById('dominio-geral-num');if(el)el.textContent=geral===null?'ainda medindo':geral+'% de domínio';}
+  const el=document.getElementById('por-area-lista');
+  if(!el)return;
+  el.innerHTML=Object.entries(AI).map(([k,a])=>{
+    const d=dom[k]||{dominio:0,quizConf:false,respondidas:0,cobertura:0,cobVistos:0,cobTotal:0};
+    const nome=k+' — '+(a.nome.split('—')[1]?.trim()||a.nome);
+    const domCor=d.dominio>=80?'var(--green)':d.dominio>=60?'var(--amber)':'var(--red)';
+    const domLinha=d.quizConf
+      ? `<span class="pg-area-tag">Domínio</span><div class="pg-area-bar-wrap"><div class="pg-area-bar" style="width:${d.dominio}%;background:${domCor}"></div></div><span class="pg-area-val" style="color:${domCor}">${d.dominio}%</span>`
+      : `<span class="pg-area-tag">Domínio</span><div class="pg-area-bar-wrap"><div class="pg-area-bar" style="width:0%;background:var(--line)"></div></div><span class="pg-area-val" style="color:var(--text3);font-size:10px">medindo (${d.respondidas}/${MIN_RESP_CONF})</span>`;
+    const cobTxt=(d.cobTotal||0)>0?`${d.cobertura}% · ${d.cobVistos}/${d.cobTotal}`:'—';
+    return `<div class="pg-area-row">
+      <div class="pg-area-ic" style="color:${a.color}">${a.icon}</div>
+      <div class="pg-area-main">
+        <div class="pg-area-name">${sanitize(nome)}</div>
+        <div class="pg-area-line">${domLinha}</div>
+        <div class="pg-area-line"><span class="pg-area-tag">Cobertura</span><div class="pg-area-bar-wrap"><div class="pg-area-bar" style="width:${d.cobertura}%;background:var(--blue)"></div></div><span class="pg-area-val" style="color:var(--blue)">${cobTxt}</span></div>
       </div>
-      <div class="dominio-area-pct" style="color:${cor}">${d.dominio}%</div>
     </div>`;
   }).join('');
-
-  // --- COBERTURA DO EDITAL (leitura separada: progresso, não qualidade) ---
-  const cobEl=document.getElementById('cobertura-areas');
-  if(cobEl){
-    cobEl.innerHTML=Object.entries(AI).map(([k,a])=>{
-      const d=dom[k]||{cobertura:0,cobVistos:0,cobTotal:0};
-      const cor=d.cobertura>=80?'var(--green)':d.cobertura>=40?'var(--amber)':'var(--blue)';
-      return `<div class="dominio-area-row">
-        <div class="dominio-area-icon" style="color:${a.color}">${a.icon}</div>
-        <div class="dominio-area-info">
-          <div class="dominio-area-name">${k} — ${a.nome.split('—')[1]?.trim()||a.nome}</div>
-          <div class="dominio-area-bar-wrap"><div class="dominio-area-bar" style="width:${d.cobertura}%;background:${cor}"></div></div>
-        </div>
-        <div class="dominio-area-pct" style="color:${cor};min-width:96px;font-size:10.5px;">${d.cobertura}% · ${d.cobVistos}/${d.cobTotal}</div>
-      </div>`;
-    }).join('');
-  }
 }
 
 function renderObjetivoSemana(){
