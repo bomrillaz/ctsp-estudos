@@ -1,4 +1,4 @@
-/* Service Worker — Bombeiro CTSP (Fase 2 + hotfix v1.106)
+/* Service Worker — Prontidão · CBMRS (Fase 2 + hotfix v1.106)
    REGRA DE OURO: só o APP (same-origin: index, data.js, assets) e os SCRIPTS ESTATICOS
    do Firebase SDK (gstatic /firebasejs/) passam pelo cache. TUDO que e Firebase DINAMICO
    (RTDB firebaseio.com, Auth googleapis.com, reCAPTCHA) passa DIRETO, sem intercept —
@@ -26,7 +26,7 @@ try {
   });
   firebase.messaging().onBackgroundMessage((payload) => {
     const n = (payload && payload.notification) || {};
-    self.registration.showNotification(n.title || 'Bombeiro CTSP', {
+    self.registration.showNotification(n.title || 'Prontidão · CBMRS', {
       body: n.body || '',
       icon: 'assets/icon-192.png',
       badge: 'assets/icon-192.png',
@@ -35,7 +35,7 @@ try {
   });
 } catch (_) {}
 
-const CACHE = 'ctsp-cache-v7';
+const CACHE = 'ctsp-cache-v8';
 const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',

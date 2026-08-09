@@ -1,7 +1,7 @@
 {
-  "name": "Plataforma CTSP - CBMRS",
-  "short_name": "CTSP",
-  "description": "Plataforma CTSP - CBMRS: questoes auditadas contra a norma vigente, simulado no formato real da prova, flashcards com revisao espacada e diagnostico das areas fracas.",
+  "name": "Prontidão - CBMRS",
+  "short_name": "Prontidão",
+  "description": "Prontidão - CBMRS: preparatorio para concursos internos do CBMRS. Questoes auditadas contra a norma vigente, simulado no formato real da prova, flashcards com revisao espacada e diagnostico das areas fracas.",
   "lang": "pt-BR",
   "dir": "ltr",
   "start_url": "./",

@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="CTSP"/>
+<meta name="apple-mobile-web-app-title" content="Prontidão"/>
 <meta name="theme-color" content="#101B3D"/>
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png"/>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"/>
@@ -19,17 +19,17 @@
      de verdade no Android (ícone, splash, tela cheia sem barra do Chrome) e para o
      app abrir em modo standalone depois de instalado. É ganho parcial, não conserto. -->
 <link rel="manifest" href="manifest.webmanifest"/>
-<title>Plataforma CTSP · CBMRS — Estudos para o Curso Técnico em Segurança Pública</title>
-<meta name="description" content="Plataforma CTSP · CBMRS: 533 questões auditadas contra a norma vigente, simulado no formato real da prova, flashcards com revisão espaçada e diagnóstico automático das suas áreas fracas."/>
+<title>Prontidão · CBMRS — Preparatório para concursos internos do CBMRS</title>
+<meta name="description" content="Prontidão · CBMRS: 533 questões auditadas contra a norma vigente, simulado no formato real da prova, flashcards com revisão espaçada e diagnóstico automático das suas áreas fracas."/>
 <meta property="og:type" content="website"/>
-<meta property="og:site_name" content="Plataforma CTSP · CBMRS"/>
-<meta property="og:title" content="Plataforma CTSP · CBMRS — sua preparação, medida por área e por tópico"/>
+<meta property="og:site_name" content="Prontidão · CBMRS"/>
+<meta property="og:title" content="Prontidão · CBMRS — sua preparação, medida por área e por tópico"/>
 <meta property="og:description" content="533 questões auditadas, simulado no formato real (60Q · 14/8/14/12/12), flashcards com revisão espaçada e um sistema que identifica seu ponto fraco e diz o que estudar."/>
 <meta property="og:image" content="https://jhoonnvictor.github.io/ctsp-estudos/img/logo.png"/>
 <meta property="og:url" content="https://jhoonnvictor.github.io/ctsp-estudos/"/>
 <meta property="og:locale" content="pt_BR"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="Plataforma CTSP · CBMRS — Estudos"/>
+<meta name="twitter:title" content="Prontidão · CBMRS — Estudos"/>
 <meta name="twitter:description" content="533 questões auditadas, simulado no formato real e diagnóstico automático do seu desempenho."/>
 <meta name="twitter:image" content="https://jhoonnvictor.github.io/ctsp-estudos/img/logo.png"/>
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://*.googleapis.com https://*.gstatic.com https://*.firebase.com https://*.firebaseio.com https://*.firebaseapp.com https://www.recaptcha.net https://recaptcha.net https://www.google.com https://www.gstatic.com wss://*.firebaseio.com data: blob:; object-src 'none'; base-uri 'self'; form-action 'none';">
@@ -236,6 +236,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .nav-item.active{color:var(--ember);}
 .nav-item.active svg{animation:navPop .3s var(--ease-spring) both;}
 .nav-item svg{width:22px;height:22px;transition:transform .2s;}
+.nav-desk,.nav-collapse{display:none;} /* C8: só aparecem no rail do desktop */
 .nav-item:active svg{transform:scale(.88);}
 /* pip aposentado — a pílula deslizante (.nav-indicator) é o indicador de ativo */
 .nav-indicator{position:absolute;top:8px;bottom:8px;left:4px;width:calc((100% - 8px) / 5);border-radius:16px;background:rgba(240,136,60,.15);border:1px solid rgba(240,136,60,.24);transition:transform .34s var(--ease-spring);pointer-events:none;z-index:0;}
@@ -412,6 +413,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pg-area-evo-chip.sobe{color:var(--green);}
 .pg-area-evo-chip.desce{color:var(--red);}
 .pg-area-evo-chip.neutra{color:var(--text3);font-weight:600;}
+/* B4 — domínio por tópico expansível dentro de cada área */
+.pg-area-toggle{display:flex;align-items:center;gap:5px;margin-top:6px;padding:4px 0;background:none;border:none;cursor:pointer;font-size:10.5px;font-weight:700;color:var(--text2);letter-spacing:.02em;}
+.pg-area-chev{transition:transform .2s;flex-shrink:0;}
+.pg-area-row.open .pg-area-chev{transform:rotate(180deg);}
+.pg-area-topicos{display:none;margin-top:2px;padding-left:2px;}
+.pg-area-row.open .pg-area-topicos{display:block;animation:fadeIn .2s;}
+.pg-area-topicos .topico-row{padding:6px 0;}
+.pg-area-topicos .topico-row:last-child{border-bottom:none;}
+.topico-vazio{font-size:11px;color:var(--text3);font-style:italic;padding:6px 0;}
 .pg-legend-line{background:var(--text2)!important;height:2px!important;}
 /* P1 — gauge de projeção */
 .pg-gauge-wrap{display:flex;justify-content:center;margin:6px 0 2px;}
@@ -1038,12 +1048,29 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   .nav-item.active{background:rgba(240,136,60,.12);}
   .nav-indicator{display:none;} /* pílula horizontal não faz sentido no rail vertical */
   .nav-badge{position:static;margin-left:auto;box-shadow:none;top:auto;right:auto;}
+  /* C8: no desktop o rail mostra TODOS os destinos; o "Mais" (bottom sheet) some. */
+  .nav-desk{display:flex;}
+  .nav-mais-btn{display:none;}
+  .nav-collapse{display:flex;align-items:center;justify-content:center;align-self:flex-end;width:34px;height:34px;margin:-4px -2px 6px 0;border:none;background:none;border-radius:9px;color:rgba(255,255,255,.5);cursor:pointer;transition:background .2s,color .2s;}
+  .nav-collapse:hover{background:rgba(255,255,255,.08);color:#fff;}
+  .nav-collapse svg{width:20px;height:20px;transition:transform .25s;}
   .app-header{margin-left:232px;}
   .app-content{margin-left:232px;padding-bottom:40px;}
   /* fixos reposicionados para não caírem sob o rail */
   .toast{left:calc(50% + 116px);}
   #save-flash{left:calc(50% + 116px);bottom:24px;}
   .foco-barra{left:auto;right:32px;bottom:24px;width:auto;min-width:280px;}
+
+  /* Estado recolhido: rail fino só com ícones. */
+  body.sidebar-collapsed .bottom-nav{width:64px;padding:18px 8px;}
+  body.sidebar-collapsed .nav-item{font-size:0;justify-content:center;gap:0;padding:12px 0;}
+  body.sidebar-collapsed .nav-badge{display:none;}
+  body.sidebar-collapsed .nav-collapse{align-self:center;margin:-4px 0 8px;}
+  body.sidebar-collapsed .nav-collapse svg{transform:rotate(180deg);}
+  body.sidebar-collapsed .app-header{margin-left:64px;}
+  body.sidebar-collapsed .app-content{margin-left:64px;}
+  body.sidebar-collapsed .toast{left:calc(50% + 32px);}
+  body.sidebar-collapsed #save-flash{left:calc(50% + 32px);}
 }
 
 /* ── FASE 5 — POLIMENTO: hover só em ponteiro fino (toque não dispara) ── */
@@ -1066,7 +1093,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 <div id="loading">
   <img src="img/logo.png" onerror="this.style.display='none'" alt="CBMRS">
   <div class="welcome-text" id="welcome-text">Bem-vindo,<br>vamos iniciar os estudos?</div>
-  <p id="loading-sub">PLATAFORMA CTSP · CBMRS</p>
+  <p id="loading-sub">PRONTIDÃO · CBMRS</p>
 </div>
 
 <!-- SPLASH SCREEN pós-login -->
@@ -1101,9 +1128,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <div class="auth-bg"></div>
   <div class="auth-content">
     <div class="auth-hero">
-      <img class="logo" src="assets/icon-512.png" onerror="this.style.background='var(--red)'" alt="Bombeiro CTSP">
-      <h1>Bombeiro CTSP</h1>
-      <p>Plataforma CTSP · CBMRS</p>
+      <img class="logo" src="assets/icon-512.png" onerror="this.style.background='var(--red)'" alt="Prontidão">
+      <h1>Prontidão</h1>
+      <p>Preparatório · CBMRS</p>
     </div>
     <div class="auth-card">
       <div class="auth-tabs">
@@ -1144,8 +1171,8 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <header class="app-header">
     <img class="header-logo" src="img/logo.png" onerror="this.style.opacity='0'" alt="CBMRS">
     <div class="header-titles">
-      <div class="header-title">Bombeiro CBMRS</div>
-      <div class="header-sub">Preparatório · CTSP</div>
+      <div class="header-title">Prontidão</div>
+      <div class="header-sub">Preparatório · CBMRS</div>
     </div>
     <div class="header-right">
       <div class="streak-badge" id="hdr-streak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1.5 3.5 5 5.2 5 9a5 5 0 0 1-10 0c0-2 .9-3.4 1.8-4.7.4 1.2 1.2 2 2.2 2.5C10.6 6.7 11 4.4 12 2z"/></svg><span id="hdr-streak-n">0</span></div>
@@ -1491,8 +1518,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="incidencia-card" id="fmt-diag"></div>
         <div class="sec-title mt14">Tópicos de alta incidência</div>
         <div class="incidencia-card" id="incidencia-lista"></div>
-        <div class="sec-title mt14">Domínio por tópico <span class="info-btn" onclick="showInfo('bkt')" aria-label="Mais informações">?</span></div>
-        <div class="incidencia-card" id="dominio-topicos"></div>
       </div>
     </div>
 
@@ -1632,6 +1657,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav" id="bottom-nav">
+    <button class="nav-collapse" onclick="toggleSidebar()" aria-label="Recolher menu" title="Recolher menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
     <div class="nav-indicator" id="nav-indicator"></div>
     <div class="nav-item active" id="nav-inicio" onclick="navTo('inicio')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Início
@@ -1647,7 +1675,20 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Resumos
       <span class="nav-badge hidden" id="badge-resumos">0</span>
     </div>
-    <div class="nav-item" id="nav-mais" onclick="abrirMais()">
+    <!-- Destinos "Mais" direto no rail do desktop (no mobile continuam no bottom sheet) -->
+    <div class="nav-item nav-desk" id="nav-desk-simulado" onclick="navMais('simulado')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Simulado
+    </div>
+    <div class="nav-item nav-desk" id="nav-desk-consulta" onclick="navMais('consulta')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Consulta
+    </div>
+    <div class="nav-item nav-desk" id="nav-desk-padroes" onclick="navMais('padroes')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Padrões
+    </div>
+    <div class="nav-item nav-desk" id="nav-desk-progresso" onclick="navMais('progresso')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>Meu progresso
+    </div>
+    <div class="nav-item nav-mais-btn" id="nav-mais" onclick="abrirMais()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Mais
     </div>
   </nav>
@@ -3174,7 +3215,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.135';
+const APP_VERSAO='v1.136';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -3298,7 +3339,16 @@ function _marcarNav(s){
   const ind=document.getElementById('nav-indicator');
   if(ind&&idx>=0)ind.style.transform='translateX('+(idx*100)+'%)';
   document.querySelectorAll('.sheet-item').forEach(el=>el.classList.toggle('active',el.id==='sheet-'+s));
+  // C8: no rail do desktop os destinos "Mais" são itens próprios — acende o certo.
+  document.querySelectorAll('.nav-desk').forEach(el=>el.classList.toggle('active',el.id==='nav-desk-'+s));
 }
+// C8: recolher/expandir a barra lateral no desktop (estado lembrado entre sessões).
+function toggleSidebar(){
+  const col=document.body.classList.toggle('sidebar-collapsed');
+  const b=document.querySelector('.nav-collapse');if(b)b.setAttribute('title',col?'Expandir menu':'Recolher menu');
+  try{localStorage.setItem('sidebarCollapsed',col?'1':'0');}catch(_){}
+}
+try{if(localStorage.getItem('sidebarCollapsed')==='1'&&document.body)document.body.classList.add('sidebar-collapsed');}catch(_){}
 function abrirMais(){const o=document.getElementById('mais-overlay');if(o)o.classList.add('open');}
 function fecharMais(e){if(e&&e.target!==e.currentTarget)return;const o=document.getElementById('mais-overlay');if(o)o.classList.remove('open');}
 function navMais(s){const o=document.getElementById('mais-overlay');if(o)o.classList.remove('open');navTo(s);}
@@ -5508,32 +5558,31 @@ function renderPadroes(){
       ${acoes}
     </div>`;
   }).join('');
-  renderDominioTopicos();
 }
 
-function renderDominioTopicos(){
-  const el=document.getElementById('dominio-topicos');
-  if(!el)return;
-  const perfil=perfilTopicos();
+// B4 (bloco 50): domínio por tópico saiu de Padrões e virou o detalhe expansível de cada
+// ÁREA em "Meu progresso". Este helper devolve as linhas de tópico de UMA área.
+function topicosAreaHTML(area,perfil){
   const cor=p=>p>=70?'var(--green)':p>=45?'var(--amber)':'var(--red)';
-  let html='';
-  ['AT1','AT2','AT3','AT4','AT5'].forEach(a=>{
-    const ts=perfil.filter(p=>p.area===a);
-    if(!ts.length)return;
-    const ai=AI[a]||{};
-    html+=`<div class="topico-area-head">${ai.icon||''} ${sanitize(ai.nome||a)}</div>`;
-    ts.forEach(p=>{
-      const semDados=p.n===0; const baixaConf=p.n>0&&p.n<3; const pct=Math.round(p.pL*100); const pctTxt=semDados?'—':pct+'%'; const barW=semDados?0:pct; const corT=(semDados||baixaConf)?'var(--text3)':cor(pct);
-      const tag=p.n===0?'<span style="font-size:10px;color:var(--text3)"> · sem dados</span>':'';
-      html+=`<div class="topico-row">
-        <span class="topico-code">${sanitize(p.t)}</span>
-        <span class="topico-name">${sanitize(p.nome)}${tag}</span>
-        <span class="topico-bar-wrap"><span class="topico-bar" style="width:${barW}%;background:${corT}"></span></span>
-        <span class="topico-pct" style="color:${corT}">${pctTxt}</span>
-      </div>`;
-    });
-  });
-  el.innerHTML=html||'<p style="font-size:13px;color:var(--text2)">Responda algumas questões para gerar seu perfil por tópico.</p>';
+  const ts=(perfil||perfilTopicos()).filter(p=>p.area===area);
+  if(!ts.length)return '<div class="topico-vazio">Responda questões desta área para mapear os tópicos.</div>';
+  return ts.map(p=>{
+    const semDados=p.n===0; const baixaConf=p.n>0&&p.n<3; const pct=Math.round(p.pL*100);
+    const pctTxt=semDados?'—':pct+'%'; const barW=semDados?0:pct; const corT=(semDados||baixaConf)?'var(--text3)':cor(pct);
+    const tag=p.n===0?'<span style="font-size:10px;color:var(--text3)"> · sem dados</span>':'';
+    return `<div class="topico-row">
+      <span class="topico-code">${sanitize(p.t)}</span>
+      <span class="topico-name">${sanitize(p.nome)}${tag}</span>
+      <span class="topico-bar-wrap"><span class="topico-bar" style="width:${barW}%;background:${corT}"></span></span>
+      <span class="topico-pct" style="color:${corT}">${pctTxt}</span>
+    </div>`;
+  }).join('');
+}
+function toggleAreaTopicos(el){
+  const row=el.closest('.pg-area-row');
+  if(!row)return;
+  const open=row.classList.toggle('open');
+  el.setAttribute('aria-expanded',open?'true':'false');
 }
 
 // Abre as questões exatas de um assunto de alta incidência (ids vinculados no Bloco A).
@@ -5788,6 +5837,7 @@ function renderDominio(){
   {const el=document.getElementById('dominio-geral-num');if(el)el.textContent=geral===null?'ainda medindo':geral+'% de domínio';}
   const el=document.getElementById('por-area-lista');
   if(!el)return;
+  const perfil=perfilTopicos(); // B4: domínio por tópico, aberto por área sob demanda
   el.innerHTML=Object.entries(AI).map(([k,a])=>{
     const d=dom[k]||{dominio:0,quizConf:false,respondidas:0,cobertura:0,cobVistos:0,cobTotal:0};
     const nome=k+' — '+((a.nome.split('—')[1]||'').trim()||a.nome);
@@ -5807,6 +5857,8 @@ function renderDominio(){
         +'<div class="pg-area-line">'+domLinha+'</div>'
         +'<div class="pg-area-line"><span class="pg-area-tag">Cobertura</span><div class="pg-area-bar-wrap"><div class="pg-area-bar" style="width:'+d.cobertura+'%;background:var(--blue)"></div></div><span class="pg-area-val" style="color:var(--blue)">'+cobTxt+'</span></div>'
         +'<div class="pg-area-line pg-area-evo"><span class="pg-area-tag">Evolução</span>'+sparklineSVG(serie)+chip+'</div>'
+        +'<button class="pg-area-toggle" onclick="toggleAreaTopicos(this)" aria-expanded="false"><span>Domínio por tópico</span><svg class="pg-area-chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>'
+        +'<div class="pg-area-topicos">'+topicosAreaHTML(k,perfil)+'</div>'
       +'</div>'
     +'</div>';
   }).join('');
@@ -6257,7 +6309,7 @@ function agendarAcessibilidade(){
 document.addEventListener('DOMContentLoaded',()=>{
   // S60: carimba a versão nas Configurações
   const cv=document.getElementById('config-versao');
-  if(cv)cv.textContent='Plataforma CTSP · CBMRS · '+APP_VERSAO;
+  if(cv)cv.textContent='Prontidão · CBMRS · '+APP_VERSAO;
   aplicarAcessibilidadeTeclado();
   const raiz=document.getElementById('app');
   if(raiz&&window.MutationObserver){
