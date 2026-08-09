@@ -1,4 +1,4 @@
-/* Remetente de push — Bombeiro CTSP (Fase 4c)
+/* Remetente de push — Prontidão · CBMRS (Fase 4c · data-only bloco 50)
    Roda no GitHub Actions. Lê os tokens em push/{uid}/{chave} do RTDB (via firebase-admin,
    com privilégio de admin → ignora as regras), dispara uma notificação via FCM HTTP v1 e
    REMOVE os tokens que o FCM reportar como não registrados (app desinstalado / token expirado).
@@ -35,9 +35,9 @@ const msg = admin.messaging();
 // (disparo manual), esses prevalecem.
 function mensagemPorHorario() {
   const h = new Date(Date.now() - 3 * 3600 * 1000).getUTCHours();
-  if (h < 12) return { titulo: 'Bombeiro CTSP', corpo: 'Bom dia! Comece adiantando suas revisões de hoje.' };
-  if (h < 18) return { titulo: 'Bombeiro CTSP', corpo: 'Pausa produtiva: 10 minutos de questões agora já contam.' };
-  return { titulo: 'Bombeiro CTSP', corpo: 'Antes de encerrar o dia, feche suas revisões pendentes.' };
+  if (h < 12) return { titulo: 'Prontidão · CBMRS', corpo: 'Bom dia! Comece adiantando suas revisões de hoje.' };
+  if (h < 18) return { titulo: 'Prontidão · CBMRS', corpo: 'Pausa produtiva: 10 minutos de questões agora já contam.' };
+  return { titulo: 'Prontidão · CBMRS', corpo: 'Antes de encerrar o dia, feche suas revisões pendentes.' };
 }
 const _rot = mensagemPorHorario();
 const TITULO = (process.env.PUSH_TITULO || '').trim() || _rot.titulo;
@@ -110,13 +110,12 @@ function corpoContagem(n) {
     // Texto manual sempre prevalece; senão, personaliza pela contagem quando conhecida (>0).
     const corpoU = (!TEM_CUSTOM && u.vencidas > 0) ? corpoContagem(u.vencidas) : CORPO;
 
+    // DATA-ONLY (bloco 50): sem o campo `notification`, o FCM NÃO exibe sozinho — quem
+    // mostra é só o onBackgroundMessage do sw.js. Isso mata a notificação DUPLICADA (antes
+    // vinham 2: a auto do FCM + a do nosso handler). Título/corpo/ícone/link vão no data.
     const resp = await msg.sendEachForMulticast({
       tokens: u.tokens.map((t) => t.token),
-      notification: { title: TITULO, body: corpoU },
-      webpush: {
-        notification: { icon: 'assets/icon-192.png', badge: 'assets/icon-192.png' },
-        fcmOptions: { link: LINK }
-      }
+      data: { title: TITULO, body: corpoU, icon: 'assets/icon-192.png', link: LINK }
     });
     sucesso += resp.successCount;
     falha += resp.failureCount;

@@ -24,18 +24,32 @@ try {
     messagingSenderId: '267159679171',
     appId: '1:267159679171:web:1ffb1853f07aff3ae2b276'
   });
+  // DATA-ONLY (bloco 50): o remetente manda tudo em `data` e SEM `notification`, então o FCM
+  // não exibe nada sozinho — este handler é a ÚNICA exibição. Fim da notificação duplicada.
   firebase.messaging().onBackgroundMessage((payload) => {
-    const n = (payload && payload.notification) || {};
-    self.registration.showNotification(n.title || 'Prontidão · CBMRS', {
-      body: n.body || '',
-      icon: 'assets/icon-192.png',
+    const d = (payload && payload.data) || {};
+    self.registration.showNotification(d.title || 'Prontidão · CBMRS', {
+      body: d.body || '',
+      icon: d.icon || 'assets/icon-192.png',
       badge: 'assets/icon-192.png',
-      data: (payload && payload.data) || {}
+      data: { link: d.link || '/ctsp-estudos/' }
     });
   });
 } catch (_) {}
 
-const CACHE = 'ctsp-cache-v8';
+// Clique na notificação: foca uma aba já aberta do app ou abre o link (data-only precisa disto,
+// que antes vinha de graça pelo fcmOptions.link do payload notification).
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const link = (e.notification.data && e.notification.data.link) || '/ctsp-estudos/';
+  e.waitUntil((async () => {
+    const cl = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const c of cl) { if (c.url.indexOf('/ctsp-estudos') !== -1 && 'focus' in c) return c.focus(); }
+    if (clients.openWindow) return clients.openWindow(link);
+  })());
+});
+
+const CACHE = 'ctsp-cache-v9';
 const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
