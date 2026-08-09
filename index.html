@@ -1555,11 +1555,11 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       </div>
       <div class="dash-body">
         <!-- PLACAR — sempre visível (resumo do estado) -->
-        <div class="pg-placar">
-          <div class="pg-kpi"><div class="pg-kpi-v" id="kpi-dominio">—</div><div class="pg-kpi-l">Domínio geral</div></div>
-          <div class="pg-kpi"><div class="pg-kpi-v" id="kpi-projecao">—</div><div class="pg-kpi-l">Projeção · de 60</div></div>
-          <div class="pg-kpi"><div class="pg-kpi-v" id="kpi-cobertura">—</div><div class="pg-kpi-l">Cobertura do edital</div></div>
-          <div class="pg-kpi"><div class="pg-kpi-v"><span id="kpi-acuracia">—</span><span class="pg-kpi-delta" id="kpi-acuracia-delta"></span></div><div class="pg-kpi-l">Acurácia geral</div></div>
+        <!-- Placar: só o que NÃO tem versão grande. Domínio geral vive no painel "Por área"
+             e Projeção no gauge — removidos daqui para não repetir o mesmo dado (bloco 50). -->
+        <div class="pg-placar pg-placar-2">
+          <div class="pg-kpi"><div class="pg-kpi-v" id="kpi-cobertura">—</div><div class="pg-kpi-l">Cobertura do edital <span class="info-btn" onclick="showInfo('cobertura')" aria-label="O que é cobertura do edital">?</span></div></div>
+          <div class="pg-kpi"><div class="pg-kpi-v"><span id="kpi-acuracia">—</span><span class="pg-kpi-delta" id="kpi-acuracia-delta"></span></div><div class="pg-kpi-l">Acurácia geral <span class="info-btn" onclick="showInfo('acuracia')" aria-label="O que é acurácia geral">?</span></div></div>
         </div>
         <div class="pg-subline">
           <span><b id="kpi-respondidas">0</b> respondidas</span>
@@ -3174,7 +3174,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.134';
+const APP_VERSAO='v1.135';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4657,7 +4657,11 @@ function _estudoCards(){
   const ehVencido=fc=>{const uc=userCards[fc.id];return !!(uc&&uc.reps>0&&uc.next&&uc.next<=now);};
   const pend=cardsPendentes();
   const acervo=pend.todos.length;
-  const limite=dose('cards')+doseExtra.cards;
+  // Sem filtro/reforço = fluxo de meta do dia: FECHA ao bater a dose (desconta hj.fc),
+  // senão o carrossel drenava o acervo inteiro. Com filtro de tópico ou reforço, a dose
+  // vale cheia (você escolheu praticar aquele tópico / revisar o erro).
+  const semFiltro=!cardsFiltroTopico&&origemReforco!=='quiz';
+  const limite=(semFiltro?Math.max(0,dose('cards')-(entradaHoje().fc||0)):dose('cards'))+doseExtra.cards;
   cardQueue=priorizarPorMalha(pend.todos,ehVencido).slice(0,limite);
   const body=document.getElementById('cards-body');
   if(!cardQueue.length){
@@ -4813,8 +4817,12 @@ function resumosPendentes(){
 // Dose de resumos do dia, já priorizada pela malha.
 function resumosDose(){
   const now=Date.now();
+  // A dose do dia FECHA ao bater a meta (hj.rs), igual aos cards. Sem isso a fila puxava
+  // do acervo inteiro (78) e nunca mostrava "concluída" — só ao esgotar TODOS os resumos.
+  const restaMeta=Math.max(0,dose('resumos')-(entradaHoje().rs||0))+doseExtra.resumos;
+  if(restaMeta<=0)return [];
   const ehVencido=r=>{const ur=userStats['resumo_'+r.id];return !!(ur&&ur.reps>0&&ur.next&&ur.next<=now);};
-  return priorizarPorMalha(resumosPendentes(),ehVencido).slice(0,dose('resumos')+doseExtra.resumos);
+  return priorizarPorMalha(resumosPendentes(),ehVencido).slice(0,restaMeta);
 }
 
 // ── Busca de conteúdo (resumos + flashcards; NÃO questões) ──────────────────────
@@ -5074,6 +5082,8 @@ function _estudoResumos(){
   }
   const r=fila[0];
   resumoAtualId=r.id;
+  const urR=userStats['resumo_'+r.id];
+  const ehNovoR=!urR||!urR.reps; // S47: selo Novo/Revisão, igual a cards e quiz
   registrarVisualizacaoResumo(r.id);
   const aInfo=AI[r.area]||{};
   const probLabel=r.prob==='alta'?'Alta probabilidade':r.prob==='media'?'Média':'Baixa';
@@ -5082,6 +5092,7 @@ function _estudoResumos(){
     <div class="resumo-card">
       <div class="resumo-card-top">
         <span class="resumo-area-tag" style="background:${aInfo.bg};color:${aInfo.color}">${aInfo.icon} ${r.area}</span>
+        <span class="q-badge ${ehNovoR?'badge-nova':'badge-rev'}">${ehNovoR?'NOVO':'REVISÃO'}</span>
         <span class="resumo-dif-tag" style="background:var(--amber-light);color:var(--amber)">${probLabel}</span>
       </div>
       <div class="resumo-titulo">${sanitize(r.titulo)}</div>
@@ -6065,9 +6076,10 @@ function showInfo(tipo){
     cobertura:'Progresso de percurso: quantos itens (questões, cards e resumos) de cada área você já tocou, dividido pelo total que existe. Diferente do desempenho — mede o quanto você já viu, não o quanto acertou.',
     bkt:'Probabilidade de você dominar cada tópico (modelo BKT). A cada resposta o sistema ajusta a estimativa considerando acerto por sorte (~20%) e erro por descuido (~10%). O Modo Adaptativo prioriza os tópicos com menor domínio.',
     prontidao:'Estimativa de quantas das 60 questões você acertaria hoje: domínio BKT médio de cada área multiplicado pela cota do edital (AT1 14 · AT2 8 · AT3 14 · AT4 12 · AT5 12). É uma projeção estatística, não uma garantia. Abaixo de '+MIN_RESP_PRONT+' respostas ela é marcada como preliminar — quanto mais você responde, mais precisa fica. Defina a data da prova em Configurações para ver a contagem regressiva.',
-    formato:'Compara sua taxa de acerto em cada FORMATO de enunciado com a sua média geral. O formato é deduzido do texto da questão pelas mesmas regras usadas para medir as 2 provas reais, então a comparação é maçã com maçã. Cada formato só mostra percentual a partir de '+FMT_MIN_AMOSTRA+' respostas — abaixo disso a base não sustenta um número e a tela diz "amostra pequena" em vez de inventar. Serve para responder uma pergunta só: formato é um problema seu, ou você erra igual em todos? A plataforma não avisa o formato enquanto você responde, de propósito — a prova real também não avisa.'
+    formato:'Compara sua taxa de acerto em cada FORMATO de enunciado com a sua média geral. O formato é deduzido do texto da questão pelas mesmas regras usadas para medir as 2 provas reais, então a comparação é maçã com maçã. Cada formato só mostra percentual a partir de '+FMT_MIN_AMOSTRA+' respostas — abaixo disso a base não sustenta um número e a tela diz "amostra pequena" em vez de inventar. Serve para responder uma pergunta só: formato é um problema seu, ou você erra igual em todos? A plataforma não avisa o formato enquanto você responde, de propósito — a prova real também não avisa.',
+    acuracia:'Sua taxa de acerto geral: total de acertos ÷ total de questões respondidas, somando todas as áreas e TODAS as tentativas (refazer uma questão conta de novo; um erro permanece no cálculo mesmo que você acerte depois). O △ ao lado compara com a semana anterior, só quando já há base. É um retrato do histórico — para o seu nível ATUAL por área, veja o Domínio.'
   };
-  const titulos={desempenho:'Histórico de Acertos por Área',evolucao:'Histórico de Acertos por Área',dominio:'Índice de Domínio Real',cobertura:'Cobertura do Edital',bkt:'Domínio por Tópico (BKT)',prontidao:'Projeção para a Prova',formato:'Seu Desempenho por Formato'};
+  const titulos={desempenho:'Histórico de Acertos por Área',evolucao:'Histórico de Acertos por Área',dominio:'Índice de Domínio Real',cobertura:'Cobertura do Edital',bkt:'Domínio por Tópico (BKT)',prontidao:'Projeção para a Prova',formato:'Seu Desempenho por Formato',acuracia:'Acurácia Geral'};
   let box=document.getElementById('info-tooltip');
   if(!box){
     box=document.createElement('div');
