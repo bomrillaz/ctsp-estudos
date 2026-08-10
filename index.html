@@ -592,6 +592,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .adapt-btn-title{font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:.03em;}
 .adapt-btn-sub{font-size:11px;opacity:.78;margin-top:2px;}
 .adapt-btn-arrow{font-size:20px;font-weight:700;opacity:.9;}
+/* Acento "recomendado" do Treino do dia — âmbar (não some no escuro) */
+.adapt-btn.rec{border:2px solid var(--ember);}
+#treino-badge{color:var(--ember);}
+/* No escuro, o card navy some no fundo navy: sobe o tom e reforça a sombra */
+html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#151f40);box-shadow:0 6px 22px rgba(0,0,0,.55);}
 .diag-card{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,var(--red-dark),var(--red));color:#fff;border-radius:18px;padding:16px 18px;margin-bottom:14px;cursor:pointer;box-shadow:0 10px 28px rgba(165,29,14,.32);transition:transform .2s var(--ease-out);}
 .diag-card.hidden{display:none;}
 .diag-card:active{transform:scale(.98);}
@@ -1111,7 +1116,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 
 <!-- LOADING -->
 <div id="loading">
-  <img src="assets/mascote-branco.png" onerror="this.style.display='none'" alt="Prontidão">
+  <img src="img/logo.png" onerror="this.style.display='none'" alt="CBMRS">
   <div class="welcome-text" id="welcome-text">Bem-vindo,<br>vamos iniciar os estudos?</div>
   <p id="loading-sub">PRONTIDÃO · CBMRS</p>
 </div>
@@ -1298,10 +1303,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
              "Treino Adaptativo", agora embutido nele. Estudo Rápido/Focado viram atalhos
              secundários; o Simulado completo já é a aba própria na barra inferior. -->
         <div class="sec-title">Estudar agora</div>
-        <div class="adapt-btn" onclick="abrirIntro('treino')" style="border:2px solid var(--blue);">
+        <div class="adapt-btn rec" onclick="abrirIntro('treino')">
           <div class="adapt-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></div>
           <div class="adapt-btn-info">
-            <div id="treino-badge" style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);margin-bottom:2px">Recomendado agora</div>
+            <div id="treino-badge" style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px">Recomendado agora</div>
             <div class="adapt-btn-title">Treino do dia</div>
             <div id="treino-sub" class="adapt-btn-sub">Revisão vencida + ponto fraco + assunto novo</div>
           </div>
@@ -3244,7 +3249,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.145';
+const APP_VERSAO='v1.146';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
