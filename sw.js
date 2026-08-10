@@ -54,6 +54,7 @@ const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
   'assets/cesar-coin.png',
+  'assets/loading.mp4', 'assets/loading-poster.jpg',
   'data.js?v=185'
 ];
 const CROSS = [
