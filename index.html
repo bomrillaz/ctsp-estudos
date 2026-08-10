@@ -119,7 +119,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 /* LOADING */
 #loading{position:fixed;inset:0;background:var(--navy-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;overflow:hidden;transition:opacity .6s ease;}
 #loading.fade-out{opacity:0;}
-#loading video{width:min(500px,80vw);max-height:72vh;aspect-ratio:1/1;object-fit:cover;border-radius:24px;box-shadow:0 24px 70px rgba(0,0,0,.5);z-index:1;}
+#loading video{width:min(500px,80vw);max-height:72vh;aspect-ratio:1/1;object-fit:cover;border-radius:24px;box-shadow:0 24px 70px rgba(0,0,0,.5);z-index:1;transform:translateY(-5vh);}
 #loading img{width:min(312px,76vw);height:min(312px,76vw);object-fit:contain;animation:pulse 1.5s ease-in-out infinite;transition:opacity .6s ease,transform .6s ease;z-index:1;}
 #loading img.fade-out{opacity:0;transform:scale(.85);}
 #loading p{position:absolute;bottom:40px;left:0;right:0;color:rgba(255,255,255,.90);font-family:var(--font-display);font-size:15px;font-weight:600;letter-spacing:.22em;text-align:center;z-index:2;transition:opacity .4s ease;}
@@ -2894,7 +2894,7 @@ auth.onAuthStateChanged(async user=>{
     document.getElementById('loading').style.display='none';
     showAuth('pending');return;
   }
-  // Animação de boas-vindas no loading
+  // Animação de boas-vindas no loading (com toque-para-pular)
   const loadVid=document.querySelector('#loading video');
   const loadImg=document.querySelector('#loading img');
   const loadEl=loadVid||loadImg;
@@ -2902,18 +2902,24 @@ auth.onAuthStateChanged(async user=>{
   if(loadVid){try{loadVid.play();}catch(e){}}
   if(loadEl){
     if(loadImg)loadImg.style.animation='none';
-    setTimeout(()=>{
+    const L=document.getElementById('loading');
+    const _t=[];
+    let introFeito=false;
+    const encerrarIntro=()=>{
+      if(introFeito)return; introFeito=true;
+      _t.forEach(clearTimeout);
+      L.classList.add('fade-out');
+      setTimeout(async()=>{ L.style.display='none'; await initApp(); },600);
+    };
+    L.style.cursor='pointer';
+    L.addEventListener('click',encerrarIntro,{once:true});
+    _t.push(setTimeout(()=>{
       if(welcomeText)welcomeText.classList.add('show');
-      setTimeout(()=>{
+      _t.push(setTimeout(()=>{
         if(welcomeText)welcomeText.style.opacity='0';
-        const L=document.getElementById('loading');
-        L.classList.add('fade-out');
-        setTimeout(async()=>{
-          L.style.display='none';
-          await initApp();
-        },600);
-      },1800);
-    },1600);
+        encerrarIntro();
+      },1800));
+    },1600));
   } else {
     document.getElementById('loading').style.display='none';
     await initApp();
@@ -3260,7 +3266,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.153';
+const APP_VERSAO='v1.154';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
