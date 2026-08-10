@@ -119,13 +119,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 /* LOADING */
 #loading{position:fixed;inset:0;background:var(--navy-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;overflow:hidden;transition:opacity .6s ease;}
 #loading.fade-out{opacity:0;}
-#loading video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
-#loading::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,20,48,.20) 0%,rgba(11,20,48,0) 34%,rgba(11,20,48,.62) 100%);z-index:1;pointer-events:none;}
-#loading img{width:min(312px,76vw);height:min(312px,76vw);object-fit:contain;animation:pulse 1.5s ease-in-out infinite;transition:opacity .6s ease,transform .6s ease;z-index:2;}
+#loading video{width:min(500px,80vw);max-height:72vh;aspect-ratio:1/1;object-fit:cover;border-radius:24px;box-shadow:0 24px 70px rgba(0,0,0,.5);z-index:1;}
+#loading img{width:min(312px,76vw);height:min(312px,76vw);object-fit:contain;animation:pulse 1.5s ease-in-out infinite;transition:opacity .6s ease,transform .6s ease;z-index:1;}
 #loading img.fade-out{opacity:0;transform:scale(.85);}
-#loading p{position:absolute;bottom:34px;left:0;right:0;color:rgba(255,255,255,.92);font-family:var(--font-display);font-size:15px;font-weight:600;letter-spacing:.22em;text-align:center;z-index:2;text-shadow:0 1px 12px rgba(0,0,0,.5);transition:opacity .4s ease;}
+#loading p{position:absolute;bottom:40px;left:0;right:0;color:rgba(255,255,255,.90);font-family:var(--font-display);font-size:15px;font-weight:600;letter-spacing:.22em;text-align:center;z-index:2;transition:opacity .4s ease;}
 #loading p.fade-out{opacity:0;}
-#loading .welcome-text{position:absolute;z-index:2;bottom:14vh;color:white;font-size:22px;font-weight:800;letter-spacing:.02em;text-align:center;padding:0 32px;opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s ease;line-height:1.4;text-shadow:0 2px 16px rgba(0,0,0,.6);}
+#loading .welcome-text{position:absolute;z-index:2;bottom:12vh;color:white;font-size:22px;font-weight:800;letter-spacing:.02em;text-align:center;padding:0 32px;opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s ease;line-height:1.4;}
 #loading .welcome-text.show{opacity:1;transform:translateY(0);}
 
 /* SPLASH SCREEN pós-login — painel de quartel */
@@ -3261,7 +3260,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.152';
+const APP_VERSAO='v1.153';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
