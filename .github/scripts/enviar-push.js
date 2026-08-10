@@ -35,9 +35,9 @@ const msg = admin.messaging();
 // (disparo manual), esses prevalecem.
 function mensagemPorHorario() {
   const h = new Date(Date.now() - 3 * 3600 * 1000).getUTCHours();
-  if (h < 12) return { titulo: 'Prontidão · CBMRS', corpo: 'Bom dia! Comece adiantando suas revisões de hoje.' };
-  if (h < 18) return { titulo: 'Prontidão · CBMRS', corpo: 'Pausa produtiva: 10 minutos de questões agora já contam.' };
-  return { titulo: 'Prontidão · CBMRS', corpo: 'Antes de encerrar o dia, feche suas revisões pendentes.' };
+  if (h < 12) return { titulo: 'Prontidão', corpo: 'Bom dia! Comece adiantando suas revisões de hoje.' };
+  if (h < 18) return { titulo: 'Prontidão', corpo: 'Pausa produtiva: 10 minutos de questões agora já contam.' };
+  return { titulo: 'Prontidão', corpo: 'Antes de encerrar o dia, feche suas revisões pendentes.' };
 }
 const _rot = mensagemPorHorario();
 const TITULO = (process.env.PUSH_TITULO || '').trim() || _rot.titulo;

@@ -1,7 +1,7 @@
 {
-  "name": "Prontidão - CBMRS",
+  "name": "Prontidão - Plataforma de Estudos",
   "short_name": "Prontidão",
-  "description": "Prontidão - CBMRS: preparatorio para concursos internos do CBMRS. Questoes auditadas contra a norma vigente, simulado no formato real da prova, flashcards com revisao espacada e diagnostico das areas fracas.",
+  "description": "Prontidão, a plataforma de estudos da Bomrillaz: preparatorio para concursos internos do CBMRS. Questoes auditadas contra a norma vigente, simulado no formato real da prova, flashcards com revisao espacada e diagnostico das areas fracas.",
   "lang": "pt-BR",
   "dir": "ltr",
   "start_url": "./",
