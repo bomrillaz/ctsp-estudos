@@ -427,6 +427,20 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pg-area-row.open .pg-area-topicos{display:block;animation:fadeIn .2s;}
 .pg-area-topicos .topico-row{padding:6px 0;}
 .pg-area-topicos .topico-row:last-child{border-bottom:none;}
+/* Domínio por tópico em COLUNAS interativas (liga o % da área aos tópicos) */
+.tq{margin-top:4px;}
+.tq-cols{display:flex;gap:6px;align-items:flex-end;height:128px;}
+.tq-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.tq-v{font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text2);}
+.tq-track{width:100%;flex:1;background:var(--paper-2);border-radius:9px;overflow:hidden;display:flex;align-items:flex-end;}
+.tq-fill{width:100%;border-radius:9px;transition:height .6s cubic-bezier(.22,1,.36,1);}
+.tq-code{font-size:10px;font-weight:700;color:var(--text3);font-variant-numeric:tabular-nums;}
+.tq-col.sel .tq-track{outline:2px solid var(--text);outline-offset:2px;}
+.tq-col.weak .tq-code{color:var(--red);}
+.tq-detail{margin-top:12px;background:var(--paper-2);border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap;line-height:1.35;}
+.tq-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.tq-weak{font-size:10px;font-weight:700;color:var(--red-dark);background:var(--red-light);padding:1px 7px;border-radius:20px;}
+.tq-praticar{margin-left:auto;font-size:11px;font-weight:800;color:var(--ember);background:none;border:none;cursor:pointer;padding:4px 2px;}
 .topico-vazio{font-size:11px;color:var(--text3);font-style:italic;padding:6px 0;}
 .pg-legend-line{background:var(--text2)!important;height:2px!important;}
 /* P1 — gauge de projeção */
@@ -3230,7 +3244,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.144';
+const APP_VERSAO='v1.145';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5596,17 +5610,29 @@ function topicosAreaHTML(area,perfil){
   const cor=p=>p>=70?'var(--green)':p>=45?'var(--amber)':'var(--red)';
   const ts=(perfil||perfilTopicos()).filter(p=>p.area===area);
   if(!ts.length)return '<div class="topico-vazio">Responda questões desta área para mapear os tópicos.</div>';
-  return ts.map(p=>{
-    const semDados=p.n===0; const baixaConf=p.n>0&&p.n<3; const pct=Math.round(p.pL*100);
-    const pctTxt=semDados?'—':pct+'%'; const barW=semDados?0:pct; const corT=(semDados||baixaConf)?'var(--text3)':cor(pct);
-    const tag=p.n===0?'<span style="font-size:10px;color:var(--text3)"> · sem dados</span>':'';
-    return `<div class="topico-row">
-      <span class="topico-code">${sanitize(p.t)}</span>
-      <span class="topico-name">${sanitize(p.nome)}${tag}</span>
-      <span class="topico-bar-wrap"><span class="topico-bar" style="width:${barW}%;background:${corT}"></span></span>
-      <span class="topico-pct" style="color:${corT}">${pctTxt}</span>
-    </div>`;
+  // ponto mais fraco COM dados, para destaque
+  let weak=null;ts.forEach(p=>{if(p.n>0&&(weak===null||p.pL<weak.pL))weak=p;});
+  const cols=ts.map(p=>{
+    const semDados=p.n===0,baixaConf=p.n>0&&p.n<3,pct=Math.round(p.pL*100);
+    const c=(semDados||baixaConf)?'var(--text3)':cor(pct);
+    const h=semDados?0:pct;
+    const isWeak=!!(weak&&p.t===weak.t);
+    return `<button type="button" class="tq-col${isWeak?' weak':''}" onclick="tqSel(this)" data-code="${sanitize(p.t)}" data-name="${sanitize(p.nome)}" data-pct="${semDados?'—':pct+'%'}" data-cor="${c}" data-weak="${isWeak?'1':''}" aria-label="${sanitize(p.t)}: ${semDados?'sem dados':pct+'%'}">
+      <span class="tq-v" style="color:${c}">${semDados?'—':pct}</span>
+      <span class="tq-track"><span class="tq-fill" style="height:${h}%;background:${c}"></span></span>
+      <span class="tq-code">${sanitize(p.t)}</span>
+    </button>`;
   }).join('');
+  return `<div class="tq"><div class="tq-cols">${cols}</div><div class="tq-detail" aria-live="polite">Toque numa coluna para ver o tópico.</div></div>`;
+}
+// Seleção de uma coluna de tópico: destaca + mostra detalhe com atalho de praticar.
+function tqSel(btn){
+  const tq=btn.closest('.tq');if(!tq)return;
+  tq.querySelectorAll('.tq-col').forEach(c=>c.classList.remove('sel'));
+  btn.classList.add('sel');
+  const code=btn.dataset.code,name=btn.dataset.name,pct=btn.dataset.pct,c=btn.dataset.cor,weak=btn.dataset.weak;
+  const d=tq.querySelector('.tq-detail');
+  if(d)d.innerHTML='<span class="tq-dot" style="background:'+c+'"></span><b>'+sanitize(code)+'</b> · '+sanitize(name)+' — <b>'+sanitize(pct)+'</b>'+(weak?'<span class="tq-weak">ponto mais fraco</span>':'')+'<button type="button" class="tq-praticar" onclick="praticarTopico(\''+sanitize(code)+'\')">Praticar →</button>';
 }
 function toggleAreaTopicos(el){
   const row=el.closest('.pg-area-row');
