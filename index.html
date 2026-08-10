@@ -409,7 +409,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pg-area-line{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
 .pg-area-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);min-width:60px;}
 .pg-area-bar-wrap{flex:1;height:9px;background:var(--paper-2);border-radius:20px;overflow:hidden;}
-.pg-area-bar{height:100%;border-radius:20px;transition:width .8s cubic-bezier(.22,1,.36,1);}
+.pg-area-bar{height:100%;border-radius:20px;transition:width .8s cubic-bezier(.22,1,.36,1);animation:barGrow .8s cubic-bezier(.22,1,.36,1);}
 .pg-area-val{font-size:10.5px;font-weight:800;min-width:70px;text-align:right;font-variant-numeric:tabular-nums;}
 /* P1 — sparkline de evolução por área */
 .pg-area-evo .pg-area-tag{color:var(--text3);}
@@ -3230,7 +3230,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.143';
+const APP_VERSAO='v1.144';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -3386,7 +3386,7 @@ function animateScreenEntrance(sc){
 
 function animateBars(container){
   // Barras .area-prog-fill, .area-evo-bar, .dominio-area-bar, .splash-area-bar
-  container.querySelectorAll('.area-prog-fill,.area-evo-bar,.dominio-area-bar,.pg-area-bar').forEach(bar=>{
+  container.querySelectorAll('.area-prog-fill,.area-evo-bar,.dominio-area-bar').forEach(bar=>{
     const target=bar.style.width;
     if(!target||target==='0%')return;
     bar.style.transition='none';
