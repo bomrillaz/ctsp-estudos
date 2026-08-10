@@ -3260,7 +3260,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.147';
+const APP_VERSAO='v1.148';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -3278,18 +3278,31 @@ function diaLocal(d){
   return x.getFullYear()+'-'+p(x.getMonth()+1)+'-'+p(x.getDate());
 }
 
+// S66: a sequência conta DIAS DE ESTUDO, não logins. No load, só exibe e detecta quebra.
+// O incremento vive em registrarEstudoDia(), chamado pelas atividades reais.
 function updateStreak(){
-  const _el=document.getElementById('hdr-streak-n');if(_el)_el.textContent=(userStats.streak||0);
-  if(!dataLoaded&&!progressoLocalOk)return; // S30 BUG-DATA: nunca incrementar/gravar sobre estado não carregado
+  const _el=document.getElementById('hdr-streak-n');
+  if(!dataLoaded&&!progressoLocalOk){if(_el)_el.textContent=(userStats.streak||0);return;}
   const today=diaLocal();
-  const last=userStats.lastAccessDate||userStats.lastStudyDate||'';
-  if(last!==today){
-    // Sequência real: dia imediatamente seguinte continua; pulou 1+ dia (ou 1º acesso) reinicia em 1.
-    userStats.streak=(last&&diffDias(last,today)===1)?(userStats.streak||0)+1:1;
-    userStats.lastAccessDate=today;
+  const last=userStats.lastStudyDate||'';
+  // Passou mais de 1 dia sem estudar → a sequência quebrou.
+  if(last&&last!==today&&diffDias(last,today)>1&&(userStats.streak||0)>0){
+    userStats.streak=0;
     saveProg();
   }
   if(_el)_el.textContent=(userStats.streak||0);
+}
+// S66: marca estudo real do dia (1ª questão respondida / card ou resumo avaliado no dia).
+// SÓ aqui a sequência avança — abrir o app não conta.
+function registrarEstudoDia(){
+  if(!dataLoaded&&!progressoLocalOk)return;
+  const today=diaLocal();
+  const last=userStats.lastStudyDate||'';
+  if(last===today)return; // já contou hoje
+  userStats.streak=(last&&diffDias(last,today)===1)?(userStats.streak||0)+1:1;
+  userStats.lastStudyDate=today;
+  saveProg();
+  const el=document.getElementById('hdr-streak-n');if(el)el.textContent=(userStats.streak||0);
 }
 
 // S62 (bloco33): entrada do dia, compartilhada pelos três contadores.
@@ -3324,6 +3337,7 @@ function checarDiaCompleto(){
   showToast('🎉 Dia concluído! As três metas de hoje foram batidas — questões, flashcards e resumos.');
 }
 function registrarAtividade(acertou){
+  registrarEstudoDia();
   const todayEntry=entradaHoje();
   todayEntry.n=(todayEntry.n||0)+1;
   if(acertou===true)todayEntry.c=(todayEntry.c||0)+1;
@@ -3332,8 +3346,8 @@ function registrarAtividade(acertou){
   if(el)el.textContent=(userStats.streak||0);
   checarDiaCompleto();
 }
-function registrarAtividadeCard(){const e=entradaHoje();e.fc=(e.fc||0)+1;checarDiaCompleto();}
-function registrarAtividadeResumo(){const e=entradaHoje();e.rs=(e.rs||0)+1;checarDiaCompleto();}
+function registrarAtividadeCard(){registrarEstudoDia();const e=entradaHoje();e.fc=(e.fc||0)+1;checarDiaCompleto();}
+function registrarAtividadeResumo(){registrarEstudoDia();const e=entradaHoje();e.rs=(e.rs||0)+1;checarDiaCompleto();}
 
 // ═══════════════════════════════
 // NAV
