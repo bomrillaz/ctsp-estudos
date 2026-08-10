@@ -401,11 +401,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pg-mod-h::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:10px;height:3px;border-radius:2px;background:var(--fire-line);}
 .pg-legend{display:flex;flex-direction:column;gap:5px;margin:12px 0;font-size:10.5px;color:var(--text2);line-height:1.4;}
 .pg-legend i{display:inline-block;width:16px;height:8px;border-radius:2px;margin-right:7px;vertical-align:-1px;flex-shrink:0;}
-.pg-area-row{display:flex;gap:10px;padding:11px 0;border-top:1px solid var(--line-soft);}
+.pg-area-row{display:flex;gap:10px;padding:15px 0;border-top:1px solid var(--line-soft);}
 .pg-area-row:first-of-type{border-top:none;}
 .pg-area-ic{font-size:15px;flex-shrink:0;padding-top:1px;line-height:1;}
 .pg-area-main{flex:1;min-width:0;}
-.pg-area-name{font-size:11.5px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.pg-area-name{font-size:13px;font-weight:800;letter-spacing:.01em;color:var(--text);margin-bottom:9px;}
 .pg-area-line{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
 .pg-area-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);min-width:60px;}
 .pg-area-bar-wrap{flex:1;height:9px;background:var(--paper-2);border-radius:20px;overflow:hidden;}
@@ -428,19 +428,20 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pg-area-topicos .topico-row{padding:6px 0;}
 .pg-area-topicos .topico-row:last-child{border-bottom:none;}
 /* Domínio por tópico em COLUNAS interativas (liga o % da área aos tópicos) */
-.tq{margin-top:4px;}
-.tq-cols{display:flex;gap:6px;align-items:flex-end;height:128px;}
-.tq-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;}
-.tq-v{font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text2);}
-.tq-track{width:100%;flex:1;background:var(--paper-2);border-radius:9px;overflow:hidden;display:flex;align-items:flex-end;}
-.tq-fill{width:100%;border-radius:9px;transition:height .6s cubic-bezier(.22,1,.36,1);}
-.tq-code{font-size:10px;font-weight:700;color:var(--text3);font-variant-numeric:tabular-nums;}
-.tq-col.sel .tq-track{outline:2px solid var(--text);outline-offset:2px;}
+.tq{margin-top:6px;}
+.tq-cols{display:flex;gap:8px;align-items:stretch;height:152px;}
+.tq-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.tq-v{font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text);}
+.tq-track{width:100%;flex:1;min-height:64px;background:var(--paper-2);border-radius:8px;overflow:hidden;display:flex;align-items:flex-end;box-shadow:inset 0 0 0 1px var(--line-soft);}
+.tq-fill{width:100%;border-radius:8px;transition:height .6s cubic-bezier(.22,1,.36,1);}
+.tq-code{font-size:10.5px;font-weight:700;color:var(--text3);font-variant-numeric:tabular-nums;}
+.tq-col.sel .tq-track{box-shadow:inset 0 0 0 2px var(--ember);}
+.tq-col.sel .tq-code{color:var(--ember);}
 .tq-col.weak .tq-code{color:var(--red);}
-.tq-detail{margin-top:12px;background:var(--paper-2);border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap;line-height:1.35;}
+.tq-detail{margin-top:14px;background:var(--paper-2);border-radius:12px;padding:11px 13px;font-size:12.5px;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap;line-height:1.4;}
 .tq-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-.tq-weak{font-size:10px;font-weight:700;color:var(--red-dark);background:var(--red-light);padding:1px 7px;border-radius:20px;}
-.tq-praticar{margin-left:auto;font-size:11px;font-weight:800;color:var(--ember);background:none;border:none;cursor:pointer;padding:4px 2px;}
+.tq-weak{font-size:10px;font-weight:700;color:var(--red-dark);background:var(--red-light);padding:2px 8px;border-radius:20px;}
+.tq-praticar{margin-left:auto;font-size:11.5px;font-weight:800;color:var(--ember);background:color-mix(in srgb,var(--ember) 12%,transparent);border:none;border-radius:8px;cursor:pointer;padding:6px 10px;}
 .topico-vazio{font-size:11px;color:var(--text3);font-style:italic;padding:6px 0;}
 .pg-legend-line{background:var(--text2)!important;height:2px!important;}
 /* P1 — gauge de projeção */
@@ -1620,11 +1621,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <span><b id="kpi-revisados">0</b> revisados</span>
           <span><b id="kpi-streak">0</b> dias seguidos</span>
           <span id="kpi-hoje">Hoje: 0</span>
-        </div>
-        <div class="pg-anchors">
-          <button class="pg-anchor" onclick="pgScroll('pg-projecao')">Projeção</button>
-          <button class="pg-anchor" onclick="pgScroll('pg-area')">Por área</button>
-          <button class="pg-anchor" onclick="pgScroll('pg-atividade')">Atividade</button>
         </div>
         <div id="pg-projecao">
           <div class="pg-mod-h">Projeção para a prova <span class="info-btn" onclick="showInfo('prontidao')" aria-label="Mais informações">?</span></div>
@@ -3260,7 +3256,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.148';
+const APP_VERSAO='v1.149';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
