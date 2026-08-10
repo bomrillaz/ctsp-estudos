@@ -49,10 +49,11 @@ self.addEventListener('notificationclick', (e) => {
   })());
 });
 
-const CACHE = 'ctsp-cache-v10';
+const CACHE = 'ctsp-cache-v11';
 const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
+  'assets/cesar-coin.png',
   'data.js?v=185'
 ];
 const CROSS = [

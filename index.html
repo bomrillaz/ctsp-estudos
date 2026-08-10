@@ -26,13 +26,13 @@
 <meta property="og:site_name" content="Prontidão · Bomrillaz"/>
 <meta property="og:title" content="Prontidão — sua preparação, medida por área e por tópico"/>
 <meta property="og:description" content="533 questões auditadas, simulado no formato real (60Q · 14/8/14/12/12), flashcards com revisão espaçada e um sistema que identifica seu ponto fraco e diz o que estudar."/>
-<meta property="og:image" content="https://jhoonnvictor.github.io/ctsp-estudos/img/logo.png"/>
+<meta property="og:image" content="https://jhoonnvictor.github.io/ctsp-estudos/assets/og-image.png"/>
 <meta property="og:url" content="https://jhoonnvictor.github.io/ctsp-estudos/"/>
 <meta property="og:locale" content="pt_BR"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Prontidão — Plataforma de Estudos"/>
 <meta name="twitter:description" content="533 questões auditadas, simulado no formato real e diagnóstico automático do seu desempenho."/>
-<meta name="twitter:image" content="https://jhoonnvictor.github.io/ctsp-estudos/img/logo.png"/>
+<meta name="twitter:image" content="https://jhoonnvictor.github.io/ctsp-estudos/assets/og-image.png"/>
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://*.googleapis.com https://*.gstatic.com https://*.firebase.com https://*.firebaseio.com https://*.firebaseapp.com https://www.recaptcha.net https://recaptcha.net https://www.google.com https://www.gstatic.com wss://*.firebaseio.com data: blob:; object-src 'none'; base-uri 'self'; form-action 'none';">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -66,7 +66,7 @@
   --glass-bg:rgba(255,255,255,0.08);
   --glass-border:rgba(255,255,255,0.14);
   --font-display:'Barlow Condensed',-apple-system,'Helvetica Neue',Arial,sans-serif;
-  --fire-line:linear-gradient(90deg,var(--red) 0%,var(--ember) 100%);
+  --fire-line:linear-gradient(90deg,var(--ember) 0%,var(--ember-deep) 100%);
 }
 /* ── S30: Modo noturno ── */
 html[data-theme="dark"]{
@@ -1117,7 +1117,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 
 <!-- LOADING -->
 <div id="loading">
-  <img src="img/logo.png" onerror="this.style.display='none'" alt="CBMRS">
+  <img src="assets/cesar-coin.png" onerror="this.style.display='none'" alt="Prontidão">
   <div class="welcome-text" id="welcome-text">Bem-vindo,<br>vamos iniciar os estudos?</div>
   <p id="loading-sub">PRONTIDÃO · BOMRILLAZ</p>
 </div>
@@ -1154,7 +1154,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <div class="auth-bg"></div>
   <div class="auth-content">
     <div class="auth-hero">
-      <img class="logo" src="assets/mascote-branco.png" onerror="this.style.display='none'" alt="Prontidão">
+      <img class="logo" src="assets/cesar-coin.png" onerror="this.style.display='none'" alt="Prontidão">
       <h1>Prontidão</h1>
       <p>Plataforma de Estudos · por Bomrillaz</p>
     </div>
@@ -1195,7 +1195,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 <div id="app">
   <!-- HEADER -->
   <header class="app-header">
-    <img class="header-logo" src="img/logo.png" onerror="this.style.opacity='0'" alt="CBMRS">
+    <img class="header-logo" src="assets/cesar-coin.png" onerror="this.style.opacity='0'" alt="Prontidão">
     <div class="header-titles">
       <div class="header-title">Prontidão</div>
       <div class="header-sub">Preparatório · CBMRS</div>
@@ -3256,7 +3256,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.150';
+const APP_VERSAO='v1.151';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
