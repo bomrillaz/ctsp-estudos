@@ -2935,13 +2935,24 @@ async function initApp(){
   const nomeDisplay=userProfile.nome&&userProfile.nome!==currentUser.email?userProfile.nome.split(' ')[0]:(currentUser.email||'').split('@')[0];
   const hnEl=document.getElementById('hdr-nome');if(hnEl)hnEl.textContent=nomeDisplay||'Bombeiro';
   if(userProfile.admin||currentUser.email===ADMIN_EMAIL){
+    const admIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
+    // Mobile: entrada no bottom sheet "Mais"
     const panel=document.getElementById('mais-panel');
     if(panel&&!document.getElementById('sheet-admin')){
       const btn=document.createElement('button');
       btn.className='sheet-item';btn.id='sheet-admin';
-      btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><div><div class="sheet-item-t">Admin</div><div class="sheet-item-sub">Painel de gestão</div></div>';
+      btn.innerHTML=admIcon+'<div><div class="sheet-item-t">Admin</div><div class="sheet-item-sub">Painel de gestão</div></div>';
       btn.onclick=()=>navMais('admin');
       panel.appendChild(btn);
+    }
+    // Desktop: o rail esconde o "Mais"; sem isto o admin fica sem porta no PC.
+    const nav=document.getElementById('bottom-nav');
+    if(nav&&!document.getElementById('nav-desk-admin')){
+      const a=document.createElement('div');
+      a.className='nav-item nav-desk';a.id='nav-desk-admin';
+      a.innerHTML=admIcon+'Admin';
+      a.onclick=()=>navMais('admin');
+      nav.appendChild(a);
     }
   }
   await loadUserData();
@@ -3249,7 +3260,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.146';
+const APP_VERSAO='v1.147';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
