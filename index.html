@@ -86,7 +86,7 @@ html[data-theme="dark"] body::before{background:radial-gradient(900px 480px at 8
 html[data-theme="dark"] body::after{opacity:.22;mix-blend-mode:screen;}
 html[data-theme="dark"] .quiz-opt.selected{background:#1D2A4D;border-color:var(--ember);}
 html[data-theme="dark"] .quiz-opt.selected .quiz-opt-letter{background:var(--ember);color:#1C1206;}
-html[data-theme="dark"] .meta-opt.active,html[data-theme="dark"] .resumo-filtro.on,html[data-theme="dark"] .admin-tab.active{background:var(--ember);border-color:var(--ember);color:#1C1206;}
+html[data-theme="dark"] .meta-opt.active,html[data-theme="dark"] .admin-tab.active{background:var(--ember);border-color:var(--ember);color:#1C1206;}
 html[data-theme="dark"] .field input:focus,html[data-theme="dark"] .field select:focus,html[data-theme="dark"] .config-input:focus{border-color:var(--ember);box-shadow:0 0 0 3px rgba(240,136,60,.12);}
 html[data-theme="dark"] .diag-card{background:linear-gradient(135deg,#7E180B,#C2412C);}
 html[data-theme="dark"] .quick-btn.destaque{border-color:#4A2B1A;background:linear-gradient(180deg,#241A14,var(--surface));}
@@ -811,6 +811,10 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .resumos-header{background:linear-gradient(160deg,var(--navy-2),var(--navy));border-radius:18px;padding:16px;color:white;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:var(--shadow-md);}
 .busca-grupo{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:8px;}
 .lista-topico{font-size:12.5px;font-weight:700;color:var(--text2);margin:11px 0 6px 2px;}
+/* BLOCO 55 — cabeçalho de tópico clicável dentro do acordeão de Cards */
+.lista-topico-acao{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;border-radius:8px;padding:4px 6px;margin-left:0;transition:background .15s;}
+.lista-topico-acao:hover,.lista-topico-acao:focus-visible{background:var(--paper-2);}
+.lt-acao{font-size:11px;font-weight:800;color:var(--ember,var(--navy));flex-shrink:0;}
 mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px;}
 .resumos-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--fire-line);opacity:.85;}
 .resumos-queue{display:flex;align-items:center;gap:8px;margin-top:10px;}
@@ -830,9 +834,6 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .resumo-btn.dif{background:var(--red-light);color:var(--red-dark);}
 .resumo-btn.med{background:var(--amber-light);color:var(--amber);}
 .resumo-btn.fac{background:var(--green-light);color:var(--green);}
-.resumo-filtros{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
-.resumo-filtro{padding:6px 13px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;}
-.resumo-filtro.on{background:var(--navy);color:white;border-color:var(--navy);}
 .resumos-list{display:flex;flex-direction:column;gap:10px;}
 .resumo-list-item{background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px;cursor:pointer;}
 .resumo-list-vence{font-size:11px;color:var(--text3);}
@@ -1121,7 +1122,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   .quiz-opt:not(.correta):not(.errada):not(.selected):hover{border-color:var(--navy);background:var(--paper-2);}
   .nav-item:hover{color:#fff;}
   .btn-primary:hover,.btn-revelar:hover,.quiz-next-btn:hover,.foco-cta:not(:disabled):hover{filter:brightness(1.06);}
-  .card-btn:hover,.resumo-btn:hover,.inc-btn:hover,.admin-tab:hover,.auth-tab:hover,.resumo-filtro:hover{filter:brightness(.97);}
+  .card-btn:hover,.resumo-btn:hover,.inc-btn:hover,.admin-tab:hover,.auth-tab:hover{filter:brightness(.97);}
 }
 </style>
 </head>
@@ -3267,7 +3268,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.155';
+const APP_VERSAO='v1.156';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4853,48 +4854,47 @@ function renderCard(){
     <div style="text-align:center"><button class="rep-link" onclick="abrirReporte('flashcard','${fc.id}')">⚐ Reportar erro neste card</button></div>`;
 }
 
-// Índice de TODOS os flashcards: chips de filtro por área + agrupado por Área → Tópico. Espelha a lista dos resumos.
-let cardsListaFiltroAT=null; // A3 (bloco 53): começa sem seleção — lista some até escolher um chip
+// BLOCO 55 — índice de flashcards em ACORDEÃO por área, espelhando o Quiz e os Resumos.
+// Cabeçalho de tópico é clicável: estuda o tópico inteiro (revisarCardsDoTopico já entra
+// em modo estudo com o filtro, como manda a regra do hub).
 function renderCardLista(){
   const todos=Object.values(allFlashcards||{});
   if(!todos.length)return '';
-  const areas=Object.keys(AI).filter(a=>todos.some(fc=>(fc.a||fc.area)===a));
-  if(cardsListaFiltroAT!==null&&cardsListaFiltroAT!=='todos'&&!areas.includes(cardsListaFiltroAT))cardsListaFiltroAT=null;
-  let chips='<div class="resumo-filtros">';
-  chips+=`<button class="resumo-filtro${cardsListaFiltroAT==='todos'?' on':''}" data-at="todos" onclick="filtrarCardsLista('todos')">Todos</button>`;
-  areas.forEach(a=>{chips+=`<button class="resumo-filtro${cardsListaFiltroAT===a?' on':''}" data-at="${a}" onclick="filtrarCardsLista('${a}')">${a}</button>`;});
-  chips+='</div>';
-  return '<div class="sec-title mt14">Todos os flashcards</div>'+chips+'<div class="resumos-list" id="cards-lista-itens">'+cardListaItens()+'</div>';
-}
-function cardListaItens(){
-  if(cardsListaFiltroAT===null)return '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Escolha "Todos" ou uma área acima.</div>';
-  const todos=Object.values(allFlashcards||{}).filter(fc=>cardsListaFiltroAT==='todos'||(fc.a||fc.area)===cardsListaFiltroAT);
-  if(!todos.length)return '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Nenhum flashcard nesta área.</div>';
+  const now=Date.now();
+  const pendente=fc=>{const uc=userCards[fc.id];return !uc||!uc.reps||(uc.next&&uc.next<=now);};
   const areas=Object.keys(AI).filter(a=>todos.some(fc=>(fc.a||fc.area)===a));
   let html='';
   areas.forEach(a=>{
     const aInfo=AI[a]||{};
+    const icBox=`background:${aInfo.bg};color:${aInfo.color}`;
     const doArea=todos.filter(fc=>(fc.a||fc.area)===a);
+    const nPend=doArea.filter(pendente).length;
     const tops=[...new Set(doArea.map(fc=>topicoDe(fc)))].sort((x,y)=>String(x).localeCompare(String(y),undefined,{numeric:true}));
-    html+=`<div class="busca-grupo" style="margin-top:16px">${aInfo.icon||''} ${a} · ${sanitize(aInfo.nome||'')}</div>`;
+    let dentro='';
     tops.forEach(t=>{
-      html+=`<div class="lista-topico">${sanitize(nomeTopico(t))}</div>`;
-      doArea.filter(fc=>topicoDe(fc)===t).forEach(fc=>{
+      const doTopico=doArea.filter(fc=>topicoDe(fc)===t);
+      dentro+=`<div class="lista-topico lista-topico-acao" role="button" tabindex="0" onclick="revisarCardsDoTopico('${t}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();revisarCardsDoTopico('${t}');}">${sanitize(nomeTopico(t))}<span class="lt-acao">Estudar ${doTopico.length} →</span></div>`;
+      doTopico.forEach(fc=>{
         const uc=userCards[fc.id];const rot=(uc&&uc.reps>0)?'Revisão':'Novo';
-        html+=`<div class="resumo-list-item" onclick="estudarCardUnico('${fc.id}')">
-          <div style="width:32px;height:32px;border-radius:8px;background:${aInfo.bg};color:${aInfo.color};display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${aInfo.icon||''}</div>
+        dentro+=`<div class="resumo-list-item" onclick="estudarCardUnico('${fc.id}')">
+          <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${aInfo.icon||''}</div>
           <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">${sanitize(fc.f)}</div><div class="resumo-list-vence">${rot}</div></div>
         </div>`;
       });
     });
+    html+=`<div class="pg-area-row quiz-area-row" data-area="${a}">
+      <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAreaTopicos(this);}">
+        <div class="area-row-icon" style="${icBox}">${aInfo.icon||''}</div>
+        <div class="area-row-info">
+          <div class="area-row-name">${a} · ${sanitize(aInfo.nome||'')}</div>
+          <div class="area-row-meta">${doArea.length} card${doArea.length!==1?'s':''}${nPend?` · ${nPend} pendente${nPend!==1?'s':''}`:' · em dia'}</div>
+        </div>
+        <svg class="pg-area-chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="pg-area-topicos">${dentro}</div>
+    </div>`;
   });
-  return html;
-}
-function filtrarCardsLista(at){
-  cardsListaFiltroAT=(cardsListaFiltroAT===at)?null:at; // A6: clicar no chip já ativo desliga o filtro
-  const el=document.getElementById('cards-lista-itens');
-  if(el)el.innerHTML=cardListaItens();
-  document.querySelectorAll('#screen-cards .resumo-filtro').forEach(b=>b.classList.toggle('on',b.dataset.at===cardsListaFiltroAT));
+  return '<div class="sec-title mt14">Todos os flashcards</div><div class="resumos-list">'+html+'</div>';
 }
 function estudarCardUnico(id){
   const fc=allFlashcards[id]||Object.values(allFlashcards).find(x=>x.id===id);
@@ -4931,7 +4931,6 @@ async function avaliarCard(dif){
 // RESUMOS
 // ═══════════════════════════════
 let resumoAtualId=null;
-let resumoFiltroAT=null; // A3 (bloco 53): começa sem seleção — lista some até escolher um chip
 // Resumos pendentes de revisão (acervo, sem corte de dose).
 function resumosPendentes(){
   const now=Date.now();
@@ -5252,48 +5251,48 @@ function blocoPraticarTopico(t){
 
 function maisResumos(){doseExtra.resumos+=dose('resumos');renderResumos();}
 
+// BLOCO 55 — o índice de resumos vira ACORDEÃO por área, igual ao Quiz
+// (.pg-area-row.quiz-area-row + toggleAreaTopicos, sem JS de toggle novo).
+// Aposenta os chips de filtro do topo: no desktop a lista é grid (min 300px) e os
+// cabeçalhos soltos de área/tópico caíam como células da grade — eram os "blocos
+// opacos que não clicam" do print. Com o acordeão, cada área é UMA célula.
 function renderResumoLista(){
-  const areas=[...new Set(RESUMOS_BANCO.map(r=>r.area))].sort();
-  if(resumoFiltroAT!==null&&resumoFiltroAT!=='todos'&&!areas.includes(resumoFiltroAT))resumoFiltroAT=null;
-  let chips='<div class="resumo-filtros">';
-  chips+=`<button class="resumo-filtro${resumoFiltroAT==='todos'?' on':''}" data-at="todos" onclick="filtrarResumos('todos')">Todos</button>`;
-  areas.forEach(a=>{chips+=`<button class="resumo-filtro${resumoFiltroAT===a?' on':''}" data-at="${a}" onclick="filtrarResumos('${a}')">${a}</button>`;});
-  chips+='</div>';
-  return '<div class="sec-title mt14">Todos os resumos</div>'+chips+'<div class="resumos-list" id="resumos-list-itens">'+resumoListaItens()+'</div>';
-}
-
-function resumoListaItens(){
-  if(resumoFiltroAT===null)return '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Escolha "Todos" ou uma área acima.</div>';
-  const lista=RESUMOS_BANCO.filter(r=>resumoFiltroAT==='todos'||r.area===resumoFiltroAT);
-  if(!lista.length)return '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Nenhum resumo nesta área.</div>';
-  // Agrupado por Área → Tópico (sub-itens), na ordem do edital.
-  const areas=Object.keys(AI).filter(a=>lista.some(r=>r.area===a));
+  const now=Date.now();
+  const vencido=r=>{const ur=userStats['resumo_'+r.id];return !ur||!ur.next||ur.next<=now;};
+  const areas=Object.keys(AI).filter(a=>RESUMOS_BANCO.some(r=>r.area===a));
+  if(!areas.length)return '';
   let html='';
   areas.forEach(a=>{
     const aInfo=AI[a]||{};
-    const doArea=lista.filter(r=>r.area===a);
+    const icBox=`background:${aInfo.bg};color:${aInfo.color}`;
+    const doArea=RESUMOS_BANCO.filter(r=>r.area===a);
+    const nPend=doArea.filter(vencido).length;
     const tops=[...new Set(doArea.map(r=>topicoDe(r)))].sort((x,y)=>String(x).localeCompare(String(y),undefined,{numeric:true}));
-    html+=`<div class="busca-grupo" style="margin-top:16px">${aInfo.icon||''} ${a} · ${sanitize(aInfo.nome||'')}</div>`;
+    let dentro='';
     tops.forEach(t=>{
-      html+=`<div class="lista-topico">${sanitize(nomeTopico(t))}</div>`;
+      dentro+=`<div class="lista-topico">${sanitize(nomeTopico(t))}</div>`;
       doArea.filter(r=>topicoDe(r)===t).forEach(r=>{
         const ur=userStats['resumo_'+r.id];
         const vence=ur?.next?new Date(ur.next).toLocaleDateString('pt-BR'):'Hoje';
-        html+=`<div class="resumo-list-item" onclick="mostrarResumoDirecto('${r.id}')">
-          <div style="width:32px;height:32px;border-radius:8px;background:${aInfo.bg};color:${aInfo.color};display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${aInfo.icon}</div>
-          <div style="flex:1"><div style="font-size:13px;font-weight:700">${sanitize(r.titulo)}</div><div class="resumo-list-vence">Revisão: ${vence}</div></div>
+        dentro+=`<div class="resumo-list-item" onclick="mostrarResumoDirecto('${r.id}')">
+          <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${aInfo.icon}</div>
+          <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">${sanitize(r.titulo)}</div><div class="resumo-list-vence">Revisão: ${vence}</div></div>
         </div>`;
       });
     });
+    html+=`<div class="pg-area-row quiz-area-row" data-area="${a}">
+      <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAreaTopicos(this);}">
+        <div class="area-row-icon" style="${icBox}">${aInfo.icon}</div>
+        <div class="area-row-info">
+          <div class="area-row-name">${a} · ${sanitize(aInfo.nome||'')}</div>
+          <div class="area-row-meta">${doArea.length} resumo${doArea.length!==1?'s':''}${nPend?` · ${nPend} a revisar`:' · em dia'}</div>
+        </div>
+        <svg class="pg-area-chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="pg-area-topicos">${dentro}</div>
+    </div>`;
   });
-  return html;
-}
-
-function filtrarResumos(at){
-  resumoFiltroAT=(resumoFiltroAT===at)?null:at; // A6: clicar no chip já ativo desliga o filtro
-  const el=document.getElementById('resumos-list-itens');
-  if(el)el.innerHTML=resumoListaItens();
-  document.querySelectorAll('#screen-resumos .resumo-filtro').forEach(b=>b.classList.toggle('on',b.dataset.at===resumoFiltroAT));
+  return '<div class="sec-title mt14">Todos os resumos</div><div class="resumos-list">'+html+'</div>';
 }
 
 function mostrarResumoDirecto(id){
