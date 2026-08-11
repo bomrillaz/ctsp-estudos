@@ -429,6 +429,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pg-area-row.open .pg-area-topicos{display:block;animation:fadeIn .2s;}
 .pg-area-topicos .topico-row{padding:6px 0;}
 .pg-area-topicos .topico-row:last-child{border-bottom:none;}
+/* A2 (bloco 53) — acordeão do Quiz: reaproveita .pg-area-row/.pg-area-topicos/toggleAreaTopicos, layout em coluna */
+.pg-area-row.quiz-area-row{display:block;padding:0;border-top:none;}
+.pg-area-row.quiz-area-row .area-row{margin-bottom:0;}
+.pg-area-row.quiz-area-row.open .area-row{border-radius:16px 16px 0 0;box-shadow:none;}
+.pg-area-row.quiz-area-row .area-row .pg-area-chev{margin-left:auto;color:var(--text3);flex-shrink:0;}
+.pg-area-row.quiz-area-row .pg-area-topicos{background:var(--surface);border:1px solid var(--line-soft);border-top:none;border-radius:0 0 16px 16px;padding:8px 10px 10px;margin-top:-1px;}
+.pg-area-row.quiz-area-row .pg-area-topicos .resumo-list-item{margin-bottom:8px;}
+.pg-area-row.quiz-area-row .pg-area-topicos .resumo-list-item:last-child{margin-bottom:0;}
 /* Domínio por tópico em COLUNAS interativas (liga o % da área aos tópicos) */
 .tq{margin-top:6px;}
 .tq-cols{display:flex;gap:8px;align-items:stretch;height:152px;}
@@ -717,7 +725,6 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .area-row-name{font-size:14px;font-weight:700;color:var(--text);}
 .area-row-meta{font-size:11px;color:var(--text2);margin-top:2px;}
 .area-row-pct{font-family:var(--font-display);font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;}
-.erro-mode-btn{width:100%;padding:14px;background:var(--surface);border:1.5px solid var(--red);color:var(--red);border-radius:14px;font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--shadow);}
 
 
 /* ═══ CARDS ═══ */
@@ -1056,6 +1063,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   .rep-sheet{border-radius:20px;max-height:80vh;}
   #auth-screen{justify-content:center;}
   .auth-card{border-radius:24px;max-width:440px;margin-bottom:24px;}
+  /* A1 — CTA dos hubs (Quiz/Cards/Resumos) proporcional à coluna desktop, sem mexer no .btn-weak global */
+  .hub-inicio .btn-primary{padding:18px;font-size:16.5px;border-radius:16px;}
+  .hub-inicio .btn-weak{padding:12px 18px;font-size:13.5px;}
 }
 
 /* ── FASE 1 (largo) — em telas bem largas, respira mais ── */
@@ -1386,12 +1396,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <div class="tela-h-sub">Escolha uma área ou modo especial</div>
           </div>
           <div class="hub-inicio" id="quiz-meta-cta"></div>
-          <button class="erro-mode-btn" onclick="iniciarModoErro()">
-            <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;flex:1">
-              <span>Modo Erro — Revisar questões erradas</span>
-              <span style="font-size:11px;opacity:.7" id="erro-sub">Sem erros ainda</span>
-            </div>
-          </button>
           <button class="btn-intercalado" onclick="iniciarInterleaving()"><svg style="width:17px;height:17px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Intercalado — Alternar entre áreas</button>
           <!-- BLOCO 34 (item 3): caminho SEM leitor de QR.
                O ebook mandava "Quiz → <nome do tópico>", mas a aba Quiz só lista ÁREAS
@@ -1408,10 +1412,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             </div>
             <div class="cod-erro hidden" id="cod-erro" role="alert"></div>
           </div>
-          <div class="sec-title" style="margin-top:4px">Escolha uma área</div>
           <div class="area-list" id="area-list"></div>
-          <div class="sec-title mt14">Praticar por tópico</div>
-          <div id="quiz-topicos"></div>
         </div>
       </div>
       <div id="quiz-running-view" class="hidden">
@@ -3266,7 +3267,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.154';
+const APP_VERSAO='v1.155';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -3596,11 +3597,7 @@ function renderDashboard(){
   // Gráfico 7 dias
   renderChart();
 
-  // Erros count
-  const erros=Object.values(allQuestoes).filter(q=>userStats.seenIds?.includes(q.id+'_E')).length;
-  const erroSubEl=document.getElementById('erro-sub');
-  if(erroSubEl)erroSubEl.textContent=erros>0?erros+' para revisar':'Sem erros ainda';
-  // (o card gordo do Caderno de Erros no painel virou linha da fila de foco — bloco 34)
+  // (A5, bloco 53: o card "Modo Erro" saiu do Quiz — já vive na home/fila de foco, bloco 34)
   updateBadges();
   renderDominio();
   renderObjetivoSemana();
@@ -4323,24 +4320,49 @@ function voltarMenuQuiz(){
   renderAreaList();renderQuizHub();
 }
 
+// A2 (bloco 53): acordeão único por área — funde "Escolha uma área" + "Praticar por tópico".
+// Clique na linha da área só abre/fecha (toggleAreaTopicos, reaproveitado de Meu Progresso);
+// iniciar a área inteira é a 1ª linha de dentro ("Praticar toda a área").
 function renderAreaList(){
   const list=document.getElementById('area-list');
   if(!list)return;
-  list.innerHTML='';
+  const contQ={};
+  Object.values(allQuestoes).forEach(q=>{if(q.topico)contQ[q.topico]=(contQ[q.topico]||0)+1;});
+  let html='';
   Object.entries(AI).forEach(([k,a])=>{
-    const ba=userStats.byArea||{};
-    const c=(ba[k]?.correct||0),w=(ba[k]?.wrong||0),t=c+w;
-    const p=t>0?Math.round(c/t*100):0;
     const n=Object.values(allQuestoes).filter(q=>q.area===k).length;
-    list.innerHTML+=`<div class="area-row" onclick="iniciarQuiz('${k}')">
-      <div class="area-row-icon" style="background:${a.bg};color:${a.color}">${a.icon}</div>
-      <div class="area-row-info">
-        <div class="area-row-name">${a.nome}</div>
-        <div class="area-row-meta">${n} questões · ${t} respondidas</div>
+    if(!n)return;
+    const tops=Object.keys(TOPICOS).filter(t=>TOPICOS[t].a===k&&contQ[t])
+      .sort((x,y)=>String(x).localeCompare(String(y),undefined,{numeric:true}));
+    const icBox=`background:${a.bg};color:${a.color}`;
+    const topicosHTML=tops.map(t=>{
+      const nt=contQ[t]||0;
+      return `<div class="resumo-list-item" onclick="praticarTopico('${t}')">
+        <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${a.icon}</div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:700">${sanitize(nomeTopico(t))}</div><div class="resumo-list-vence">${nt} quest${nt!==1?'ões':'ão'}</div></div>
+        <div style="color:var(--text3);font-size:18px">→</div>
+      </div>`;
+    }).join('');
+    html+=`<div class="pg-area-row quiz-area-row" data-area="${k}">
+      <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAreaTopicos(this);}">
+        <div class="area-row-icon" style="${icBox}">${a.icon}</div>
+        <div class="area-row-info">
+          <div class="area-row-name">${k} · ${sanitize(a.nome||'')}</div>
+          <div class="area-row-meta">${n} quest${n!==1?'ões':'ão'}</div>
+        </div>
+        <svg class="pg-area-chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
       </div>
-      <div class="area-row-pct" style="color:${t>0?a.color:'var(--text3)'}">${p}%</div>
+      <div class="pg-area-topicos">
+        <div class="resumo-list-item" onclick="iniciarQuiz('${k}')">
+          <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${a.icon}</div>
+          <div style="flex:1"><div style="font-size:13px;font-weight:700">Praticar toda a área</div><div class="resumo-list-vence">${n} quest${n!==1?'ões':'ão'}</div></div>
+          <div style="color:var(--text3);font-size:18px">→</div>
+        </div>
+        ${topicosHTML}
+      </div>
     </div>`;
   });
+  list.innerHTML=html||'<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Sem questões cadastradas ainda.</div>';
 }
 // ── Hub do Quiz (S64): meta do dia + índice por Área→Tópico, como Cards/Resumos ──
 function renderQuizHub(){
@@ -4355,33 +4377,6 @@ function renderQuizHub(){
          <div class="hub-hint">Questões novas e revisões, na medida do dia. Ou escolha uma área ou tópico abaixo.</div>`
       : `<div class="hub-ok">✓ Meta de questões concluída hoje</div><button class="btn-weak" style="width:100%" onclick="iniciarMetaQuiz()">Responder mais assim mesmo</button>`;
   }
-  renderQuizTopicos();
-}
-function renderQuizTopicos(){
-  const cont=document.getElementById('quiz-topicos');
-  if(!cont)return;
-  const contQ={};
-  Object.values(allQuestoes).forEach(q=>{if(q.topico)contQ[q.topico]=(contQ[q.topico]||0)+1;});
-  const areas=Object.keys(AI).filter(a=>Object.keys(TOPICOS).some(t=>TOPICOS[t].a===a&&contQ[t]));
-  let html='';
-  areas.forEach(a=>{
-    const aInfo=AI[a]||{};
-    const tops=Object.keys(TOPICOS).filter(t=>TOPICOS[t].a===a&&contQ[t])
-      .sort((x,y)=>String(x).localeCompare(String(y),undefined,{numeric:true}));
-    if(!tops.length)return;
-    html+=`<div class="busca-grupo" style="margin-top:16px">${aInfo.icon||''} ${a} · ${sanitize(aInfo.nome||'')}</div>`;
-    html+='<div class="resumos-list">';
-    tops.forEach(t=>{
-      const n=contQ[t]||0;
-      html+=`<div class="resumo-list-item" onclick="praticarTopico('${t}')">
-        <div style="width:32px;height:32px;border-radius:8px;background:${aInfo.bg};color:${aInfo.color};display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${aInfo.icon}</div>
-        <div style="flex:1"><div style="font-size:13px;font-weight:700">${sanitize(nomeTopico(t))}</div><div class="resumo-list-vence">${n} quest${n!==1?'ões':'ão'}</div></div>
-        <div style="color:var(--text3);font-size:18px">→</div>
-      </div>`;
-    });
-    html+='</div>';
-  });
-  cont.innerHTML=html||'<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Sem tópicos com questões ainda.</div>';
 }
 function iniciarMetaQuiz(){
   const meta=userStats.metaDiaria||10;
@@ -4859,12 +4854,12 @@ function renderCard(){
 }
 
 // Índice de TODOS os flashcards: chips de filtro por área + agrupado por Área → Tópico. Espelha a lista dos resumos.
-let cardsListaFiltroAT='todos';
+let cardsListaFiltroAT=null; // A3 (bloco 53): começa sem seleção — lista some até escolher um chip
 function renderCardLista(){
   const todos=Object.values(allFlashcards||{});
   if(!todos.length)return '';
   const areas=Object.keys(AI).filter(a=>todos.some(fc=>(fc.a||fc.area)===a));
-  if(cardsListaFiltroAT!=='todos'&&!areas.includes(cardsListaFiltroAT))cardsListaFiltroAT='todos';
+  if(cardsListaFiltroAT!==null&&cardsListaFiltroAT!=='todos'&&!areas.includes(cardsListaFiltroAT))cardsListaFiltroAT=null;
   let chips='<div class="resumo-filtros">';
   chips+=`<button class="resumo-filtro${cardsListaFiltroAT==='todos'?' on':''}" data-at="todos" onclick="filtrarCardsLista('todos')">Todos</button>`;
   areas.forEach(a=>{chips+=`<button class="resumo-filtro${cardsListaFiltroAT===a?' on':''}" data-at="${a}" onclick="filtrarCardsLista('${a}')">${a}</button>`;});
@@ -4872,6 +4867,7 @@ function renderCardLista(){
   return '<div class="sec-title mt14">Todos os flashcards</div>'+chips+'<div class="resumos-list" id="cards-lista-itens">'+cardListaItens()+'</div>';
 }
 function cardListaItens(){
+  if(cardsListaFiltroAT===null)return '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Escolha "Todos" ou uma área acima.</div>';
   const todos=Object.values(allFlashcards||{}).filter(fc=>cardsListaFiltroAT==='todos'||(fc.a||fc.area)===cardsListaFiltroAT);
   if(!todos.length)return '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Nenhum flashcard nesta área.</div>';
   const areas=Object.keys(AI).filter(a=>todos.some(fc=>(fc.a||fc.area)===a));
@@ -4895,10 +4891,10 @@ function cardListaItens(){
   return html;
 }
 function filtrarCardsLista(at){
-  cardsListaFiltroAT=at;
+  cardsListaFiltroAT=(cardsListaFiltroAT===at)?null:at; // A6: clicar no chip já ativo desliga o filtro
   const el=document.getElementById('cards-lista-itens');
   if(el)el.innerHTML=cardListaItens();
-  document.querySelectorAll('#screen-cards .resumo-filtro').forEach(b=>b.classList.toggle('on',b.dataset.at===at));
+  document.querySelectorAll('#screen-cards .resumo-filtro').forEach(b=>b.classList.toggle('on',b.dataset.at===cardsListaFiltroAT));
 }
 function estudarCardUnico(id){
   const fc=allFlashcards[id]||Object.values(allFlashcards).find(x=>x.id===id);
@@ -4935,7 +4931,7 @@ async function avaliarCard(dif){
 // RESUMOS
 // ═══════════════════════════════
 let resumoAtualId=null;
-let resumoFiltroAT='todos';
+let resumoFiltroAT=null; // A3 (bloco 53): começa sem seleção — lista some até escolher um chip
 // Resumos pendentes de revisão (acervo, sem corte de dose).
 function resumosPendentes(){
   const now=Date.now();
@@ -5258,7 +5254,7 @@ function maisResumos(){doseExtra.resumos+=dose('resumos');renderResumos();}
 
 function renderResumoLista(){
   const areas=[...new Set(RESUMOS_BANCO.map(r=>r.area))].sort();
-  if(resumoFiltroAT!=='todos'&&!areas.includes(resumoFiltroAT))resumoFiltroAT='todos';
+  if(resumoFiltroAT!==null&&resumoFiltroAT!=='todos'&&!areas.includes(resumoFiltroAT))resumoFiltroAT=null;
   let chips='<div class="resumo-filtros">';
   chips+=`<button class="resumo-filtro${resumoFiltroAT==='todos'?' on':''}" data-at="todos" onclick="filtrarResumos('todos')">Todos</button>`;
   areas.forEach(a=>{chips+=`<button class="resumo-filtro${resumoFiltroAT===a?' on':''}" data-at="${a}" onclick="filtrarResumos('${a}')">${a}</button>`;});
@@ -5267,6 +5263,7 @@ function renderResumoLista(){
 }
 
 function resumoListaItens(){
+  if(resumoFiltroAT===null)return '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Escolha "Todos" ou uma área acima.</div>';
   const lista=RESUMOS_BANCO.filter(r=>resumoFiltroAT==='todos'||r.area===resumoFiltroAT);
   if(!lista.length)return '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Nenhum resumo nesta área.</div>';
   // Agrupado por Área → Tópico (sub-itens), na ordem do edital.
@@ -5293,10 +5290,10 @@ function resumoListaItens(){
 }
 
 function filtrarResumos(at){
-  resumoFiltroAT=at;
+  resumoFiltroAT=(resumoFiltroAT===at)?null:at; // A6: clicar no chip já ativo desliga o filtro
   const el=document.getElementById('resumos-list-itens');
   if(el)el.innerHTML=resumoListaItens();
-  document.querySelectorAll('#screen-resumos .resumo-filtro').forEach(b=>b.classList.toggle('on',b.dataset.at===at));
+  document.querySelectorAll('#screen-resumos .resumo-filtro').forEach(b=>b.classList.toggle('on',b.dataset.at===resumoFiltroAT));
 }
 
 function mostrarResumoDirecto(id){
