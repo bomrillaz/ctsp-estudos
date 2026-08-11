@@ -891,11 +891,38 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .badge-admin{background:var(--amber-light);color:#8A5A0E;}
 .badge-ok{background:var(--green-light);color:var(--green);}
 .badge-pend{background:var(--red-light);color:var(--red);}
+/* BLOCO 55 — revogado ≠ pendente: precisa de rótulo próprio, senão o ex-assinante
+   volta a parecer inscrição nova esperando aprovação. */
+.badge-revog{background:var(--paper-2);color:var(--text2);}
 .user-actions{display:flex;flex-direction:column;gap:4px;}
 .btn-sm{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;}
 .btn-approve{background:var(--green-light);color:var(--green);}
 .btn-revoke{background:var(--red-light);color:var(--red);}
 .btn-mkadmin{background:var(--amber-light);color:#8A5A0E;}
+.btn-remove{background:var(--paper-2);color:var(--text2);border:1px solid var(--line-soft);}
+/* BLOCO 55 — controle de cobrança no painel do admin */
+.cob-bloco{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line-soft);}
+.cob-linha{font-size:11.5px;font-weight:700;color:var(--text2);display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.cob-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;}
+.cob-ok .cob-dot{background:var(--green);}
+.cob-trial .cob-dot{background:var(--amber);}
+.cob-vencendo .cob-dot{background:var(--amber);}
+.cob-vencendo{color:var(--amber);}
+.cob-vencido .cob-dot{background:var(--red);}
+.cob-vencido{color:var(--red);}
+.cob-btns{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
+.cob-btns .btn-sm{border:none;cursor:pointer;font-family:inherit;}
+.cob-on{background:var(--navy);color:#fff;}
+.cob-resumo{background:var(--red-light);color:var(--red);font-size:12px;font-weight:800;padding:9px 12px;border-radius:10px;margin-bottom:12px;}
+/* Faixa de cobrança na Home do militar */
+.aviso-cob{border-radius:14px;padding:12px 14px;margin-bottom:14px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);}
+.aviso-cob.info{background:var(--amber-light);color:#8A5A0E;}
+.aviso-cob.urgente{background:var(--red-light);color:var(--red);}
+.aviso-cob-ic{font-size:18px;flex-shrink:0;}
+.aviso-cob-sub{display:block;font-weight:600;opacity:.85;margin-top:2px;}
+.user-grupo{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin:16px 0 8px;}
+.user-grupo:first-child{margin-top:0;}
+.user-item.revogado{opacity:.72;}
 
 /* Ring SVG helper */
 .ring-container{position:relative;display:inline-flex;align-items:center;justify-content:center;isolation:isolate;}
@@ -1237,6 +1264,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 
     <!-- INÍCIO -->
     <div class="screen active" id="screen-inicio">
+      <!-- BLOCO 55: faixa de cobrança (teste acabando / mensalidade vencendo). Escrita por
+           renderAvisoCobranca(); fica vazia quando não há nada a avisar. -->
+      <div id="aviso-cobranca"></div>
       <div class="dash-hero" style="position:relative;">
         <div class="dash-top">
           <div>
@@ -3516,10 +3546,37 @@ function _aplicarMetas(){
     row.classList.toggle('vis',vis);
   });
 }
+// BLOCO 55 — faixa de cobrança na Home. Só avisa; não bloqueia nada. Quem corta o acesso
+// continua sendo o `aprovado` (revogação manual no painel) — assim um erro de data nunca
+// tranca um assinante em dia do lado de fora.
+function renderAvisoCobranca(){
+  const el=document.getElementById('aviso-cobranca');
+  if(!el)return;
+  el.innerHTML='';
+  if(!userProfile||userProfile.admin)return;
+  const st=estadoCobranca(userProfile);
+  let cls='',ic='',txt='',sub='';
+  if(st.estado==='trial'&&st.dias<=TRIAL_DIAS){
+    cls='info';ic='⏳';
+    txt=`Seu teste grátis termina em ${st.dias} dia${st.dias!==1?'s':''}`;
+    sub='Garanta o plano anual: 13 meses por 12 · R$ 39,90/mês no cartão.';
+  }else if(st.estado==='vencendo'){
+    cls='info';ic='📅';
+    txt=`Sua assinatura vence em ${st.dias} dia${st.dias!==1?'s':''} (${fmtData(st.prox)})`;
+    sub='Combine o pagamento para não perder o acesso.';
+  }else if(st.estado==='vencido'){
+    cls='urgente';ic='⚠️';
+    txt=st.plano==='trial'?'Seu teste grátis terminou':'Sua assinatura está vencida';
+    sub='Fale com o administrador para regularizar e manter o acesso.';
+  }else return;
+  el.innerHTML=`<div class="aviso-cob ${cls}"><span class="aviso-cob-ic">${ic}</span><span>${txt}<span class="aviso-cob-sub">${sub}</span></span></div>`;
+}
+
 function renderDashboard(){
   // S59: atualiza o retrato da semana ANTES de desenhar, para a variação semanal já
   // sair correta nesta passada. A função se protege sozinha se `dataLoaded` for false.
   registrarRetratoSemanal();
+  renderAvisoCobranca();
   renderHoje();
   const total=(userStats.correct||0)+(userStats.wrong||0);
   const pct=total>0?Math.round((userStats.correct||0)/total*100):0;
@@ -5717,25 +5774,62 @@ async function loadAdminUsers(){
       el.innerHTML='<p style="color:var(--text2);font-size:13px">Nenhum usuário cadastrado.</p>';return;
     }
     const users=snap.val();
-    let html='';
+    // BLOCO 55 — três grupos: ativos, aguardando e revogados. Antes, revogar devolvia
+    // o usuário à mesma pilha de "Pendente" das inscrições novas — impossível saber
+    // quem era ex-assinante e quem nunca entrou.
+    const grupos={ativos:[],pend:[],revog:[]};
     Object.entries(users).forEach(([uid,u])=>{
       if(!u)return;
-      html+=`<div class="user-item">
+      grupos[u.aprovado?'ativos':(u.revogadoEm?'revog':'pend')].push([uid,u]);
+    });
+    const dt=ms=>ms?new Date(ms).toLocaleDateString('pt-BR'):'';
+    // Ativos ordenados pela urgência da cobrança: vencido no topo, em dia no fim.
+    grupos.ativos.sort((a,b)=>{
+      const ea=estadoCobranca(a[1]),eb=estadoCobranca(b[1]);
+      return (_COB_PESO[ea.estado]-_COB_PESO[eb.estado])||((ea.prox||0)-(eb.prox||0));
+    });
+    const cobBloco=(uid,u)=>{
+      if(u.admin)return '';
+      const st=estadoCobranca(u);
+      const pagoTxt=u.cob&&u.cob.pago?` · último pago ${dt(u.cob.pago)}`:'';
+      return `<div class="cob-bloco">
+        <div class="cob-linha cob-${st.estado}">
+          <span class="cob-dot"></span>${st.label}${st.meio?` · ${st.meio==='cartao'?'cartão':'Pix'}`:''}${pagoTxt}
+        </div>
+        <div class="cob-btns">
+          <button class="btn-sm ${st.plano==='mensal'?'cob-on':'btn-remove'}" onclick="definirPlano('${uid}','mensal')">Mensal Pix</button>
+          <button class="btn-sm ${st.plano==='anual'?'cob-on':'btn-remove'}" onclick="definirPlano('${uid}','anual')">Anual cartão</button>
+          <button class="btn-sm btn-approve" onclick="marcarPago('${uid}')">Pago</button>
+          ${u.cob&&u.cob.pago?`<button class="btn-sm btn-remove" onclick="desfazerPago('${uid}')">Desfazer</button>`:''}
+          ${st.plano!=='trial'?`<button class="btn-sm btn-remove" onclick="voltarParaTeste('${uid}')">Teste</button>`:''}
+        </div>
+      </div>`;
+    };
+    const linha=([uid,u],rev)=>`<div class="user-item${rev?' revogado':''}">
         <div class="user-item-info">
           <div class="user-item-name">${sanitize(u.nome||u.email||uid)}</div>
           <div class="user-item-email">${sanitize(u.email||'')}</div>
           <div class="user-badges">
             ${u.admin?'<span class="badge badge-admin">Admin</span>':''}
-            <span class="badge ${u.aprovado?'badge-ok':'badge-pend'}">${u.aprovado?'Aprovado':'Pendente'}</span>
+            <span class="badge ${u.aprovado?'badge-ok':(rev?'badge-revog':'badge-pend')}">${u.aprovado?'Aprovado':(rev?'Revogado'+(u.revogadoEm?' · '+dt(u.revogadoEm):''):'Pendente'+(u.criadoEm?' · '+dt(u.criadoEm):''))}</span>
           </div>
+          <div class="user-item-email">1º acesso: ${dt(u.criadoEm)||'—'}</div>
+          ${u.aprovado?cobBloco(uid,u):''}
         </div>
         <div class="user-actions">
-          ${!u.aprovado?`<button class="btn-sm btn-approve" onclick="approveUser('${uid}')">Aprovar</button>`:''}
+          ${!u.aprovado?`<button class="btn-sm btn-approve" onclick="approveUser('${uid}')">${rev?'Reativar':'Aprovar'}</button>`:''}
           ${u.aprovado&&!u.admin?`<button class="btn-sm btn-revoke" onclick="revokeUser('${uid}')">Revogar</button>`:''}
           ${!u.admin?`<button class="btn-sm btn-mkadmin" onclick="makeAdmin('${uid}')">Admin</button>`:''}
+          ${!u.admin?`<button class="btn-sm btn-remove" onclick="removerUsuario('${uid}')">Remover</button>`:''}
         </div>
       </div>`;
-    });
+    const secao=(titulo,arr,rev)=>arr.length?`<div class="user-grupo">${titulo} · ${arr.length}</div>`+arr.map(x=>linha(x,rev)).join(''):'';
+    // Contador de quem precisa de ação — é o número que você olha primeiro.
+    const acao=grupos.ativos.filter(([,u])=>['vencido','vencendo'].includes(estadoCobranca(u).estado)&&!u.admin).length;
+    const html=(acao?`<div class="cob-resumo">${acao} assinatura${acao!==1?'s':''} para cobrar</div>`:'')
+      +secao('Ativos',grupos.ativos,false)
+      +secao('Aguardando aprovação',grupos.pend,false)
+      +secao('Revogados',grupos.revog,true);
     el.innerHTML=html||'<p style="color:var(--text2);font-size:13px">Nenhum usuário.</p>';
   }catch(err){
     console.error('loadAdminUsers erro:',err);
@@ -5744,9 +5838,133 @@ async function loadAdminUsers(){
   }
 }
 
-async function approveUser(uid){if(!isAdmin())return;await db.ref('usuarios/'+uid).update({aprovado:true});loadAdminUsers();showToast('Usuário aprovado!');}
-async function revokeUser(uid){if(!isAdmin())return;await db.ref('usuarios/'+uid).update({aprovado:false});loadAdminUsers();showToast('Acesso revogado.');}
+async function approveUser(uid){
+  if(!isAdmin())return;
+  await db.ref('usuarios/'+uid).update({aprovado:true});
+  // Limpa o carimbo de revogação em chamada SEPARADA: se as regras do RTDB recusarem a
+  // chave, quem cai é só a limpeza — a aprovação acima já está gravada.
+  try{await db.ref('usuarios/'+uid+'/revogadoEm').remove();}catch(e){console.warn('revogadoEm nao limpo:',e.message);}
+  loadAdminUsers();showToast('Usuário aprovado!');
+}
+async function revokeUser(uid){
+  if(!isAdmin())return;
+  await db.ref('usuarios/'+uid).update({aprovado:false});   // isto é o que corta o acesso
+  // Carimbo é só rótulo da lista. Vai em chamada separada porque `revogadoEm` é chave
+  // nova: se a regra `$outros` do RTDB barrar, a revogação NÃO pode cair junto.
+  try{await db.ref('usuarios/'+uid+'/revogadoEm').set(Date.now());}catch(e){console.warn('revogadoEm nao gravado:',e.message);}
+  loadAdminUsers();showToast('Acesso revogado.');
+}
+// Remove o REGISTRO do banco (limpeza da lista). Não apaga a conta de login: o Firebase
+// Auth só permite isso pelo Admin SDK / console. Se a pessoa logar de novo, o registro
+// renasce como "Aguardando aprovação" — sem acesso, porque o portão é o `aprovado`.
+async function removerUsuario(uid){
+  if(!isAdmin())return;
+  if(!confirm('Remover este usuário da lista?\n\nO acesso já fica bloqueado, mas a conta de login continua existindo no Firebase. Se a pessoa entrar de novo, ela reaparece aqui como "Aguardando aprovação".\n\nPara apagar o login de vez: Firebase Console → Authentication.'))return;
+  try{
+    await db.ref('usuarios/'+uid).remove();
+    loadAdminUsers();showToast('Usuário removido da lista.');
+  }catch(err){
+    console.error('removerUsuario erro:',err);
+    showToast('Não foi possível remover: '+err.message);
+  }
+}
 async function makeAdmin(uid){if(!isAdmin())return;await db.ref('usuarios/'+uid).update({admin:true,aprovado:true});loadAdminUsers();showToast('Admin concedido!');}
+
+// ═══════════════════════════════
+// COBRANÇA (bloco 55)
+// ═══════════════════════════════
+// Controle manual de assinatura. O dinheiro roda FORA do app (Pix ou link do Nubank);
+// aqui só mora a data. Fonte do 1º acesso: `criadoEm`, que já era gravado no cadastro —
+// por isso o teste de 7 dias funciona retroativo, sem precisar carimbar ninguém.
+// Tudo mora em usuarios/$uid/cob: {plano, meio, prox, pago}. `prox` é o vencimento.
+const TRIAL_DIAS=7;            // teste grátis
+const COB_AVISO_DIAS=5;        // antecedência do aviso ao militar
+const COB_DIA_MS=86400000;
+const COB_MESES_ANUAL=13;      // 12 pagos + 1º mês grátis
+// setMonth puro estoura: 31/jan + 1 mês vira 03/mar (não existe 31/fev). Fixa o dia 1
+// antes de somar e depois grampeia no último dia do mês de destino — quem assina dia 31
+// vence dia 28, não ganha 3 dias de brinde todo bimestre.
+function _cobAddMeses(ms,n){
+  const d=new Date(ms),dia=d.getDate();
+  d.setDate(1);d.setMonth(d.getMonth()+n);
+  d.setDate(Math.min(dia,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));
+  return d.getTime();
+}
+function _cobDias(alvo){return Math.ceil((alvo-Date.now())/COB_DIA_MS);}
+function fmtData(ms){return ms?new Date(ms).toLocaleDateString('pt-BR'):'—';}
+// Estado derivado — nunca gravado. Assim um plano que venceu vira "vencido" sozinho,
+// sem depender de ninguém rodar rotina nenhuma.
+function estadoCobranca(u){
+  const cob=(u&&u.cob)||{};
+  const inicio=(u&&u.criadoEm)||0;
+  const plano=cob.plano||'trial';
+  const meio=cob.meio||'';
+  if(plano==='trial'){
+    if(!inicio)return{plano,meio,estado:'sem_data',label:'Sem data de 1º acesso',dias:null,inicio,prox:0};
+    const prox=inicio+TRIAL_DIAS*COB_DIA_MS,dias=_cobDias(prox);
+    return dias>0
+      ?{plano,meio,estado:'trial',label:`Teste · faltam ${dias} dia${dias!==1?'s':''}`,dias,inicio,prox}
+      :{plano,meio,estado:'vencido',label:`Teste terminou em ${fmtData(prox)}`,dias,inicio,prox};
+  }
+  const prox=cob.prox||0;
+  const nome=plano==='anual'?'Anual':'Mensal';
+  if(!prox)return{plano,meio,estado:'sem_data',label:nome+' · sem vencimento definido',dias:null,inicio,prox:0};
+  const dias=_cobDias(prox);
+  if(dias<0)return{plano,meio,estado:'vencido',label:`${nome} · venceu em ${fmtData(prox)}`,dias,inicio,prox};
+  if(dias<=COB_AVISO_DIAS)return{plano,meio,estado:'vencendo',label:`${nome} · vence em ${dias} dia${dias!==1?'s':''} (${fmtData(prox)})`,dias,inicio,prox};
+  return{plano,meio,estado:'ok',label:`${nome} · pago até ${fmtData(prox)}`,dias,inicio,prox};
+}
+// Ordem do painel: quem precisa de ação primeiro (vencido → vencendo → teste → em dia).
+const _COB_PESO={vencido:0,vencendo:1,trial:2,sem_data:3,ok:4};
+// Grava o subnó `cob` inteiro de uma vez. Se as regras do RTDB ainda não liberarem a
+// chave, o erro aparece na tela em vez de falhar em silêncio.
+async function _cobSet(uid,obj){
+  try{await db.ref('usuarios/'+uid+'/cob').update(obj);return true;}
+  catch(err){
+    console.error('cob erro:',err);
+    showToast('Não gravou a cobrança: '+err.message+' — confira as regras do RTDB.');
+    return false;
+  }
+}
+async function definirPlano(uid,plano){
+  if(!isAdmin())return;
+  const meio=plano==='anual'?'cartao':'pix';
+  const prox=plano==='anual'?_cobAddMeses(Date.now(),COB_MESES_ANUAL):_cobAddMeses(Date.now(),1);
+  if(await _cobSet(uid,{plano,meio,prox,pago:Date.now()}))
+    showToast(plano==='anual'?`Anual no cartão · acesso até ${fmtData(prox)}`:`Mensal no Pix · vence ${fmtData(prox)}`);
+  loadAdminUsers();
+}
+// "Pago" empurra o vencimento um ciclo à frente. Se já estava vencido, conta a partir de
+// hoje (não adianta empilhar meses que a pessoa não usou); se estava em dia, emenda no
+// vencimento antigo, que é o que preserva a data de aniversário da assinatura.
+async function marcarPago(uid){
+  if(!isAdmin())return;
+  const snap=await db.ref('usuarios/'+uid).get();
+  const u=snap.val()||{};
+  const st=estadoCobranca(u);
+  const plano=st.plano==='trial'?'mensal':st.plano;
+  const base=(st.prox&&st.prox>Date.now())?st.prox:Date.now();
+  const prox=_cobAddMeses(base,plano==='anual'?COB_MESES_ANUAL:1);
+  if(await _cobSet(uid,{plano,meio:(u.cob&&u.cob.meio)||(plano==='anual'?'cartao':'pix'),prox,pago:Date.now()}))
+    showToast('Pago · próximo vencimento '+fmtData(prox));
+  loadAdminUsers();
+}
+async function desfazerPago(uid){
+  if(!isAdmin())return;
+  const snap=await db.ref('usuarios/'+uid).get();
+  const u=snap.val()||{};
+  const st=estadoCobranca(u);
+  if(st.plano==='trial'||!st.prox){showToast('Nada para desfazer.');return;}
+  const prox=_cobAddMeses(st.prox,st.plano==='anual'?-COB_MESES_ANUAL:-1);
+  if(await _cobSet(uid,{prox,pago:null}))showToast('Desfeito · vencimento voltou para '+fmtData(prox));
+  loadAdminUsers();
+}
+async function voltarParaTeste(uid){
+  if(!isAdmin())return;
+  if(!confirm('Voltar este usuário para teste grátis? O vencimento atual é apagado.'))return;
+  if(await _cobSet(uid,{plano:'trial',meio:'',prox:null,pago:null}))showToast('De volta ao teste de 7 dias.');
+  loadAdminUsers();
+}
 
 // Sincroniza QI + FCI (fonte da verdade, versionados no index.html) com os nós 'questoes' e
 // 'flashcards' do Firebase. update() é merge por chave: adiciona itens novos, atualiza os campos
