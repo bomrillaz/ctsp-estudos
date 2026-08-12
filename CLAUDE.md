@@ -20,6 +20,9 @@ Dois arquivos no núcleo, mais a camada PWA:
 
 `data.js` é carregado por `<script src="data.js?v=NNN">` **antes** do script principal.
 
+- **Rebrand em andamento (b67): pasta local virou `bombillaz-estudos`.** Site, repo no GitHub, projeto
+  Firebase e RTDB **continuam com o nome `ctsp-estudos`** — só a pasta local mudou até aqui. Não mexer
+  nesses quatro sem pedido explícito (mudar a URL do repo/site quebra o PWA já instalado por quem usa).
 - Site: https://jhoonnvictor.github.io/ctsp-estudos
 - Repo: github.com/jhoonnvictor/ctsp-estudos
 - Firebase: projeto `ctsp-estudos` · conta dona `jvictor.projetos.ti@gmail.com` (**não sugerir migração**)
@@ -128,7 +131,24 @@ via `vm.runInContext` no MESMO contexto. jsdom não tem `requestAnimationFrame`/
 ## 5. MATERIAL DE REFERÊNCIA
 
 `materiais/` espelha a pasta oficial do Drive e é **gitignorada** — nunca commitar (material institucional).
-Subpastas: 5 áreas temáticas + `marca/` + `entregas/` + `historico/` (+ `arquivo_morto/`).
+Subpastas: 5 áreas temáticas + `marca/` + `entregas/` + `produtos/` + `historico/` (+ `arquivo_morto/`).
+
+**`materiais/entregas/`** é só planejamento e ferramentas (reorganizado no b67):
+`planos/` (PLANO_*.md) · `protocolo/` (instruções de projeto, LEIA-ME, migração) · `comercial/`
+(VENDAS_planos_e_copy.md) · `conteudo/` (CONTEUDO_PROGRAMATICO, `_analise/`, `_dados/`) · `seguranca/`
+(SEGURANCA_regras_rtdb.json) · `testes/` (harness de regressão) · `_tmp/`.
+
+**`materiais/produtos/`** — fora de `entregas/`, é onde vivem os ENTREGÁVEIS físicos (PDF) e os scripts
+que os geram: `ebook/`, `flashcards/`, `plataforma/`. Cada script (`build_ebook.py`, `gen_flashcards.py`,
+`build_deck.py`) calcula `REPO` relativo à própria posição — se mover um desses scripts, ajustar a
+contagem de `..` antes de rodar.
+
+**Arquivo temporário:** SEMPRE dentro de `materiais/entregas/_tmp/` (nunca solto em outra subpasta) e
+**apagar ao terminar de usar**. Produto/código usa `.tmp/` na raiz do repo (já existente) — mesma regra.
+
+**Arquivo novo:** ao criar, colocar direto na subpasta a que pertence pelo assunto (`planos/`,
+`comercial/`, `produtos/ebook/` etc.) — não deixar solto na raiz de `entregas/` ou `materiais/` pra
+organizar depois.
 
 - Fontes oficiais: **Edital 004/ABM-DENS/2025 + Aditamento 10**.
 - **Cotas do edital (60 questões): AT1=14 · AT2=8 · AT3=14 · AT4=12 · AT5=12.** `CTSP_CORTE=53`.
@@ -172,14 +192,14 @@ sabe o que vai cair ou promete aprovação. Há teste no harness travando isso.
 - Cobrança manual no painel do admin: `usuarios/$uid/cob = {plano, meio, prox, pago}`. 1º acesso vem do `criadoEm`.
   **Estado é derivado, nunca gravado.** A faixa da Home só avisa; **quem corta acesso é o `aprovado`**.
 - O banco de questões é **público por arquitetura** (`data.js` antes do login). Aceito — a mensalidade paga o SERVIÇO.
-- Textos e peça de venda: `materiais/entregas/VENDAS_planos_e_copy.md`.
+- Textos e peça de venda: `materiais/entregas/comercial/VENDAS_planos_e_copy.md`.
 
 ---
 
 ## 8. DEPLOY
 
 ```bash
-cd ~/Documents/ctsp-estudos
+cd ~/Documents/bombillaz-estudos
 git add index.html          # + data.js / sw.js / manifest.webmanifest / assets/ quando mudarem
 git commit -m "vX.YZ — ..."
 git push                    # ← só com confirmação explícita do João antes de rodar
@@ -230,7 +250,8 @@ O repositório do GitHub já é a segunda via do **produto** (`index.html`, `dat
 | Pasta | Onde | Por quê |
 |---|---|---|
 | `vault\10-projetos\prontidao-ctsp\` | `Documents\Claude\vault\`, fora do repo | memória ativa: `_estado.md`, `licoes/`, `decisoes/`, `historico/` |
-| `materiais/entregas/` | dentro do repo, gitignorada | regras do RTDB, planos, copy de vendas, scripts de build, ebook/deck |
+| `materiais/entregas/` | dentro do repo, gitignorada | regras do RTDB, planos, copy de vendas, scripts de auditoria |
+| `materiais/produtos/` | dentro do repo, gitignorada | PDFs entregáveis (ebook, flashcards, plataforma) + scripts que os geram |
 | `materiais/marca/` | dentro do repo, gitignorada | mascote César, vídeo de loading, fontes — a identidade visual |
 
 Confirmado (b65): `Documents\Claude\vault\` sincronizada com o Google Drive para desktop.
