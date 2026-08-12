@@ -197,43 +197,56 @@ Conferência: Configurações → fim da tela mostra a versão.
 
 ## 9. INÍCIO E FIM DE SESSÃO
 
-**Início** (obrigatório só quando a sessão mexer em código ou no banco):
-1. Ler o `.md` mais recente de `materiais/historico/` — é a autoridade do **estado atual** (versão, contagens, pendências).
-2. Ler `materiais/historico/MEMORIA_INDICE.md` — o mapa do que é duradouro.
-   *(Sessão de execução que já tem plano em arquivo pula o índice.)*
-3. Rodar `verify_ctsp.sh` e comparar com as contagens do histórico.
+Memória do projeto vive no **vault Obsidian**, fora do repo:
+`C:\Users\Daiane\Documents\Claude\vault\10-projetos\prontidao-ctsp\`.
+`materiais/historico/` e `MEMORIA_INDICE.md` do repo estão **congelados** (arquivo morto da migração,
+b65) — não recebem mais gravação. Ver §12 sobre backup do vault.
 
-**Fonte de verdade é o disco local.** `materiais/historico/` é a memória do projeto; o Drive é só
-segunda via (ver §12). Nunca subir arquivo ao Drive dentro de uma sessão de trabalho — a sincronização
-roda por fora, sem IA no meio.
+**Início** (obrigatório só quando a sessão mexer em código ou no banco):
+1. Ler `_estado.md` do vault — é a autoridade do **estado atual** (versão, contagens, pendências).
+2. Ler as notas de `licoes/`/`decisoes/` linkadas nas pendências abertas do `_estado.md` — não o vault
+   inteiro, só o que a pendência do dia referencia.
+3. Rodar `verify_ctsp.sh` e comparar com as contagens do `_estado.md`.
+
+**Fonte de verdade é o disco local.** O vault é a memória do projeto; o Drive é só segunda via (ver
+§12). Nunca subir arquivo ao Drive dentro de uma sessão de trabalho — a sincronização roda por fora, sem
+IA no meio.
 
 **Fim — comando `encerrar`:**
-1. Gerar `.md` com: o que foi feito, o que ficou aberto, decisões, erros, IDs livres, estado do banco e contagens. Registrar commits não publicados.
-2. Estrutura: **ESTADO ATUAL** (autossuficiente) + **ÚLTIMAS SESSÕES** (máx. 5). As mais antigas vão inteiras para `arquivo_morto/`. Alvo: ≤12 KB.
-3. Gravar em `materiais/historico/`. **Só isso** — a cópia no Drive é automática.
-4. Atualizar o `MEMORIA_INDICE.md` e **podar sem dó** o que virou irrelevante.
+1. Atualizar `_estado.md` do vault: o que foi feito, o que ficou aberto, decisões, erros, IDs livres,
+   estado do banco e contagens. Registrar commits não publicados. Autossuficiente — quem só lê o
+   `_estado.md` tem de entender o estado sem abrir mais nada.
+2. Criar/atualizar nota(s) atômica(s) em `licoes/` (o que muda conduta futura) ou `decisoes/` (o que foi
+   fechado e por quê), linkadas ao bloco da sessão.
+3. Copiar o `.md` da sessão para `historico/` do vault, no mesmo formato dos blocos anteriores.
+4. **Não** escrever mais em `materiais/historico/` nem em `MEMORIA_INDICE.md` do repo.
 
 ---
 
 ## 12. BACKUP
 
 O repositório do GitHub já é a segunda via do **produto** (`index.html`, `data.js`, `sw.js`, `assets/`).
-O que não tem segunda via é o que está sob `materiais/`, que é gitignorada.
 
-**Crítico** — perda seria irrecuperável, e some se o disco morrer:
+**Crítico** — perda seria irrecuperável:
 
-| Pasta | Tamanho | Por quê |
+| Pasta | Onde | Por quê |
 |---|---|---|
-| `materiais/historico/` | ~1 MB | a memória do projeto: 60 blocos + `MEMORIA_INDICE.md` |
-| `materiais/entregas/` | ~4 MB | regras do RTDB, planos, copy de vendas, scripts de build, ebook/deck |
-| `materiais/marca/` | ~34 MB | mascote César, vídeo de loading, fontes — a identidade visual |
+| `vault\10-projetos\prontidao-ctsp\` | `Documents\Claude\vault\`, fora do repo | memória ativa: `_estado.md`, `licoes/`, `decisoes/`, `historico/` |
+| `materiais/entregas/` | dentro do repo, gitignorada | regras do RTDB, planos, copy de vendas, scripts de build, ebook/deck |
+| `materiais/marca/` | dentro do repo, gitignorada | mascote César, vídeo de loading, fontes — a identidade visual |
+
+Confirmado (b65): `Documents\Claude\vault\` sincronizada com o Google Drive para desktop.
+
+**Congelado, não cresce mais:** `materiais/historico/` e `MEMORIA_INDICE.md` do repo — arquivo morto da
+migração (b65), preservados como estão. Cobertos pela sincronização de `materiais/` já existente; não
+recebem gravação nova.
 
 **Não precisa de backup:** as 5 áreas temáticas e `materiais/provas/` (~240 MB) já vieram do Drive
 e continuam lá; `materiais/prints/` é regenerável.
 
-**Método:** sincronização automática por fora (Google Drive para desktop apontando para essas três
-pastas). **A IA não sobe arquivo para o Drive** — o conector só adiciona, gera duplicado, e gasta
-token para fazer o que um sincronizador faz de graça.
+**Método:** sincronização automática por fora (Google Drive para desktop). **A IA não sobe arquivo para
+o Drive** — o conector só adiciona, gera duplicado, e gasta token para fazer o que um sincronizador faz
+de graça.
 
 ---
 
