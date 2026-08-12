@@ -20,7 +20,7 @@ Dois arquivos no núcleo, mais a camada PWA:
 
 `data.js` é carregado por `<script src="data.js?v=NNN">` **antes** do script principal.
 
-- **Rebrand em andamento (b67): pasta local virou `bombillaz-estudos`.** Site, repo no GitHub, projeto
+- **Rebrand em andamento (b67): pasta local virou `bomrillaz-estudos`.** Site, repo no GitHub, projeto
   Firebase e RTDB **continuam com o nome `ctsp-estudos`** — só a pasta local mudou até aqui. Não mexer
   nesses quatro sem pedido explícito (mudar a URL do repo/site quebra o PWA já instalado por quem usa).
 - Site: https://jhoonnvictor.github.io/ctsp-estudos
@@ -199,7 +199,7 @@ sabe o que vai cair ou promete aprovação. Há teste no harness travando isso.
 ## 8. DEPLOY
 
 ```bash
-cd ~/Documents/bombillaz-estudos
+cd ~/Documents/bomrillaz-estudos
 git add index.html          # + data.js / sw.js / manifest.webmanifest / assets/ quando mudarem
 git commit -m "vX.YZ — ..."
 git push                    # ← só com confirmação explícita do João antes de rodar
