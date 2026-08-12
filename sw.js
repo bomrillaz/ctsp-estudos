@@ -32,7 +32,7 @@ try {
       body: d.body || '',
       icon: d.icon || 'assets/icon-192.png',
       badge: 'assets/icon-192.png',
-      data: { link: d.link || '/ctsp-estudos/' }
+      data: { link: d.link || '/bomrillaz-estudos/' }
     });
   });
 } catch (_) {}
@@ -41,15 +41,15 @@ try {
 // que antes vinha de graça pelo fcmOptions.link do payload notification).
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
-  const link = (e.notification.data && e.notification.data.link) || '/ctsp-estudos/';
+  const link = (e.notification.data && e.notification.data.link) || '/bomrillaz-estudos/';
   e.waitUntil((async () => {
     const cl = await clients.matchAll({ type: 'window', includeUncontrolled: true });
-    for (const c of cl) { if (c.url.indexOf('/ctsp-estudos') !== -1 && 'focus' in c) return c.focus(); }
+    for (const c of cl) { if (c.url.indexOf('/bomrillaz-estudos') !== -1 && 'focus' in c) return c.focus(); }
     if (clients.openWindow) return clients.openWindow(link);
   })());
 });
 
-const CACHE = 'ctsp-cache-v12';
+const CACHE = 'ctsp-cache-v13';
 const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
