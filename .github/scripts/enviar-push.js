@@ -43,7 +43,7 @@ const _rot = mensagemPorHorario();
 const TITULO = (process.env.PUSH_TITULO || '').trim() || _rot.titulo;
 const CORPO = (process.env.PUSH_CORPO || '').trim() || _rot.corpo;
 const TEM_CUSTOM = !!((process.env.PUSH_TITULO || '').trim()) || !!((process.env.PUSH_CORPO || '').trim());
-const LINK = 'https://jhoonnvictor.github.io/ctsp-estudos/';
+const LINK = 'https://jhoonnvictor.github.io/bomrillaz-estudos/';
 
 // Conta revisões vencidas a partir do array de timestamps absolutos gravado pelo cliente.
 // Retorna -1 quando o usuário está vencido mas o cliente é antigo (só tem `prox`, sem `agenda`).
