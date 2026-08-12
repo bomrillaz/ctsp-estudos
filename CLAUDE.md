@@ -83,7 +83,7 @@ Cada uma destas já quebrou o site pelo menos uma vez.
 - Nunca declarar uma norma "inverificável" sem antes abrir os arquivos de `materiais/`.
 
 **Git**
-- **NUNCA executar `git push`.** Commit local é permitido; a publicação é manual, do João.
+- **`git push` permitido, mas só com confirmação explícita do João antes de cada push.** Nunca empurrar sem perguntar, mesmo com commit local pronto.
 
 ---
 
@@ -182,7 +182,7 @@ sabe o que vai cair ou promete aprovação. Há teste no harness travando isso.
 cd ~/Documents/ctsp-estudos
 git add index.html          # + data.js / sw.js / manifest.webmanifest / assets/ quando mudarem
 git commit -m "vX.YZ — ..."
-git push                    # ← do João, nunca da IA
+git push                    # ← só com confirmação explícita do João antes de rodar
 ```
 
 Se o push for recusado: `git fetch origin` → `git merge -s ours origin/main -m "reconcilia"` → `git push`.
@@ -190,8 +190,6 @@ Se o push for recusado: `git fetch origin` → `git merge -s ours origin/main -m
 
 Conferência: Configurações → fim da tela mostra a versão.
 **Não** commitar `assets/cesar-coin-gray.png` (órfão).
-
-**Entregar o comando de deploy ao João ao final de TODO bloco** — ele pediu e não vai lembrar sozinho.
 
 ---
 
