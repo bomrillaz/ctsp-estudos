@@ -9,7 +9,7 @@
 set -u
 ARG="${1:-.}"
 if [ -d "$ARG" ]; then DIR="$ARG"; else DIR="$(dirname "$ARG")"; fi
-W="$DIR/.verify_tmp"
+W="$DIR/.tmp/verify_ctsp"
 mkdir -p "$W"; cp "$DIR/index.html" "$W/index.html"
 DATA=""
 [ -f "$DIR/data.js" ] && { cp "$DIR/data.js" "$W/data.js"; DATA="data.js"; }
