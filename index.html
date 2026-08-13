@@ -569,14 +569,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pg-legend i{display:inline-block;width:16px;height:8px;border-radius:2px;margin-right:7px;vertical-align:-1px;flex-shrink:0;}
 .pg-area-row{display:flex;gap:10px;padding:15px 0;border-top:1px solid var(--line-soft);}
 .pg-area-row:first-of-type{border-top:none;}
-.pg-area-ic{font-size:15px;flex-shrink:0;padding-top:1px;line-height:1;}
-.pg-area-main{flex:1;min-width:0;}
-.pg-area-name{font-size:13px;font-weight:800;letter-spacing:.01em;color:var(--text);margin-bottom:9px;}
-.pg-area-line{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
 .pg-area-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);min-width:60px;}
-.pg-area-bar-wrap{flex:1;height:9px;background:var(--paper-2);border-radius:20px;overflow:hidden;}
-.pg-area-bar{height:100%;border-radius:20px;transition:width .8s cubic-bezier(.22,1,.36,1);animation:barGrow .8s cubic-bezier(.22,1,.36,1);}
-.pg-area-val{font-size:10.5px;font-weight:800;min-width:70px;text-align:right;font-variant-numeric:tabular-nums;}
 /* P1 — sparkline de evolução por área */
 .pg-area-evo .pg-area-tag{color:var(--text3);}
 .pg-spark{width:118px;height:34px;flex-shrink:0;}
@@ -631,23 +624,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .tq-praticar{margin-left:auto;font-size:11.5px;font-weight:800;color:var(--ember);background:color-mix(in srgb,var(--ember) 12%,transparent);border:none;border-radius:8px;cursor:pointer;padding:6px 10px;}
 .topico-vazio{font-size:11px;color:var(--text3);font-style:italic;padding:6px 0;}
 .pg-legend-line{background:var(--text2)!important;height:2px!important;}
-/* B56 — projeção por área, comparar áreas, legenda geral */
-.pg-proj-area-row{display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;-webkit-tap-highlight-color:transparent;}
-.pg-proj-area-tag{font-size:10px;font-weight:800;min-width:28px;flex-shrink:0;}
-.pg-proj-area-val{font-size:10.5px;font-weight:800;min-width:96px;text-align:right;font-variant-numeric:tabular-nums;flex-shrink:0;}
-.pg-proj-nota{font-size:10.5px;color:var(--text3);line-height:1.4;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-soft);}
-.compara-card{padding:2px 0;}
-.compara-selects{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.compara-selects select{flex:1;min-width:0;font-size:12.5px;font-weight:700;padding:8px;border-radius:10px;border:1px solid var(--border);background:var(--paper-2);color:var(--text);}
-.compara-vs{font-size:11px;font-weight:800;color:var(--text3);flex-shrink:0;}
-.compara-tabela{display:flex;flex-direction:column;gap:2px;}
-.compara-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line-soft);font-size:12px;}
-.compara-row:first-child{border-top:none;}
-.compara-row>div:first-child{text-align:left;}
-.compara-row>div:last-child{text-align:right;}
-.compara-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text3);text-align:center!important;}
-.compara-melhor{font-weight:800;color:var(--green);}
-.compara-veredito{margin-top:10px;padding-top:10px;border-top:1px solid var(--line-soft);font-size:11.5px;color:var(--text2);line-height:1.4;}
 #pg-legenda-progresso{margin-top:4px;}
 /* P1 — gauge de projeção */
 .pg-gauge-wrap{display:flex;justify-content:center;margin:6px 0 2px;}
@@ -710,7 +686,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
    lateral (relatado no "Caderno de Erros" e no "Estude isto"). `min-width:0` libera
    o encolhimento e o texto passa a quebrar. Mesma solução já usada em `.quiz-opt-text`.
    Mobile-first: vale em qualquer largura, sem media query. */
-.weak-info,.adapt-btn-info,.diag-card-info,.dominio-geral-info,.dominio-area-info,
+.weak-info,.adapt-btn-info,.diag-card-info,
 .area-row-info,.user-item-info,.header-titles,.topico-name{min-width:0;}
 .weak-area,.weak-pct,.weak-title,.diag-card-title,.diag-card-sub,.adapt-btn-title,
 .adapt-btn-sub,.quick-btn-title,.quick-btn-sub{overflow-wrap:anywhere;}
@@ -1172,27 +1148,65 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .btn-config-reset{background:var(--red-light);color:var(--red);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;}
 
 /* ═══ ÍNDICE DE DOMÍNIO ═══ */
-.dominio-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:16px;box-shadow:var(--shadow);margin-bottom:16px;}
-/* B57 — o domínio geral vira o número-herói centralizado da tela "Por área". */
-.dominio-geral-wrap{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;margin-bottom:14px;padding:4px 0 16px;border-bottom:1px solid var(--line-soft);}
+/* F2a: o número vira o anel-herói do cartão de topo (.pg-hero-*, ver bloco P1/gauge
+   abaixo). .dominio-geral-pct segue existindo — mesmo tamanho/peso, agora dentro do
+   anel — para não duplicar a regra com sim-result-score (mesmo padrão visual, 46px). */
 .dominio-geral-pct{font-family:var(--font-display);font-size:46px;font-weight:700;color:var(--text);line-height:1;letter-spacing:-.01em;}
-.dominio-geral-label{font-size:11.5px;color:var(--text2);margin-top:4px;letter-spacing:.02em;}
-.dominio-geral-badges{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;justify-content:center;}
-/* B57 — sub-acordeões DENTRO de "Por área" (projeção por área, comparar áreas). */
-.pg-sub{margin-top:14px;padding-top:14px;border-top:1px solid var(--line-soft);}
-.pg-sub-head{display:flex;align-items:center;gap:8px;width:100%;padding:4px 0;background:none;border:none;cursor:pointer;text-align:left;}
-.pg-sub-title{flex:1;min-width:0;font-size:12.5px;font-weight:800;color:var(--text);letter-spacing:.01em;}
-.pg-sub-chev{flex-shrink:0;color:var(--text3);transition:transform .2s;}
-.pg-sub.open .pg-sub-chev{transform:rotate(180deg);}
-.pg-sub-body{display:none;padding-top:10px;}
-.pg-sub.open .pg-sub-body{display:block;animation:fadeIn .2s;}
-.dominio-area-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
-.dominio-area-icon{font-size:14px;flex-shrink:0;display:flex;align-items:center;}
-.dominio-area-info{flex:1;}
-.dominio-area-name{font-size:11px;font-weight:700;color:var(--text);}
-.dominio-area-bar-wrap{height:8px;background:var(--paper-2);border-radius:4px;overflow:hidden;margin-top:3px;}
-.dominio-area-bar{height:100%;border-radius:4px;transition:width .4s;}
-.dominio-area-pct{font-size:12px;font-weight:800;min-width:36px;text-align:right;font-variant-numeric:tabular-nums;}
+
+/* F2a — cartão-herói: anel de domínio + projeção em pontos, um cartão só (D3). */
+.pg-hero-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:18px 16px;box-shadow:var(--shadow);margin-bottom:16px;}
+.pg-hero-ring-row{display:flex;align-items:center;gap:16px;}
+.pg-hero-ring{width:120px;height:120px;flex-shrink:0;}
+.pg-hero-info{flex:1;min-width:0;}
+.pg-hero-label{font-size:13px;color:var(--text2);font-weight:700;letter-spacing:.02em;}
+.pg-hero-faixa{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--text);margin-top:4px;text-transform:uppercase;letter-spacing:.06em;}
+.pg-hero-div{height:1px;background:var(--line-soft);margin:16px 0;}
+
+/* F2a — cinco vereditos automáticos, cada linha também é a aba do mestre-detalhe (D2/D3). */
+.pg-vereditos-wrap{margin-bottom:2px;}
+.pg-vereditos-list{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);}
+.pg-veredito-row{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:11px 14px;background:none;border:none;border-top:1px solid var(--line-soft);cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;transition:background .15s;}
+.pg-veredito-row:first-child{border-top:none;}
+.pg-veredito-row:hover,.pg-veredito-row:focus-visible{background:var(--paper-2);}
+.pg-veredito-row.sel{background:color-mix(in srgb,var(--ember) 8%,transparent);}
+.pg-veredito-ic{font-size:15px;flex-shrink:0;line-height:1;}
+.pg-veredito-main{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;}
+.pg-veredito-nome{font-size:12.5px;font-weight:800;color:var(--text);letter-spacing:.02em;}
+.pg-veredito-dom{font-size:11.5px;font-weight:700;}
+.pg-veredito-dom-vazio{color:var(--text3);font-weight:600;}
+.pg-veredito-txt{flex-basis:100%;font-size:10.5px;color:var(--text2);line-height:1.3;}
+
+/* F2a — Nível 2/3 do mestre-detalhe: painel da área selecionada. */
+.pg-area-detalhe{margin-top:10px;}
+.pg-area-detalhe-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:16px;box-shadow:var(--shadow);}
+.pg-area-detalhe-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.pg-area-detalhe-ic{font-size:17px;line-height:1;}
+.pg-area-detalhe-nome{font-family:var(--font-display);font-size:13.5px;font-weight:700;color:var(--text);letter-spacing:.01em;}
+.pg-area-detalhe-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--line-soft);}
+.pg-area-detalhe-v{display:block;font-family:var(--font-display);font-size:22px;font-weight:700;line-height:1;}
+.pg-area-detalhe-l{display:block;font-size:10px;color:var(--text3);margin-top:4px;font-weight:600;}
+.pg-area-detalhe-line{display:flex;align-items:center;gap:8px;margin:14px 0;}
+
+/* F2a/D4 — decomposição "por que isso aconteceu" (Quiz/Cards/Resumos + gargalo). */
+.pg-porque{margin:6px 0 14px;padding-top:14px;border-top:1px solid var(--line-soft);}
+.pg-porque-comps{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11px;color:var(--text2);}
+.pg-porque-comps b{color:var(--text);font-weight:800;}
+.pg-porque-comp.gargalo,.pg-porque-comp.gargalo b{color:var(--red-dark);}
+.pg-porque-frase{font-size:11.5px;color:var(--text2);line-height:1.4;margin-top:8px;}
+
+/* F2a — estado vazio: calcProntidao()===null (nenhuma resposta ainda). */
+.pg-vazio-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:22px 18px;box-shadow:var(--shadow);text-align:center;}
+.pg-vazio-title{font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--text);}
+.pg-vazio-txt{font-size:12px;color:var(--text2);line-height:1.5;margin-top:8px;}
+
+/* F2a — "E agora?": fecho em ação. */
+.pg-agora-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:16px;box-shadow:var(--shadow);margin:16px 0;}
+.pg-agora-card:empty{display:none;}
+.pg-agora-txt{font-size:12.5px;color:var(--text2);line-height:1.4;}
+
+/* F2a — curva geral de acerto por semana, dentro de "Evolução". */
+.pg-evo-geral{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line-soft);}
+.pg-evo-geral-head{font-size:12px;color:var(--text2);margin-bottom:6px;}
 
 /* Cards de objetivos/semana */
 .obj-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;padding:14px;box-shadow:var(--shadow);margin-bottom:10px;border-left:4px solid var(--red);}
@@ -2205,90 +2219,103 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         </div>
       </div>
       <div class="dash-body">
-        <!-- PLACAR — sempre visível (resumo do estado) -->
-        <!-- Placar: só o que NÃO tem versão grande. Domínio geral vive no painel "Por área"
-             e Projeção no gauge — removidos daqui para não repetir o mesmo dado (bloco 50). -->
-        <div class="pg-placar pg-placar-2">
-          <div class="pg-kpi"><div class="pg-kpi-v" id="kpi-cobertura">—</div><div class="pg-kpi-l">Cobertura do edital <span class="info-btn" onclick="showInfo('cobertura')" aria-label="O que é cobertura do edital">?</span></div></div>
-          <div class="pg-kpi"><div class="pg-kpi-v"><span id="kpi-acuracia">—</span><span class="pg-kpi-delta" id="kpi-acuracia-delta"></span></div><div class="pg-kpi-l">Acurácia geral <span class="info-btn" onclick="showInfo('acuracia')" aria-label="O que é acurácia geral">?</span></div></div>
+        <!-- F2a — estado vazio: usuário sem NENHUMA resposta ainda (calcProntidao()===null).
+             Antes disso a tela mostrava cinco barras cinzas e 0% — lido como "domínio zero",
+             não como "sem dado ainda". renderDominio() alterna este bloco com #pg-conteudo. -->
+        <div id="pg-vazio" class="pg-vazio-card hidden">
+          <div class="pg-vazio-title">Ainda não há o que medir</div>
+          <div class="pg-vazio-txt">Domínio, cobertura e projeção só aparecem depois das primeiras respostas.<br><span id="pg-vazio-qtd"></span></div>
+          <button class="btn-primary" type="button" onclick="abrirIntro('diagnostico')" style="width:100%;margin-top:12px;">Fazer o nivelamento →</button>
+          <button class="btn-weak" type="button" onclick="abrirIntro('treino')" style="width:100%;margin-top:8px;">Treino do dia →</button>
         </div>
-        <div class="pg-subline">
-          <span><b id="kpi-respondidas">0</b> respondidas</span>
-          <span><b id="kpi-revisados">0</b> revisados</span>
-          <span><b id="kpi-streak">0</b> dias seguidos</span>
-          <span id="kpi-hoje">Hoje: 0</span>
-        </div>
-        <div id="pg-projecao">
-          <div class="pg-mod-h">Projeção para a prova <span class="info-btn" onclick="showInfo('prontidao')" aria-label="Mais informações">?</span></div>
-          <div id="dash-pront" class="chart-wrap hidden">
-            <div style="display:flex;align-items:center;justify-content:flex-end;">
-              <span style="font-size:12px;font-weight:700;color:var(--ember);" id="pront-dias"></span>
+
+        <div id="pg-conteudo">
+          <!-- CARTÃO-HERÓI (D3/1a) — domínio geral em anel + projeção em pontos, um cartão
+               só: duas unidades diferentes (% de domínio × pontos da prova), a mesma origem
+               (dominioAreaBKT, fonte única desde o F2b). -->
+          <div class="pg-hero-card">
+            <div class="pg-hero-ring-row">
+              <div class="pg-hero-ring ring-container">
+                <svg class="ring-svg" width="120" height="120" viewBox="0 0 120 120">
+                  <circle class="ring-bg" cx="60" cy="60" r="50" stroke-width="10"/>
+                  <circle class="ring-fg" id="pg-hero-ring-fg" cx="60" cy="60" r="50" stroke-width="10" stroke-dasharray="314.16" stroke-dashoffset="314.16"/>
+                </svg>
+                <div class="ring-center"><div class="dominio-geral-pct" id="dominio-geral-num">0%</div></div>
+              </div>
+              <div class="pg-hero-info">
+                <div class="pg-hero-label">de domínio geral <span class="info-btn" onclick="showInfo('dominio')" aria-label="Mais informações">?</span></div>
+                <div class="pg-hero-faixa" id="dominio-geral-faixa"></div>
+              </div>
             </div>
-            <div class="pg-gauge-wrap" id="pront-gauge"></div>
-            <div id="pront-status" class="pg-status"></div>
-            <div id="pront-aviso" style="display:none;font-size:11px;color:var(--ember-deep);background:var(--amber-light);border-radius:8px;padding:7px 9px;margin-top:8px;line-height:1.4;"><svg style="width:13px;height:13px;vertical-align:-1px;margin-right:3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Estimativa preliminar — baseada em poucas respostas. Vai ficar mais precisa conforme você estuda.</div>
-          </div>
-        </div>
-        <!-- B58: "Por área" nasce ABERTO. Com o b57 ele virou o painel principal da
-             tela; entrar fechado escondia o número-herói. Os dois sub-blocos de
-             dentro seguem fechados — abrir tudo devolve a tela-muralha do b55. -->
-        <div class="mp-item open" id="pg-area">
-          <div class="mp-head" role="button" tabindex="0" aria-expanded="true" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
-            <span class="mp-title">Por área <span class="info-btn" onclick="event.stopPropagation();showInfo('dominio')" aria-label="Mais informações">?</span></span>
-            <span class="mp-right"><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
-          </div>
-          <div class="mp-body">
-            <!-- B57: "Por área" é o painel único de domínio. O número geral abre a
-                 tela centralizado; abaixo dele, área por área; e dentro, os dois
-                 aprofundamentos (projeção por área e comparação), fechados. Não
-                 existe mais dashboard separado para isso. -->
-            <div class="dominio-card">
-              <div class="dominio-geral-wrap">
-                <div class="dominio-geral-info">
-                  <div class="dominio-geral-pct" id="dominio-geral-num">0%</div>
-                  <div class="dominio-geral-label">de domínio geral</div>
-                  <div class="dominio-geral-badges">
-                    <span class="dominio-badge" style="background:var(--blue-light);color:var(--blue)">Quiz 50%</span>
-                    <span class="dominio-badge" style="background:var(--green-light);color:var(--green)">Cards 30%</span>
-                    <span class="dominio-badge" style="background:var(--amber-light);color:var(--amber)">Resumos 20%</span>
-                  </div>
+            <div class="pg-hero-div"></div>
+            <div id="pg-projecao">
+              <div class="pg-mod-h">Projeção para a prova <span class="info-btn" onclick="showInfo('prontidao')" aria-label="Mais informações">?</span></div>
+              <div id="dash-pront" class="chart-wrap hidden">
+                <div style="display:flex;align-items:center;justify-content:flex-end;">
+                  <span style="font-size:12px;font-weight:700;color:var(--ember);" id="pront-dias"></span>
                 </div>
-              </div>
-              <div id="por-area-lista"></div>
-              <div class="pg-sub" id="pg-sub-projecao">
-                <div class="pg-sub-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleSub(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSub(this);}">
-                  <span class="pg-sub-title">Quanto cada área vale na prova</span>
-                  <svg class="pg-sub-chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-                </div>
-                <div class="pg-sub-body"><div id="pg-projecao-area"></div></div>
-              </div>
-              <div class="pg-sub" id="pg-sub-compara">
-                <div class="pg-sub-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleSub(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSub(this);}">
-                  <span class="pg-sub-title">Comparar duas áreas</span>
-                  <svg class="pg-sub-chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-                </div>
-                <div class="pg-sub-body"><div class="compara-card" id="compara-card"></div></div>
+                <div class="pg-gauge-wrap" id="pront-gauge"></div>
+                <div id="pront-status" class="pg-status"></div>
+                <div id="pront-aviso" style="display:none;font-size:11px;color:var(--ember-deep);background:var(--amber-light);border-radius:8px;padding:7px 9px;margin-top:8px;line-height:1.4;"><svg style="width:13px;height:13px;vertical-align:-1px;margin-right:3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Estimativa preliminar — baseada em poucas respostas. Vai ficar mais precisa conforme você estuda.</div>
               </div>
             </div>
           </div>
-        </div>
-        <div id="pg-legenda-progresso">
-          <div class="pg-mod-h">Como ler esta tela</div>
-          <div class="pg-legend" id="pg-legend-geral"></div>
-        </div>
-        <div id="pg-atividade">
-          <div class="pg-mod-h">Atividade</div>
-          <div class="chart-wrap">
-            <div style="display:flex;align-items:center;justify-content:space-between;">
-              <span style="font-size:12px;color:var(--text2);">Questões · últimos 7 dias</span>
-              <span style="font-size:12px;font-weight:700;" id="chart-total-week">0 essa semana</span>
+
+          <!-- PLACAR + SUBLINE — abaixo do herói, sem repetir domínio/projeção (D3). -->
+          <div class="pg-placar pg-placar-2">
+            <div class="pg-kpi"><div class="pg-kpi-v" id="kpi-cobertura">—</div><div class="pg-kpi-l">Cobertura do edital <span class="info-btn" onclick="showInfo('cobertura')" aria-label="O que é cobertura do edital">?</span></div></div>
+            <div class="pg-kpi"><div class="pg-kpi-v"><span id="kpi-acuracia">—</span><span class="pg-kpi-delta" id="kpi-acuracia-delta"></span></div><div class="pg-kpi-l">Acurácia geral <span class="info-btn" onclick="showInfo('acuracia')" aria-label="O que é acurácia geral">?</span></div></div>
+          </div>
+          <div class="pg-subline">
+            <span><b id="kpi-respondidas">0</b> respondidas</span>
+            <span><b id="kpi-revisados">0</b> revisados</span>
+            <span><b id="kpi-streak">0</b> dias seguidos</span>
+            <span id="kpi-hoje">Hoje: 0</span>
+          </div>
+
+          <!-- CINCO VEREDITOS (D2/D3) — leitura automática por área, substitui "Comparar duas
+               áreas": a comparação virou algo que o app já escreve, não uma escolha do usuário.
+               Cada linha também é a aba do mestre-detalhe — tocar troca o painel abaixo,
+               sem empurrar o resto da tela. -->
+          <div id="pg-vereditos" class="pg-vereditos-wrap">
+            <div class="pg-mod-h">Por área <span class="info-btn" onclick="showInfo('dominio')" aria-label="Mais informações">?</span></div>
+            <div id="pg-vereditos-list" class="pg-vereditos-list" role="tablist" aria-label="Selecionar área"></div>
+          </div>
+          <!-- Nível 2/3: domínio da área + projeção + posição entre as 5 + colunas de tópico
+               (reusa topicosAreaHTML) + decomposição "por que isso aconteceu" (D4). -->
+          <div id="pg-area-detalhe" class="pg-area-detalhe"></div>
+
+          <!-- E AGORA? — fecho em ação: o tópico mais frágil, com atalho de prática. -->
+          <div id="pg-agora" class="pg-agora-card"></div>
+
+          <!-- EVOLUÇÃO — curva geral de acerto por semana + esforço (questões) por dia. -->
+          <div id="pg-atividade">
+            <div class="pg-mod-h">Evolução</div>
+            <div class="pg-evo-geral">
+              <div class="pg-evo-geral-head"><span>Acerto geral · por semana</span></div>
+              <div id="pg-evo-geral-spark"></div>
             </div>
-            <div class="pg-chart-plot" role="img" aria-label="Questões respondidas por dia nos últimos 7 dias">
-              <div class="pg-meta-line" id="atividade-meta"></div>
-              <div class="chart-bars" id="chart-bars"></div>
+            <div class="chart-wrap">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:12px;color:var(--text2);">Questões · últimos 7 dias</span>
+                <span style="font-size:12px;font-weight:700;" id="chart-total-week">0 essa semana</span>
+              </div>
+              <div class="pg-chart-plot" role="img" aria-label="Questões respondidas por dia nos últimos 7 dias">
+                <div class="pg-meta-line" id="atividade-meta"></div>
+                <div class="chart-bars" id="chart-bars"></div>
+              </div>
+              <div class="pg-chart-labels" id="chart-labels"></div>
+              <div class="pg-streak" id="atividade-streak"></div>
             </div>
-            <div class="pg-chart-labels" id="chart-labels"></div>
-            <div class="pg-streak" id="atividade-streak"></div>
+          </div>
+
+          <!-- COMO LER ESTA TELA — rodapé, fechado por padrão (reusa .mp-item/toggleMp). -->
+          <div class="mp-item" id="pg-legenda-progresso">
+            <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
+              <span class="mp-title">Como ler esta tela</span>
+              <span class="mp-right"><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
+            </div>
+            <div class="mp-body"><div class="pg-legend" id="pg-legend-geral"></div></div>
           </div>
         </div>
       </div>
@@ -3349,7 +3376,6 @@ function renderProntidao(){
     else{txt='Abaixo do corte — faltam '+falta+' ponto'+(falta!==1?'s':'')+' para '+corte;cls='alerta';}
     stEl.textContent=txt;stEl.className='pg-status '+cls;
   }
-  renderProjecaoArea(r,perfilTopicos());
   const avisoEl=document.getElementById('pront-aviso');
   if(avisoEl)avisoEl.style.display=(r.nResp<MIN_RESP_PRONT)?'block':'none';
   const dEl=document.getElementById('pront-dias');
@@ -3361,102 +3387,10 @@ function renderProntidao(){
   }
 }
 
-// ── B56: projeção por área, em pontos da cota do edital (nunca % solto) ──
-// r = calcProntidao() (não-nulo, garantido pelo chamador). perfil = perfilTopicos().
-function renderProjecaoArea(r,perfil){
-  const el=document.getElementById('pg-projecao-area');
-  if(!el)return;
-  el.innerHTML=Object.entries(AI).map(([k,a])=>{
-    const cota=a.n;
-    const val=r.proj[k]||0;
-    const nRespArea=perfil.filter(p=>p.area===k).reduce((s,p)=>s+(p.n||0),0);
-    const pctBarra=Math.min(100,Math.round(val/cota*100));
-    const valTxt=nRespArea<5
-      ? '<span style="color:var(--text3);font-size:11px">estimativa inicial</span>'
-      : ('~'+val.toFixed(1).replace('.',',')+' de '+cota+' pts');
-    return '<div class="pg-proj-area-row" role="button" tabindex="0" onclick="abrirAreaNoPainel(\''+k+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();abrirAreaNoPainel(\''+k+'\');}">'
-      +'<span class="pg-proj-area-tag" style="color:'+a.color+'">'+k+'</span>'
-      +'<div class="pg-area-bar-wrap"><div class="pg-area-bar" style="width:'+pctBarra+'%;background:'+a.color+'"></div></div>'
-      +'<span class="pg-proj-area-val">'+valTxt+'</span>'
-    +'</div>';
-  }).join('')
-  +'<div class="pg-proj-nota">A prova tem cota fixa por área. Estudar mais AT4 não aumenta o teto de AT4 — ele é '+AI.AT4.n+' pontos. Os pontos que faltam para o corte saem das áreas de maior cota com menor domínio.</div>';
-}
-
-// Abre "Por área" (se fechado) e expande a linha da área k, com scroll até ela.
-function abrirAreaNoPainel(k){
-  const item=document.getElementById('pg-area');
-  if(!item)return;
-  if(!item.classList.contains('open')){
-    const head=item.querySelector('.mp-head');
-    if(head)toggleMp(head);
-  }
-  setTimeout(()=>{
-    const row=item.querySelector('.pg-area-row[data-area="'+k+'"]');
-    if(!row)return;
-    if(!row.classList.contains('open')){
-      const btn=row.querySelector('.pg-area-toggle');
-      if(btn)toggleAreaTopicos(btn);
-    }
-    row.scrollIntoView({behavior:'smooth',block:'center'});
-  },50);
-}
-
-// ── B56: comparar duas áreas lado a lado ──
-function renderComparaAreas(){
-  const card=document.getElementById('compara-card');
-  if(!card)return;
-  const areas=Object.keys(AI);
-  const selA=document.getElementById('compara-sel-a'),selB=document.getElementById('compara-sel-b');
-  const kA=(selA&&selA.value)||areas[2]||areas[0]; // default AT3
-  const kB=(selB&&selB.value)||areas[3]||areas[1]; // default AT4
-  if(!selA||!selB){
-    const opts=k=>areas.map(a=>'<option value="'+a+'"'+(a===k?' selected':'')+'>'+a+'</option>').join('');
-    card.innerHTML='<div class="compara-selects">'
-      +'<select id="compara-sel-a" onchange="renderComparaAreas()">'+opts(kA)+'</select>'
-      +'<span class="compara-vs">×</span>'
-      +'<select id="compara-sel-b" onchange="renderComparaAreas()">'+opts(kB)+'</select>'
-      +'</div><div id="compara-tabela"></div>';
-    return renderComparaAreas(); // recursão única: agora os selects existem, preenche a tabela
-  }
-  const dom=calcDominio();
-  const perfil=perfilTopicos();
-  const r=calcProntidao();
-  const linha=(label,va,vb,melhorA)=>{
-    const cA=melhorA===true?' class="compara-melhor"':melhorA===false?'':'';
-    const cB=melhorA===false?' class="compara-melhor"':melhorA===true?'':'';
-    return '<div class="compara-row"><div'+cA+'>'+va+'</div><div class="compara-label">'+label+'</div><div'+cB+'>'+vb+'</div></div>';
-  };
-  const dA=dom[kA]||{dominio:0,quizConf:false},dB=dom[kB]||{dominio:0,quizConf:false};
-  const domTxtA=dA.quizConf?dA.dominio+'%':'—',domTxtB=dB.quizConf?dB.dominio+'%':'—';
-  const respA=perfil.filter(p=>p.area===kA).reduce((s,p)=>s+(p.n||0),0);
-  const respB=perfil.filter(p=>p.area===kB).reduce((s,p)=>s+(p.n||0),0);
-  const projA=r?(r.proj[kA]||0):0,projB=r?(r.proj[kB]||0):0;
-  const cotaA=AI[kA].n,cotaB=AI[kB].n;
-  const serieA=serieSemanalArea(kA),serieB=serieSemanalArea(kB);
-  const dvTxt=s=>s.length<2?'—':(s[s.length-1]-s[s.length-2]);
-  const dvA=dvTxt(serieA),dvB=dvTxt(serieB);
-  const fraco=(k)=>{const ts=perfil.filter(p=>p.area===k&&p.n>0);if(!ts.length)return null;return ts.reduce((w,p)=>p.pL<w.pL?p:w,ts[0]);};
-  const fA=fraco(kA),fB=fraco(kB);
-  let tbl='<div class="compara-tabela">';
-  tbl+=linha('Domínio',domTxtA,domTxtB,dA.quizConf&&dB.quizConf?dA.dominio>dB.dominio:null);
-  tbl+=linha('Cobertura',(dA.cobVistos||0)+'/'+(dA.cobTotal||0),(dB.cobVistos||0)+'/'+(dB.cobTotal||0),null);
-  tbl+=linha('Respostas',respA,respB,respA>respB?true:respB>respA?false:null);
-  tbl+=linha('Cota do edital',cotaA+' pts',cotaB+' pts',null);
-  tbl+=linha('Projeção',(respA<5?'estimativa inicial':'~'+projA.toFixed(1).replace('.',',')+' de '+cotaA),(respB<5?'estimativa inicial':'~'+projB.toFixed(1).replace('.',',')+' de '+cotaB),null);
-  tbl+=linha('Evolução (7d)',dvA===0?'estável':(typeof dvA==='number'?(dvA>0?'▲'+dvA+'pp':'▼'+Math.abs(dvA)+'pp'):dvA),dvB===0?'estável':(typeof dvB==='number'?(dvB>0?'▲'+dvB+'pp':'▼'+Math.abs(dvB)+'pp'):dvB),null);
-  const fracoTxt=f=>f?(sanitize(f.t)+' ('+Math.round(f.pL*100)+'%) <button type="button" class="tq-praticar" style="margin-left:4px;padding:2px 7px;font-size:10px;" onclick="event.stopPropagation();praticarTopico(\''+sanitize(f.t)+'\')">Praticar →</button>'):'—';
-  tbl+=linha('Tópico mais fraco',fracoTxt(fA),fracoTxt(fB),null);
-  tbl+='</div>';
-  if(respA<5&&respB<5){
-    tbl+='<div class="compara-veredito">Ainda não dá para comparar — poucas respostas nas duas áreas.</div>';
-  }else{
-    const gapA=cotaA-projA,gapB=cotaB-projB;
-    const maior=gapA>=gapB?{k:kA,gap:gapA,cota:cotaA}:{k:kB,gap:gapB,cota:cotaB};
-    tbl+='<div class="compara-veredito">Maior ganho possível: '+maior.k+' — faltam ~'+Math.max(0,maior.gap).toFixed(1).replace('.',',')+' pts dos '+maior.cota+' da cota.</div>';
-  }
-  document.getElementById('compara-tabela').innerHTML=tbl;
-}
+// F2a: a projeção por área (em pontos da cota, "estudar mais AT4 não aumenta o teto de
+// AT4") e a navegação até uma área saíram daqui — viraram o painel Nível 2 do
+// mestre-detalhe, montado por renderAreaDetalhe() a partir da linha selecionada em
+// #pg-vereditos-list (ver renderVereditos()/selecionarAreaPg()).
 
 // ── B56: legenda única da tela — métricas + faixas de cor (escala DOM_ESCALA) ──
 function renderLegendaProgresso(){
@@ -4100,7 +4034,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.165';
+const APP_VERSAO='v1.166';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4461,7 +4395,6 @@ function renderDashboard(){
   updateBadges();
   renderDominio();
   renderObjetivoSemana();
-  renderComparaAreas();
   renderLegendaProgresso();
 }
 
@@ -6487,14 +6420,6 @@ function toggleAreaTopicos(el){
   el.setAttribute('aria-expanded',abrir?'true':'false');
 }
 
-// B57 — sub-acordeão de "Por área" (projeção por área / comparar áreas).
-function toggleSub(el){
-  const b=el.closest('.pg-sub');
-  if(!b)return;
-  const abrir=b.classList.toggle('open');
-  el.setAttribute('aria-expanded',abrir?'true':'false');
-}
-
 // B57 — bloco de tópico fechado usado por Cards e Resumos. `nome` e `itensHTML`
 // já chegam sanitizados pelo chamador (é HTML montado, não texto de banco cru).
 function hubTopicoHTML(nome,contaTxt,itensHTML){
@@ -6939,7 +6864,10 @@ function calcDominio(){
       cardsPct:Math.round(cardsPct*100),
       resumosPct:Math.round(resumosPct*100),
       cobertura:Math.round(coberturaPct*100),
-      cobVistos, cobTotal
+      cobVistos, cobTotal,
+      // F2a: contagens cruas por trás de cada %, para a frase "o que está segurando"
+      // (decompoePorque). Só leitura local — não é campo gravado no RTDB.
+      qTotal, qVistas, cardsTotal, cardsRevisados, resumosTotal, resumosRevisados
     };
   });
   return result;
@@ -6960,10 +6888,22 @@ function respondeuNaSemanaAtual(k){
   return h.some(x=>x.s===s&&x.areas&&x.areas[k]);
 }
 function renderDominio(){
+  // F2a — estado vazio: sem NENHUMA resposta ainda (calcProntidao()===null) não é
+  // "domínio 0%", é "nada pra medir". Antes disso a tela mostrava cinco barras cinzas.
+  const prontoNulo=calcProntidao()===null;
+  const vazioEl=document.getElementById('pg-vazio');
+  const conteudoEl=document.getElementById('pg-conteudo');
+  if(vazioEl)vazioEl.classList.toggle('hidden',!prontoNulo);
+  if(conteudoEl)conteudoEl.classList.toggle('hidden',prontoNulo);
+  if(prontoNulo){
+    const qEl=document.getElementById('pg-vazio-qtd');
+    if(qEl)qEl.textContent=Object.keys(allQuestoes).length+' questões · '+Object.keys(allFlashcards).length+' flashcards · '+RESUMOS_BANCO.length+' resumos esperando';
+    return;
+  }
   const dom=calcDominio(); // sobrevive pela cobertura e pelo "por quê" (quiz/cards/resumos) — não pelo campo dominio
   const perfil=perfilTopicos(); // B4: domínio por tópico, aberto por área sob demanda
-  // F2b: herói = média SIMPLES do domínio BKT das áreas com evidência. Fonte única com a barra
-  // da área e com a projeção (que pondera pela cota do edital — números diferentes de propósito).
+  // F2b: herói = média SIMPLES do domínio BKT das áreas com evidência. Fonte única com o
+  // veredito de área e com a projeção (que pondera pela cota do edital — números diferentes de propósito).
   const comEvidencia=Object.keys(AI).filter(k=>respostasAreaBKT(k,perfil)>=MIN_RESP_CONF);
   const geral=comEvidencia.length>0
     ?Math.round(comEvidencia.reduce((s,k)=>s+dominioAreaBKT(k,perfil),0)/comEvidencia.length*100)
@@ -6971,37 +6911,260 @@ function renderDominio(){
   let _cobV=0,_cobT=0;Object.values(dom).forEach(d=>{_cobV+=(d.cobVistos||0);_cobT+=(d.cobTotal||0);});
   const cobGeral=_cobT>0?Math.round(_cobV/_cobT*100):null;
   {const el=document.getElementById('kpi-cobertura');if(el)el.textContent=cobGeral===null?'—':cobGeral+'%';}
-  {const el=document.getElementById('dominio-geral-num');if(el){if(geral===null){el.textContent='ainda medindo';el.removeAttribute('data-cv');}else{animateCount(el,geral,'% de domínio');}}}
-  const el=document.getElementById('por-area-lista');
-  if(!el)return;
-  el.innerHTML=Object.entries(AI).map(([k,a])=>{
-    const d=dom[k]||{cobertura:0,cobVistos:0,cobTotal:0};
+  // F2a: herói virou anel — número, faixa nomeada e cor vêm da mesma escala DOM_ESCALA da
+  // barra de área (domFaixa/domCor). O CSS de .ring-fg já faz a transição suave sozinho.
+  {
+    const numEl=document.getElementById('dominio-geral-num');
+    const faixaEl=document.getElementById('dominio-geral-faixa');
+    const ringEl=document.getElementById('pg-hero-ring-fg');
+    const circ=314.16; // 2·π·50 — mesmo raio do .ring-svg de 120px usado no app (sim-result-ring)
+    if(geral===null){
+      if(numEl){numEl.textContent='ainda medindo';numEl.removeAttribute('data-cv');numEl.style.color='';}
+      if(faixaEl)faixaEl.textContent='';
+      if(ringEl){ringEl.style.stroke='var(--text3)';ringEl.style.strokeDashoffset=String(circ);}
+    }else{
+      const fx=domFaixa(geral);
+      if(numEl){numEl.style.color=fx.cor;animateCount(numEl,geral,'%');}
+      if(faixaEl)faixaEl.textContent=fx.rot;
+      if(ringEl){ringEl.style.stroke=fx.cor;ringEl.style.strokeDashoffset=String(circ*(1-geral/100));}
+    }
+  }
+  renderVereditos();
+  renderAgora();
+  renderEvolucaoGeral();
+}
+
+// ── F2a: cinco vereditos automáticos por área — substituem "Comparar duas áreas" (D2):
+// a comparação virou leitura que o app já escreve, não escolha do usuário. Cada linha é
+// também a aba do mestre-detalhe (D3): tocar troca #pg-area-detalhe abaixo, sem empurrar
+// o resto da tela.
+let pgAreaSel=null; // área selecionada no mestre-detalhe de "Meu progresso"
+
+// Guarda de honestidade: área com respostasAreaBKT(k) < MIN_RESP_CONF não entra em
+// nenhum ranking. Com menos de duas áreas com evidência não há o que comparar — null,
+// e o bloco de vereditos nem aparece (renderVereditos trata isso).
+function calcVereditos(perfil){
+  const comEvid=Object.keys(AI).filter(k=>respostasAreaBKT(k,perfil)>=MIN_RESP_CONF);
+  if(comEvid.length<2)return null;
+  const dom=calcDominio();
+  const r=calcProntidao();
+  const porArea={};
+  comEvid.forEach(k=>porArea[k]=[]);
+  // "a que menos evoluiu" — menor delta entre as duas últimas semanas com retrato.
+  {
+    let pior=null,piorD=Infinity;
+    comEvid.forEach(k=>{
+      const s=serieSemanalArea(k);
+      if(s.length<2)return;
+      const d=s[s.length-1]-s[s.length-2];
+      if(d<piorD){piorD=d;pior=k;}
+    });
+    if(pior!==null)porArea[pior].push('a que menos evoluiu: '+(piorD>0?'+':'')+piorD+'pp na semana');
+  }
+  // "maior ganho possível" — maior distância entre a cota do edital e a projeção atual.
+  if(r){
+    let melhor=null,melhorGap=-Infinity;
+    comEvid.forEach(k=>{
+      const gap=AI[k].n-(r.proj[k]||0);
+      if(gap>melhorGap){melhorGap=gap;melhor=k;}
+    });
+    if(melhor!==null&&melhorGap>0.05)porArea[melhor].push('maior ganho possível: ~'+melhorGap.toFixed(1).replace('.',',')+' pts em aberto');
+  }
+  // "mais coberta" / "menos coberta"
+  {
+    let maisA=null,maisV=-1,menosA=null,menosV=101;
+    comEvid.forEach(k=>{
+      const c=(dom[k]&&dom[k].cobertura)||0;
+      if(c>maisV){maisV=c;maisA=k;}
+      if(c<menosV){menosV=c;menosA=k;}
+    });
+    if(maisA!==null)porArea[maisA].push('a mais coberta: '+maisV+'%');
+    if(menosA!==null&&menosA!==maisA)porArea[menosA].push('a menos coberta: '+menosV+'%');
+  }
+  // "mais frágil" — menor domínio BKT entre as áreas com evidência.
+  {
+    let fragA=null,fragV=2;
+    comEvid.forEach(k=>{
+      const v=dominioAreaBKT(k,perfil);
+      if(v<fragV){fragV=v;fragA=k;}
+    });
+    if(fragA!==null)porArea[fragA].push('a mais frágil: '+Math.round(fragV*100)+'% de domínio');
+  }
+  return porArea;
+}
+
+function renderVereditos(){
+  const wrap=document.getElementById('pg-vereditos');
+  const list=document.getElementById('pg-vereditos-list');
+  if(!wrap||!list)return;
+  const perfil=perfilTopicos();
+  const vereditos=calcVereditos(perfil);
+  if(!vereditos){
+    wrap.classList.add('hidden');
+    const detEl=document.getElementById('pg-area-detalhe');
+    if(detEl)detEl.innerHTML='';
+    return;
+  }
+  wrap.classList.remove('hidden');
+  if(!pgAreaSel||!AI[pgAreaSel])pgAreaSel=Object.keys(AI)[0];
+  list.innerHTML=Object.entries(AI).map(([k,a])=>{
     const nResp=respostasAreaBKT(k,perfil);
-    const temEvidencia=nResp>=MIN_RESP_CONF;
-    const domPct=Math.round(dominioAreaBKT(k,perfil)*100);
-    const nome=k+' — '+((a.nome.split('—')[1]||'').trim()||a.nome);
-    const domCorV=domCor(domPct); // B56: escala unificada
-    const domLinha=temEvidencia
-      ? '<span class="pg-area-tag">Domínio</span><div class="pg-area-bar-wrap"><div class="pg-area-bar" style="width:'+domPct+'%;background:'+domCorV+'"></div></div><span class="pg-area-val" style="color:'+domCorV+'">'+domPct+'%</span>'
-      : '<span class="pg-area-tag">Domínio</span><div class="pg-area-bar-wrap"><div class="pg-area-bar" style="width:0%;background:var(--line)"></div></div><span class="pg-area-val" style="color:var(--text3);font-size:10px">medindo ('+nResp+'/'+MIN_RESP_CONF+')</span>';
-    const cobTxt=(d.cobTotal||0)>0?(d.cobertura+'% · '+d.cobVistos+'/'+d.cobTotal):'—';
-    const serie=serieSemanalArea(k);
-    let chip;
-    if(temEvidencia&&!respondeuNaSemanaAtual(k))chip='<span class="pg-area-evo-chip neutra">esfriou</span>';
-    else if(serie.length<2)chip='<span class="pg-area-evo-chip neutra">'+(serie.length?'1 semana':'—')+'</span>';
-    else{const dv=serie[serie.length-1]-serie[serie.length-2];chip=dv===0?'<span class="pg-area-evo-chip neutra">estável</span>':'<span class="pg-area-evo-chip '+(dv>0?'sobe':'desce')+'">'+(dv>0?'▲':'▼')+Math.abs(dv)+'pp</span>';}
-    return '<div class="pg-area-row" data-area="'+k+'">'
-      +'<div class="pg-area-ic" style="color:'+a.color+'">'+a.icon+'</div>'
-      +'<div class="pg-area-main">'
-        +'<div class="pg-area-name">'+sanitize(nome)+'</div>'
-        +'<div class="pg-area-line">'+domLinha+'</div>'
-        +'<div class="pg-area-line"><span class="pg-area-tag">Cobertura</span><div class="pg-area-bar-wrap"><div class="pg-area-bar" style="width:'+d.cobertura+'%;background:var(--blue)"></div></div><span class="pg-area-val" style="color:var(--blue)">'+cobTxt+'</span></div>'
-        +'<div class="pg-area-line pg-area-evo"><span class="pg-area-tag">Evolução</span>'+sparklineSVG(serie)+chip+'</div>'
-        +'<button class="pg-area-toggle" onclick="toggleAreaTopicos(this)" aria-expanded="false"><span>Domínio por tópico</span><svg class="pg-area-chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>'
-        +'<div class="pg-area-topicos">'+topicosAreaHTML(k,perfil)+'</div>'
-      +'</div>'
-    +'</div>';
+    const temEv=nResp>=MIN_RESP_CONF;
+    const sel=pgAreaSel===k;
+    const domPct=temEv?Math.round(dominioAreaBKT(k,perfil)*100):null;
+    const domCorV=domPct!==null?domCor(domPct):'var(--text3)';
+    const vtxt=(vereditos[k]||[]).join(' · ');
+    return '<button type="button" class="pg-veredito-row'+(sel?' sel':'')+'" role="tab" aria-selected="'+sel+'" data-area="'+k+'" onclick="selecionarAreaPg(\''+k+'\')">'
+      +'<span class="pg-veredito-ic" style="color:'+a.color+'">'+a.icon+'</span>'
+      +'<span class="pg-veredito-main">'
+        +'<span class="pg-veredito-nome">'+k+'</span>'
+        +(temEv
+          ?('<span class="pg-veredito-dom" style="color:'+domCorV+'">'+domPct+'% de domínio</span>')
+          :('<span class="pg-veredito-dom pg-veredito-dom-vazio">estimativa inicial ('+nResp+'/'+MIN_RESP_CONF+')</span>'))
+        +(vtxt?('<span class="pg-veredito-txt">'+sanitize(vtxt)+'</span>'):'')
+      +'</span>'
+    +'</button>';
   }).join('');
+  // F2a: stagger de entrada. animateScreenEntrance roda ANTES desta lista existir
+  // (navTo chama a animação antes de renderDashboard), então o stagger global não
+  // pega estas linhas — repete o mesmo padrão localmente, já com o conteúdo pronto.
+  list.querySelectorAll('.pg-veredito-row').forEach((el,i)=>{
+    el.style.opacity='0';el.style.transform='translateY(10px)';el.style.transition='none';
+    setTimeout(()=>{
+      el.style.transition='opacity .3s var(--ease-out), transform .3s var(--ease-out)';
+      el.style.opacity='1';el.style.transform='translateY(0)';
+    },i*55+20);
+  });
+  selecionarAreaPg(pgAreaSel);
+}
+
+function selecionarAreaPg(k){
+  pgAreaSel=k;
+  document.querySelectorAll('#pg-vereditos-list .pg-veredito-row').forEach(btn=>{
+    const sel=btn.dataset.area===k;
+    btn.classList.toggle('sel',sel);
+    btn.setAttribute('aria-selected',sel?'true':'false');
+  });
+  renderAreaDetalhe(k);
+}
+
+// Posição automática da área entre as 5 (D3/Nível 2) — só entre as que têm evidência.
+function posicaoArea(k,perfil){
+  const comEvid=Object.keys(AI).filter(a=>respostasAreaBKT(a,perfil)>=MIN_RESP_CONF);
+  if(!comEvid.includes(k))return null;
+  const ordenado=[...comEvid].sort((a,b)=>dominioAreaBKT(b,perfil)-dominioAreaBKT(a,perfil));
+  return {pos:ordenado.indexOf(k)+1,de:comEvid.length};
+}
+
+// F2a/D4 — "por que isso aconteceu": o gargalo é o menor dos três componentes de
+// calcDominio()[k] (regra do diagnóstico do F2, não escolha estética); a frase nomeia
+// o material concreto que falta.
+function decompoePorque(k){
+  const d=calcDominio()[k];
+  if(!d)return null;
+  const comps=[
+    {label:'Quiz',pct:d.quizPct,txt:d.quizConf?(d.quizPct+'% ('+d.respondidas+' respostas)'):'poucas respostas ainda'},
+    {label:'Cards',pct:d.cardsPct,txt:d.cardsPct+'%'},
+    {label:'Resumos',pct:d.resumosPct,txt:d.resumosPct+'%'}
+  ];
+  let gargalo=comps[0];comps.forEach(c=>{if(c.pct<gargalo.pct)gargalo=c;});
+  let frase;
+  if(gargalo.label==='Resumos')frase='Você leu '+d.resumosRevisados+' dos '+d.resumosTotal+' resumos de '+k+'.';
+  else if(gargalo.label==='Cards')frase='Você revisou '+d.cardsRevisados+' dos '+d.cardsTotal+' flashcards de '+k+'.';
+  else frase='Você respondeu '+d.respondidas+' das '+d.qTotal+' questões de '+k+'.';
+  return {comps,gargalo,frase};
+}
+
+// Nível 2/3 do mestre-detalhe: domínio + projeção na cota + posição entre as 5 +
+// colunas de tópico (reusa topicosAreaHTML, sem recriar) + decomposição "por quê".
+function renderAreaDetalhe(k){
+  const el=document.getElementById('pg-area-detalhe');
+  if(!el)return;
+  const a=AI[k];
+  if(!a){el.innerHTML='';return;}
+  const perfil=perfilTopicos();
+  const nResp=respostasAreaBKT(k,perfil);
+  const temEv=nResp>=MIN_RESP_CONF;
+  const domPct=temEv?Math.round(dominioAreaBKT(k,perfil)*100):null;
+  const domCorV=domPct!==null?domCor(domPct):'var(--text3)';
+  const r=calcProntidao();
+  const cota=a.n;
+  const proj=r?(r.proj[k]||0):0;
+  const projTxt=(!r||nResp<5)?'estimativa inicial':('~'+proj.toFixed(1).replace('.',',')+' de '+cota+' pts');
+  const pos=temEv?posicaoArea(k,perfil):null;
+  const posTxt=pos?(pos.pos+'ª de '+pos.de+' áreas com dados'):'ainda sem posição — poucas respostas';
+  const dec=temEv?decompoePorque(k):null;
+  const serie=serieSemanalArea(k);
+  let evoChip;
+  if(temEv&&!respondeuNaSemanaAtual(k))evoChip='<span class="pg-area-evo-chip neutra">esfriou</span>';
+  else if(serie.length<2)evoChip='<span class="pg-area-evo-chip neutra">'+(serie.length?'1 semana':'—')+'</span>';
+  else{const dv=serie[serie.length-1]-serie[serie.length-2];evoChip=dv===0?'<span class="pg-area-evo-chip neutra">estável</span>':'<span class="pg-area-evo-chip '+(dv>0?'sobe':'desce')+'">'+(dv>0?'▲':'▼')+Math.abs(dv)+'pp</span>';}
+  let porqueHTML='';
+  if(dec){
+    porqueHTML='<div class="pg-porque">'
+      +'<div class="pg-porque-comps">'
+        +dec.comps.map(c=>'<span class="pg-porque-comp'+(c===dec.gargalo?' gargalo':'')+'"><b>'+c.label+'</b> '+sanitize(c.txt)+'</span>').join('')
+      +'</div>'
+      +'<div class="pg-porque-frase">O que está segurando: '+sanitize(dec.frase)+'</div>'
+    +'</div>';
+  }
+  el.innerHTML='<div class="pg-area-detalhe-card">'
+    +'<div class="pg-area-detalhe-head">'
+      +'<span class="pg-area-detalhe-ic" style="color:'+a.color+'">'+a.icon+'</span>'
+      +'<span class="pg-area-detalhe-nome">'+sanitize(a.nome)+'</span>'
+    +'</div>'
+    +'<div class="pg-area-detalhe-stats">'
+      +'<div class="pg-area-detalhe-stat"><span class="pg-area-detalhe-v" style="color:'+domCorV+'">'+(domPct!==null?domPct+'%':'—')+'</span><span class="pg-area-detalhe-l">domínio · '+posTxt+'</span></div>'
+      +'<div class="pg-area-detalhe-stat"><span class="pg-area-detalhe-v">'+projTxt+'</span><span class="pg-area-detalhe-l">projeção na cota do edital</span></div>'
+    +'</div>'
+    +'<div class="pg-area-detalhe-line"><span class="pg-area-tag">Evolução</span>'+sparklineSVG(serie)+evoChip+'</div>'
+    +porqueHTML
+    +'<div class="pg-area-detalhe-topicos">'+topicosAreaHTML(k,perfil)+'</div>'
+  +'</div>';
+  // Estética (D3/1a): troca de área é uma transição lateral ≤200ms, não um salto seco.
+  // O guard global de prefers-reduced-motion (:174) já zera esta duração quando cabível.
+  el.style.transition='none';el.style.opacity='0';el.style.transform='translateX(8px)';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    el.style.transition='opacity .18s var(--ease-out), transform .18s var(--ease-out)';
+    el.style.opacity='1';el.style.transform='translateX(0)';
+  }));
+}
+
+// F2a — "E agora?": fecho em ação, o tópico mais frágil com atalho de prática.
+function renderAgora(){
+  const el=document.getElementById('pg-agora');
+  if(!el)return;
+  const perfil=perfilTopicos().filter(p=>p.nQ>0&&p.n>0);
+  if(!perfil.length){el.innerHTML='';return;}
+  perfil.sort((a,b)=>a.pL-b.pL);
+  const p=perfil[0];
+  const pct=Math.round(p.pL*100);
+  const a=AI[p.area]||{};
+  el.innerHTML='<div class="pg-mod-h">E agora?</div>'
+    +'<div class="pg-agora-body">'
+      +'<div class="pg-agora-txt">Seu ponto mais frágil agora é <b style="color:'+a.color+'">'+sanitize(p.nome)+'</b> ('+sanitize(a.nome||'')+' · '+pct+'% de domínio).</div>'
+      +'<button class="btn-primary" type="button" onclick="praticarTopico(\''+sanitize(p.t)+'\')" style="width:100%;margin-top:10px;">Praticar '+sanitize(p.nome)+' →</button>'
+    +'</div>';
+}
+
+// F2a — curva GERAL de acerto por semana (agregado de todas as áreas), para "Evolução".
+// Mesmo padrão de deltaAcuraciaGeral(), mas devolve a série inteira para o sparkline.
+function serieSemanalGeral(){
+  const h=userStats.semanas;
+  if(!Array.isArray(h))return [];
+  const out=[];
+  h.forEach(sn=>{
+    if(!sn||!sn.areas)return;
+    let c=0,t=0;
+    Object.values(sn.areas).forEach(ar=>{c+=(ar.c||0);t+=(ar.c||0)+(ar.w||0);});
+    if(t>0)out.push(Math.round(c/t*100));
+  });
+  return out;
+}
+function renderEvolucaoGeral(){
+  const el=document.getElementById('pg-evo-geral-spark');
+  if(!el)return;
+  el.innerHTML=sparklineSVG(serieSemanalGeral());
 }
 
 function renderObjetivoSemana(){
@@ -7581,7 +7744,9 @@ function showInfo(tipo){
       +'Quanto mais você já acertou um tópico, mais devagar ele esfria; revisar levanta o número de novo. '
       +'As questões de uma área só entram na conta a partir de '+MIN_RESP_CONF+' respostas, para o número não '
       +'inflar com pouca base. Domínio baixo numa área é o sinal mais direto de onde estudar — abra a área e '
-      +'vá pelos tópicos mais fracos.',
+      +'vá pelos tópicos mais fracos. Ao selecionar uma área, a tela também mostra POR QUÊ: como o resultado se '
+      +'decompõe entre Quiz (peso 50%), Cards (peso 30%) e Resumos (peso 20%) do que você já praticou — é essa '
+      +'decomposição, não o número grande do topo, que usa esses pesos.',
     cobertura:'Quanto do material você já viu: questões, flashcards e resumos que você abriu pelo menos uma vez, '
       +'dividido pelo total que existe na área. Mede caminho percorrido, não acerto — dá para ter 100% de cobertura '
       +'e domínio baixo, e isso só quer dizer que você passou por tudo sem fixar. '
