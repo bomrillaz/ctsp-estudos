@@ -3301,16 +3301,26 @@ function domCor(pct){return domFaixa(pct).cor;}
 // Mais alto que MIN_RESP_CONF (5) porque a prova cobre 5 áreas e muitos tópicos.
 const MIN_RESP_PRONT=20;
 const CTSP_CORTE=53; // nota de corte CTSP 2026 (de 60), informada pelo João; não consta nos materiais do repo — trocar aqui se o edital divergir.
+
+// F2b: média BKT ponderada pelo nº de questões do tópico. Fonte ÚNICA de domínio por área.
+// Consumidores: calcProntidao (× cota do edital) e renderDominio (barra da área + herói).
+function dominioAreaBKT(k,perfil){
+  const tops=(perfil||perfilTopicos()).filter(p=>p.area===k&&p.nQ>0);
+  let soma=0,peso=0;
+  tops.forEach(p=>{soma+=p.pL*p.nQ;peso+=p.nQ;});
+  return peso?soma/peso:BKT_P.L0;
+}
+// Respostas que alimentaram o BKT da área — é o gate de evidência, não o byArea.
+function respostasAreaBKT(k,perfil){
+  return (perfil||perfilTopicos()).filter(p=>p.area===k).reduce((s,p)=>s+(p.n||0),0);
+}
 function calcProntidao(){
   const perfil=perfilTopicos();
   if(!perfil.some(p=>p.n>0))return null; // sem dados BKT ainda
   const nResp=perfil.reduce((s,p)=>s+(p.n||0),0); // total de respostas que alimentaram o BKT
   const proj={};let total=0;
   Object.entries(AI).forEach(([k,a])=>{
-    const tops=perfil.filter(p=>p.area===k&&p.nQ>0);
-    let soma=0,peso=0;
-    tops.forEach(p=>{soma+=p.pL*p.nQ;peso+=p.nQ;}); // média ponderada pelo nº de questões do tópico
-    const m=peso?soma/peso:BKT_P.L0;
+    const m=dominioAreaBKT(k,perfil);
     proj[k]=a.n*m;total+=proj[k];
   });
   return{total,proj,nResp};
@@ -3319,12 +3329,10 @@ function renderProntidao(){
   const el=document.getElementById('dash-pront');
   if(!el)return;
   const r=calcProntidao();
-  const kp=document.getElementById('kpi-projecao');
   const stEl=document.getElementById('pront-status');
-  if(!r){el.classList.add('hidden');if(kp)kp.textContent='—';if(stEl){stEl.textContent='';stEl.className='pg-status';}return;}
+  if(!r){el.classList.add('hidden');if(stEl){stEl.textContent='';stEl.className='pg-status';}return;}
   el.classList.remove('hidden');
   const total=Math.round(r.total);
-  if(kp)kp.textContent='~'+total;
   const p=Math.min(1,Math.max(0,r.total/60));
   const se=Math.sqrt(Math.max(p*(1-p),0.0025)/Math.max(r.nResp,1));
   const lo=Math.max(0,Math.round(60*(p-se)));
@@ -3456,8 +3464,9 @@ function renderLegendaProgresso(){
   if(!el)return;
   const faixas=DOM_ESCALA.map(f=>'<span><i style="background:'+f.cor+'"></i>'+f.rot+' ('+(f.min===0?'abaixo de 60':f.min+(f.min<80?'–79':'+'))+'%)</span>').join('');
   el.innerHTML=
-     // B58: "o quanto você acerta" contradizia o tooltip (domínio NÃO é taxa de acerto).
-     '<span><i style="background:linear-gradient(90deg,var(--red),var(--amber),var(--green))"></i>Domínio — seu nível de hoje no conteúdo; esfria sozinho sem revisão</span>'
+     // B58 §4.6 / F2b: "o quanto você acerta" contradizia o tooltip (domínio NÃO é taxa de acerto);
+     // e a legenda dizia "esfria sozinho" sem dizer QUANTO — agora diz.
+     '<span><i style="background:linear-gradient(90deg,var(--red),var(--amber),var(--green))"></i>Domínio — seu nível de hoje no conteúdo; sem revisão, cai pela metade a cada '+BKT_MV_PISO_D+' a '+BKT_MV_TETO_D+' dias (mais devagar quanto mais você já acertou)</span>'
     +'<span><i style="background:var(--blue)"></i>Cobertura — o quanto do edital você já viu</span>'
     +'<span><i class="pg-legend-line"></i>Evolução — seu acerto por semana</span>'
     +'<span><i style="background:var(--green)"></i>Projeção — acertos esperados na cota da área</span>'
@@ -4091,7 +4100,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.164';
+const APP_VERSAO='v1.165';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -6918,7 +6927,9 @@ function calcDominio(){
     const cobVistos=qVistas+cardsRevisados+resumosRevisados;
     const coberturaPct=cobTotal>0?cobVistos/cobTotal:0;
 
-    // --- ÍNDICE DE DOMÍNIO (composto) — só quando há evidência de quiz (piso). ---
+    // --- ÍNDICE DE DOMÍNIO (composto) — F2b: fonte da UI virou dominioAreaBKT(). Este campo
+    // sobrevive só para a decomposição "por quê" (quiz/cards/resumos) que o F2a vai consumir;
+    // não alimenta mais barra nem herói. Pendência própria: peso 50/30/20 x §6 do CLAUDE.md.
     const dominio=Math.round((quizPct*0.5+cardsPct*0.3+resumosPct*0.2)*100);
 
     result[k]={
@@ -6940,29 +6951,44 @@ function toggleMp(el){
   const open=item.classList.toggle('open');
   el.setAttribute('aria-expanded',open?'true':'false');
 }
+// F2b: nenhuma resposta desta área no retrato da semana ISO atual (userStats.semanas).
+// Não grava nada — só lê o que registrarRetratoSemanal() já grava por conta própria.
+function respondeuNaSemanaAtual(k){
+  const h=userStats.semanas;
+  if(!Array.isArray(h))return false;
+  const s=semanaISO(new Date());
+  return h.some(x=>x.s===s&&x.areas&&x.areas[k]);
+}
 function renderDominio(){
-  const dom=calcDominio();
-  const comConf=Object.values(dom).filter(d=>d.quizConf);
-  const geral=comConf.length>0?Math.round(comConf.reduce((a,b)=>a+b.dominio,0)/comConf.length):null;
+  const dom=calcDominio(); // sobrevive pela cobertura e pelo "por quê" (quiz/cards/resumos) — não pelo campo dominio
+  const perfil=perfilTopicos(); // B4: domínio por tópico, aberto por área sob demanda
+  // F2b: herói = média SIMPLES do domínio BKT das áreas com evidência. Fonte única com a barra
+  // da área e com a projeção (que pondera pela cota do edital — números diferentes de propósito).
+  const comEvidencia=Object.keys(AI).filter(k=>respostasAreaBKT(k,perfil)>=MIN_RESP_CONF);
+  const geral=comEvidencia.length>0
+    ?Math.round(comEvidencia.reduce((s,k)=>s+dominioAreaBKT(k,perfil),0)/comEvidencia.length*100)
+    :null;
   let _cobV=0,_cobT=0;Object.values(dom).forEach(d=>{_cobV+=(d.cobVistos||0);_cobT+=(d.cobTotal||0);});
   const cobGeral=_cobT>0?Math.round(_cobV/_cobT*100):null;
-  {const el=document.getElementById('kpi-dominio');if(el)el.textContent=geral===null?'—':geral+'%';}
   {const el=document.getElementById('kpi-cobertura');if(el)el.textContent=cobGeral===null?'—':cobGeral+'%';}
   {const el=document.getElementById('dominio-geral-num');if(el){if(geral===null){el.textContent='ainda medindo';el.removeAttribute('data-cv');}else{animateCount(el,geral,'% de domínio');}}}
   const el=document.getElementById('por-area-lista');
   if(!el)return;
-  const perfil=perfilTopicos(); // B4: domínio por tópico, aberto por área sob demanda
   el.innerHTML=Object.entries(AI).map(([k,a])=>{
-    const d=dom[k]||{dominio:0,quizConf:false,respondidas:0,cobertura:0,cobVistos:0,cobTotal:0};
+    const d=dom[k]||{cobertura:0,cobVistos:0,cobTotal:0};
+    const nResp=respostasAreaBKT(k,perfil);
+    const temEvidencia=nResp>=MIN_RESP_CONF;
+    const domPct=Math.round(dominioAreaBKT(k,perfil)*100);
     const nome=k+' — '+((a.nome.split('—')[1]||'').trim()||a.nome);
-    const domCorV=domCor(d.dominio); // B56: escala unificada
-    const domLinha=d.quizConf
-      ? '<span class="pg-area-tag">Domínio</span><div class="pg-area-bar-wrap"><div class="pg-area-bar" style="width:'+d.dominio+'%;background:'+domCorV+'"></div></div><span class="pg-area-val" style="color:'+domCorV+'">'+d.dominio+'%</span>'
-      : '<span class="pg-area-tag">Domínio</span><div class="pg-area-bar-wrap"><div class="pg-area-bar" style="width:0%;background:var(--line)"></div></div><span class="pg-area-val" style="color:var(--text3);font-size:10px">medindo ('+d.respondidas+'/'+MIN_RESP_CONF+')</span>';
+    const domCorV=domCor(domPct); // B56: escala unificada
+    const domLinha=temEvidencia
+      ? '<span class="pg-area-tag">Domínio</span><div class="pg-area-bar-wrap"><div class="pg-area-bar" style="width:'+domPct+'%;background:'+domCorV+'"></div></div><span class="pg-area-val" style="color:'+domCorV+'">'+domPct+'%</span>'
+      : '<span class="pg-area-tag">Domínio</span><div class="pg-area-bar-wrap"><div class="pg-area-bar" style="width:0%;background:var(--line)"></div></div><span class="pg-area-val" style="color:var(--text3);font-size:10px">medindo ('+nResp+'/'+MIN_RESP_CONF+')</span>';
     const cobTxt=(d.cobTotal||0)>0?(d.cobertura+'% · '+d.cobVistos+'/'+d.cobTotal):'—';
     const serie=serieSemanalArea(k);
     let chip;
-    if(serie.length<2)chip='<span class="pg-area-evo-chip neutra">'+(serie.length?'1 semana':'—')+'</span>';
+    if(temEvidencia&&!respondeuNaSemanaAtual(k))chip='<span class="pg-area-evo-chip neutra">esfriou</span>';
+    else if(serie.length<2)chip='<span class="pg-area-evo-chip neutra">'+(serie.length?'1 semana':'—')+'</span>';
     else{const dv=serie[serie.length-1]-serie[serie.length-2];chip=dv===0?'<span class="pg-area-evo-chip neutra">estável</span>':'<span class="pg-area-evo-chip '+(dv>0?'sobe':'desce')+'">'+(dv>0?'▲':'▼')+Math.abs(dv)+'pp</span>';}
     return '<div class="pg-area-row" data-area="'+k+'">'
       +'<div class="pg-area-ic" style="color:'+a.color+'">'+a.icon+'</div>'
@@ -7059,14 +7085,18 @@ function mostrarSplash(){
   diasEl.classList.remove('animate');
   setTimeout(()=>{diasEl.classList.add('animate');diasEl.textContent=dias;},100);
 
-  // Domínio por área
+  // Domínio por área — F2b: mesma fonte do #screen-progresso (dominioAreaBKT), não o
+  // composto de calcDominio(). Este splash mostrava um "domínio" diferente do da tela de
+  // progresso; achado fora do mapa do plano, corrigido junto por ser a mesma classe de bug.
   const dom=calcDominio();
+  const perfil=perfilTopicos();
   const cores={AT1:'var(--at1)',AT2:'var(--at2)',AT3:'var(--at3)',AT4:'var(--at4)',AT5:'var(--at5)'};
   const areasEl=document.getElementById('splash-areas');
   if(areasEl){
     areasEl.innerHTML=Object.entries(AI).map(([k,a])=>{
-      const d=dom[k]||{dominio:0,quizConf:false,respondidas:0};
-      const txt=d.quizConf?d.dominio+'%':'—';
+      const temEv=respostasAreaBKT(k,perfil)>=MIN_RESP_CONF;
+      const domPct=Math.round(dominioAreaBKT(k,perfil)*100);
+      const txt=temEv?domPct+'%':'—';
       return `<div class="splash-area-row">
         <div class="splash-area-label">${k}</div>
         <div class="splash-area-bar-wrap"><div class="splash-area-bar" style="width:0%;background:${cores[k]}" id="splash-bar-${k}"></div></div>
@@ -7076,9 +7106,10 @@ function mostrarSplash(){
     // Animar barras (só as com confiança preenchem)
     setTimeout(()=>{
       Object.entries(AI).forEach(([k])=>{
-        const d=dom[k]||{dominio:0,quizConf:false};
+        const temEv=respostasAreaBKT(k,perfil)>=MIN_RESP_CONF;
+        const domPct=Math.round(dominioAreaBKT(k,perfil)*100);
         const bar=document.getElementById('splash-bar-'+k);
-        if(bar)bar.style.width=(d.quizConf?d.dominio:0)+'%';
+        if(bar)bar.style.width=(temEv?domPct:0)+'%';
       });
     },200);
   }
@@ -7086,9 +7117,9 @@ function mostrarSplash(){
   // Objetivo da semana: prioriza áreas COM evidência de quiz (menor domínio real).
   // Sem nenhuma área com confiança, sugere a de menor cobertura (o que falta percorrer).
   let piorArea=null,piorVal=101;
-  const comConf=Object.entries(dom).filter(([k,d])=>d.quizConf);
+  const comConf=Object.keys(AI).filter(k=>respostasAreaBKT(k,perfil)>=MIN_RESP_CONF);
   if(comConf.length>0){
-    comConf.forEach(([k,d])=>{if(d.dominio<piorVal){piorVal=d.dominio;piorArea=k;}});
+    comConf.forEach(k=>{const v=Math.round(dominioAreaBKT(k,perfil)*100);if(v<piorVal){piorVal=v;piorArea=k;}});
     if(piorArea){
       const a=AI[piorArea];
       document.getElementById('splash-sug-area').textContent=a.nome;
@@ -7542,11 +7573,15 @@ function showInfo(tipo){
   const textos={
     desempenho:HISTORICO,
     evolucao:HISTORICO,
-    dominio:'O quanto você domina o conteúdo HOJE, de 0 a 100. É a nota que junta as três formas de estudar: '
-      +'as questões pesam 50%, os flashcards 30% e os resumos 20% — responder questão vale mais porque é o que a prova cobra. '
-      +'Não é sua taxa de acerto: acertar 90% de dez questões fáceis não faz o domínio ir a 90. '
-      +'As questões de uma área só entram na conta a partir de '+MIN_RESP_CONF+' respostas, para o número não inflar com pouca base. '
-      +'Domínio baixo numa área é o sinal mais direto de onde estudar — abra a área e vá pelos tópicos mais fracos.',
+    dominio:'O quanto você domina o conteúdo HOJE, de 0 a 100 — a média dos tópicos da área, ponderada '
+      +'pelo número de questões de cada um. Não é sua taxa de acerto acumulada: acertar 90% de dez questões '
+      +'fáceis não faz o domínio ir a 90; o cálculo desconta acerto por sorte e erro por descuido, igual ao '
+      +'domínio por tópico. ATENÇÃO: este número CAI sozinho com o tempo, sem você errar nada — conhecimento '
+      +'sem revisão esfria, e o app prefere avisar antes da prova a deixar confiante com um dado velho. '
+      +'Quanto mais você já acertou um tópico, mais devagar ele esfria; revisar levanta o número de novo. '
+      +'As questões de uma área só entram na conta a partir de '+MIN_RESP_CONF+' respostas, para o número não '
+      +'inflar com pouca base. Domínio baixo numa área é o sinal mais direto de onde estudar — abra a área e '
+      +'vá pelos tópicos mais fracos.',
     cobertura:'Quanto do material você já viu: questões, flashcards e resumos que você abriu pelo menos uma vez, '
       +'dividido pelo total que existe na área. Mede caminho percorrido, não acerto — dá para ter 100% de cobertura '
       +'e domínio baixo, e isso só quer dizer que você passou por tudo sem fixar. '
