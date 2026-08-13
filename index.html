@@ -399,7 +399,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .header-sub{color:rgba(255,255,255,.55);font-family:var(--font-display);font-size:11px;letter-spacing:.18em;text-transform:uppercase;}
 .header-right{display:flex;align-items:center;gap:6px;}
 .streak-badge{background:rgba(240,136,60,.16);border:1px solid rgba(240,136,60,.35);color:var(--ember);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums;}
-.streak-badge svg{width:12px;height:12px;}
+.streak-badge svg{width:12px;height:12px;flex-shrink:0;}
+.streak-days{display:flex;gap:3px;}
+.streak-days i{width:7px;height:7px;border-radius:2px;background:rgba(255,255,255,.22);display:block;}
+.streak-days i.on{background:var(--ember);}
 .btn-logout{background:rgba(255,255,255,.12);color:white;border-radius:9px;padding:6px 8px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;}
 .btn-logout svg{width:16px;height:16px;}
 
@@ -479,6 +482,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .metas-head-title{font-size:13px;font-weight:700;color:#fff;}
 .metas-head-sub{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);}
 .metas-card.todas .metas-head-sub{color:#46C07A;}
+.dia-fechado{display:flex;align-items:center;gap:10px;background:rgba(70,192,122,.14);border:1px solid rgba(70,192,122,.35);border-radius:14px;padding:10px 12px;margin-top:10px;}
+.dia-fechado-ic{width:22px;height:22px;border-radius:50%;background:#46C07A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+.dia-fechado-title{font-size:12.5px;font-weight:800;color:#fff;}
+.dia-fechado-sub{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.75);}
 .metas-chev{color:rgba(255,255,255,.5);display:flex;flex-shrink:0;transition:transform .25s ease;}
 .metas-chev svg{width:18px;height:18px;}
 .metas-card.expanded .metas-chev{transform:rotate(180deg);}
@@ -1109,7 +1116,8 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .ring-container{position:relative;display:inline-flex;align-items:center;justify-content:center;isolation:isolate;}
 
 /* Toast */
-.toast{position:fixed;bottom:calc(var(--nav-h)+20px);left:50%;transform:translateX(-50%) translateY(24px) scale(.95);background:rgba(13,21,48,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:white;border-radius:14px;padding:11px 22px;font-size:13px;font-weight:600;opacity:0;transition:all .3s var(--ease-out);z-index:9998;white-space:nowrap;border:1px solid rgba(255,255,255,.1);}
+.toast{position:fixed;bottom:calc(var(--nav-h)+20px);left:50%;transform:translateX(-50%) translateY(24px) scale(.95);background:rgba(13,21,48,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:white;border-radius:14px;padding:11px 22px;font-size:13px;font-weight:600;opacity:0;transition:all .3s var(--ease-out);z-index:9998;white-space:nowrap;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:12px;}
+.toast-action{background:none;border:none;color:var(--ember);font-weight:800;font-size:12.5px;cursor:pointer;white-space:nowrap;padding:0;flex-shrink:0;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1);}
 
 /* Util */
@@ -1827,7 +1835,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <div class="header-sub">Preparatório · CBMRS</div>
     </div>
     <div class="header-right">
-      <div class="streak-badge" id="hdr-streak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1.5 3.5 5 5.2 5 9a5 5 0 0 1-10 0c0-2 .9-3.4 1.8-4.7.4 1.2 1.2 2 2.2 2.5C10.6 6.7 11 4.4 12 2z"/></svg><span id="hdr-streak-n">0</span></div>
+      <div class="streak-badge" id="hdr-streak" title="Sequência de estudo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1.5 3.5 5 5.2 5 9a5 5 0 0 1-10 0c0-2 .9-3.4 1.8-4.7.4 1.2 1.2 2 2.2 2.5C10.6 6.7 11 4.4 12 2z"/></svg><div class="streak-days" id="hdr-streak-days"></div></div>
       <button class="btn-logout" id="btn-tema" onclick="toggleTemaRapido()" title="Tema" aria-label="Alternar tema claro/escuro"></button>
       <button class="btn-logout" onclick="abrirBuscaGlobal()" title="Buscar" aria-label="Buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></button>
       <div class="header-menu-wrap" id="header-menu-wrap">
@@ -1900,6 +1908,15 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
               <span class="metas-pct" id="ring-rs-pct">0%</span>
               <button class="metas-hide" type="button" aria-label="Esconder a meta de resumos" onclick="esconderMeta(event,'rs')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
             </div>
+          </div>
+        </div>
+        <!-- F2c: cartão de fechamento do dia — substitui o toast de 2,5s (não persistia).
+             Mostrado quando userStats.diaCelebrado===diaLocal(); some sozinho na virada do dia. -->
+        <div class="dia-fechado hidden" id="dia-fechado-card">
+          <span class="dia-fechado-ic">✓</span>
+          <div class="dia-fechado-txt">
+            <div class="dia-fechado-title">Dia fechado</div>
+            <div class="dia-fechado-sub" id="dia-fechado-sub"></div>
           </div>
         </div>
         <!-- números acumulados movidos para "Meu progresso → Números gerais" (menos redundância no topo) -->
@@ -2950,6 +2967,7 @@ function bktUpdate(topico,acertou){
   if(!userStats.bkt)userStats.bkt={};
   const cur=userStats.bkt[topico]||{pL:BKT_P.L0,n:0};
   const pL=bktPLefetivo(cur); // parte do domínio JÁ envelhecido, depois atualiza
+  _snapSessaoTopico(topico,pL);
   const post=acertou
     ? (pL*(1-BKT_P.S))/(pL*(1-BKT_P.S)+(1-pL)*BKT_P.G)
     : (pL*BKT_P.S)/(pL*BKT_P.S+(1-pL)*(1-BKT_P.G));
@@ -2971,8 +2989,31 @@ function bktTocarRecuperacao(topico,forca){
   if(!b||typeof b.last!=='number')return;
   const now=Date.now();
   if(b.last>=now)return;
+  _snapSessaoTopico(topico,bktPLefetivo(b));
   const f=Math.min(1,Math.max(0,forca||0));
   b.last=Math.round(b.last+(now-b.last)*f); // pL e nc preservados de propósito
+}
+
+// F2c: delta de domínio "ao vivo" — snapshot em memória do pL efetivo por tópico no
+// 1º toque do BKT desde a última volta ao início; comparado na volta seguinte.
+// Nada gravado, nada persistido — só leitura pra dar feedback do que mudou na sessão.
+let _sessaoBktSnap=null;
+function _snapSessaoTopico(topico,pLantes){
+  if(!_sessaoBktSnap)_sessaoBktSnap={};
+  if(!(topico in _sessaoBktSnap))_sessaoBktSnap[topico]=pLantes;
+}
+function _fecharSessaoBkt(){
+  if(!_sessaoBktSnap)return;
+  const antes=_sessaoBktSnap;
+  _sessaoBktSnap=null;
+  let melhorTopico=null,melhorDelta=0;
+  Object.keys(antes).forEach(top=>{
+    const delta=Math.round((bktDe(top)-antes[top])*100);
+    if(delta>melhorDelta){melhorDelta=delta;melhorTopico=top;}
+  });
+  if(melhorTopico&&melhorDelta>=1){
+    showToast('+'+melhorDelta+'pp em '+(TOPICOS[melhorTopico]&&TOPICOS[melhorTopico].n||melhorTopico),'Ver o que mudou →',()=>navTo('progresso'));
+  }
 }
 
 // ── F2.3 FSRS-lite (questões): estabilidade S e dificuldade D ──
@@ -4046,7 +4087,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.166';
+const APP_VERSAO='v1.167';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4064,11 +4105,29 @@ function diaLocal(d){
   return x.getFullYear()+'-'+p(x.getMonth()+1)+'-'+p(x.getDate());
 }
 
+// F2c: sequência visível — 7 quadradinhos dos últimos 7 dias no lugar do número solto
+// no cabeçalho. "Estudou" = mesmo critério que credita a sequência (dia com entrada
+// em history com atividade real). Mesmo loop de datas do gráfico de 7 dias da tela de
+// progresso (não reaproveitado por estar em módulo diferente da UI, mas mesmo cálculo).
+function _renderStreakDias(){
+  const box=document.getElementById('hdr-streak-days');
+  if(!box)return;
+  const hist=userStats.history||[];
+  const hoje=new Date();
+  let html='';
+  for(let i=6;i>=0;i--){
+    const d=new Date(hoje-i*86400000);
+    const h=hist.find(x=>x.date===diaLocal(d))||{};
+    const estudou=((h.n||0)+(h.fc||0)+(h.rs||0))>0;
+    html+='<i class="'+(estudou?'on':'')+'"></i>';
+  }
+  box.innerHTML=html;
+  box.parentElement.setAttribute('aria-label','Sequência de '+(userStats.streak||0)+' dia'+((userStats.streak||0)===1?'':'s')+' seguidos');
+}
 // S66: a sequência conta DIAS DE ESTUDO, não logins. No load, só exibe e detecta quebra.
 // O incremento vive em registrarEstudoDia(), chamado pelas atividades reais.
 function updateStreak(){
-  const _el=document.getElementById('hdr-streak-n');
-  if(!dataLoaded&&!progressoLocalOk){if(_el)_el.textContent=(userStats.streak||0);return;}
+  if(!dataLoaded&&!progressoLocalOk){_renderStreakDias();return;}
   const today=diaLocal();
   const last=userStats.lastStudyDate||'';
   // Passou mais de 1 dia sem estudar → a sequência quebrou.
@@ -4076,7 +4135,7 @@ function updateStreak(){
     userStats.streak=0;
     saveProg();
   }
-  if(_el)_el.textContent=(userStats.streak||0);
+  _renderStreakDias();
 }
 // S66: marca estudo real do dia (1ª questão respondida / card ou resumo avaliado no dia).
 // SÓ aqui a sequência avança — abrir o app não conta.
@@ -4088,7 +4147,7 @@ function registrarEstudoDia(){
   userStats.streak=(last&&diffDias(last,today)===1)?(userStats.streak||0)+1:1;
   userStats.lastStudyDate=today;
   saveProg();
-  const el=document.getElementById('hdr-streak-n');if(el)el.textContent=(userStats.streak||0);
+  _renderStreakDias();
 }
 
 // S62 (bloco33): entrada do dia, compartilhada pelos três contadores.
@@ -4120,7 +4179,21 @@ function checarDiaCompleto(){
   if(!diaCompleto())return;
   userStats.diaCelebrado=diaLocal();
   saveProg();
-  showToast('🎉 Dia concluído! As três metas de hoje foram batidas — questões, flashcards e resumos.');
+  _aplicarDiaFechado();
+}
+// F2c: cartão persistente (substitui o toast de 2,5s, que não deixava rastro). Chamado
+// de novo a cada render do painel pra sobreviver a reload — a fonte é diaCelebrado,
+// já gravado e já aprovado pelo .validate; nada novo persiste.
+function _aplicarDiaFechado(){
+  const card=document.getElementById('dia-fechado-card');
+  if(!card)return;
+  const fechado=userStats.diaCelebrado===diaLocal();
+  card.classList.toggle('hidden',!fechado);
+  if(!fechado)return;
+  const hj=(userStats.history||[]).find(h=>h.date===diaLocal())||{};
+  const dias=userStats.streak||0;
+  const sub=document.getElementById('dia-fechado-sub');
+  if(sub)sub.textContent=(hj.n||0)+' questões · '+(hj.fc||0)+' cards · '+(hj.rs||0)+' resumos · sequência de '+dias+(dias===1?' dia':' dias');
 }
 function registrarAtividade(acertou){
   registrarEstudoDia();
@@ -4128,8 +4201,7 @@ function registrarAtividade(acertou){
   todayEntry.n=(todayEntry.n||0)+1;
   if(acertou===true)todayEntry.c=(todayEntry.c||0)+1;
   else if(acertou===false)todayEntry.w=(todayEntry.w||0)+1;
-  const el=document.getElementById('hdr-streak-n');
-  if(el)el.textContent=(userStats.streak||0);
+  _renderStreakDias();
   checarDiaCompleto();
 }
 function registrarAtividadeCard(){registrarEstudoDia();const e=entradaHoje();e.fc=(e.fc||0)+1;checarDiaCompleto();}
@@ -4159,7 +4231,7 @@ function _navToInner(s,skipStagger){
   // Voltar ao painel encerra o ciclo de foco — senão a barra flutuante ficaria
   // pendurada para sempre, já que só `sairDoFoco()` a limparia.
   if(s==='inicio')focoAtivo=null;
-  if(s==='inicio'){renderDashboard();atualizarCardTreino();}
+  if(s==='inicio'){_fecharSessaoBkt();renderDashboard();atualizarCardTreino();}
   if(s==='quiz'){renderAreaList();renderQuizHeader();renderQuizHub();}
   if(s==='cards'){cardsModo='hub';renderCards();}
   if(s==='resumos'){resumosModo='hub';renderResumos();updateBadges();}
@@ -4337,6 +4409,7 @@ function renderDashboard(){
   registrarRetratoSemanal();
   renderAvisoCobranca();
   renderHoje();
+  _aplicarDiaFechado();
   const total=(userStats.correct||0)+(userStats.wrong||0);
   const pct=total>0?Math.round((userStats.correct||0)/total*100):0;
   const meta=userStats.metaDiaria||10;
@@ -7400,7 +7473,7 @@ async function resetarStreak(){
   userStats.streak=0;
   userStats.lastAccessDate='';
   await saveProg();
-  document.getElementById('hdr-streak-n').textContent='0';
+  _renderStreakDias();
   document.getElementById('config-streak-info').textContent='0 dias seguidos';
   showToast('Contagem zerada.');
 }
@@ -7434,7 +7507,7 @@ async function reiniciarEstudos(){
     if(typeof updateBadges==='function')updateBadges();
     if(typeof renderCards==='function')renderCards();
     if(typeof renderResumos==='function')renderResumos();
-    const hsn=document.getElementById('hdr-streak-n');if(hsn)hsn.textContent='0';
+    _renderStreakDias();
     const csi=document.getElementById('config-streak-info');if(csi)csi.textContent='0 dias seguidos';
     fecharModalConfig();
     if(typeof setScreen==='function')setScreen('inicio');
@@ -7935,9 +8008,19 @@ function animateCount(el,target,suf,pre){
   el.setAttribute('data-cv',target);requestAnimationFrame(step);
 }
 
-function showToast(msg){
+function showToast(msg,acaoLabel,acaoFn){
   const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
+  t.innerHTML='';
+  const span=document.createElement('span');
+  span.textContent=msg;
+  t.appendChild(span);
+  if(acaoLabel&&acaoFn){
+    const btn=document.createElement('button');
+    btn.type='button';btn.className='toast-action';btn.textContent=acaoLabel;
+    btn.onclick=function(){t.classList.remove('show');acaoFn();};
+    t.appendChild(btn);
+  }
+  t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2500);
 }
 
