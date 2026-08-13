@@ -20,11 +20,12 @@ Dois arquivos no núcleo, mais a camada PWA:
 
 `data.js` é carregado por `<script src="data.js?v=NNN">` **antes** do script principal.
 
-- **Rebrand em andamento (b67): pasta local virou `bomrillaz-estudos`.** Site, repo no GitHub, projeto
-  Firebase e RTDB **continuam com o nome `ctsp-estudos`** — só a pasta local mudou até aqui. Não mexer
-  nesses quatro sem pedido explícito (mudar a URL do repo/site quebra o PWA já instalado por quem usa).
-- Site: https://jhoonnvictor.github.io/ctsp-estudos
-- Repo: github.com/jhoonnvictor/ctsp-estudos
+- **Rebrand técnico (b69): repo transferido pra conta `bomrillaz`, path continua `ctsp-estudos`.** Pasta
+  local, repo no GitHub e URL do site já usam a marca nova. Firebase e RTDB **continuam de propósito com o
+  nome `ctsp-estudos`** — são identificadores internos invisíveis ao usuário; trocar exigiria migrar contas
+  de Auth e o banco de progresso, sem ganho visível. Não mexer nesses dois sem pedido explícito.
+- Site: https://bomrillaz.github.io/ctsp-estudos
+- Repo: github.com/bomrillaz/ctsp-estudos
 - Firebase: projeto `ctsp-estudos` · conta dona `jvictor.projetos.ti@gmail.com` (**não sugerir migração**)
 - RTDB: https://ctsp-estudos-default-rtdb.firebaseio.com · UID admin `DyNxtutn1aaemZk8cbMtGOnM0iG3`
 - Stack: HTML/CSS/JS puro + Firebase Auth + Realtime Database + GitHub Pages + Service Worker
