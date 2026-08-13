@@ -52,8 +52,8 @@
   --white:#FFFFFF;--bg:#EFE9DD;
   --text:#1C2233;--text2:#5A6072;--text3:#64697A;
   --border:#E6DFD2;--line-soft:#EDE7DB;
-  --green:#1F8A4C;--green-light:#E9F4EC;
-  --amber:#C77B1D;--amber-light:#FAF1E3;
+  --green:#16713C;--green-light:#E9F4EC;
+  --amber:#8A5410;--amber-light:#FAF1E3;
   --blue:#1F5C8B;--blue-light:#E9F1F7;
   --at1:#E03A1B;--at2:#E8820E;--at3:#1E7BC2;--at4:#C2375E;--at5:#5C9233;
   --shadow:0 1px 2px rgba(16,27,61,.05),0 4px 14px rgba(16,27,61,.06);
@@ -132,14 +132,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 /* S47: gate de onboarding */
 #onboard-gate{position:fixed;inset:0;z-index:9995;display:none;align-items:center;justify-content:center;padding:24px;background:linear-gradient(170deg,var(--navy-2) 0%,var(--navy-deep) 70%);}
 #onboard-gate.active{display:flex;}
-.onboard-box{max-width:420px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 22px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3);}
+.onboard-box{position:relative;max-width:420px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 22px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3);}
+.onboard-fechar{position:absolute;top:12px;right:12px;width:32px;height:32px;border:none;background:var(--paper-2);border-radius:50%;font-size:16px;line-height:1;color:var(--text2);cursor:pointer;}
+.onboard-fechar::before{content:'';position:absolute;inset:-6px;}
 .onboard-logo{width:52px;height:52px;margin:0 auto 14px;color:var(--ember);}
 .onboard-logo svg{width:100%;height:100%;}
 .onboard-title{font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px;}
 .onboard-sub{font-size:14px;line-height:1.5;color:var(--text2);margin-bottom:20px;}
 .onboard-btn{width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;}
 .onboard-btn:active{transform:scale(.98);}
-.onboard-foot{font-size:11px;color:var(--text3);margin-top:12px;}
+.onboard-foot{font-size:12px;color:var(--text3);margin-top:12px;}
 #splash-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(560px 320px at 82% 18%,rgba(240,136,60,.05),transparent 70%);pointer-events:none;}
 #splash-screen.active{display:flex;}
 #splash-screen.fade-out{opacity:0;transition:opacity .4s ease;}
@@ -213,6 +215,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .auth-tab{flex:1;padding:9px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--text2);transition:all .2s;}
 .auth-tab.active{background:var(--navy);color:white;box-shadow:0 2px 8px rgba(16,27,61,.25);}
 .field{margin-bottom:14px;}
+.field-pass-wrap{position:relative;}
+.field-pass-wrap input{padding-right:44px;}
+.field-pass-toggle{position:absolute;top:0;right:0;bottom:0;width:40px;border:none;background:transparent;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.field-pass-toggle svg{width:19px;height:19px;}
+.auth-forgot{display:block;margin-top:8px;background:none;border:none;padding:0;font-size:12.5px;font-weight:600;color:var(--blue);cursor:pointer;text-align:right;width:100%;}
 .field label{display:block;font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.12em;}
 .field input,.field select,.field textarea{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:11px;font-size:16px;color:var(--text);background:var(--surface);transition:border-color .2s,box-shadow .2s;}
 .field input:focus,.field select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(16,27,61,.08);background:var(--surface);}
@@ -362,7 +369,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .doc-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--fire-line);}
 .doc-head{display:flex;align-items:center;gap:10px;padding:20px 20px 12px;border-bottom:1px solid var(--line-soft);}
 .doc-tit{flex:1;min-width:0;font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);}
-.doc-fechar{flex-shrink:0;width:32px;height:32px;border:none;background:var(--paper-2);border-radius:50%;font-size:17px;line-height:1;color:var(--text2);cursor:pointer;}
+.doc-fechar{flex-shrink:0;width:32px;height:32px;border:none;background:var(--paper-2);border-radius:50%;font-size:17px;line-height:1;color:var(--text2);cursor:pointer;position:relative;}
+.doc-fechar::before{content:'';position:absolute;inset:-6px;}
 .doc-corpo{overflow-y:auto;padding:16px 20px 28px;font-size:13px;color:var(--text2);line-height:1.65;overflow-wrap:anywhere;}
 .doc-corpo h3{font-size:13.5px;font-weight:800;color:var(--text);margin:18px 0 6px;}
 .doc-corpo h3:first-child{margin-top:0;}
@@ -395,7 +403,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 /* BOTTOM NAV — pílula flutuante */
 .bottom-nav{position:fixed;bottom:calc(10px + env(safe-area-inset-bottom));left:12px;right:12px;height:64px;background:rgba(13,21,48,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08);border-radius:22px;display:flex;z-index:100;box-shadow:0 12px 36px rgba(11,20,48,.35);padding:0 4px;}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:rgba(255,255,255,.42);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;transition:color .25s;padding:8px 2px;position:relative;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:rgba(255,255,255,.55);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;transition:color .25s;padding:8px 2px;position:relative;}
 .nav-item.active{color:var(--ember);}
 .nav-item.active svg{animation:navPop .3s var(--ease-spring) both;}
 .nav-item svg{width:22px;height:22px;transition:transform .2s;}
@@ -489,7 +497,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .metas-fill.done{background:#46C07A;}
 .metas-pct{font-size:12.5px;font-weight:800;color:#fff;min-width:30px;text-align:right;font-variant-numeric:tabular-nums;}
 .metas-row.batido .metas-pct{color:#46C07A;}
-.metas-hide{display:none;flex-shrink:0;width:20px;height:20px;align-items:center;justify-content:center;background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;border-radius:6px;padding:0;}
+.metas-hide{display:none;flex-shrink:0;width:20px;height:20px;align-items:center;justify-content:center;background:none;border:none;color:rgba(255,255,255,.58);cursor:pointer;border-radius:6px;padding:0;position:relative;}
+.metas-hide::before{content:'';position:absolute;inset:-12px;}
 .metas-hide svg{width:13px;height:13px;}
 .metas-hide:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.08);}
 .metas-card:not(.expanded) .metas-row.vis .metas-hide{display:flex;}
@@ -783,6 +792,8 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .diag-card{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,var(--red-dark),var(--red));color:#fff;border-radius:18px;padding:16px 18px;margin-bottom:14px;cursor:pointer;box-shadow:0 10px 28px rgba(165,29,14,.32);transition:transform .2s var(--ease-out);}
 .diag-card.hidden{display:none;}
 .diag-card:active{transform:scale(.98);}
+.diag-card-fechar{position:absolute;top:8px;right:8px;width:26px;height:26px;border:none;background:rgba(255,255,255,.18);border-radius:50%;color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.diag-card-fechar::before{content:'';position:absolute;inset:-9px;}
 .diag-card-icon{font-size:30px;flex-shrink:0;width:48px;height:48px;border-radius:13px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;}
 .diag-card-icon svg{width:24px;height:24px;}
 .diag-card-info{flex:1;}
@@ -839,6 +850,9 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .modal-overlay.hidden{display:none;}
 .modal-box{background:var(--surface);border-radius:24px 24px 0 0;padding:28px 22px 40px;width:100%;max-width:480px;position:relative;max-height:90vh;overflow-y:auto;overflow-x:hidden;}
 .modal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--fire-line);}
+.modal-fechar-bar{position:sticky;top:0;height:0;z-index:5;}
+.modal-fechar{position:absolute;top:2px;right:0;width:30px;height:30px;border:none;background:var(--paper-2);border-radius:50%;font-size:15px;line-height:1;color:var(--text2);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.modal-fechar::before{content:'';position:absolute;inset:-6px;}
 .modal-title{font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:.02em;}
 .modal-sub{font-size:13px;color:var(--text2);margin-bottom:20px;}
 .meta-options{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;}
@@ -1116,7 +1130,8 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 
 /* Header dropdown menu */
 .header-menu-wrap{position:relative;display:flex;align-items:center;gap:6px;}
-.btn-header-menu{background:rgba(255,255,255,.12);border:none;border-radius:9px;padding:6px 8px;display:flex;flex-direction:column;gap:4px;cursor:pointer;width:32px;height:32px;align-items:center;justify-content:center;}
+.btn-header-menu{background:rgba(255,255,255,.12);border:none;border-radius:9px;padding:6px 8px;display:flex;flex-direction:column;gap:4px;cursor:pointer;width:32px;height:32px;align-items:center;justify-content:center;position:relative;}
+.btn-header-menu::before{content:'';position:absolute;inset:-6px;}
 .btn-header-menu span{display:block;width:14px;height:2px;background:white;border-radius:2px;transition:all .2s;}
 .header-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;box-shadow:var(--shadow-lg);overflow:hidden;min-width:150px;z-index:200;animation:scaleIn .18s var(--ease-out);}
 .header-dropdown button{display:block;width:100%;padding:13px 16px;text-align:left;font-size:14px;font-weight:600;color:var(--text);background:none;border:none;cursor:pointer;border-bottom:1px solid var(--line-soft);}
@@ -1188,6 +1203,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 
 /* Botão reload discreto */
 .btn-reload{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);border-radius:8px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;border:none;cursor:pointer;transition:opacity .2s;}
+.btn-reload::before{content:'';position:absolute;inset:-8px;}
 .btn-reload:active{opacity:.6;}
 
 /* Botão voltar quiz */
@@ -1396,11 +1412,12 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 <!-- S47: gate de onboarding obrigatório (1º acesso) -->
 <div id="onboard-gate">
   <div class="onboard-box">
+    <button class="onboard-fechar" type="button" aria-label="Fechar" onclick="adiarOnboard()">✕</button>
     <div class="onboard-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.2 7.8 14.3 14.3 7.8 16.2 9.7 9.7 16.2 7.8"/></svg></div>
     <div class="onboard-title">Bem-vindo, Bombeiro!</div>
     <div class="onboard-sub">Antes de começar, faça o <b>simulado de nivelamento</b>: 15 questões pelas 5 áreas do edital. Ele mede seu domínio inicial e faz a plataforma adaptar os estudos ao seu nível.</div>
     <button class="onboard-btn" onclick="iniciarOnboardDiagnostico()">Começar nivelamento →</button>
-    <div class="onboard-foot">Leva poucos minutos · aparece só uma vez</div>
+    <div class="onboard-foot">Leva poucos minutos</div>
   </div>
 </div>
 <div id="splash-screen">
@@ -1730,18 +1747,29 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       </div>
       <!-- LOGIN -->
       <div id="tab-login">
-        <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email"></div>
-        <div class="field"><label>Senha</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"></div>
+        <div class="field"><label for="login-email">Email</label><input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email"></div>
+        <div class="field"><label for="login-pass">Senha</label>
+          <div class="field-pass-wrap">
+            <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+            <button type="button" class="field-pass-toggle" aria-label="Mostrar senha" aria-pressed="false" onclick="toggleSenhaVisivel('login-pass',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <button type="button" class="auth-forgot" onclick="enviarResetSenha()">Esqueci minha senha</button>
+        </div>
         <button class="btn-primary" onclick="doLogin()">Entrar</button>
-        <p class="auth-msg" id="login-msg"></p>
+        <p class="auth-msg" id="login-msg" role="alert"></p>
       </div>
       <!-- REGISTER -->
       <div id="tab-register" class="hidden">
-        <div class="field"><label>Nome</label><input type="text" id="reg-nome" placeholder="Seu nome completo"></div>
-        <div class="field"><label>Email</label><input type="email" id="reg-email" placeholder="seu@email.com"></div>
-        <div class="field"><label>Senha</label><input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres"></div>
+        <div class="field"><label for="reg-nome">Nome</label><input type="text" id="reg-nome" placeholder="Seu nome completo" autocomplete="name"></div>
+        <div class="field"><label for="reg-email">Email</label><input type="email" id="reg-email" placeholder="seu@email.com" autocomplete="email"></div>
+        <div class="field"><label for="reg-pass">Senha</label>
+          <div class="field-pass-wrap">
+            <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+            <button type="button" class="field-pass-toggle" aria-label="Mostrar senha" aria-pressed="false" onclick="toggleSenhaVisivel('reg-pass',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+        </div>
         <button class="btn-primary" onclick="doRegister()">Criar conta</button>
-        <p class="auth-msg" id="reg-msg"></p>
+        <p class="auth-msg" id="reg-msg" role="alert"></p>
       </div>
       <!-- PENDING -->
       <div id="tab-pending" class="hidden">
@@ -1858,6 +1886,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <div class="dash-body">
         <!-- FEAT-01: Simulado de nivelamento (onboarding) -->
         <div id="diag-card" class="diag-card hidden" onclick="abrirIntro('diagnostico')">
+          <button class="diag-card-fechar" type="button" aria-label="Fechar" onclick="adiarDiagCard(event)">✕</button>
           <div class="diag-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.2 7.8 14.3 14.3 7.8 16.2 9.7 9.7 16.2 7.8"/></svg></div>
           <div class="diag-card-info">
             <div class="diag-card-tag">Comece por aqui</div>
@@ -2125,7 +2154,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <p>Gerencie usuários, questões e flashcards</p>
         <div id="admin-sync" style="margin-bottom:14px;">
           <button class="btn-primary" onclick="sincronizarBanco()">Sincronizar banco (QI + FCI → Firebase)</button>
-          <p class="auth-msg" id="sync-msg"></p>
+          <p class="auth-msg" id="sync-msg" role="alert"></p>
         </div>
         <div class="admin-tabs">
           <button class="admin-tab active" onclick="setAdminTab('usuarios',this)">Usuários</button>
@@ -2137,29 +2166,29 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <div id="admin-users-list"><p style="color:var(--text2);font-size:13px;">Carregando...</p></div>
         </div>
         <div class="admin-section" id="admin-questao">
-          <div class="field"><label>Área</label>
+          <div class="field"><label for="q-area">Área</label>
             <select id="q-area"><option value="AT1">AT1</option><option value="AT2">AT2</option><option value="AT3">AT3</option><option value="AT4">AT4</option><option value="AT5">AT5</option></select>
           </div>
-          <div class="field"><label>Documento de referência</label><input type="text" id="q-doc" placeholder="Ex: RT CBMRS nº 14/2016"></div>
-          <div class="field"><label>Enunciado</label><textarea id="q-enun" rows="3"></textarea></div>
-          <div class="field"><label>Opção A</label><input type="text" id="q-a"></div>
-          <div class="field"><label>Opção B</label><input type="text" id="q-b"></div>
-          <div class="field"><label>Opção C</label><input type="text" id="q-c"></div>
-          <div class="field"><label>Opção D</label><input type="text" id="q-d"></div>
-          <div class="field"><label>Opção E</label><input type="text" id="q-e"></div>
-          <div class="field"><label>Gabarito (A-E)</label><select id="q-gab"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option></select></div>
-          <div class="field"><label>Explicação</label><textarea id="q-exp" rows="2"></textarea></div>
+          <div class="field"><label for="q-doc">Documento de referência</label><input type="text" id="q-doc" placeholder="Ex: RT CBMRS nº 14/2016"></div>
+          <div class="field"><label for="q-enun">Enunciado</label><textarea id="q-enun" rows="3"></textarea></div>
+          <div class="field"><label for="q-a">Opção A</label><input type="text" id="q-a"></div>
+          <div class="field"><label for="q-b">Opção B</label><input type="text" id="q-b"></div>
+          <div class="field"><label for="q-c">Opção C</label><input type="text" id="q-c"></div>
+          <div class="field"><label for="q-d">Opção D</label><input type="text" id="q-d"></div>
+          <div class="field"><label for="q-e">Opção E</label><input type="text" id="q-e"></div>
+          <div class="field"><label for="q-gab">Gabarito (A-E)</label><select id="q-gab"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option></select></div>
+          <div class="field"><label for="q-exp">Explicação</label><textarea id="q-exp" rows="2"></textarea></div>
           <button class="btn-primary" onclick="addQuestao()">Salvar questão</button>
-          <p class="auth-msg" id="q-msg"></p>
+          <p class="auth-msg" id="q-msg" role="alert"></p>
         </div>
         <div class="admin-section" id="admin-flashcard">
-          <div class="field"><label>Área</label>
+          <div class="field"><label for="fc-area">Área</label>
             <select id="fc-area"><option value="AT1">AT1</option><option value="AT2">AT2</option><option value="AT3">AT3</option><option value="AT4">AT4</option><option value="AT5">AT5</option></select>
           </div>
-          <div class="field"><label>Frente (pergunta)</label><textarea id="fc-f" rows="2"></textarea></div>
-          <div class="field"><label>Verso (resposta)</label><textarea id="fc-v" rows="2"></textarea></div>
+          <div class="field"><label for="fc-f">Frente (pergunta)</label><textarea id="fc-f" rows="2"></textarea></div>
+          <div class="field"><label for="fc-v">Verso (resposta)</label><textarea id="fc-v" rows="2"></textarea></div>
           <button class="btn-primary" onclick="addFlashcard()">Salvar flashcard</button>
-          <p class="auth-msg" id="fc-msg"></p>
+          <p class="auth-msg" id="fc-msg" role="alert"></p>
         </div>
         <div class="admin-section" id="admin-reportes">
           <div id="admin-reportes-list"><p style="color:var(--text2);font-size:13px;">Carregando...</p></div>
@@ -2377,18 +2406,19 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <div class="meta-opt" data-v="50" onclick="selecionarMeta(50)">50</div>
     </div>
     <div class="meta-custom-wrap">
-      <label>Ou defina um valor personalizado</label>
+      <label for="meta-custom-input">Ou defina um valor personalizado</label>
       <input type="number" id="meta-custom-input" min="1" max="200" placeholder="Ex: 12" oninput="selecionarMeta(parseInt(this.value)||0)"/>
     </div>
     <button class="btn-primary" onclick="salvarMeta()">Salvar meta</button>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- Modal Configurações -->
 <div class="modal-overlay hidden" id="modal-config" onclick="fecharModalConfig(event)">
   <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-fechar-bar"><button class="modal-fechar" type="button" aria-label="Fechar" onclick="fecharModalConfig()">✕</button></div>
     <div class="modal-title">Configurações</div>
     <div class="modal-sub">Personalize sua experiência de estudo</div>
     <div class="config-row">
@@ -3542,6 +3572,45 @@ function showAuthTab(t){
   });
 }
 
+// F1-11: alterna type do campo de senha entre password/text, com aria-pressed.
+const _EYE_ON='<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/>';
+const _EYE_OFF='<path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.3 20.3 0 015.06-5.94M9.9 4.24A10.4 10.4 0 0112 4c7 0 11 7 11 7a20.3 20.3 0 01-3.22 4.36M14.12 14.12a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+function toggleSenhaVisivel(id,btn){
+  const inp=document.getElementById(id);if(!inp)return;
+  const visivel=inp.type==='password';
+  inp.type=visivel?'text':'password';
+  btn.setAttribute('aria-pressed',String(visivel));
+  btn.setAttribute('aria-label',visivel?'Ocultar senha':'Mostrar senha');
+  const svg=btn.querySelector('svg');if(svg)svg.innerHTML=visivel?_EYE_OFF:_EYE_ON;
+}
+
+// F1-10: reset de senha por email — sem ele, quem esquece a senha só volta via WhatsApp manual.
+async function enviarResetSenha(){
+  const e=document.getElementById('login-email').value.trim();
+  if(!e){showMsg('login-msg','Digite seu email acima e toque em "Esqueci minha senha" de novo.');return;}
+  try{
+    await auth.sendPasswordResetEmail(e);
+  }catch(err){}
+  // Mensagem neutra sempre — nunca revelar se o email existe na base.
+  showMsg('login-msg','Se este email tiver cadastro, enviamos um link para redefinir a senha.','ok');
+}
+
+// F1-15: mapa de erros do Firebase Auth — "Erro ao entrar"/"Erro ao criar conta" sem
+// causa vira suporte manual garantido numa divulgação em massa.
+function mensagemErroAuth(err,fallback){
+  const mapa={
+    'auth/wrong-password':'Email ou senha incorretos.',
+    'auth/user-not-found':'Email ou senha incorretos.',
+    'auth/invalid-email':'Email inválido.',
+    'auth/user-disabled':'Esta conta foi desativada.',
+    'auth/too-many-requests':'Muitas tentativas. Aguarde alguns minutos e tente de novo.',
+    'auth/network-request-failed':'Sem conexão com a internet. Tente novamente.',
+    'auth/email-already-in-use':'Email já cadastrado.',
+    'auth/weak-password':'Senha muito fraca. Use pelo menos 6 caracteres.'
+  };
+  return mapa[err&&err.code]||fallback;
+}
+
 async function doLogin(){
   if(!checkRateLimit()){showMsg('login-msg','Muitas tentativas. Aguarde 1 minuto.');return;}
   const e=document.getElementById('login-email').value.trim();
@@ -3550,7 +3619,7 @@ async function doLogin(){
   const btn=document.querySelector('#tab-login .btn-primary');
   btn.disabled=true;btn.textContent='Entrando...';
   try{await auth.signInWithEmailAndPassword(e,p);}
-  catch(err){showMsg('login-msg',err.code==='auth/wrong-password'||err.code==='auth/user-not-found'?'Email ou senha incorretos.':'Erro ao entrar.');}
+  catch(err){showMsg('login-msg',mensagemErroAuth(err,'Erro ao entrar.'));}
   finally{btn.disabled=false;btn.textContent='Entrar';}
 }
 
@@ -3570,7 +3639,7 @@ async function doRegister(){
     const isAdm=e===ADMIN_EMAIL;
     await db.ref('usuarios/'+cred.user.uid).set({nome,email:e,admin:isAdm,aprovado:isAdm,criadoEm:Date.now()});
     if(!isAdm)showAuthTab('pending');
-  }catch(err){showMsg('reg-msg',err.code==='auth/email-already-in-use'?'Email já cadastrado.':'Erro ao criar conta.');}
+  }catch(err){showMsg('reg-msg',mensagemErroAuth(err,'Erro ao criar conta.'));}
   finally{btn.disabled=false;btn.textContent='Criar conta';}
 }
 
@@ -3732,7 +3801,7 @@ async function initApp(){
   setTimeout(()=>{const sc=document.getElementById('screen-inicio');if(sc)animateBars(sc);},600);
   // S47: 1º acesso → nivelamento obrigatório (gera domínio); senão, splash normal
   // S50: se o usuário veio de um QR do ebook, o deep link substitui o splash.
-  if(!userStats.diagFeito){mostrarOnboard();}
+  if(!userStats.diagFeito&&!podeAdiarOnboard()){mostrarOnboard();}
   else if(!consumirDeepLink()){mostrarSplash();}
 }
 
@@ -4022,7 +4091,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.163';
+const APP_VERSAO='v1.164';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4365,7 +4434,7 @@ function renderDashboard(){
 
   // FEAT-01: card de nivelamento só enquanto não concluído
   const diagCard=document.getElementById('diag-card');
-  if(diagCard)diagCard.classList.toggle('hidden', !!userStats.diagFeito);
+  if(diagCard)diagCard.classList.toggle('hidden', !!userStats.diagFeito||podeAdiarDiagCard());
 
   // (S64) O grid de áreas clicável saiu da home/progresso: a ação "praticar área/tópico"
   // já vive na aba Quiz ("Escolha uma área" + "Praticar por tópico"). Aqui é só leitura.
@@ -6957,6 +7026,24 @@ function mostrarOnboard(){
 function esconderOnboard(){
   const g=document.getElementById('onboard-gate');if(g)g.classList.remove('active');
 }
+// F1-01: X/Esc adiam o nivelamento por 24h (localStorage) — nunca campo novo em usuarios/$uid.
+function podeAdiarOnboard(){
+  try{const t=localStorage.getItem('onboardDismiss');return !!t&&(Date.now()-Number(t))<86400000;}catch(_){return false;}
+}
+function adiarOnboard(){
+  try{localStorage.setItem('onboardDismiss',String(Date.now()));}catch(_){}
+  esconderOnboard();
+  if(!consumirDeepLink())mostrarSplash();
+}
+// F1-02: X do card de nivelamento na home adia por 7 dias (localStorage).
+function podeAdiarDiagCard(){
+  try{const t=localStorage.getItem('diagCardDismiss');return !!t&&(Date.now()-Number(t))<604800000;}catch(_){return false;}
+}
+function adiarDiagCard(e){
+  if(e)e.stopPropagation();
+  try{localStorage.setItem('diagCardDismiss',String(Date.now()));}catch(_){}
+  const el=document.getElementById('diag-card');if(el)el.classList.add('hidden');
+}
 function iniciarOnboardDiagnostico(){
   esconderOnboard();   // libera a tela para o quiz do nivelamento
   iniciarDiagnostico();
@@ -7639,7 +7726,7 @@ function showToast(msg){
 // só contêiner; ambos viram armadilha na ordem de tabulação se entrarem nela.
 const A11Y_IGNORA='.modal-overlay,.modal-box';
 function aplicarAcessibilidadeTeclado(raiz){
-  const alvo=raiz||document.getElementById('app');
+  const alvo=raiz||document.body;
   if(!alvo||!alvo.querySelectorAll)return 0;
   let n=0;
   alvo.querySelectorAll('[onclick]').forEach(el=>{
@@ -7665,9 +7752,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   const cv=document.getElementById('config-versao');
   if(cv)cv.textContent='Prontidão · Bomrillaz · '+APP_VERSAO;
   aplicarAcessibilidadeTeclado();
-  const raiz=document.getElementById('app');
-  if(raiz&&window.MutationObserver){
-    new MutationObserver(agendarAcessibilidade).observe(raiz,{childList:true,subtree:true});
+  if(window.MutationObserver){
+    new MutationObserver(agendarAcessibilidade).observe(document.body,{childList:true,subtree:true});
   }
 });
 
@@ -7676,8 +7762,8 @@ document.addEventListener('keydown',e=>{
   const tag=(e.target&&e.target.tagName||'').toLowerCase();
   if(tag==='input'||tag==='textarea'||tag==='select'){
     if(e.key==='Enter'){
-      const tl=document.getElementById('tab-login');
-      if(tl&&!tl.classList.contains('hidden'))doLogin();
+      const as=document.getElementById('auth-screen');
+      if(as&&as.classList.contains('active'))doLogin();
     }
     return; // digitando em campo: não interceptar
   }
@@ -7692,8 +7778,8 @@ document.addEventListener('keydown',e=>{
   }
   if(document.querySelector('.modal-overlay:not(.hidden)'))return; // modal aberto: não interceptar
   if(e.key==='Enter'){
-    const tl=document.getElementById('tab-login');
-    if(tl&&!tl.classList.contains('hidden')){doLogin();return;}
+    const as=document.getElementById('auth-screen');
+    if(as&&as.classList.contains('active')){doLogin();return;}
     const nb=document.getElementById('quiz-next-btn');
     if(nb&&nb.classList.contains('show')){nextQuiz();return;}
   }
@@ -7705,6 +7791,24 @@ document.addEventListener('keydown',e=>{
       if(ops.length>=+e.key)responderQuiz(+e.key-1);
     }
   }
+});
+
+// F1-03: Esc fecha o overlay visível mais ao topo. Listener PRÓPRIO — não usar o
+// handler S35 acima, que desiste cedo quando há modal aberto (justo o caso que
+// precisa funcionar aqui).
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  const gate=document.getElementById('onboard-gate');
+  if(gate&&gate.classList.contains('active')){adiarOnboard();return;}
+  const info=document.getElementById('info-tooltip');
+  if(info&&!info.classList.contains('hidden')){info.classList.add('hidden');return;}
+  const rep=document.getElementById('rep-overlay');
+  if(rep&&rep.classList.contains('show')){fecharReporte();return;}
+  const mais=document.getElementById('mais-overlay');
+  if(mais&&mais.classList.contains('open')){fecharMais({target:mais,currentTarget:mais});return;}
+  const FECHAR_MODAL={'modal-busca':fecharBuscaGlobal,'modal-intro':fecharIntro,'modal-fim':fecharFim,'modal-meta':fecharModalMeta,'modal-config':fecharModalConfig};
+  const aberto=document.querySelector('.modal-overlay:not(.hidden)');
+  if(aberto&&FECHAR_MODAL[aberto.id])FECHAR_MODAL[aberto.id]({target:aberto,currentTarget:aberto});
 });
 
 // ── Fase 2: registro do Service Worker (offline + aviso de nova versao) ──
@@ -7743,6 +7847,8 @@ function ehStandalone(){return (window.matchMedia&&window.matchMedia('(display-m
 function ehIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent||'');}
 function conviteDispensado(){try{var t=localStorage.getItem('installDismiss');return !!t&&(Date.now()-(+t)<2592000000);}catch(_){return false;}}
 function dispensarInstalar(){try{localStorage.setItem('installDismiss',String(Date.now()));}catch(_){}var el=document.getElementById('install-banner');if(el)el.style.display='none';}
+// F1-06: X do aviso de nova versão só esconde nesta sessão — reaparece no próximo deploy real.
+function dispensarSwUpdate(){var el=document.getElementById('sw-update');if(el)el.style.display='none';}
 function instalarApp(){var el=document.getElementById('install-banner');if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.finally(function(){deferredPrompt=null;if(el)el.style.display='none';});}}
 function avaliarConviteInstalar(){
   if(ehStandalone()||conviteDispensado())return;
@@ -7815,6 +7921,7 @@ window.addEventListener('load',function(){setTimeout(avaliarConviteInstalar,3000
 <div id="sw-update" role="status" style="display:none;position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:200;background:var(--navy-2);color:#fff;border:1px solid var(--ember);border-radius:12px;padding:10px 14px;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 8px 24px rgba(11,20,48,.4);">
   <span style="font-size:13px;font-weight:600">Nova versão disponível</span>
   <button onclick="aplicarAtualizacao()" style="background:var(--ember);color:#1C1206;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer">Atualizar</button>
+  <button onclick="dispensarSwUpdate()" aria-label="Dispensar" style="background:transparent;border:none;color:rgba(255,255,255,.6);font-size:20px;line-height:1;cursor:pointer;flex-shrink:0;padding:9px">×</button>
 </div>
 <div id="install-banner" style="display:none;position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:200;background:var(--navy-2);color:#fff;border:1px solid rgba(240,136,60,.4);border-radius:14px;padding:12px 14px;gap:12px;align-items:center;box-shadow:0 8px 24px rgba(11,20,48,.4);">
   <img src="assets/icon-192.png" alt="" style="width:40px;height:40px;border-radius:10px;flex-shrink:0"/>
@@ -7823,7 +7930,7 @@ window.addEventListener('load',function(){setTimeout(avaliarConviteInstalar,3000
     <div id="install-sub" style="font-size:12px;color:rgba(255,255,255,.75);line-height:1.4">Acesso rápido, tela cheia e funciona offline.</div>
   </div>
   <button id="install-btn" onclick="instalarApp()" style="display:none;background:var(--ember);color:#1C1206;border:none;border-radius:9px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">Instalar</button>
-  <button onclick="dispensarInstalar()" aria-label="Dispensar" style="background:transparent;border:none;color:rgba(255,255,255,.6);font-size:22px;line-height:1;cursor:pointer;flex-shrink:0;padding:0 2px">×</button>
+  <button onclick="dispensarInstalar()" aria-label="Dispensar" style="background:transparent;border:none;color:rgba(255,255,255,.6);font-size:22px;line-height:1;cursor:pointer;flex-shrink:0;padding:11px">×</button>
 </div>
 </body>
 </html>
