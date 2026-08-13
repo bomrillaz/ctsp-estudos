@@ -1729,6 +1729,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="lp-card"><h3>E se o edital atrasar?</h3><p>O plano vale pelo período contratado a partir da assinatura, independente da data do edital. Por isso o anual, com 13 meses, costuma ser o mais seguro.</p></div>
         <div class="lp-card"><h3>Posso desistir depois de pagar?</h3><p>Pode. São 7 dias de arrependimento a contar do pagamento, com devolução integral, conforme o CDC.</p></div>
         <div class="lp-card"><h3>Perco o progresso se trocar de celular?</h3><p>Não. Ele fica na sua conta, e ainda dá para exportar um backup próprio em Configurações.</p></div>
+        <div class="lp-card"><h3>Dá para dividir a conta com um colega?</h3><p>Tecnicamente até dá, mas quebra o que faz a plataforma funcionar: o sistema aprende com cada resposta para calcular o seu Domínio e montar o Treino do dia. Duas pessoas numa conta só embaralham as duas estimativas — nenhum dos dois fica com um treino que reflita o que ele mesmo sabe. Por isso o acesso é individual.</p></div>
       </div>
       <button type="button" class="lp-btn-linha" onclick="abrirDoc('faq')">Ver todas as perguntas</button>
     </div>
@@ -1780,7 +1781,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       </div>
       <!-- LOGIN -->
       <div id="tab-login">
-        <div class="field"><label for="login-email">Email</label><input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email"></div>
+        <div class="field"><label for="login-email">E-mail</label><input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email"></div>
         <div class="field"><label for="login-pass">Senha</label>
           <div class="field-pass-wrap">
             <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
@@ -1794,7 +1795,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <!-- REGISTER -->
       <div id="tab-register" class="hidden">
         <div class="field"><label for="reg-nome">Nome</label><input type="text" id="reg-nome" placeholder="Seu nome completo" autocomplete="name"></div>
-        <div class="field"><label for="reg-email">Email</label><input type="email" id="reg-email" placeholder="seu@email.com" autocomplete="email"></div>
+        <div class="field"><label for="reg-email">E-mail</label><input type="email" id="reg-email" placeholder="seu@email.com" autocomplete="email"></div>
         <div class="field"><label for="reg-pass">Senha</label>
           <div class="field-pass-wrap">
             <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
@@ -4087,7 +4088,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.167';
+const APP_VERSAO='v1.168';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -7669,7 +7670,7 @@ const DOCS={
     <h3>Posso desistir depois de pagar?</h3>
     <p>Pode. Por ser compra online, você tem <b>7 dias de arrependimento</b> a contar do pagamento, conforme o Código de Defesa do Consumidor, com devolução integral. Depois desse prazo, o plano segue até o fim do período contratado.</p>
     <h3>Posso dividir a conta com um colega?</h3>
-    <p>Não. O acesso é individual e a conta compartilhada é bloqueada. Além de ser o que sustenta o projeto, o progresso e o treino do dia só fazem sentido medindo <b>uma</b> pessoa.</p>
+    <p>Não. O sistema aprende com cada resposta para calcular o seu Domínio e montar o Treino do dia — se duas pessoas respondem pela mesma conta, as estimativas dos dois ficam erradas, e nenhum dos dois recebe um treino que reflita o que sabe de verdade. Por isso o acesso é individual e a conta compartilhada é bloqueada.</p>
     <h3>Perco meu progresso se trocar de celular?</h3>
     <p>Não. Ele fica na sua conta. Em Configurações ainda dá para exportar um arquivo de backup e restaurar depois, se quiser uma cópia própria.</p>
     <h3>Achei um erro numa questão. E agora?</h3>
@@ -7691,7 +7692,7 @@ const DOCS={
       <li>O acesso é <b>pessoal e intransferível</b>. É proibido emprestar, vender ou compartilhar login e senha.</li>
       <li>Você é responsável por manter sua senha em sigilo e pelo que for feito na sua conta.</li>
       <li>A liberação do acesso é manual e depende da confirmação do pagamento.</li>
-      <li>Detectado compartilhamento de conta, o acesso pode ser suspenso sem devolução dos valores do período já usado.</li>
+      <li>Detectado o compartilhamento de conta, o acesso pode ser suspenso sem devolução dos valores do período já usado.</li>
     </ul>
 
     <h3>3. Planos, preços e pagamento</h3>
@@ -8202,7 +8203,7 @@ function atualizarBotaoNotif(){
   var btn=document.getElementById('config-notif-btn'),sub=document.getElementById('config-notif-sub');
   if(!btn)return;
   var st=estadoNotif();
-  if(st==='indisponivel'){btn.textContent='Indisponível';btn.disabled=true;if(sub)sub.textContent='Este navegador não suporta (no iPhone, instale o app na tela inicial primeiro).';return;}
+  if(st==='indisponivel'){btn.textContent='Indisponível';btn.disabled=true;if(sub)sub.textContent='Este navegador não suporta notificações push (no iPhone, instale o app na tela inicial primeiro).';return;}
   btn.disabled=false;
   if(st==='granted'){btn.textContent='Ativado';btn.disabled=true;if(sub)sub.textContent='Você receberá o lembrete diário de revisões.';}
   else if(st==='denied'){btn.textContent='Bloqueado';btn.disabled=true;if(sub)sub.textContent='Permissão negada — libere nas configurações do navegador.';}
