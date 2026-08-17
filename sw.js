@@ -49,7 +49,7 @@ self.addEventListener('notificationclick', (e) => {
   })());
 });
 
-const CACHE = 'ctsp-cache-v14';
+const CACHE = 'ctsp-cache-v15';
 const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
@@ -112,8 +112,11 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
+  // data.js: match EXATO (com ?v=) — ignoreSearch aqui deixava o SW servir uma versao antiga
+  // cacheada mesmo depois de um bump de ?v= sem bump de CACHE (ver licao no vault).
+  const dataJs = url.pathname.endsWith('/data.js');
   e.respondWith(
-    caches.match(req, { ignoreSearch: true }).then((cached) => {
+    caches.match(req, { ignoreSearch: !dataJs }).then((cached) => {
       const net = fetch(req).then((res) => { cachePut(req, res.clone()); return res; }).catch(() => cached);
       return cached || net;
     })
