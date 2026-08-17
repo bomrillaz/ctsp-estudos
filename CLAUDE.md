@@ -293,6 +293,5 @@ de graça.
 - **Banco desbalanceado vs peso da prova:** AT4 tem ~117 questões para cota 12.
   **Expandir AT1, AT3/APH e T2.x; nunca AT4/AT5.** Nunca escrever questão só por escrever.
 - **BKT sem dificuldade de item** (IRT/Elo) — `itemStats` plantada, falta volume e agregação.
-- `r_at3_14` com numeração antiga de protocolo (mexe em `data.js`, exige bump).
 - Acessibilidade por teclado incompleta em pontos.
 - Formato do banco está **congelado** (97% alternativa direta) — não reformatar.

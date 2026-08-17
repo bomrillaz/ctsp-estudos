@@ -86,14 +86,13 @@ html[data-theme="dark"] body::before{background:radial-gradient(900px 480px at 8
 html[data-theme="dark"] body::after{opacity:.22;mix-blend-mode:screen;}
 html[data-theme="dark"] .quiz-opt.selected{background:#1D2A4D;border-color:var(--ember);}
 html[data-theme="dark"] .quiz-opt.selected .quiz-opt-letter{background:var(--ember);color:#1C1206;}
-html[data-theme="dark"] .meta-opt.active,html[data-theme="dark"] .admin-tab.active{background:var(--ember);border-color:var(--ember);color:#1C1206;}
+html[data-theme="dark"] .admin-tab.active{background:var(--ember);border-color:var(--ember);color:#1C1206;}
 html[data-theme="dark"] .field input:focus,html[data-theme="dark"] .field select:focus,html[data-theme="dark"] .config-input:focus{border-color:var(--ember);box-shadow:0 0 0 3px rgba(240,136,60,.12);}
 html[data-theme="dark"] .diag-card{background:linear-gradient(135deg,#7E180B,#C2412C);}
 html[data-theme="dark"] .quick-btn.destaque{border-color:#4A2B1A;background:linear-gradient(180deg,#241A14,var(--surface));}
 html[data-theme="dark"] .quiz-fb-erro .fb-correta{color:var(--green);}
 html[data-theme="dark"] .padrao-dica{color:var(--amber);}
 html[data-theme="dark"] .badge-admin,html[data-theme="dark"] .btn-mkadmin{color:var(--amber);}
-html[data-theme="dark"] .weak-card{border-color:var(--border);}
 /* .link-inline usa var(--navy) fixo (pensado pra fundo claro) — no tema escuro o
    .auth-card é var(--surface) quase da mesma cor, deixando "Termos de Uso"/"Política
    de Privacidade" ilegíveis (reportado pelo João, 13/08/2026). .lp-rodape já tem a
@@ -113,13 +112,13 @@ input,select,textarea{font-family:inherit;outline:none;}
 /* A11y: foco visível apenas para navegação por teclado (não afeta clique/toque) */
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,
 .quiz-opt:focus-visible,.nav-item:focus-visible,.auth-tab:focus-visible,.quick-btn:focus-visible,
-.adapt-btn:focus-visible,.diag-card:focus-visible,.weak-card:focus-visible,.btn-weak:focus-visible{
+.adapt-btn:focus-visible,.diag-card:focus-visible,.btn-weak:focus-visible{
   outline:2px solid transparent;box-shadow:0 0 0 3px rgba(240,136,60,.45);border-radius:var(--radius-xs);
 }
 /* Ícones inline do sistema */
 .ai-ic{width:1.05em;height:1.05em;display:inline-block;vertical-align:-0.16em;}
 /* Números técnicos */
-.num,.dash-stat-v,.sim-timer,.splash-dias,.quiz-score-v,.cards-h-stat-v,.tela-h-stat-v,.dominio-geral-pct,.sim-result-score,.sim-hist-score,.ring-pct{font-variant-numeric:tabular-nums;}
+.num,.sim-timer,.splash-dias,.quiz-score-v,.dominio-geral-pct,.sim-result-score,.sim-hist-score,.ring-pct{font-variant-numeric:tabular-nums;}
 
 /* LOADING */
 #loading{position:fixed;inset:0;background:var(--navy-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;overflow:hidden;transition:opacity .6s ease;}
@@ -448,30 +447,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .dash-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;position:relative;z-index:1;}
 .dash-greeting{font-family:var(--font-display);font-size:13px;color:var(--ember);font-weight:600;letter-spacing:.18em;text-transform:uppercase;margin-bottom:2px;}
 .dash-name{font-family:var(--font-display);font-size:30px;font-weight:700;letter-spacing:.02em;line-height:1;}
-.dash-ring-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;}
 .dash-ring-label{font-size:10px;opacity:.7;font-weight:600;font-variant-numeric:tabular-nums;}
-/* S62: linha das três metas do dia. `1fr` em cada coluna mantém os anéis do mesmo
-   tamanho e centrados em qualquer largura de tela — sem media query, mobile-first. */
-.dash-metas{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px;position:relative;z-index:1;}
-.ring-box{position:relative;width:72px;height:72px;max-width:100%;}
-.dash-metas .ring-svg{width:72px;height:72px;}
-.dash-ring-nome{font-family:var(--font-display);font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.62);margin-top:3px;}
-.dash-metas .ring-pct{font-size:14px;}
 .ring-fg.ring-fc{stroke:var(--at3);}
 .ring-fg.ring-rs{stroke:var(--at4);}
-.dash-stat{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:11px 8px;text-align:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:transform .15s;}
-.dash-stat-v{font-family:var(--font-display);font-size:24px;font-weight:700;line-height:1;}
-.dash-stat-l{font-size:9px;color:rgba(255,255,255,.65);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;}
 /* S30: hero com anel de meta */
-.dash-sub{font-size:11px;color:rgba(255,255,255,.55);margin-top:5px;font-weight:600;letter-spacing:.02em;}
-.dash-statline{display:flex;align-items:stretch;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px 4px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);position:relative;z-index:1;}
-.dash-statline .dash-stat{flex:1;background:none;border:none;border-radius:0;padding:0 4px;backdrop-filter:none;-webkit-backdrop-filter:none;}
 .dash-stat-div{width:1px;background:rgba(255,255,255,.13);margin:5px 0;flex-shrink:0;}
-/* Variante clara do resumo acumulado, agora dentro do acordeão "Meu progresso" */
-.dash-statline-light{background:transparent;border:none;padding:2px 0;backdrop-filter:none;-webkit-backdrop-filter:none;}
-.dash-statline-light .dash-stat-v{color:var(--text);}
-.dash-statline-light .dash-stat-l{color:var(--text2);}
-.dash-statline-light .dash-stat-div{background:var(--line-soft);}
 /* Meta do dia — recolhível (padrão fechado; cada meta batida "brota" sozinha) */
 .metas-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:4px 6px;position:relative;z-index:1;}
 .metas-head{width:100%;background:none;border:none;color:inherit;display:flex;align-items:center;gap:10px;padding:9px 8px;cursor:pointer;text-align:left;border-radius:12px;}
@@ -552,13 +532,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .mp-title{font-family:var(--font-display);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--text);display:flex;align-items:center;gap:7px;position:relative;padding-left:16px;}
 .mp-title::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:9px;height:3px;border-radius:2px;background:var(--fire-line);}
 .mp-right{display:flex;align-items:center;gap:10px;flex:none;}
-.mp-glance{font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--text);}
-.mp-glance small{font-size:11px;color:var(--text3);font-weight:600;}
 .mp-chev{color:var(--text3);display:flex;transition:transform .22s ease;}
 .mp-item.open .mp-chev{transform:rotate(180deg);}
 .mp-body{display:none;padding:0 14px 14px;}
 .mp-item.open .mp-body{display:block;}
-.mp-sublabel{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin:2px 0 8px;}
 /* Atalho da home para a aba "Meu progresso" */
 .ver-progresso{width:100%;display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 14px;cursor:pointer;text-align:left;margin-top:4px;}
 .ver-progresso:focus-visible{outline:3px solid var(--ember);outline-offset:-3px;}
@@ -578,9 +555,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pg-kpi-delta.down{color:var(--red);}
 .pg-subline{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11.5px;color:var(--text2);margin-bottom:16px;padding:0 2px;}
 .pg-subline b{color:var(--text);font-variant-numeric:tabular-nums;}
-.pg-anchors{display:flex;gap:8px;margin-bottom:16px;}
-.pg-anchor{flex:1;font-size:12px;font-weight:700;color:var(--text2);background:var(--paper-2);border:1px solid var(--line-soft);border-radius:10px;padding:8px;cursor:pointer;}
-.pg-anchor:active{transform:scale(.97);}
 .pg-mod-h{font-family:var(--font-display);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text);margin:4px 0 10px;position:relative;padding-left:16px;}
 .pg-mod-h::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:10px;height:3px;border-radius:2px;background:var(--fire-line);}
 .pg-legend{display:flex;flex-direction:column;gap:5px;margin:12px 0;font-size:10.5px;color:var(--text2);line-height:1.4;}
@@ -597,13 +571,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pg-area-evo-chip.desce{color:var(--red);}
 .pg-area-evo-chip.neutra{color:var(--text3);font-weight:600;}
 /* B4 — domínio por tópico expansível dentro de cada área */
-.pg-area-toggle{display:flex;align-items:center;gap:5px;margin-top:6px;padding:4px 0;background:none;border:none;cursor:pointer;font-size:10.5px;font-weight:700;color:var(--text2);letter-spacing:.02em;}
 .pg-area-chev{transition:transform .2s;flex-shrink:0;}
 .pg-area-row.open .pg-area-chev{transform:rotate(180deg);}
 .pg-area-topicos{display:none;margin-top:2px;padding-left:2px;}
 .pg-area-row.open .pg-area-topicos{display:block;animation:fadeIn .2s;}
-.pg-area-topicos .topico-row{padding:6px 0;}
-.pg-area-topicos .topico-row:last-child{border-bottom:none;}
 /* A2 (bloco 53) — acordeão do Quiz: reaproveita .pg-area-row/.pg-area-topicos/toggleAreaTopicos, layout em coluna */
 .pg-area-row.quiz-area-row{display:block;padding:0;border-top:none;}
 .pg-area-row.quiz-area-row .area-row{margin-bottom:0;}
@@ -667,48 +638,25 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .ring-fg{fill:none;stroke:var(--ember);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .8s var(--ease-out);}
 .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .ring-pct{font-family:var(--font-display);font-size:15px;font-weight:700;color:white;line-height:1;}
-.ring-lbl{font-size:8px;color:rgba(255,255,255,.7);font-weight:600;margin-top:1px;}
 
 /* Cards de progresso por área */
-.area-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}.area-grid>.area-card:last-child:nth-child(odd){grid-column:1/-1;max-width:calc(50% - 5px);margin:0 auto;}
 .area-card{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:14px;padding-left:16px;box-shadow:var(--shadow);transition:transform .2s var(--ease-out),box-shadow .2s;}
 .area-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--ac,var(--red));}
 .area-card:active{transform:scale(.97);}
-.area-card-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.area-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-.area-card-name{font-size:11px;font-weight:700;color:var(--text);line-height:1.2;}
-.area-card-code{font-family:var(--font-display);font-size:11px;color:var(--text3);letter-spacing:.08em;}
-.area-prog-bar{height:5px;background:var(--paper-2);border-radius:3px;overflow:hidden;margin-bottom:4px;}
 .area-prog-fill{height:100%;border-radius:3px;transition:width .4s;}
-.area-prog-pct{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;}
 
-/* Alerta ponto fraco */
-.weak-card{background:var(--surface);border:1px solid #F0D9CF;border-left:4px solid var(--red);border-radius:14px;padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);}
-.weak-icon{width:42px;height:42px;background:var(--red-light);color:var(--red);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
-.weak-icon svg{width:22px;height:22px;}
-.weak-info{flex:1;}
-.weak-title{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.13em;margin-bottom:2px;}
-.weak-area{font-size:14px;font-weight:700;color:var(--text);}
-.weak-pct{font-size:12px;color:var(--red);font-weight:600;font-variant-numeric:tabular-nums;}
 .btn-weak{background:var(--red);color:white;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;flex-shrink:0;box-shadow:0 4px 12px rgba(211,36,18,.25);}
-/* Bloco B — material nominal recomendado pelo tópico fraco */
-.weak-material{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;padding:12px 14px;margin:-6px 0 14px;box-shadow:var(--shadow);}
-.weak-material-title{font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
-.weak-mat-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line-soft);font-size:13px;color:var(--text);cursor:pointer;}
-.weak-mat-item:first-of-type{border-top:0;}
-.weak-mat-tag{font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px;background:var(--paper-2);color:var(--text2);flex-shrink:0;}
-.weak-mat-txt{flex:1;min-width:0;overflow-wrap:anywhere;}
 /* S51 MOBILE-FIT (bloco31) — corrige ESTOURO HORIZONTAL do painel no celular.
    Causa: filho flex com `flex:1` mantém `min-width:auto` e não encolhe abaixo da
    largura intrínseca do texto — o card é empurrado além da viewport e cria scroll
    lateral (relatado no "Caderno de Erros" e no "Estude isto"). `min-width:0` libera
    o encolhimento e o texto passa a quebrar. Mesma solução já usada em `.quiz-opt-text`.
    Mobile-first: vale em qualquer largura, sem media query. */
-.weak-info,.adapt-btn-info,.diag-card-info,
-.area-row-info,.user-item-info,.header-titles,.topico-name{min-width:0;}
-.weak-area,.weak-pct,.weak-title,.diag-card-title,.diag-card-sub,.adapt-btn-title,
+.adapt-btn-info,.diag-card-info,
+.area-row-info,.user-item-info,.header-titles{min-width:0;}
+.diag-card-title,.diag-card-sub,.adapt-btn-title,
 .adapt-btn-sub,.quick-btn-title,.quick-btn-sub{overflow-wrap:anywhere;}
-.weak-card,.weak-material,.weak-mat-item,.adapt-btn,.diag-card{max-width:100%;}
+.adapt-btn,.diag-card{max-width:100%;}
 
 /* ═══ BLOCO 34 — FILA DE FOCO + TELA DE FOCO ═══
    Mobile-first. Toda largura em % ou flex com min-width:0, seguindo a lição do S51:
@@ -799,14 +747,6 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .quiz-fb-erro .fb-marcada{background:var(--red-light);color:var(--red-dark);}
 .quiz-fb-erro .fb-correta{background:var(--green-light);color:#16693A;}
 .quiz-fb-erro .fb-rotulo{display:block;font-weight:800;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;opacity:.8;}
-.topico-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-soft);}
-.topico-row:last-child{border-bottom:none;}
-.topico-code{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text2);min-width:34px;letter-spacing:.04em;}
-.topico-name{flex:1;font-size:12px;color:var(--text);line-height:1.3;}
-.topico-bar-wrap{width:74px;height:7px;background:var(--paper-2);border-radius:6px;overflow:hidden;flex-shrink:0;}
-.topico-bar{height:100%;border-radius:6px;transition:width .5s var(--ease-out);}
-.topico-pct{font-size:12px;font-weight:800;min-width:34px;text-align:right;font-variant-numeric:tabular-nums;}
-.topico-area-head{font-size:12px;font-weight:800;color:var(--text2);margin:12px 0 2px;}
 .quick-btn{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:16px 12px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;cursor:pointer;transition:transform .2s var(--ease-out),box-shadow .2s;}
 .quick-btn::after{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:var(--fire-line);opacity:.9;}
 .quick-btn:active{transform:scale(.97);box-shadow:var(--shadow);}
@@ -824,7 +764,6 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .area-evo-label{font-family:var(--font-display);font-size:12px;font-weight:600;min-width:32px;color:var(--text2);letter-spacing:.04em;}
 .area-evo-bar-wrap{flex:1;background:var(--paper-2);border-radius:6px;height:18px;overflow:hidden;}
 .area-evo-bar{height:100%;border-radius:6px;transition:width .4s;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;}
-.area-evo-pct{font-size:10px;font-weight:800;color:white;}
 /* S57: coluna de valor com largura fixa — mantém as 5 linhas alinhadas e evita que
    uma área com número curto pareça ter menos informação que as outras. */
 .area-evo-val{font-size:10.5px;font-weight:700;min-width:78px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums;}
@@ -849,12 +788,6 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .modal-fechar::before{content:'';position:absolute;inset:-6px;}
 .modal-title{font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:.02em;}
 .modal-sub{font-size:13px;color:var(--text2);margin-bottom:20px;}
-.meta-options{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;}
-.meta-opt{padding:12px 6px;background:var(--paper-2);border-radius:12px;text-align:center;font-size:15px;font-weight:800;color:var(--text);cursor:pointer;border:2px solid transparent;transition:all .2s;font-variant-numeric:tabular-nums;}
-.meta-opt.active{background:var(--navy);color:white;border-color:var(--navy);}
-.meta-custom-wrap{margin-bottom:20px;}
-.meta-custom-wrap label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.12em;display:block;margin-bottom:6px;}
-.meta-custom-wrap input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:11px;font-size:16px;font-weight:700;text-align:center;}
 
 .quiz-header{background:linear-gradient(160deg,var(--navy-2),var(--navy));padding:14px 16px;color:white;position:relative;}
 .quiz-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--fire-line);opacity:.85;}
@@ -895,8 +828,6 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 
 /* Quiz home */
 .quiz-home{padding:16px;background:transparent;}
-.quiz-home-title{font-family:var(--font-display);font-size:26px;font-weight:700;margin-bottom:2px;color:var(--text);letter-spacing:.02em;}
-.quiz-home-sub{font-size:13px;color:var(--text2);margin-bottom:18px;}
 .area-list{display:flex;flex-direction:column;gap:10px;}
 .area-row{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:14px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform .2s var(--ease-out),box-shadow .2s;}
 .area-row:active{transform:scale(.98);}
@@ -904,27 +835,13 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .area-row-info{flex:1;}
 .area-row-name{font-size:14px;font-weight:700;color:var(--text);}
 .area-row-meta{font-size:11px;color:var(--text2);margin-top:2px;}
-.area-row-pct{font-family:var(--font-display);font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;}
 
 
-/* ═══ CARDS ═══ */
-.cards-header{background:linear-gradient(160deg,var(--navy-2),var(--navy));padding:16px;color:white;position:relative;}
-.cards-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--fire-line);opacity:.85;}
-.cards-h-title{font-family:var(--font-display);font-size:24px;font-weight:700;margin-bottom:2px;letter-spacing:.02em;}
-.cards-h-sub{font-size:12px;opacity:.7;}
-.cards-h-stats{display:flex;gap:12px;margin-top:12px;}
-.cards-h-stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 12px;text-align:center;}
-.cards-h-stat-v{font-family:var(--font-display);font-size:19px;font-weight:700;}
-.cards-h-stat-l{font-size:9px;opacity:.75;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
 /* ── Cabeçalho de tela unificado (todas as abas) ── */
 .tela-header{background:linear-gradient(160deg,var(--navy-2),var(--navy));border-radius:18px;padding:16px;color:#fff;position:relative;overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow-md);}
 .tela-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--fire-line);opacity:.9;}
 .tela-h-title{font-family:var(--font-display);font-size:24px;font-weight:700;letter-spacing:.02em;line-height:1.05;}
 .tela-h-sub{font-size:12.5px;color:rgba(255,255,255,.62);margin-top:3px;}
-.tela-h-stats{display:flex;gap:10px;margin-top:14px;}
-.tela-h-stat{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:9px 8px;text-align:center;}
-.tela-h-stat-v{font-family:var(--font-display);font-size:20px;font-weight:700;line-height:1;}
-.tela-h-stat-l{font-size:9px;opacity:.72;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:3px;}
 /* Hub de estudo (Cards/Resumos): tela de entrada antes do modo imersivo */
 .hub-inicio{margin-bottom:16px;}
 .hub-hint{font-size:12px;color:var(--text3);text-align:center;margin-top:8px;line-height:1.45;}
@@ -988,7 +905,6 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .sub-tabs{display:flex;gap:6px;margin-bottom:14px;}
 .sub-tab{flex:1;padding:9px 6px;border-radius:10px;border:1px solid var(--line-soft);background:var(--surface);color:var(--text2);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s,color .15s;}
 .sub-tab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
-.resumos-header{background:linear-gradient(160deg,var(--navy-2),var(--navy));border-radius:18px;padding:16px;color:white;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:var(--shadow-md);}
 .busca-grupo{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:8px;}
 .lista-topico{font-size:12.5px;font-weight:700;color:var(--text2);margin:11px 0 6px 2px;}
 /* BLOCO 55 — cabeçalho de tópico clicável dentro do acordeão de Cards */
@@ -996,9 +912,6 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .lista-topico-acao:hover,.lista-topico-acao:focus-visible{background:var(--paper-2);}
 .lt-acao{font-size:11px;font-weight:800;color:var(--ember,var(--navy));flex-shrink:0;}
 mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px;}
-.resumos-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--fire-line);opacity:.85;}
-.resumos-queue{display:flex;align-items:center;gap:8px;margin-top:10px;}
-.resumo-queue-n{background:rgba(240,136,60,.16);border:1px solid rgba(240,136,60,.35);color:var(--ember);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;}
 .resumo-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:16px;box-shadow:var(--shadow-md);margin-bottom:16px;}
 .resumo-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .resumo-area-tag{font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;}
@@ -1020,10 +933,6 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 
 /* ═══ PADRÕES ═══ */
 .padroes-screen{padding:16px;background:transparent;}
-.padroes-header{background:linear-gradient(160deg,var(--navy-2),var(--navy));border-radius:18px;padding:16px;color:white;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:var(--shadow-md);}
-.padroes-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--fire-line);opacity:.85;}
-.padroes-header h2{font-family:var(--font-display);font-size:24px;font-weight:700;margin-bottom:4px;letter-spacing:.02em;}
-.padroes-header p{font-size:12px;opacity:.72;}
 .padrao-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;padding:14px;box-shadow:var(--shadow);margin-bottom:10px;cursor:pointer;}
 .padrao-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 /* S55: a badge deixou de ser só "38%" — agora carrega medida qualitativa
@@ -1152,9 +1061,6 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .info-tooltip-text{font-size:13px;color:var(--text2);line-height:1.6;}
 .info-tooltip-close{width:100%;padding:12px;background:var(--red);color:white;border-radius:12px;font-size:14px;font-weight:700;margin-top:16px;border:none;cursor:pointer;}
 
-/* Dominio badges */
-.dominio-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;}
-
 /* Dash meta sem cursor */
 
 /* ═══ CONFIGURAÇÕES MODAL ═══ */
@@ -1234,11 +1140,6 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .obj-card-motivo{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.4;}
 .obj-card-pct{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;margin-top:6px;display:inline-block;}
 
-/* Botão reload discreto */
-.btn-reload{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);border-radius:8px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;border:none;cursor:pointer;transition:opacity .2s;}
-.btn-reload::before{content:'';position:absolute;inset:-8px;}
-.btn-reload:active{opacity:.6;}
-
 /* Botão voltar quiz */
 .btn-voltar-quiz{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:white;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;}
 .btn-voltar-quiz:active{opacity:.7;}
@@ -1251,20 +1152,11 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .badge-erro{background:var(--red-light);color:var(--red);}
 .badge-rev{background:var(--amber-light);color:var(--amber);}
 .badge-dom{background:var(--paper-2);color:var(--text2);}
-/* S47: contador novas/revisar no card de área */
-.area-card-counts{font-size:10px;color:var(--text3);margin-top:4px;font-variant-numeric:tabular-nums;}
 .fb-caderno{margin-top:8px;font-size:12px;font-weight:600;color:var(--ember-deep);}
 html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 #save-flash{position:fixed;left:50%;bottom:80px;transform:translateX(-50%) translateY(8px);background:var(--green);color:#fff;font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,.18);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:9999;}
 #save-flash.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-/* ── V1 Bento grid (cards de ação) ── */
-.acoes-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
-.acoes-grid .weak-card{flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:0;}
-.acoes-grid .weak-card.hidden{display:none;}
-.acoes-grid .weak-info{width:100%;}
-.acoes-grid .btn-weak{width:100%;text-align:center;}
-@media(max-width:360px){.acoes-grid{grid-template-columns:1fr;}}
 /* ── Reporte de erros ── */
 .rep-link{display:inline-flex;align-items:center;gap:5px;margin-top:10px;background:none;border:none;color:var(--text3);font-size:11.5px;font-weight:600;cursor:pointer;padding:4px 0;text-decoration:underline;text-underline-offset:2px;}
 .rep-link:hover{color:var(--red);}
@@ -1314,9 +1206,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   /* FASE 1 — coluna de conteúdo centralizada (fim do "celular esticado") */
   .screen{max-width:1040px;margin-inline:auto;}
   /* FASE 2 — grids multi-coluna (auto-fit escala sem hard-code de contagem) */
-  .area-grid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));}
-  .area-grid>.area-card:last-child:nth-child(odd){grid-column:auto;max-width:none;margin:0;} /* neutraliza a regra do card ímpar do mobile */
-  .quick-grid,.acoes-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
+  .quick-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
   .sim-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start;}
   /* B57 — hubs (Quiz/Cards/Resumos) em MESTRE-DETALHE. As áreas ficam empilhadas
      numa coluna estreita à esquerda (como no celular) e a área aberta ocupa o
@@ -2448,28 +2338,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   </div>
 </div>
 
-<div class="modal-overlay hidden" id="modal-meta" onclick="fecharModalMeta(event)">
-  <div class="modal-box" onclick="event.stopPropagation()">
-    <div class="modal-title">Meta Diária</div>
-    <div class="modal-sub">Quantas questões você quer responder por dia?</div>
-    <div class="meta-options" id="meta-options">
-      <div class="meta-opt" data-v="5" onclick="selecionarMeta(5)">5</div>
-      <div class="meta-opt" data-v="10" onclick="selecionarMeta(10)">10</div>
-      <div class="meta-opt" data-v="15" onclick="selecionarMeta(15)">15</div>
-      <div class="meta-opt" data-v="20" onclick="selecionarMeta(20)">20</div>
-      <div class="meta-opt" data-v="25" onclick="selecionarMeta(25)">25</div>
-      <div class="meta-opt" data-v="30" onclick="selecionarMeta(30)">30</div>
-      <div class="meta-opt" data-v="40" onclick="selecionarMeta(40)">40</div>
-      <div class="meta-opt" data-v="50" onclick="selecionarMeta(50)">50</div>
-    </div>
-    <div class="meta-custom-wrap">
-      <label for="meta-custom-input">Ou defina um valor personalizado</label>
-      <input type="number" id="meta-custom-input" min="1" max="200" placeholder="Ex: 12" oninput="selecionarMeta(parseInt(this.value)||0)"/>
-    </div>
-    <button class="btn-primary" onclick="salvarMeta()">Salvar meta</button>
-  </div>
-</div>
-
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- Modal Configurações -->
@@ -2582,7 +2450,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="config-versao" id="config-versao">—</div>
   </div>
 </div>
-<script src="data.js?v=185"></script>
+<script src="data.js?v=186"></script>
 <script>
 // ═══════════════════════════════
 // FIREBASE
@@ -3683,8 +3551,6 @@ auth.onAuthStateChanged(async user=>{
       // o set() INTEIRO e o login junto. O painel detecta o renascimento por
       // heurística (nome === e-mail), sem gravar nada.
       await withTimeout(db.ref('usuarios/'+user.uid).set({nome:emailNorm,email:emailNorm,admin:isAdmEmail,aprovado:isAdmEmail,criadoEm:Date.now()}));
-    } else if(isAdmEmail&&!snap.val().admin){
-      await withTimeout(db.ref('usuarios/'+user.uid).update({admin:true,aprovado:true}));
     }
     const freshSnap=await withTimeout(db.ref('usuarios/'+user.uid).get());
     userProfile={nome:user.email,email:user.email,admin:isAdmEmail,aprovado:isAdmEmail,...(freshSnap.val()||{})};
@@ -4088,7 +3954,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.168';
+const APP_VERSAO='v1.169';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4845,11 +4711,6 @@ function abrirPorCodigo(){
   abrirFoco(v);   // abre a Tela de Foco: resumo, cards e questões do tópico juntos
 }
 
-function abrirResumoDoPainel(id){
-  navTo('resumos');
-  mostrarResumoDirecto(id);
-}
-
 // Troca de tela SEM passar por navTo — navTo limpa origemReforco (qualquer navegação por
 // menu encerra o vínculo com a questão), então o reforço e o retorno ativam a tela na mão.
 function _ativarTelaLocal(screenId){
@@ -4981,13 +4842,6 @@ function deltaAcuraciaGeral(){
   const pctNow=totalNow>0?Math.round((userStats.correct||0)/totalNow*100):0;
   return pctNow-pctAnt;
 }
-// Índice/âncoras da tela "Meu progresso": rola até a seção (abre o acordeão se preciso).
-function pgScroll(id){
-  const el=document.getElementById(id);if(!el)return;
-  if(el.classList.contains('mp-item')&&!el.classList.contains('open')){el.classList.add('open');const hd=el.querySelector('.mp-head');if(hd)hd.setAttribute('aria-expanded','true');}
-  el.scrollIntoView({behavior:'smooth',block:'start'});
-}
-
 // P1 — série semanal de acerto de uma área (a partir dos snapshots já gravados).
 function serieSemanalArea(k){
   const h=userStats.semanas;
@@ -5238,15 +5092,6 @@ function montarFilaEstudo(qs,n){
   const seen=new Set(),out=[];
   for(const q of fila){if(!seen.has(q.id)){seen.add(q.id);out.push(q);}if(out.length>=n)break;}
   return out;
-}
-// Contagem por área para os cards do dashboard (novas vs a revisar)
-function contagemArea(area){
-  let novas=0,rev=0;
-  Object.values(allQuestoes).filter(q=>q.area===area).forEach(q=>{
-    const cl=classeQuestao(q);
-    if(cl==='novo')novas++;else if(cl==='errado'||cl==='revisar')rev++;
-  });
-  return {novas,rev};
 }
 function iniciarQuiz(area){
   quizArea=area;quizModoErro=false;
@@ -6867,51 +6712,6 @@ async function addFlashcard(){
 }
 
 // ═══════════════════════════════
-// META DIÁRIA PERSONALIZÁVEL
-// ═══════════════════════════════
-let metaTempVal=10;
-
-function abrirModalMeta(){
-  const meta=userStats.metaDiaria||10;
-  metaTempVal=meta;
-  document.getElementById('meta-custom-input').value='';
-  document.querySelectorAll('.meta-opt').forEach(el=>{
-    const v=parseInt(el.dataset.v);
-    el.classList.toggle('active',v===meta);
-  });
-  // se valor não está nas opções, preenche campo custom
-  const presets=[5,10,15,20,25,30,40,50];
-  if(!presets.includes(meta)){
-    document.getElementById('meta-custom-input').value=meta;
-    document.querySelectorAll('.meta-opt').forEach(el=>el.classList.remove('active'));
-  }
-  document.getElementById('modal-meta').classList.remove('hidden');
-}
-
-function fecharModalMeta(e){
-  if(!e||e.target===document.getElementById('modal-meta'))
-    document.getElementById('modal-meta').classList.add('hidden');
-}
-
-function selecionarMeta(v){
-  if(!v||v<1)return;
-  metaTempVal=v;
-  document.querySelectorAll('.meta-opt').forEach(el=>{
-    el.classList.toggle('active',parseInt(el.dataset.v)===v);
-  });
-}
-
-async function salvarMeta(){
-  const v=metaTempVal;
-  if(!v||v<1||v>200){showToast('Meta inválida (1–200).');return;}
-  userStats.metaDiaria=v;
-  await saveProg();
-  renderDashboard();
-  document.getElementById('modal-meta').classList.add('hidden');
-  showToast('Meta atualizada: '+v+' questões/dia');
-}
-
-// ═══════════════════════════════
 // ÍNDICE DE DOMÍNIO REAL
 // ═══════════════════════════════
 function calcDominio(){
@@ -8118,7 +7918,7 @@ document.addEventListener('keydown',e=>{
   if(rep&&rep.classList.contains('show')){fecharReporte();return;}
   const mais=document.getElementById('mais-overlay');
   if(mais&&mais.classList.contains('open')){fecharMais({target:mais,currentTarget:mais});return;}
-  const FECHAR_MODAL={'modal-busca':fecharBuscaGlobal,'modal-intro':fecharIntro,'modal-fim':fecharFim,'modal-meta':fecharModalMeta,'modal-config':fecharModalConfig};
+  const FECHAR_MODAL={'modal-busca':fecharBuscaGlobal,'modal-intro':fecharIntro,'modal-fim':fecharFim,'modal-config':fecharModalConfig};
   const aberto=document.querySelector('.modal-overlay:not(.hidden)');
   if(aberto&&FECHAR_MODAL[aberto.id])FECHAR_MODAL[aberto.id]({target:aberto,currentTarget:aberto});
 });
