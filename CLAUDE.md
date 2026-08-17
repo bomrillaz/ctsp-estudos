@@ -109,6 +109,17 @@ Nota: `Cap.4` tem 4 ocorrências **legítimas** (questões de mangueiras citando
 **`node --check` não pega erro de execução.** Variável órfã é sintaticamente válida.
 Validar EXECUTANDO — harness Node+jsdom, ou o navegador. Comportamento de PWA só o navegador pega.
 
+**Padrão: pedir login manual do João pra validar/reproduzir com dado real.** Mudança que toca tela
+pós-login (dashboard, domínio, FSRS, RTDB, sync) ou bug relatado que só aparece logado → **pedir de
+saída** pro João abrir a aba (navegador embutido do chat ou Claude in Chrome) e logar ele mesmo. A IA
+nunca digita credencial, só recebe a aba já autenticada e testa sozinha dali (clicar, ler console/rede,
+abrir telas). Não é fallback pra quando lembrar — é o primeiro passo ao terminar a alteração.
+Exceção: bug específico de Safari/iOS precisa do aparelho físico (prioridade de dispositivo do §1), um
+browser genérico não reproduz. Cuidado: não completar sessão de estudo de verdade (Quiz/Treino/Cards)
+durante o teste — só abrir a tela e confirmar que carrega sem erro, senão suja o histórico de revisão
+espaçada da conta real. Detalhe da técnica: `vault/10-projetos/prontidao-ctsp/licoes/
+login-manual-do-usuario-no-browser-embutido-destrava-teste-com-dado-real.md`.
+
 Harness jsdom: `let`/`const`/`class` de topo **não** viram propriedade do objeto de contexto mesmo usando
 `global` como sandbox. Para ler `userStats`/`allQuestoes`/`QI` depois do load, o teste também tem de rodar
 via `vm.runInContext` no MESMO contexto. jsdom não tem `requestAnimationFrame`/`MutationObserver`/`scrollIntoView` — stub manual.

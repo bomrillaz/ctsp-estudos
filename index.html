@@ -3884,12 +3884,14 @@ async function saveProg(){
         gravarEspelho();
       }
     }catch(eLeitura){console.warn('saveProg merge (leitura falhou, grava local):',eLeitura.message);}
-    await ref.set(bktParaFirebase(userStats));   // S48: chaves do BKT sem "."
+    // S65: guard do eco tem de estar valendo ANTES do set() — o SDK dispara o listener
+    // local (otimista) assim que a escrita entra no cache, não só quando o servidor confirma.
     _meuUltimoRev=userStats.rev;
+    await ref.set(bktParaFirebase(userStats));   // S48: chaves do BKT sem "."
     flashSalvo();
   }catch(e){
     console.warn('saveProg 1ª tentativa:',e.message);
-    try{await ref.set(bktParaFirebase(userStats));_meuUltimoRev=userStats.rev;}
+    try{await ref.set(bktParaFirebase(userStats));}
     catch(e2){savePendente=true;showToast('Sem conexão — progresso guardado no aparelho');}
   }finally{
     _saveEmCurso=false;
@@ -3991,7 +3993,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.178';
+const APP_VERSAO='v1.179';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
