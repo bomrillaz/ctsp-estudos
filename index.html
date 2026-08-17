@@ -1853,16 +1853,29 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <div class="adapt-btn-arrow">→</div>
         </div>
         <div class="quick-grid">
-          <div class="quick-btn" onclick="iniciarEstudoRapido()">
+          <div class="quick-btn" onclick="abrirIntro('rapido')">
             <div class="quick-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
             <div class="quick-btn-title">Estudo Rápido</div>
-            <div class="quick-btn-sub" id="quick-sub">5 questões soltas</div>
+            <div class="quick-btn-sub" id="quick-sub">10 questões soltas</div>
           </div>
 
-          <div class="quick-btn" onclick="iniciarSimuladoInteligente()">
+          <div class="quick-btn" onclick="abrirIntro('focado')">
             <div class="quick-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></div>
             <div class="quick-btn-title">Treino Focado</div>
             <div class="quick-btn-sub">15 questões · pontos fracos</div>
+          </div>
+        </div>
+        <div class="sec-title">Revisar material</div>
+        <div class="quick-grid">
+          <div class="quick-btn" onclick="irResumosHub()">
+            <div class="quick-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+            <div class="quick-btn-title">Resumos</div>
+            <div class="quick-btn-sub">Por área e tópico</div>
+          </div>
+          <div class="quick-btn" onclick="irCardsHub()">
+            <div class="quick-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
+            <div class="quick-btn-title">Flashcards</div>
+            <div class="quick-btn-sub">Memorização rápida</div>
           </div>
         </div>
         <!-- S65: "Seu foco" + "Foco da semana" — agora abaixo de "Estudar agora". -->
@@ -2724,6 +2737,10 @@ let quizQueue=[],quizIdx=0,quizArea='TODAS',quizSessao={c:0,t:0},quizAnswered=fa
 // 'quiz' enquanto um resumo/flashcard está aberto como REFORÇO de uma questão errada,
 // para devolver o usuário à questão (e não ao carrossel de resumos/cards) ao concluir.
 let origemReforco=null;
+// IDs de resumo já avaliados dentro da ocorrência de reforço da questão atual — trava
+// reclassificação (o usuário reabre "Ler o resumo" e forçaria o FSRS de novo sem revisão
+// real). Zerado a cada nova questão em renderQuizQ().
+let _reforcoResumosAvaliados=new Set();
 // Ids já re-expostos NESTA sessão de treino (reaprendizado dentro da sessão) —
 // garante que a questão errada volte só UMA vez, sem loop. Zera a cada nova sessão.
 let quizReexpostas=new Set();
@@ -3199,6 +3216,27 @@ function abrirIntro(tipo){
            ['Errou? Tudo bem','o reforço aparece na hora'],
            ['No fim','seu perfil de domínio é montado e o app passa a adaptar seus estudos']];
     btn='Começar o nivelamento'; acao=iniciarDiagnostico;
+  } else if(tipo==='rapido'){
+    titulo='Estudo Rápido';
+    sub='10 questões soltas para praticar agora.';
+    itens=[['10 questões','sorteadas do banco inteiro, priorizando revisão e novidade'],
+           ['Só questões','resumo e flashcard aparecem quando você erra'],
+           ['Sem meta fixa','pode sair quando quiser, sem compromisso']];
+    btn='Começar'; acao=iniciarEstudoRapido;
+  } else if(tipo==='focado'){
+    titulo='Treino Focado';
+    sub='15 questões priorizadas pelos seus pontos fracos.';
+    itens=[['15 questões','fila inteligente sobre os assuntos onde você mais precisa'],
+           ['Só questões','resumo e flashcard aparecem quando você erra'],
+           ['Sem meta fixa','pode sair quando quiser, sem compromisso']];
+    btn='Começar'; acao=iniciarSimuladoInteligente;
+  } else if(tipo==='erro'){
+    titulo='Modo Erro';
+    sub='Revisão só das questões que você errou.';
+    itens=[['Só seus erros','prioriza as que você mais errou'],
+           ['Só questões','resumo e flashcard aparecem quando você erra de novo'],
+           ['Sem meta fixa','pode sair quando quiser, sem compromisso']];
+    btn='Começar'; acao=iniciarModoErro;
   } else {
     titulo='Treino do dia';
     sub='Sua sessão de hoje, montada para você.';
@@ -3223,6 +3261,11 @@ function introComecar(){
   document.getElementById('modal-intro').classList.add('hidden');
   const a=_introAcao;_introAcao=null;if(typeof a==='function')a();
 }
+
+// Atalhos de 1 clique para os hubs de material (mesma peça de UI do botão de
+// transição pós-treino, oferecida também como entrada — item 2 do plano de fluxo).
+function irResumosHub(){navTo('resumos');}
+function irCardsHub(){navTo('cards');}
 
 function irTreinoDoDia(){
   if(!allQuestoes||!Object.keys(allQuestoes).length){showToast('Banco ainda carregando, tente em instantes.');return;}
@@ -3954,7 +3997,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.170';
+const APP_VERSAO='v1.171';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4470,7 +4513,7 @@ function renderFilaFoco(){
   if(erros){
     notas.push({cor:'var(--red)',titulo:'Caderno de erros',
       sub:erros+(erros===1?' questão pendente':' questões pendentes')+' · prioriza as mais erradas',
-      cta:'REFAZER',acao:'iniciarModoErro()'});
+      cta:'REFAZER',acao:"abrirIntro('erro')"});
   }
 
   if(!notas.length){bloco.classList.add('hidden');fila.innerHTML='';return;}
@@ -5205,18 +5248,26 @@ function renderQuizBadge(q){
   b.textContent=txt;b.className='q-badge '+cls;b.style.display='inline-block';
 }
 
+// "Respondidas" some sem denominador nas sessões livres (pode ser interrompida sem
+// culpa); mantém X/Y só onde há meta fechada de verdade (Simulado, Nivelamento).
+const QUIZ_AREAS_LIVRES=['RAPIDO','INTELIGENTE','TREINO'];
+function atualizarScoreV(){
+  document.getElementById('quiz-score-v').textContent=
+    QUIZ_AREAS_LIVRES.includes(quizArea)?String(quizSessao.t):quizSessao.t+'/'+quizQueue.length;
+}
 function renderQuizQ(){
   if(quizIdx>=quizQueue.length){finishQuiz();return;}
   const q=quizQueue[quizIdx];
   quizAnswered=false;
   if(quizIdx===0)quizReexpostas=new Set(); // início de sessão: zera as re-exposições
+  _reforcoResumosAvaliados.clear(); // nova questão = nova ocorrência de reforço
   const tot=quizQueue.length;
   document.getElementById('quiz-q-num').textContent=`Questão ${quizIdx+1} de ${tot}`;
   renderQuizBadge(q);  // S47: selo de status
   document.getElementById('quiz-q-text').textContent=q.e;
   document.getElementById('quiz-q-doc').textContent=q.doc||'';questaoAtualId=q.id;
   document.getElementById('quiz-prog-fill').style.width=(quizIdx/tot*100)+'%';
-  document.getElementById('quiz-score-v').textContent=quizSessao.t+'/'+quizQueue.length;
+  atualizarScoreV();
   quizQT0=Date.now(); // S53: começa a cronometrar esta questão
   const opts=document.getElementById('quiz-opts');
   const letras=['A','B','C','D','E'];
@@ -5340,7 +5391,7 @@ async function responderQuiz(idx){
   }
 
   document.getElementById('quiz-next-btn').classList.add('show');
-  document.getElementById('quiz-score-v').textContent=quizSessao.t+'/'+quizQueue.length;
+  atualizarScoreV();
 }
 
 function nextQuiz(){
@@ -5373,6 +5424,8 @@ function mostrarFimTreino(){
   g('fim-acoes').innerHTML=`
     <button class="btn-primary" onclick="fimIr(iniciarEstudoRapido)">Continuar com Estudo rápido</button>
     <button class="btn-weak" onclick="fimIr(estudarFraco)">Treino focado no ponto fraco</button>
+    <button class="btn-weak" onclick="fimIr(irResumosHub)">Resumos →</button>
+    <button class="btn-weak" onclick="fimIr(irCardsHub)">Flashcards →</button>
     <button class="btn-weak" onclick="fimIr(irTreinoDoDia)">Refazer o treino</button>
     <button class="btn-weak" onclick="fecharFim()" style="background:var(--bg);color:var(--text2)">Voltar ao início</button>`;
   g('modal-fim').classList.remove('hidden');
@@ -5985,6 +6038,11 @@ function mostrarResumoDirecto(id){
       <div class="resumo-titulo">${sanitize(r.titulo)}</div>
       <div class="resumo-texto">${sanitize(r.texto).replace(/\n/g,'<br>')}</div>
       <button class="resumo-audio-btn" id="resumo-audio-btn" onclick="ouvirResumo('${r.id}')">▶ Ouvir este resumo</button>
+      ${origemReforco==='quiz'&&_reforcoResumosAvaliados.has(id)?`
+      <div class="resumo-avaliar">
+        <div class="resumo-avaliar-title">Você já avaliou este resumo agora</div>
+        <button class="resumo-btn med" style="width:100%" onclick="voltarAoQuizDoReforco()">▶ Voltar à questão</button>
+      </div>`:`
       <div class="resumo-avaliar">
         <div class="resumo-avaliar-title">Como foi?</div>
         <div style="font-size:11.5px;color:var(--text3);margin:-4px 0 8px">Toque uma opção para concluir — só ler não baixa a fila do dia.</div>
@@ -5993,7 +6051,7 @@ function mostrarResumoDirecto(id){
           <button class="resumo-btn med" onclick="avaliarResumo('med')">Médio</button>
           <button class="resumo-btn fac" onclick="avaliarResumo('fac')">Fácil</button>
         </div>
-      </div>
+      </div>`}
       <button class="rep-link" onclick="abrirReporte('resumo','${r.id}')">⚐ Reportar erro neste resumo</button>
       <button onclick="${origemReforco==='quiz'?'voltarAoQuizDoReforco()':'voltarHubResumos()'}" style="width:100%;margin-top:12px;padding:10px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:600;color:var(--text2);">${origemReforco==='quiz'?'← Voltar à questão':'← Voltar aos resumos'}</button>
     </div>
@@ -6012,7 +6070,7 @@ async function avaliarResumo(dif){
   saveProg();
   updateBadges();
   showToast('Revisão em '+updated.interval+(updated.interval===1?' dia':' dias'));
-  if(origemReforco==='quiz'){voltarAoQuizDoReforco();return;} // reforço de erro: volta à questão, não ao carrossel
+  if(origemReforco==='quiz'){_reforcoResumosAvaliados.add(resumoAtualId);voltarAoQuizDoReforco();return;} // reforço de erro: volta à questão, não ao carrossel
   if(resumosUnico){voltarHubResumos();return;} // resumo avulso do índice: volta ao hub
   renderResumos();
 }
@@ -6251,7 +6309,7 @@ function gerarDiagnostico(pct,byArea){
   html+=`<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
     <button class="btn-weak" onclick="abrirIntro('treino')">Ver meu Treino do dia →</button>`;
   const nErr=Object.values(allQuestoes).filter(q=>userStats.seenIds?.includes(q.id+'_E')).length;
-  if(nErr)html+=`<button class="btn-weak" style="background:var(--paper-2);color:var(--text2)" onclick="iniciarModoErro()">Refazer os ${nErr} erro${nErr!==1?'s':''} agora · opcional</button>`;
+  if(nErr)html+=`<button class="btn-weak" style="background:var(--paper-2);color:var(--text2)" onclick="abrirIntro('erro')">Refazer os ${nErr} erro${nErr!==1?'s':''} agora · opcional</button>`;
   html+=`</div>`;
   el.innerHTML=html;
 }
