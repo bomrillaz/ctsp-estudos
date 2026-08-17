@@ -2465,6 +2465,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 </div>
 <script src="data.js?v=187"></script>
 <script>
+if(window.top!==window.self) window.top.location=window.self.location;
 // ═══════════════════════════════
 // FIREBASE
 // ═══════════════════════════════
@@ -3997,7 +3998,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.172';
+const APP_VERSAO='v1.173';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -7601,7 +7602,7 @@ const DOCS={
       <li><b>Cadastro:</b> nome e e-mail. A senha é guardada e verificada pelo Firebase Authentication (Google) — nós não temos acesso a ela.</li>
       <li><b>Uso da plataforma:</b> questões respondidas, acertos e erros, flashcards e resumos vistos, datas de revisão, sequência de dias e configurações de estudo.</li>
       <li><b>Notificações (opcional):</b> se você ativar os lembretes, é guardado um identificador do aparelho para envio. Desativar remove esse identificador.</li>
-      <li><b>Segurança:</b> o login usa o reCAPTCHA do Google, que analisa sinais do navegador para distinguir pessoa de robô.</li>
+      <li><b>Segurança:</b> o acesso é protegido por login com senha e as regras do banco de dados impedem qualquer usuário de ver ou alterar dados de outra pessoa.</li>
       <li><b>Não coletamos</b> CPF, endereço, telefone, localização, dados de cartão ou qualquer dado sensível.</li>
     </ul>
 
