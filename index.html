@@ -1390,7 +1390,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 
   <!-- ── HERO ── -->
   <section class="lp-hero">
-    <img class="lp-hero-img" src="img/banner.jpg" alt="" onerror="this.style.display='none'">
+    <picture>
+      <source srcset="img/banner.webp" type="image/webp">
+      <img class="lp-hero-img" src="img/banner.jpg" alt="" onerror="this.style.display='none'">
+    </picture>
     <div class="lp-hero-veu"></div>
     <div class="lp-hero-in">
       <div class="lp-eyebrow">Preparação para o CTSP · CBMRS</div>
@@ -1655,7 +1658,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 </div><!-- /#landing-view -->
 
 <div id="login-view" class="hidden">
-  <img class="auth-bg-img" src="img/banner.jpg" alt="" onerror="this.style.display='none'">
+  <picture>
+    <source srcset="img/banner.webp" type="image/webp">
+    <img class="auth-bg-img" src="img/banner.jpg" alt="" onerror="this.style.display='none'">
+  </picture>
   <div class="auth-bg"></div>
   <div class="auth-content">
     <button type="button" class="lp-voltar" onclick="verLanding()" aria-label="Voltar para a apresentação">← Voltar</button>
@@ -3985,7 +3991,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.177';
+const APP_VERSAO='v1.178';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
