@@ -3998,7 +3998,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.174';
+const APP_VERSAO='v1.175';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5176,8 +5176,9 @@ function iniciarModoErro(){
 }
 
 function iniciarSimuladoInteligente(){
-  // S47: fila inteligente sobre todo o banco, 15 questões (novas + revisão).
-  quizQueue=montarFilaEstudo(Object.values(allQuestoes),15);
+  // b174: fila por ponto fraco (BKT), igual ao Treino do dia — antes usava montarFilaEstudo,
+  // que ignora tópico fraco e deixava "Treino Focado" com a mesma lógica do Estudo Rápido.
+  quizQueue=selecionarAdaptativo(15);
   quizArea='INTELIGENTE';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};
   document.getElementById('quiz-home-view').classList.add('hidden');
   document.getElementById('quiz-running-view').classList.remove('hidden');
