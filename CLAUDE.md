@@ -290,8 +290,15 @@ de graça.
 
 ## 11. BACKLOG (não bloqueante)
 
-- **Banco desbalanceado vs peso da prova:** AT4 tem ~117 questões para cota 12.
-  **Expandir AT1, AT3/APH e T2.x; nunca AT4/AT5.** Nunca escrever questão só por escrever.
+- **Banco levemente desbalanceado vs peso da prova — não urgente.** Medido em 17/08/2026 (533
+  questões): AT1 106 · AT2 78 · AT3 114 · AT4 122 · AT5 113, para cotas 14/8/14/12/12. Dá de 7,6
+  (AT1) a 10,2 (AT4) questões por vaga — desvio de **1,3x**, não a distorção grande que este item
+  já sugeriu. Equilibrar custaria ~28 questões em AT1+AT3.
+  A direção continua valendo: **expandir AT1, AT3/APH e T2.x; nunca AT4/AT5.** Mas com 7,6 por vaga
+  em AT1 ninguém esgota o banco antes da prova — só mexer se aparecer sinal de uso real.
+  Nunca escrever questão só por escrever.
+  **Ao remedir:** `QI` tem as chaves `AT1..AT5` **e** os lotes `AT1B..AT5B`, e a questão **não** tem
+  campo `area` — a área sai de `TOPICOS[q.topico].a`. Contar só as 5 primeiras chaves erra por 4x.
 - **BKT sem dificuldade de item** (IRT/Elo) — `itemStats` plantada, falta volume e agregação.
 - Acessibilidade por teclado incompleta em pontos.
 - Formato do banco está **congelado** (97% alternativa direta) — não reformatar.

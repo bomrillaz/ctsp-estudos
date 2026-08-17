@@ -1865,19 +1865,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <div class="quick-btn-sub">15 questões · pontos fracos</div>
           </div>
         </div>
-        <div class="sec-title">Revisar material</div>
-        <div class="quick-grid">
-          <div class="quick-btn" onclick="irResumosHub()">
-            <div class="quick-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
-            <div class="quick-btn-title">Resumos</div>
-            <div class="quick-btn-sub">Por área e tópico</div>
-          </div>
-          <div class="quick-btn" onclick="irCardsHub()">
-            <div class="quick-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
-            <div class="quick-btn-title">Flashcards</div>
-            <div class="quick-btn-sub">Memorização rápida</div>
-          </div>
-        </div>
         <!-- S65: "Seu foco" + "Foco da semana" — agora abaixo de "Estudar agora". -->
         <div id="foco-bloco" class="foco-bloco hidden">
           <div class="foco-bloco-head">
@@ -3998,7 +3985,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.175';
+const APP_VERSAO='v1.176';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
