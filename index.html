@@ -3954,7 +3954,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.169';
+const APP_VERSAO='v1.170';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -6501,9 +6501,9 @@ async function loadAdminUsers(){
         </div>
         <div class="user-actions">
           ${!u.aprovado?`<button class="btn-sm btn-approve" onclick="approveUser('${uid}')">${rev?'Reativar':'Aprovar'}</button>`:''}
-          ${u.aprovado&&!u.admin?`<button class="btn-sm btn-revoke" onclick="revokeUser('${uid}')">Revogar</button>`:''}
+          ${u.aprovado&&uid!==currentUser.uid?`<button class="btn-sm btn-revoke" onclick="revokeUser('${uid}')">Revogar</button>`:''}
           ${!u.admin?`<button class="btn-sm btn-mkadmin" onclick="makeAdmin('${uid}')">Admin</button>`:''}
-          ${!u.admin?`<button class="btn-sm btn-remove" onclick="removerUsuario('${uid}')">Remover</button>`:''}
+          ${uid!==currentUser.uid?`<button class="btn-sm btn-remove" onclick="removerUsuario('${uid}')">Remover</button>`:''}
         </div>
       </div>`;
     const secao=(titulo,arr,rev)=>arr.length?`<div class="user-grupo">${titulo} · ${arr.length}</div>`+arr.map(x=>linha(x,rev)).join(''):'';
