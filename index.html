@@ -3985,7 +3985,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.176';
+const APP_VERSAO='v1.177';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -6796,13 +6796,8 @@ function calcDominio(){
     const cobVistos=qVistas+cardsRevisados+resumosRevisados;
     const coberturaPct=cobTotal>0?cobVistos/cobTotal:0;
 
-    // --- ÍNDICE DE DOMÍNIO (composto) — F2b: fonte da UI virou dominioAreaBKT(). Este campo
-    // sobrevive só para a decomposição "por quê" (quiz/cards/resumos) que o F2a vai consumir;
-    // não alimenta mais barra nem herói. Pendência própria: peso 50/30/20 x §6 do CLAUDE.md.
-    const dominio=Math.round((quizPct*0.5+cardsPct*0.3+resumosPct*0.2)*100);
-
     result[k]={
-      dominio, quizConf,
+      quizConf,
       respondidas:t, acertos:c,
       quizPct:Math.round(quizPct*100),
       cardsPct:Math.round(cardsPct*100),
@@ -7688,9 +7683,9 @@ function showInfo(tipo){
       +'Quanto mais você já acertou um tópico, mais devagar ele esfria; revisar levanta o número de novo. '
       +'As questões de uma área só entram na conta a partir de '+MIN_RESP_CONF+' respostas, para o número não '
       +'inflar com pouca base. Domínio baixo numa área é o sinal mais direto de onde estudar — abra a área e '
-      +'vá pelos tópicos mais fracos. Ao selecionar uma área, a tela também mostra POR QUÊ: como o resultado se '
-      +'decompõe entre Quiz (peso 50%), Cards (peso 30%) e Resumos (peso 20%) do que você já praticou — é essa '
-      +'decomposição, não o número grande do topo, que usa esses pesos.',
+      +'vá pelos tópicos mais fracos. Ao selecionar uma área, a tela também mostra POR QUÊ: o quanto você já '
+      +'praticou em Quiz, Cards e Resumos daquela área, apontando a frente mais fraca como gargalo — isso é '
+      +'diagnóstico, não entra na conta do número grande do topo.',
     cobertura:'Quanto do material você já viu: questões, flashcards e resumos que você abriu pelo menos uma vez, '
       +'dividido pelo total que existe na área. Mede caminho percorrido, não acerto — dá para ter 100% de cobertura '
       +'e domínio baixo, e isso só quer dizer que você passou por tudo sem fixar. '
