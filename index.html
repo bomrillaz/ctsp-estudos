@@ -1052,11 +1052,19 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .pix-cartao{font-size:11.5px;color:var(--text3);margin-top:12px;padding-top:10px;border-top:1px dashed var(--line-soft);}
 .pix-cartao-tit{font-size:12.5px;font-weight:800;color:var(--text2);}
 .pix-cartao-sub{font-size:11.5px;line-height:1.5;color:var(--text3);margin-top:3px;}
-/* Nenhuma opção vem destacada de propósito: 12x é teto disponível, não sugestão. */
+/* 6 opções em 3 colunas = duas fileiras cheias, sem item solto na última linha.
+   Nenhuma vem marcada de propósito: 12x é teto disponível, não sugestão. */
 .pix-parcelas{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px;}
-.pix-parc-btn{display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 4px;border-radius:10px;background:var(--paper-2);border:1px solid var(--line-soft);text-decoration:none;color:var(--text2);}
+.pix-parc-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:56px;padding:8px 4px;border-radius:10px;background:var(--paper-2);border:1px solid var(--line-soft);font-family:inherit;color:var(--text2);cursor:pointer;}
 .pix-parc-btn b{font-size:13px;font-weight:800;color:var(--text);}
 .pix-parc-btn span{font-size:10.5px;color:var(--text3);}
+.pix-parc-btn.on{background:var(--navy);border-color:var(--navy);}
+.pix-parc-btn.on b,.pix-parc-btn.on span{color:#fff;}
+.pix-parc-tag{font-style:normal;font-size:8.5px;font-weight:700;line-height:1.2;color:var(--green);margin-top:2px;text-align:center;}
+.pix-parc-btn.on .pix-parc-tag{color:#9FE6C0;}
+/* Confirmação em passo separado: sem escolha, não tem href e não clica. */
+.pix-confirmar{display:block;margin-top:9px;padding:12px;border-radius:12px;text-align:center;font-size:13px;font-weight:800;text-decoration:none;background:var(--green-light);color:var(--green);}
+.pix-confirmar.off{background:var(--paper-2);color:var(--text3);cursor:default;}
 .user-grupo{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin:16px 0 8px;}
 .user-grupo:first-child{margin-top:0;}
 /* Nos dois filhos, não no .user-row: no desktop ele é `display:contents` e não gera
@@ -4079,7 +4087,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.185';
+const APP_VERSAO='v1.186';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -6789,13 +6797,16 @@ const PIX_NOME='44.044.042 DAIANE MAGEDANZ FERREIRA';
    11x  15,79% → R$ 403,20      10,49% → R$ 428,57
    12x  16,49% → R$ 399,85      10,99% → R$ 426,18
 
-   Por que a lista é [1,2,3,4,6,8,12] e não 1..12: entre 3x e 8x cada parcela a mais
+   Por que a lista é [1,2,3,6,8,12] e não 1..12: entre 3x e 8x cada parcela a mais
    custa ~R$ 4, mas de 8x para 9x custa R$ 11,97 de uma vez (11,49% → 13,99%). 8x é o
    último degrau barato — e a parcela de 8x (R$ 59,85) é praticamente a mensalidade
    (R$ 59,90), o que dá um ponto de parada natural para quem está comparando os planos.
-   12x continua na lista porque é teto real de oferta, mas nenhuma opção vem marcada. */
+   12x continua na lista porque é teto real de oferta, mas nenhuma opção vem marcada.
+   São SEIS opções de propósito: a grade tem 3 colunas, então 6 fecha duas fileiras
+   cheias. Com 7 sobrava o 12x sozinho na última linha, parecendo item solto. O 4x foi
+   o cortado por ser o menos distintivo — fica espremido entre o 3x e o 6x. */
 const PIX_PLANOS={
-  anual :{rotulo:'Anual',  valor:478.80, txt:'R$ 478,80', obs:'13 meses de acesso', parcelas:[1,2,3,4,6,8,12]},
+  anual :{rotulo:'Anual',  valor:478.80, txt:'R$ 478,80', obs:'13 meses de acesso', parcelas:[1,2,3,6,8,12]},
   mensal:{rotulo:'Mensal', valor:59.90,  txt:'R$ 59,90',  obs:'30 dias de acesso'}
 };
 function pixMoeda(v){return 'R$ '+v.toFixed(2).replace('.',',');}
@@ -8039,22 +8050,45 @@ function abrirPagamento(plano){
     cart.appendChild(tit);
     const sub=document.createElement('div');
     sub.className='pix-cartao-sub';
-    sub.textContent='O total é '+p.txt+' em qualquer opção — em menos parcelas seu limite libera mais rápido. Escolha e me chame:';
+    sub.textContent='O total é '+p.txt+' em qualquer opção — em menos parcelas seu limite libera mais rápido.';
     cart.appendChild(sub);
     const linha=document.createElement('div');
     linha.className='pix-parcelas';
+    // B99b — ESCOLHER e CONFIRMAR são passos separados. Antes cada card era um link
+    // que abria o WhatsApp na hora: como eles parecem seletor (e o app do Nubank usa
+    // exatamente esse padrão de lista com marcação), a pessoa clicava esperando
+    // selecionar e caía fora do app sem querer. Agora o card marca e o botão confirma.
+    const confirmar=document.createElement('a');
+    confirmar.className='pix-confirmar off';
+    confirmar.target='_blank'; confirmar.rel='noopener noreferrer';
+    confirmar.textContent='Escolha as parcelas acima';
     p.parcelas.forEach(function(n){
-      const a=document.createElement('a');
-      a.className='pix-parc-btn';
-      a.target='_blank'; a.rel='noopener noreferrer';
-      a.href=linkWhats('Olá! Quero assinar o plano '+p.rotulo+' do Prontidão no cartão, em '
-        +n+'x de '+pixMoeda(p.valor/n)+' (total '+p.txt+'). Pode gerar o link?');
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='pix-parc-btn';
       const t=document.createElement('b'); t.textContent=n+'x';
       const v=document.createElement('span'); v.textContent=pixMoeda(p.valor/n);
-      a.appendChild(t); a.appendChild(v);
-      linha.appendChild(a);
+      b.appendChild(t); b.appendChild(v);
+      // Rótulo só onde ele é FATO verificável: a parcela de 8x (R$ 59,85) bate com a
+      // mensalidade (R$ 59,90). Não é promessa de desconto, é uma referência de
+      // comparação — e por acaso 8x é o último degrau barato da tabela do Nubank.
+      if(Math.abs(p.valor/n-PIX_PLANOS.mensal.valor)<0.10){
+        const tag=document.createElement('i');
+        tag.className='pix-parc-tag'; tag.textContent='= mensalidade';
+        b.appendChild(tag);
+      }
+      b.onclick=function(){
+        linha.querySelectorAll('.pix-parc-btn').forEach(x=>x.classList.remove('on'));
+        b.classList.add('on');
+        confirmar.href=linkWhats('Olá! Quero assinar o plano '+p.rotulo+' do Prontidão no cartão, em '
+          +n+'x de '+pixMoeda(p.valor/n)+' (total '+p.txt+'). Pode gerar o link?');
+        confirmar.classList.remove('off');
+        confirmar.textContent='Chamar no WhatsApp · '+n+'x de '+pixMoeda(p.valor/n);
+      };
+      linha.appendChild(b);
     });
     cart.appendChild(linha);
+    cart.appendChild(confirmar);
   }else if(urlGen){
     cart.appendChild(document.createTextNode('Só consegue pagar no cartão? '));
     const a=document.createElement('a');
