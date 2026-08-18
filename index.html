@@ -2848,6 +2848,14 @@ let resumosQueue=[],resumoAtualIdx=0;
 // ═══════════════════════════════
 // ── FSRS-lite para flashcards (graus Difícil/Médio/Fácil); migra cards SM-2 antigos ──
 const FSRS_MAX_DIAS=240; // teto defensivo: sem isso o intervalo cresce sem limite (composto puro)
+// b101 CALIBRAÇÃO: o piso antigo (1.12 questões / 1.1 cards) vencia o termo de dificuldade
+// em TODA revisão feita no prazo (R≈0,9 → o termo de D vale no máx. 0,054), então D era
+// calculado e jogado fora. Piso menor + coeficiente maior devolvem efeito ao D: no prazo,
+// D=5 (nunca errou) cresce 18%/revisão e D=10 (erra sempre) cresce 5%. Não alonga o total
+// — realoca tempo do dominado para o problemático (~16 vs ~26 revisões em 240 dias).
+// O TETO limita o salto de um acerto muito atrasado (G=0,20: 1 em 5 acertos é chute).
+// Ajustar a calibração AQUI, não dentro das fórmulas.
+const FSRS_INC_K=0.30, FSRS_INC_PISO=1.05, FSRS_INC_TETO=2.5;
 function fsrsCardUpdate(card,dif){
   const now=Date.now();card=card||{};
   const grau=dif==='dif'?1:dif==='fac'?3:2; // 1=lapso, 2=ok, 3=fácil
@@ -2861,7 +2869,7 @@ function fsrsCardUpdate(card,dif){
     D=Math.min(10,Math.max(1,D-0.7*(grau-2)));
     D=D+0.06*(5-D);
     if(grau===1){ S=Math.max(0.5,S*0.5*(1-(D-1)/22)); }
-    else{ const inc=Math.max(1.1,1+(11-D)*0.09*(1-R)*(grau===3?1.35:1)); S=Math.min(FSRS_MAX_DIAS,Math.max(S*inc,S+0.5)); }
+    else{ const inc=Math.min(FSRS_INC_TETO,Math.max(FSRS_INC_PISO,1+(11-D)*FSRS_INC_K*(1-R)*(grau===3?1.35:1))); S=Math.min(FSRS_MAX_DIAS,Math.max(S*inc,S+0.5)); }
   }
   const interval=Math.max(1,Math.round(S));
   return{S:+S.toFixed(3),D:+D.toFixed(2),reps:reps+1,last:now,next:now+interval*86400000,interval};
@@ -2932,6 +2940,15 @@ function bktUpdate(topico,acertou){
   userStats.bkt[topico]={pL:Math.min(0.99,Math.max(0.01,pLnew)),n:(cur.n||0)+1,nc:ncPrev+(acertou?1:0),last:Date.now()};
 }
 function bktDe(topico){const b=userStats.bkt&&userStats.bkt[topico];return b?bktPLefetivo(b):BKT_P.L0;}
+// b101: peso de seleção com ENCOLHIMENTO para o prior. O pL do BKT é instável com n
+// baixo (1 erro leva a 0,19; 1 acerto de sorte — G=0,20 — leva a 0,71), e o boost antigo
+// `n<3?1.4:1` AMPLIFICAVA isso, pondo um único chute errado acima de tópico fraco bem
+// amostrado. Descontamos a amostra pequena com m=3 pseudo-observações do prior (mesmo
+// limiar do `minN=3` de topicosFracos). Cobertura de material novo NÃO é problema desta
+// função — quem cuida disso é `novasPorCobertura` no Treino do dia, com reserva própria;
+// aqui fica só um empurrão pequeno para tópico NUNCA visto, que serve ao Treino Focado.
+const BKT_SHRINK_M=3, BKT_BONUS_NOVO=1.15;
+function bktPLajustado(pL,n){const k=n||0;return (k*pL+BKT_SHRINK_M*BKT_P.L0)/(k+BKT_SHRINK_M);}
 
 // BLOCO 43 — COSTURA: recuperação ativa FORA da questão (flashcard). Ela NÃO cria
 // domínio (só a questão comprova P(saber), então `pL` e `nc` ficam intactos), mas é
@@ -2983,7 +3000,7 @@ function fsrsUpdate(card,acertou){
     D=Math.min(10,Math.max(1,D-0.6*((acertou?3:1)-3)));
     D=D+0.05*(5-D); // regressão suave à média
     if(acertou){
-      const inc=Math.max(1.12,1+(11-D)*0.09*(1-R));
+      const inc=Math.min(FSRS_INC_TETO,Math.max(FSRS_INC_PISO,1+(11-D)*FSRS_INC_K*(1-R)));
       S=Math.min(FSRS_MAX_DIAS,Math.max(S*inc,S+0.5));
     }else{
       S=Math.max(0.5,S*0.4*(1-(D-1)/22));
@@ -3175,7 +3192,11 @@ function interleavePorTopico(arr){
 // ── F2.4 Seleção adaptativa por tópico ──
 function selecionarAdaptativo(limite=12){
   const perfil=perfilTopicos().filter(p=>p.nQ>0);
-  perfil.forEach(p=>{p.peso=(1-p.pL)*(p.n<3?1.4:1);}); // fraqueza + reforço p/ pouco vistos
+  const pLajDe={};
+  perfil.forEach(p=>{
+    pLajDe[p.t]=bktPLajustado(p.pL,p.n);
+    p.peso=(1-pLajDe[p.t])*((p.n||0)===0?BKT_BONUS_NOVO:1); // fraqueza descontada de ruído
+  });
   const totalPeso=perfil.reduce((s,p)=>s+p.peso,0)||1;
   let pool=[];
   perfil.forEach(p=>{
@@ -3184,7 +3205,7 @@ function selecionarAdaptativo(limite=12){
       .sort((a,b)=>questaoDue(a.id)-questaoDue(b.id)); // vencidas/nunca vistas primeiro
     pool.push(...qs.slice(0,cota));
   });
-  pool=pool.map(q=>({q,pL:bktDe(q.topico),due:questaoDue(q.id)}));
+  pool=pool.map(q=>({q,pL:(q.topico in pLajDe)?pLajDe[q.topico]:BKT_P.L0,due:questaoDue(q.id)}));
   pool.sort((a,b)=>(a.pL-b.pL)||(a.due-b.due));
   const seen=new Set();const out=[];
   for(const it of pool){if(seen.has(it.q.id))continue;seen.add(it.q.id);out.push(it.q);if(out.length>=limite)break;}
@@ -4094,7 +4115,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.188';
+const APP_VERSAO='v1.189';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
