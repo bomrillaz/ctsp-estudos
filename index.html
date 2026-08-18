@@ -1029,6 +1029,24 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .aviso-cob.urgente{background:var(--red-light);color:var(--red);}
 .aviso-cob-ic{font-size:18px;flex-shrink:0;}
 .aviso-cob-sub{display:block;font-weight:600;opacity:.85;margin-top:2px;}
+.aviso-cob-btn{margin-left:auto;flex-shrink:0;background:var(--navy);color:#fff;border:none;font-family:inherit;font-weight:800;font-size:12px;padding:8px 14px;border-radius:10px;cursor:pointer;}
+/* B99 — folha de pagamento Pix. Reaproveita .rep-overlay/.rep-sheet do reportar erro.
+   A ordem visual é pensada para o iPhone, que é a prioridade do projeto: quem paga
+   está no MESMO aparelho e não consegue escanear a própria tela, então o copia-e-cola
+   é o botão principal e o QR fica recolhido num <details>. */
+.pix-sheet{text-align:left;}
+.pix-plano{font-size:13px;font-weight:800;color:var(--text);background:var(--paper-2);border-radius:10px;padding:9px 12px;margin-bottom:12px;}
+.pix-copiar{width:100%;background:var(--navy);color:#fff;border:none;font-family:inherit;font-size:15px;font-weight:800;padding:15px;border-radius:12px;cursor:pointer;}
+.pix-fallback{width:100%;margin-top:8px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;color:var(--text2);background:var(--paper-2);border:1px solid var(--line-soft);border-radius:8px;padding:8px;}
+.pix-aviso{font-size:12px;line-height:1.5;color:var(--text2);margin-top:10px;}
+.pix-qr-wrap{margin-top:12px;}
+.pix-qr-wrap summary{font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;}
+.pix-qr{display:block;margin:10px auto 0;width:220px;height:220px;background:#fff;border-radius:8px;}
+.pix-ja{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line-soft);}
+.pix-ja-btn{width:100%;background:var(--green-light);color:var(--green);border:none;font-family:inherit;font-size:14px;font-weight:800;padding:13px;border-radius:12px;cursor:pointer;}
+.pix-ja-btn:disabled{opacity:.55;cursor:default;}
+.pix-legal{font-size:11px;line-height:1.5;color:var(--text3);margin-top:12px;}
+.pix-cartao{font-size:11.5px;color:var(--text3);margin-top:8px;}
 .user-grupo{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin:16px 0 8px;}
 .user-grupo:first-child{margin-top:0;}
 /* Nos dois filhos, não no .user-row: no desktop ele é `display:contents` e não gera
@@ -1618,7 +1636,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
               <li>Economia de R$ 239,90 no ano</li>
               <li>Paga uma vez e esquece: sem Pix todo mês</li>
             </ul>
-            <button class="btn-primary" onclick="verLogin('register')">Quero o anual</button>
+            <button class="btn-primary" onclick="verLogin('register','anual')">Quero o anual</button>
           </div>
           <div class="plano-card">
             <div class="plano-nome">Mensal</div>
@@ -1627,7 +1645,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <ul class="plano-lista">
               <li>Sem fidelidade, cancela quando quiser</li>
             </ul>
-            <button class="btn-weak plano-btn-weak" onclick="verLogin('register')">Quero o mensal</button>
+            <button class="btn-weak plano-btn-weak" onclick="verLogin('register','mensal')">Quero o mensal</button>
           </div>
         </div>
         <div class="planos-trial">Comece com <b>7 dias grátis</b>. Sem cartão, sem compromisso — se não servir para você, é só não continuar.</div>
@@ -1733,7 +1751,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <strong style="color:var(--text);font-size:15px;">Conta criada com sucesso.</strong><br>
           Seu acesso está aguardando liberação manual.<br>
           <span style="display:inline-block;margin-top:10px;">A liberação costuma sair em <strong>até 24h</strong>. Assim que for liberada, é só entrar com o mesmo e-mail e senha — não precisa cadastrar de novo.</span>
-          <span style="display:block;margin-top:10px;color:var(--text3);font-size:12px;">Já fez o pagamento e passou o prazo? Chame no WhatsApp que eu libero na hora.</span>
+          <span style="display:block;margin-top:12px;">
+            <button class="pix-copiar" style="font-size:14px;padding:13px;" onclick="abrirPagamento(planoEscolhido())">Pagar com Pix</button>
+          </span>
+          <span style="display:block;margin-top:10px;color:var(--text3);font-size:12px;">Já pagou e passou o prazo? Chame no WhatsApp que eu libero na hora.</span>
         </div>
       </div>
       <div class="auth-legal">
@@ -2437,6 +2458,15 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="config-sub" id="config-notif-sub">Lembrete diário das revisões vencidas</div>
       </div>
       <button class="btn-config-reset" id="config-notif-btn" onclick="ativarNotificacoes()">Ativar</button>
+    </div>
+    <!-- B99 — entrada permanente do pagamento. A faixa da Home só aparece perto do
+         vencimento; aqui quem quiser adiantar encontra em qualquer momento. -->
+    <div class="config-row">
+      <div>
+        <div class="config-label">Pagamento e assinatura</div>
+        <div class="config-sub" id="config-cob-sub">Pagar com Pix e avisar</div>
+      </div>
+      <button class="btn-config-reset" onclick="abrirPagamento(planoAtual())">Pagar</button>
     </div>
     <div class="config-row">
       <div>
@@ -3660,12 +3690,32 @@ auth.onAuthStateChanged(async user=>{
 // b59 — troca entre a apresentação e a tela de entrada. SÍNCRONA, sem View
 // Transitions (regra dura: o app faz `navTo('x'); <ação>` em ~15 pontos e qualquer
 // assincronia aqui quebraria o mesmo contrato).
-function verLogin(tab){
+// B99 — segundo parâmetro OPCIONAL: guarda qual plano a pessoa clicou na landing.
+// Antes os dois botões chamavam verLogin('register') igual e a escolha se perdia.
+// Vai para o localStorage porque o cadastro passa por verificação de e-mail e a
+// variável de memória não sobrevive. Isso é só a etiqueta do preço que será exibido:
+// abrirPagamento() valida contra PIX_PLANOS, então um valor adulterado aqui não vira
+// cobrança errada — no máximo mostra o plano errado para a própria pessoa.
+function verLogin(tab,plano){
+  if(plano==='anual'||plano==='mensal'){
+    try{localStorage.setItem('planoEscolhido',plano);}catch(e){}
+  }
   const l=document.getElementById('landing-view'),v=document.getElementById('login-view');
   if(l)l.classList.add('hidden');
   if(v)v.classList.remove('hidden');
   showAuthTab(tab||'login');
   window.scrollTo(0,0);
+}
+function planoEscolhido(){
+  let p=null;
+  try{p=localStorage.getItem('planoEscolhido');}catch(e){}
+  return (p==='anual'||p==='mensal')?p:'anual';
+}
+// Já logado: o plano real da conta manda. Em teste (ou sem dado), cai no que a pessoa
+// escolheu na landing. Sempre um dos dois valores do mapa PIX_PLANOS.
+function planoAtual(){
+  const p=userProfile&&userProfile.cob&&userProfile.cob.plano;
+  return (p==='anual'||p==='mensal')?p:planoEscolhido();
 }
 function verLanding(){
   const l=document.getElementById('landing-view'),v=document.getElementById('login-view');
@@ -4019,7 +4069,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.180';
+const APP_VERSAO='v1.181';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4330,9 +4380,13 @@ function renderAvisoCobranca(){
   }else if(st.estado==='vencido'){
     cls='urgente';ic='⚠️';
     txt=st.plano==='trial'?'Seu teste grátis terminou':'Sua assinatura está vencida';
-    sub='Fale com o administrador para regularizar e manter o acesso.';
+    sub='Pague pelo Pix e avise aqui mesmo para manter o acesso.';
   }else return;
-  el.innerHTML=`<div class="aviso-cob ${cls}"><span class="aviso-cob-ic">${ic}</span><span>${txt}<span class="aviso-cob-sub">${sub}</span></span></div>`;
+  // B99 — a faixa deixou de ser só aviso e virou o caminho da renovação: é por aqui
+  // que passa o caso mensal, que é o recorrente. O plano do botão sai do estado atual
+  // (nunca de URL); em teste, oferece o anual, que é o que a escada do §7 quer induzir.
+  const planoBtn=(st.plano==='anual'||st.plano==='mensal')?st.plano:'anual';
+  el.innerHTML=`<div class="aviso-cob ${cls}"><span class="aviso-cob-ic">${ic}</span><span>${txt}<span class="aviso-cob-sub">${sub}</span></span><button class="aviso-cob-btn" onclick="abrirPagamento('${planoBtn}')">Pagar</button></div>`;
 }
 
 function renderDashboard(){
@@ -6674,6 +6728,56 @@ const TRIAL_DIAS=7;            // teste grátis
 const COB_AVISO_DIAS=5;        // antecedência do aviso ao militar
 const COB_DIA_MS=86400000;
 const COB_MESES_ANUAL=13;      // 12 pagos + 1º mês grátis
+
+/* ==========================================================================
+   PIX — B99
+   SEGURANÇA, e a razão de estar tudo aqui como const literal:
+   estes valores NUNCA podem vir do RTDB nem de URL, localStorage ou qualquer
+   entrada do usuário. Se viessem do banco, quem conseguisse escrever no nó
+   correspondente redirecionaria o dinheiro. Como são literais no fonte, nenhuma
+   escrita no banco — nem de um admin — muda o que aparece na tela. Só um commit
+   no repositório muda, e isso é protegido pela conta do GitHub (mantenha 2FA).
+
+   ⚠️ O PDF do Nubank avisa: se a chave aleatória abaixo for EXCLUÍDA no app ou a
+   conta for portada para outra instituição, este código PARA DE FUNCIONAR — e
+   falha em silêncio, ninguém consegue pagar e nada avisa aqui. Se um dia mexer
+   nas chaves Pix da conta PJ, gere um QR novo e troque PIX_BRCODE + assets/pix-qr.png.
+
+   PIX_BRCODE é o "copia e cola" (padrão EMV/BR Code do Bacen), extraído do QR
+   oficial da conta PJ e conferido por CRC16. É ESTÁTICO e SEM VALOR definido
+   (não tem campo 54): quem paga digita o valor. Por isso a tela precisa deixar
+   o valor exato em destaque.
+   ========================================================================== */
+const PIX_BRCODE='00020126580014BR.GOV.BCB.PIX0136ce07d577-73ca-44c0-b85a-83d297c329245204000053039865802BR592544.044.042 DAIANE MAGEDAN6009SAO PAULO61080540900062250521d53PqmhKCBXlHHk5owj4d6304E4BB';
+// Nome que o app do pagador mostra na confirmação. Precisa aparecer na tela ANTES
+// do pagamento: quem esperava o nome do João estranha e desiste achando que é golpe.
+const PIX_NOME='44.044.042 DAIANE MAGEDANZ FERREIRA';
+// Valores oficiais (CLAUDE.md §7). Mapa fechado: o plano nunca é lido de URL nem
+// interpolado cru na tela — só serve de chave aqui dentro.
+const PIX_PLANOS={
+  anual :{rotulo:'Anual',  valor:478.80, txt:'R$ 478,80', obs:'13 meses de acesso'},
+  mensal:{rotulo:'Mensal', valor:59.90,  txt:'R$ 59,90',  obs:'30 dias de acesso'}
+};
+// CRC16/CCITT-FALSE sobre tudo que vem antes dos 4 dígitos finais — é como o Bacen
+// fecha o BR Code. Serve de detector de adulteração ACIDENTAL (edição errada, deploy
+// corrompido, byte trocado): se não bater, a tela se recusa a exibir em vez de mandar
+// alguém pagar num código quebrado.
+// HONESTIDADE SOBRE O LIMITE: isto NÃO protege contra quem já executa JS na página
+// (XSS ou origem comprometida) — nesse cenário dá para trocar payload e CRC juntos,
+// ou simplesmente sobrescrever esta função. A proteção real contra isso é a CSP (que
+// bloqueia execução dinâmica de código), o sanitize() em todo innerHTML e a segurança
+// da conta do GitHub.
+function pixCRC(str){
+  let crc=0xFFFF;
+  for(let i=0;i<str.length;i++){
+    crc^=str.charCodeAt(i)<<8;
+    for(let b=0;b<8;b++) crc=(crc&0x8000)?((crc<<1)^0x1021)&0xFFFF:(crc<<1)&0xFFFF;
+  }
+  return crc.toString(16).toUpperCase().padStart(4,'0');
+}
+function pixIntegro(){
+  return PIX_BRCODE.length>100 && pixCRC(PIX_BRCODE.slice(0,-4))===PIX_BRCODE.slice(-4);
+}
 // setMonth puro estoura: 31/jan + 1 mês vira 03/mar (não existe 31/fev). Fixa o dia 1
 // antes de somar e depois grampeia no último dia do mês de destino — quem assina dia 31
 // vence dia 28, não ganha 3 dias de brinde todo bimestre.
@@ -7815,6 +7919,91 @@ function repPreview(tipo,id){
     if(tipo==='flashcard'){const c=(typeof FCI!=='undefined'?FCI.find(x=>x.id===id):null)||(allFlashcards&&allFlashcards[id]);return c?('Card: '+(c.f||id)):('Flashcard '+id);}
   }catch(e){}
   return tipo+' '+id;
+}
+/* ---------- PIX — folha de pagamento (B99) ----------
+   Copia a mecânica de abrirReporte(): overlay sob demanda, .show dentro de
+   requestAnimationFrame, fecha clicando no fundo. NÃO cria seção nem mexe em navTo.
+
+   Regra de ouro desta função: o BR Code NUNCA passa por innerHTML. Vai por
+   textContent e por .value, para que nem em cenário absurdo uma string consiga
+   injetar marcação. O único dado dinâmico é o plano, e ele é validado contra o
+   mapa fechado PIX_PLANOS — nada vem de URL, de localStorage nem do banco. */
+function abrirPagamento(plano){
+  const p=PIX_PLANOS[plano]||PIX_PLANOS.mensal;
+  if(!pixIntegro()){
+    // Prefere não pagar a pagar errado.
+    showToast('Código Pix indisponível no momento. Chame no WhatsApp.');
+    console.error('PIX: CRC não confere — o BR Code foi alterado ou corrompido.');
+    return;
+  }
+  let ov=document.getElementById('pix-overlay');
+  if(!ov){
+    ov=document.createElement('div');ov.id='pix-overlay';ov.className='rep-overlay';
+    ov.innerHTML='<div class="rep-sheet pix-sheet">'
+      +'<h3>Pagar com Pix</h3>'
+      +'<div class="pix-plano" id="pix-plano"></div>'
+      +'<button class="pix-copiar" id="pix-copiar">Copiar código Pix</button>'
+      +'<input class="pix-fallback" id="pix-fallback" readonly aria-label="Código Pix copia e cola">'
+      +'<div class="pix-aviso" id="pix-aviso"></div>'
+      +'<details class="pix-qr-wrap"><summary>Pagando de outro aparelho? Mostrar QR Code</summary>'
+        +'<img class="pix-qr" src="assets/pix-qr.png" alt="QR Code para pagamento via Pix" width="220" height="220">'
+      +'</details>'
+      +'<div class="pix-ja" ><button class="pix-ja-btn" id="pix-ja-btn">Já paguei</button></div>'
+      +'<div class="pix-legal">O plano vale pelo período contratado a partir da assinatura. '
+        +'Compras online têm <b>7 dias de arrependimento</b> (CDC). '
+        +'<button type="button" class="link-inline" onclick="abrirDoc(\'termos\')">Ver os Termos</button></div>'
+      +'<div class="pix-cartao">Prefere 12x no cartão? Chame no WhatsApp que eu gero o link.</div>'
+      +'<div class="rep-actions"><button class="rep-cancel" onclick="fecharPagamento()">Fechar</button></div>'
+      +'</div>';
+    ov.onclick=function(e){if(e.target===ov)fecharPagamento();};
+    document.body.appendChild(ov);
+  }
+  // textContent em tudo que é dado — nada de innerHTML daqui para baixo.
+  document.getElementById('pix-plano').textContent=p.rotulo+' · '+p.txt+' · '+p.obs;
+  document.getElementById('pix-fallback').value=PIX_BRCODE;
+  document.getElementById('pix-aviso').textContent=
+    'O código não vem com valor preenchido: digite '+p.txt+' no app do seu banco. '
+    +'Na confirmação vai aparecer o nome '+PIX_NOME+' — é a conta certa.';
+  const bt=document.getElementById('pix-copiar');
+  bt.onclick=function(){copiarPix(bt);};
+  document.getElementById('pix-ja-btn').onclick=function(){avisarPagamento(plano);};
+  requestAnimationFrame(()=>ov.classList.add('show'));
+}
+function fecharPagamento(){const ov=document.getElementById('pix-overlay');if(ov)ov.classList.remove('show');}
+// iPhone é a prioridade do projeto e é onde clipboard mais falha (Safari antigo,
+// contexto não-seguro). O <input> já está na tela como plano B real, não escondido.
+function copiarPix(btn){
+  const campo=document.getElementById('pix-fallback');
+  const ok=function(){if(btn){btn.textContent='Código copiado ✓';setTimeout(function(){btn.textContent='Copiar código Pix';},2500);}showToast('Código Pix copiado');};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(PIX_BRCODE).then(ok).catch(function(){campo.select();showToast('Toque em Copiar no campo abaixo');});
+  }else{campo.select();campo.setSelectionRange(0,99999);
+    try{document.execCommand('copy');ok();}catch(e){showToast('Toque e segure no campo para copiar');}}
+}
+// Avisa o admin que pagou. Com QR estático não dá para saber QUEM pagou pelo extrato
+// (só aparece o nome do pagador), então este clique é o que amarra pagamento ↔ conta.
+// Vai para `reportes`, que já tem lista, badge e botão Resolver no painel.
+// `texto` é OBRIGATÓRIO pela regra do RTDB — ver enviarReporte().
+async function avisarPagamento(plano){
+  const p=PIX_PLANOS[plano]||PIX_PLANOS.mensal;
+  if(!currentUser){showToast('Entre na sua conta antes de avisar.');return;}
+  if(!checkReporteRL()){showToast('Aguarde um momento antes de avisar de novo');return;}
+  const btn=document.getElementById('pix-ja-btn');if(btn)btn.disabled=true;
+  const quem=(userProfile&&userProfile.nome)||currentUser.email||'sem nome';
+  const rep={
+    texto:('PAGAMENTO INFORMADO — '+p.rotulo+' '+p.txt+' · '+quem+' · '+(currentUser.email||'')
+      +' · uid '+currentUser.uid).slice(0,2000),
+    tipo:'pagamento',plano:plano,uid:currentUser.uid,nome:quem,
+    criadoEm:Date.now(),status:'aberto'};
+  try{
+    await db.ref('reportes').push(rep);
+    fecharPagamento();
+    showToast('Avisado! Assim que eu confirmar, seu acesso é renovado.');
+  }catch(e){
+    console.error('aviso de pagamento:',e);
+    showToast('Falha ao avisar. Chame no WhatsApp.');
+    if(btn)btn.disabled=false;
+  }
 }
 function abrirReporte(tipo,id){
   if(!id){showToast('Item não identificado');return;}
