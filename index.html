@@ -1035,6 +1035,9 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
    está no MESMO aparelho e não consegue escanear a própria tela, então o copia-e-cola
    é o botão principal e o QR fica recolhido num <details>. */
 .pix-sheet{text-align:left;}
+.pix-troca{display:flex;gap:6px;margin-bottom:10px;}
+.pix-troca-btn{flex:1;font-family:inherit;font-size:11.5px;font-weight:700;padding:9px 6px;border-radius:10px;cursor:pointer;background:var(--paper-2);color:var(--text2);border:1px solid var(--line-soft);}
+.pix-troca-btn.on{background:var(--navy);color:#fff;border-color:var(--navy);}
 .pix-plano{font-size:13px;font-weight:800;color:var(--text);background:var(--paper-2);border-radius:10px;padding:9px 12px;margin-bottom:12px;}
 .pix-copiar{width:100%;background:var(--navy);color:#fff;border:none;font-family:inherit;font-size:15px;font-weight:800;padding:15px;border-radius:12px;cursor:pointer;}
 .pix-fallback{width:100%;margin-top:8px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;color:var(--text2);background:var(--paper-2);border:1px solid var(--line-soft);border-radius:8px;padding:8px;}
@@ -1754,7 +1757,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <span style="display:block;margin-top:12px;">
             <button class="pix-copiar" style="font-size:14px;padding:13px;" onclick="abrirPagamento(planoEscolhido())">Pagar com Pix</button>
           </span>
-          <span style="display:block;margin-top:10px;color:var(--text3);font-size:12px;">Já pagou e passou o prazo? Chame no WhatsApp que eu libero na hora.</span>
+          <span style="display:block;margin-top:10px;color:var(--text3);font-size:12px;">Já pagou e passou o prazo? <a class="link-inline" id="pending-whats" href="#" target="_blank" rel="noopener noreferrer">Chame no WhatsApp</a> que eu libero na hora.</span>
         </div>
       </div>
       <div class="auth-legal">
@@ -4069,7 +4072,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.181';
+const APP_VERSAO='v1.182';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4385,7 +4388,10 @@ function renderAvisoCobranca(){
   // B99 — a faixa deixou de ser só aviso e virou o caminho da renovação: é por aqui
   // que passa o caso mensal, que é o recorrente. O plano do botão sai do estado atual
   // (nunca de URL); em teste, oferece o anual, que é o que a escada do §7 quer induzir.
-  const planoBtn=(st.plano==='anual'||st.plano==='mensal')?st.plano:'anual';
+  // Em teste, respeita o plano que a pessoa clicou na landing em vez de forçar o anual
+  // (planoEscolhido() já cai no anual quando não há escolha registrada). De todo jeito
+  // a própria folha tem o seletor, então ninguém fica preso.
+  const planoBtn=(st.plano==='anual'||st.plano==='mensal')?st.plano:planoEscolhido();
   el.innerHTML=`<div class="aviso-cob ${cls}"><span class="aviso-cob-ic">${ic}</span><span>${txt}<span class="aviso-cob-sub">${sub}</span></span><button class="aviso-cob-btn" onclick="abrirPagamento('${planoBtn}')">Pagar</button></div>`;
 }
 
@@ -7632,6 +7638,15 @@ const EMPRESA={
   cidade:'Rio Grande do Sul',
   vigencia:'11 de agosto de 2026'
 };
+// B99 — monta o link direto do WhatsApp com mensagem já escrita. Deriva os dígitos de
+// EMPRESA.whatsapp para haver UMA fonte de verdade: trocar o número lá em cima muda
+// todos os links de uma vez. Formato wa.me exige DDI+DDD+número só com dígitos.
+function linkWhats(msg){
+  const d=String(EMPRESA.whatsapp||'').replace(/\D/g,'');
+  if(d.length<10)return null;                 // sem número utilizável, não inventa link
+  const num=d.startsWith('55')?d:'55'+d;
+  return 'https://wa.me/'+num+'?text='+encodeURIComponent(msg||'');
+}
 function _docContato(){
   let s='<p>Falar com o responsável: <b>'+EMPRESA.email+'</b>';
   if(EMPRESA.whatsapp)s+=' · WhatsApp <b>'+EMPRESA.whatsapp+'</b>';
@@ -7941,6 +7956,7 @@ function abrirPagamento(plano){
     ov=document.createElement('div');ov.id='pix-overlay';ov.className='rep-overlay';
     ov.innerHTML='<div class="rep-sheet pix-sheet">'
       +'<h3>Pagar com Pix</h3>'
+      +'<div class="pix-troca" id="pix-troca"></div>'
       +'<div class="pix-plano" id="pix-plano"></div>'
       +'<button class="pix-copiar" id="pix-copiar">Copiar código Pix</button>'
       +'<input class="pix-fallback" id="pix-fallback" readonly aria-label="Código Pix copia e cola">'
@@ -7952,14 +7968,40 @@ function abrirPagamento(plano){
       +'<div class="pix-legal">O plano vale pelo período contratado a partir da assinatura. '
         +'Compras online têm <b>7 dias de arrependimento</b> (CDC). '
         +'<button type="button" class="link-inline" onclick="abrirDoc(\'termos\')">Ver os Termos</button></div>'
-      +'<div class="pix-cartao">Prefere 12x no cartão? Chame no WhatsApp que eu gero o link.</div>'
+      +'<div class="pix-cartao" id="pix-cartao"></div>'
       +'<div class="rep-actions"><button class="rep-cancel" onclick="fecharPagamento()">Fechar</button></div>'
       +'</div>';
     ov.onclick=function(e){if(e.target===ov)fecharPagamento();};
     document.body.appendChild(ov);
   }
+  // Seletor de plano DENTRO da folha: ninguém fica preso no plano que o ponto de
+  // entrada escolheu. Reabre a própria folha, que já está montada, então é instantâneo.
+  const troca=document.getElementById('pix-troca');
+  troca.innerHTML='';
+  Object.keys(PIX_PLANOS).forEach(function(k){
+    const b=document.createElement('button');
+    b.type='button';
+    b.className='pix-troca-btn'+(k===plano?' on':'');
+    b.textContent=PIX_PLANOS[k].rotulo+' · '+PIX_PLANOS[k].txt;
+    b.onclick=function(){abrirPagamento(k);};
+    troca.appendChild(b);
+  });
   // textContent em tudo que é dado — nada de innerHTML daqui para baixo.
   document.getElementById('pix-plano').textContent=p.rotulo+' · '+p.txt+' · '+p.obs;
+  // Linha do cartão: vira link de verdade quando há número. Antes era só texto e a
+  // pessoa não tinha o que fazer com a informação.
+  const cart=document.getElementById('pix-cartao');
+  cart.innerHTML='';
+  const urlCart=linkWhats('Olá! Quero assinar o plano '+p.rotulo+' ('+p.txt+') do Prontidão parcelado em 12x no cartão. Pode gerar o link de pagamento?');
+  if(urlCart){
+    cart.appendChild(document.createTextNode('Prefere 12x no cartão? '));
+    const a=document.createElement('a');
+    a.href=urlCart; a.target='_blank'; a.rel='noopener noreferrer';
+    a.className='link-inline'; a.textContent='Chame no WhatsApp que eu gero o link.';
+    cart.appendChild(a);
+  }else{
+    cart.textContent='Prefere 12x no cartão? Chame no WhatsApp que eu gero o link.';
+  }
   document.getElementById('pix-fallback').value=PIX_BRCODE;
   document.getElementById('pix-aviso').textContent=
     'O código não vem com valor preenchido: digite '+p.txt+' no app do seu banco. '
@@ -8168,6 +8210,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   // S60: carimba a versão nas Configurações
   const cv=document.getElementById('config-versao');
   if(cv)cv.textContent='Prontidão · Bomrillaz · '+APP_VERSAO;
+  // B99 — href do WhatsApp da tela pós-cadastro. Fica em JS para sair de EMPRESA
+  // (fonte única) em vez de ter o número escrito solto no HTML.
+  const pw=document.getElementById('pending-whats');
+  const urlPw=linkWhats('Olá! Criei minha conta no Prontidão e já fiz o pagamento. Pode liberar o acesso?');
+  if(pw){ if(urlPw)pw.href=urlPw; else pw.replaceWith(document.createTextNode('Chame no WhatsApp')); }
   aplicarAcessibilidadeTeclado();
   if(window.MutationObserver){
     new MutationObserver(agendarAcessibilidade).observe(document.body,{childList:true,subtree:true});
