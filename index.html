@@ -2847,6 +2847,7 @@ let resumosQueue=[],resumoAtualIdx=0;
 // A leitura de dados SM-2 legados segue no `questaoDue` (fallback) e no merge de sync.
 // ═══════════════════════════════
 // ── FSRS-lite para flashcards (graus Difícil/Médio/Fácil); migra cards SM-2 antigos ──
+const FSRS_MAX_DIAS=240; // teto defensivo: sem isso o intervalo cresce sem limite (composto puro)
 function fsrsCardUpdate(card,dif){
   const now=Date.now();card=card||{};
   const grau=dif==='dif'?1:dif==='fac'?3:2; // 1=lapso, 2=ok, 3=fácil
@@ -2860,7 +2861,7 @@ function fsrsCardUpdate(card,dif){
     D=Math.min(10,Math.max(1,D-0.7*(grau-2)));
     D=D+0.06*(5-D);
     if(grau===1){ S=Math.max(0.5,S*0.5*(1-(D-1)/22)); }
-    else{ const inc=Math.max(1.1,1+(11-D)*0.09*(1-R)*(grau===3?1.35:1)); S=Math.max(S*inc,S+0.5); }
+    else{ const inc=Math.max(1.1,1+(11-D)*0.09*(1-R)*(grau===3?1.35:1)); S=Math.min(FSRS_MAX_DIAS,Math.max(S*inc,S+0.5)); }
   }
   const interval=Math.max(1,Math.round(S));
   return{S:+S.toFixed(3),D:+D.toFixed(2),reps:reps+1,last:now,next:now+interval*86400000,interval};
@@ -2983,7 +2984,7 @@ function fsrsUpdate(card,acertou){
     D=D+0.05*(5-D); // regressão suave à média
     if(acertou){
       const inc=Math.max(1.12,1+(11-D)*0.09*(1-R));
-      S=Math.max(S*inc,S+0.5);
+      S=Math.min(FSRS_MAX_DIAS,Math.max(S*inc,S+0.5));
     }else{
       S=Math.max(0.5,S*0.4*(1-(D-1)/22));
     }
@@ -4093,7 +4094,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.187';
+const APP_VERSAO='v1.188';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5250,7 +5251,7 @@ function montarFilaEstudo(qs,n){
   if(fila.length<n)fila.push(...dominado);                     // por fim, dominadas
   const seen=new Set(),out=[];
   for(const q of fila){if(!seen.has(q.id)){seen.add(q.id);out.push(q);}if(out.length>=n)break;}
-  return out;
+  return interleavePorTopico(out);   // evita blocão do mesmo tópico seguido na apresentação
 }
 function iniciarQuiz(area){
   quizArea=area;quizModoErro=false;
