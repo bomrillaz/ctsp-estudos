@@ -2324,6 +2324,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
     <div class="nav-item" id="nav-quiz" onclick="navTo('quiz')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Quiz
+      <span class="nav-badge hidden" id="badge-quiz">0</span>
     </div>
     <div class="nav-item" id="nav-cards" onclick="navTo('cards')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Cards
@@ -3030,6 +3031,11 @@ function registrarRespostaAdaptativa(q,acertou){
   if(!userStats.itemStats)userStats.itemStats={};
   const is=userStats.itemStats[q.id]||{t:0,c:0};
   userStats.itemStats[q.id]={t:(is.t||0)+1,c:(is.c||0)+(acertou?1:0)};
+  // Etapa "questões" da Tela de Foco só conta como feita quando o usuário REALMENTE
+  // responde — por qualquer caminho (hub, Treino do dia, Simulado), não só praticarTopico.
+  if(focoAtivo&&q.topico===focoAtivo&&!focoEstado(focoAtivo).q){
+    focoGravar(focoAtivo,{q:true});
+  }
 }
 
 // ── F2.1 Perfil de domínio por tópico ──
@@ -4087,7 +4093,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.186';
+const APP_VERSAO='v1.187';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4557,7 +4563,13 @@ function focoTodasEtapas(t){const e=focoEtapas(t);return[...e.resumos,...e.cards
 function focoConcluido(t,pLAtual){
   const f=focoEstado(t);
   if(!f.done)return false;
-  return !(typeof f.pL==='number'&&pLAtual<f.pL-0.05);
+  const caiu=typeof f.pL==='number'&&pLAtual<f.pL-0.05;
+  if(caiu){
+    // Reabriu de verdade: etapas voltam a exigir prática nova, não ficam com ✓ velho.
+    focoGravar(t,{done:false,q:false,fc:false,r:[],pL:0});
+    return false;
+  }
+  return true;
 }
 
 function renderFilaFoco(){
@@ -4716,8 +4728,7 @@ function focoAbrirEtapa(tipo,id){
     focoGravar(t,{fc:true});
     revisarCardsDoTopico(t);
   } else if(tipo==='questoes'){
-    focoGravar(t,{q:true});
-    praticarTopico(t);
+    praticarTopico(t);   // marcado como feito em registrarRespostaAdaptativa(), só ao responder de verdade
   }
   atualizarBarraFoco();
 }
@@ -5115,6 +5126,14 @@ function updateBadges(){
   const rfEl=document.getElementById('resumos-fila');if(rfEl)rfEl.textContent=dueR;
   const rtEl=document.getElementById('resumos-total');if(rtEl)rtEl.textContent=RESUMOS_BANCO.length;
   const rvEl=document.getElementById('resumos-revis');if(rvEl)rvEl.textContent=RESUMOS_BANCO.filter(r=>{const u=userStats['resumo_'+r.id];return u&&u.reps>0;}).length;
+
+  // Quiz — falta da dose do dia. Meta vem de metaDiaria (mesma fonte do anel do painel
+  // e da CTA do hub do Quiz), não de dose('questoes'), pra não abrir uma segunda meta.
+  const acervoQ=Object.values(allQuestoes).filter(q=>classeQuestao(q)!=='dominado').length;
+  const restaQ=Math.max(0,(userStats.metaDiaria||10)-(hj.n||0));
+  const dueQ=Math.min(acervoQ,restaQ);
+  const bq=document.getElementById('badge-quiz');
+  if(dueQ>0){bq.classList.remove('hidden');bq.textContent=dueQ;}else bq.classList.add('hidden');
 }
 
 // ═══════════════════════════════
