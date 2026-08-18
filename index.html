@@ -4072,7 +4072,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.182';
+const APP_VERSAO='v1.183';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -7632,7 +7632,7 @@ const EMPRESA={
   produto:'Prontidão',
   marca:'Bomrillaz',
   responsavel:'João Victor',          // nome civil do responsável pelo tratamento
-  cnpj:'',                            // preencher quando abrir o MEI
+  cnpj:'44.044.042/0001-08',          // MEI ativo; alimenta Termos e Politica de Privacidade
   email:'jvictor.projetos.ti@gmail.com',
   whatsapp:'(54) 99124-6171',
   cidade:'Rio Grande do Sul',
@@ -7992,15 +7992,17 @@ function abrirPagamento(plano){
   // pessoa não tinha o que fazer com a informação.
   const cart=document.getElementById('pix-cartao');
   cart.innerHTML='';
-  const urlCart=linkWhats('Olá! Quero assinar o plano '+p.rotulo+' ('+p.txt+') do Prontidão parcelado em 12x no cartão. Pode gerar o link de pagamento?');
+  // NAO cita numero de parcelas de proposito: cada parcela a mais custa taxa (12x come
+  // 16,66% contra 0% do Pix). Sem ancora no texto, quem gera o link decide quantas.
+  const urlCart=linkWhats('Olá! Quero assinar o plano '+p.rotulo+' ('+p.txt+') do Prontidão, mas preciso pagar no cartão. Como a gente faz?');
   if(urlCart){
-    cart.appendChild(document.createTextNode('Prefere 12x no cartão? '));
+    cart.appendChild(document.createTextNode('Só consegue pagar no cartão? '));
     const a=document.createElement('a');
     a.href=urlCart; a.target='_blank'; a.rel='noopener noreferrer';
-    a.className='link-inline'; a.textContent='Chame no WhatsApp que eu gero o link.';
-    cart.appendChild(a);
+    a.className='link-inline'; a.textContent='Chame no WhatsApp'; 
+    cart.appendChild(a); cart.appendChild(document.createTextNode(' que a gente resolve.'));
   }else{
-    cart.textContent='Prefere 12x no cartão? Chame no WhatsApp que eu gero o link.';
+    cart.textContent='Só consegue pagar no cartão? Chame no WhatsApp que a gente resolve.';
   }
   document.getElementById('pix-fallback').value=PIX_BRCODE;
   document.getElementById('pix-aviso').textContent=
