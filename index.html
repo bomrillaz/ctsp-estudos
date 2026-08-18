@@ -1049,7 +1049,14 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .pix-ja-btn{width:100%;background:var(--green-light);color:var(--green);border:none;font-family:inherit;font-size:14px;font-weight:800;padding:13px;border-radius:12px;cursor:pointer;}
 .pix-ja-btn:disabled{opacity:.55;cursor:default;}
 .pix-legal{font-size:11px;line-height:1.5;color:var(--text3);margin-top:12px;}
-.pix-cartao{font-size:11.5px;color:var(--text3);margin-top:8px;}
+.pix-cartao{font-size:11.5px;color:var(--text3);margin-top:12px;padding-top:10px;border-top:1px dashed var(--line-soft);}
+.pix-cartao-tit{font-size:12.5px;font-weight:800;color:var(--text2);}
+.pix-cartao-sub{font-size:11.5px;line-height:1.5;color:var(--text3);margin-top:3px;}
+/* Nenhuma opção vem destacada de propósito: 12x é teto disponível, não sugestão. */
+.pix-parcelas{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px;}
+.pix-parc-btn{display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 4px;border-radius:10px;background:var(--paper-2);border:1px solid var(--line-soft);text-decoration:none;color:var(--text2);}
+.pix-parc-btn b{font-size:13px;font-weight:800;color:var(--text);}
+.pix-parc-btn span{font-size:10.5px;color:var(--text3);}
 .user-grupo{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin:16px 0 8px;}
 .user-grupo:first-child{margin-top:0;}
 /* Nos dois filhos, não no .user-row: no desktop ele é `display:contents` e não gera
@@ -1633,7 +1640,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <div class="plano-selo">Mais escolhido</div>
             <div class="plano-nome">Anual</div>
             <div class="plano-preco"><span class="plano-valor">R$ 39,90</span><span class="plano-por">/mês</span></div>
-            <div class="plano-cond">12x de R$ 39,90 sem juros no cartão · total R$ 478,80</div>
+            <div class="plano-cond">Pix à vista ou em até 12x de R$ 39,90 sem juros no cartão · total R$ 478,80</div>
             <ul class="plano-lista">
               <li><b>13 meses de acesso</b> — o primeiro é por nossa conta</li>
               <li>Economia de R$ 239,90 no ano</li>
@@ -4072,7 +4079,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.183';
+const APP_VERSAO='v1.184';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -6760,10 +6767,17 @@ const PIX_BRCODE='00020126580014BR.GOV.BCB.PIX0136ce07d577-73ca-44c0-b85a-83d297
 const PIX_NOME='44.044.042 DAIANE MAGEDANZ FERREIRA';
 // Valores oficiais (CLAUDE.md §7). Mapa fechado: o plano nunca é lido de URL nem
 // interpolado cru na tela — só serve de chave aqui dentro.
+// `parcelas`: opções de cartão oferecidas para o plano. R$ 478,80 divide REDONDO em
+// todas elas (478,80 / 2 / 3 / 4 / 6 / 12 dá centavo exato), então nenhuma vira valor
+// quebrado. O total é o MESMO em qualquer opção — o que muda é a margem do recebedor,
+// porque a taxa do Nubank sobe com o número de parcelas (4,20% em 1x, 16,66% em 12x).
+// Por isso as opções aparecem SEM nenhuma pré-selecionada: 12x fica como teto
+// disponível, não como caminho sugerido.
 const PIX_PLANOS={
-  anual :{rotulo:'Anual',  valor:478.80, txt:'R$ 478,80', obs:'13 meses de acesso'},
+  anual :{rotulo:'Anual',  valor:478.80, txt:'R$ 478,80', obs:'13 meses de acesso', parcelas:[1,2,3,4,6,12]},
   mensal:{rotulo:'Mensal', valor:59.90,  txt:'R$ 59,90',  obs:'30 dias de acesso'}
 };
+function pixMoeda(v){return 'R$ '+v.toFixed(2).replace('.',',');}
 // CRC16/CCITT-FALSE sobre tudo que vem antes dos 4 dígitos finais — é como o Bacen
 // fecha o BR Code. Serve de detector de adulteração ACIDENTAL (edição errada, deploy
 // corrompido, byte trocado): se não bater, a tela se recusa a exibir em vez de mandar
@@ -7992,17 +8006,42 @@ function abrirPagamento(plano){
   // pessoa não tinha o que fazer com a informação.
   const cart=document.getElementById('pix-cartao');
   cart.innerHTML='';
-  // NAO cita numero de parcelas de proposito: cada parcela a mais custa taxa (12x come
-  // 16,66% contra 0% do Pix). Sem ancora no texto, quem gera o link decide quantas.
-  const urlCart=linkWhats('Olá! Quero assinar o plano '+p.rotulo+' ('+p.txt+') do Prontidão, mas preciso pagar no cartão. Como a gente faz?');
-  if(urlCart){
+  // Cartão: as parcelas viram ESCOLHA explícita em vez de âncora. Nenhuma vem marcada,
+  // e o total idêntico fica escrito na tela — quem quiser 12x acha, quem puder em menos
+  // vê que não paga nada a mais por isso. Cada opção abre o WhatsApp já dizendo quantas
+  // parcelas, então é só gerar o link no app do Nubank com esse número.
+  const urlGen=linkWhats('Olá! Quero assinar o plano '+p.rotulo+' ('+p.txt+') do Prontidão no cartão. Como a gente faz?');
+  if(p.parcelas&&urlGen){
+    const tit=document.createElement('div');
+    tit.className='pix-cartao-tit';
+    tit.textContent='Prefere no cartão? Até '+p.parcelas[p.parcelas.length-1]+'x sem juros.';
+    cart.appendChild(tit);
+    const sub=document.createElement('div');
+    sub.className='pix-cartao-sub';
+    sub.textContent='O total é '+p.txt+' em qualquer opção — em menos parcelas seu limite libera mais rápido. Escolha e me chame:';
+    cart.appendChild(sub);
+    const linha=document.createElement('div');
+    linha.className='pix-parcelas';
+    p.parcelas.forEach(function(n){
+      const a=document.createElement('a');
+      a.className='pix-parc-btn';
+      a.target='_blank'; a.rel='noopener noreferrer';
+      a.href=linkWhats('Olá! Quero assinar o plano '+p.rotulo+' do Prontidão no cartão, em '
+        +n+'x de '+pixMoeda(p.valor/n)+' (total '+p.txt+'). Pode gerar o link?');
+      const t=document.createElement('b'); t.textContent=n+'x';
+      const v=document.createElement('span'); v.textContent=pixMoeda(p.valor/n);
+      a.appendChild(t); a.appendChild(v);
+      linha.appendChild(a);
+    });
+    cart.appendChild(linha);
+  }else if(urlGen){
     cart.appendChild(document.createTextNode('Só consegue pagar no cartão? '));
     const a=document.createElement('a');
-    a.href=urlCart; a.target='_blank'; a.rel='noopener noreferrer';
-    a.className='link-inline'; a.textContent='Chame no WhatsApp'; 
+    a.href=urlGen; a.target='_blank'; a.rel='noopener noreferrer';
+    a.className='link-inline'; a.textContent='Chame no WhatsApp';
     cart.appendChild(a); cart.appendChild(document.createTextNode(' que a gente resolve.'));
   }else{
-    cart.textContent='Só consegue pagar no cartão? Chame no WhatsApp que a gente resolve.';
+    cart.textContent='Prefere no cartão? Chame no WhatsApp que a gente resolve.';
   }
   document.getElementById('pix-fallback').value=PIX_BRCODE;
   document.getElementById('pix-aviso').textContent=
