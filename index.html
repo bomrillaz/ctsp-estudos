@@ -4079,7 +4079,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.184';
+const APP_VERSAO='v1.185';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -6767,14 +6767,35 @@ const PIX_BRCODE='00020126580014BR.GOV.BCB.PIX0136ce07d577-73ca-44c0-b85a-83d297
 const PIX_NOME='44.044.042 DAIANE MAGEDANZ FERREIRA';
 // Valores oficiais (CLAUDE.md §7). Mapa fechado: o plano nunca é lido de URL nem
 // interpolado cru na tela — só serve de chave aqui dentro.
-// `parcelas`: opções de cartão oferecidas para o plano. R$ 478,80 divide REDONDO em
-// todas elas (478,80 / 2 / 3 / 4 / 6 / 12 dá centavo exato), então nenhuma vira valor
-// quebrado. O total é o MESMO em qualquer opção — o que muda é a margem do recebedor,
-// porque a taxa do Nubank sobe com o número de parcelas (4,20% em 1x, 16,66% em 12x).
-// Por isso as opções aparecem SEM nenhuma pré-selecionada: 12x fica como teto
-// disponível, não como caminho sugerido.
+/* `parcelas`: opções de cartão oferecidas. R$ 478,80 divide REDONDO em todas
+   (478,80 · 239,40 · 159,60 · 119,70 · 79,80 · 59,85 · 39,90). O cliente paga o MESMO
+   total em qualquer uma; o que muda é quanto sobra para o recebedor.
+
+   TAXAS REAIS do Nubank (lidas no app em 18/08/2026 — NÃO são estimativa), e o líquido
+   sobre R$ 478,80. A coluna que importa no dia a dia é a de "outro cartão", porque é a
+   maioria; quem paga com cartão Nubank custa bem menos:
+
+        outro cartão            cartão Nubank
+    1x   3,99% → R$ 459,70       2,69% → R$ 465,92
+    2x   5,99% → R$ 450,12       3,99% → R$ 459,70
+    3x   6,99% → R$ 445,33       4,99% → R$ 454,91
+    4x   7,89% → R$ 441,02       5,99% → R$ 450,12
+    5x   8,79% → R$ 436,71       6,69% → R$ 446,77
+    6x   9,59% → R$ 432,88       7,39% → R$ 443,42
+    7x  10,49% → R$ 428,57       7,99% → R$ 440,54
+    8x  11,49% → R$ 423,79       8,69% → R$ 437,19   ← último degrau barato
+    9x  13,99% → R$ 411,82       9,29% → R$ 434,32   ← DEGRÃO: -R$ 11,97 de uma vez
+   10x  14,99% → R$ 407,03       9,99% → R$ 430,97
+   11x  15,79% → R$ 403,20      10,49% → R$ 428,57
+   12x  16,49% → R$ 399,85      10,99% → R$ 426,18
+
+   Por que a lista é [1,2,3,4,6,8,12] e não 1..12: entre 3x e 8x cada parcela a mais
+   custa ~R$ 4, mas de 8x para 9x custa R$ 11,97 de uma vez (11,49% → 13,99%). 8x é o
+   último degrau barato — e a parcela de 8x (R$ 59,85) é praticamente a mensalidade
+   (R$ 59,90), o que dá um ponto de parada natural para quem está comparando os planos.
+   12x continua na lista porque é teto real de oferta, mas nenhuma opção vem marcada. */
 const PIX_PLANOS={
-  anual :{rotulo:'Anual',  valor:478.80, txt:'R$ 478,80', obs:'13 meses de acesso', parcelas:[1,2,3,4,6,12]},
+  anual :{rotulo:'Anual',  valor:478.80, txt:'R$ 478,80', obs:'13 meses de acesso', parcelas:[1,2,3,4,6,8,12]},
   mensal:{rotulo:'Mensal', valor:59.90,  txt:'R$ 59,90',  obs:'30 dias de acesso'}
 };
 function pixMoeda(v){return 'R$ '+v.toFixed(2).replace('.',',');}
