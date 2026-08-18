@@ -974,7 +974,19 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .admin-tab.active{background:var(--navy);color:white;border-color:var(--navy);}
 .admin-section{display:none;}
 .admin-section.active{display:block;}
-.user-item{background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+/* B99 — a lista de pessoas virou MESTRE-DETALHE, igual aos hubs de Quiz/Cards/Resumos.
+   Antes era um cartão chapado com tudo aberto ao mesmo tempo, e no desktop o
+   #admin-users-list era um grid auto-fit que colocava as pessoas LADO A LADO — e os
+   cabeçalhos de grupo, sendo irmãos dos itens, viravam célula solta (o problema
+   descrito no CLAUDE.md §2, já corrigido nos hubs no B57 e esquecido aqui).
+   Agora: .user-head é o que sempre aparece, .user-detalhe abre no clique. */
+.user-row{margin-bottom:8px;}
+.user-head{width:100%;text-align:left;font-family:inherit;color:inherit;cursor:pointer;background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px;}
+.user-row.open>.user-head{border-radius:12px 12px 0 0;}
+.user-head-seta{flex-shrink:0;color:var(--text3);transition:transform .18s ease;}
+.user-row.open .user-head-seta{transform:rotate(90deg);}
+.user-detalhe{display:none;background:var(--surface);border:1px solid var(--line-soft);border-top:none;border-radius:0 0 12px 12px;padding:12px 14px;box-shadow:var(--shadow);}
+.user-row.open>.user-detalhe{display:block;}
 .user-item-info{flex:1;}
 .user-item-name{font-size:13px;font-weight:700;}
 .user-item-email{font-size:11px;color:var(--text2);}
@@ -986,7 +998,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 /* BLOCO 55 — revogado ≠ pendente: precisa de rótulo próprio, senão o ex-assinante
    volta a parecer inscrição nova esperando aprovação. */
 .badge-revog{background:var(--paper-2);color:var(--text2);}
-.user-actions{display:flex;flex-direction:column;gap:4px;}
+.user-actions{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line-soft);}
 .btn-sm{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;}
 .btn-approve{background:var(--green-light);color:var(--green);}
 .btn-revoke{background:var(--red-light);color:var(--red);}
@@ -1008,7 +1020,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .cob-resumo{background:var(--red-light);color:var(--red);font-size:12px;font-weight:800;padding:9px 12px;border-radius:10px;margin-bottom:12px;}
 /* B58 — sinalização de registro duplicado no painel admin. */
 .dup-resumo{background:var(--amber-light);color:var(--ember-deep);font-weight:700;line-height:1.45;}
-.user-item.user-dup{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber) inset;}
+.user-row.user-dup>.user-head{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber) inset;}
 .badge-dup{background:var(--amber-light);color:var(--ember-deep);}
 .user-item-uid{font-size:10px;color:var(--text3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere;margin-top:2px;}
 /* Faixa de cobrança na Home do militar */
@@ -1019,7 +1031,9 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .aviso-cob-sub{display:block;font-weight:600;opacity:.85;margin-top:2px;}
 .user-grupo{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin:16px 0 8px;}
 .user-grupo:first-child{margin-top:0;}
-.user-item.revogado{opacity:.72;}
+/* Nos dois filhos, não no .user-row: no desktop ele é `display:contents` e não gera
+   caixa, então opacity aplicada nele não teria efeito nenhum. */
+.user-row.revogado>.user-head,.user-row.revogado>.user-detalhe{opacity:.72;}
 
 /* Ring SVG helper */
 .ring-container{position:relative;display:inline-flex;align-items:center;justify-content:center;isolation:isolate;}
@@ -1226,8 +1240,20 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   .hub-detalhe-vazio{display:flex;align-items:center;justify-content:center;grid-column:2;grid-row:1/span 99;align-self:start;min-height:200px;border:1px dashed var(--line-soft);border-radius:16px;color:var(--text3);font-size:13px;line-height:1.5;padding:24px;text-align:center;}
   .area-list:has(.quiz-area-row.open) .hub-detalhe-vazio,
   .resumos-list:has(.quiz-area-row.open) .hub-detalhe-vazio{display:none;}
-  #admin-users-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:8px;}
-  .user-item{margin-bottom:0;}
+  /* B99 — o painel admin usa o MESMO mestre-detalhe dos hubs acima. Antes era
+     `repeat(auto-fit,minmax(320px,1fr))`: as pessoas ficavam lado a lado e os
+     cabeçalhos de grupo (.user-grupo) e as faixas de aviso (.cob-resumo), sendo
+     irmãos dos itens, viravam CÉLULA SOLTA no meio da grade — o exato problema
+     que o comentário do B57 logo acima descreve. `grid-column:1` prende os dois
+     na coluna da esquerda. row-gap:0 é obrigatório pelo mesmo motivo dos hubs. */
+  #admin-users-list{display:grid;grid-template-columns:minmax(240px,320px) 1fr;column-gap:20px;row-gap:0;align-items:start;}
+  #admin-users-list>.user-row{display:contents;}
+  .user-row>.user-head{grid-column:1;margin-bottom:8px;}
+  .user-row.open>.user-head{border-radius:12px;}
+  .user-row>.user-detalhe{grid-column:2;grid-row:1/span 99;align-self:start;border-top:1px solid var(--line-soft);border-radius:12px;position:sticky;top:16px;max-height:calc(100vh - 120px);overflow:auto;}
+  .user-grupo,.cob-resumo{grid-column:1;}
+  #admin-users-list:has(.user-row.open) .hub-detalhe-vazio{display:none;}
+  .user-row{margin-bottom:0;}
   /* FASE 3 — largura de leitura: texto longo não estica a coluna toda */
   .quiz-body,.quiz-feedback,.card-flip-wrap,.resumo-card,.sim-q-wrap,.sim-result-areas,.sim-ai-diag{max-width:720px;margin-inline:auto;}
   .quiz-q-text,.resumo-texto{max-width:64ch;}
@@ -3993,7 +4019,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.179';
+const APP_VERSAO='v1.180';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4177,7 +4203,7 @@ function fecharMais(e){if(e&&e.target!==e.currentTarget)return;const o=document.
 function navMais(s){const o=document.getElementById('mais-overlay');if(o)o.classList.remove('open');navTo(s);}
 function animateScreenEntrance(sc){
   // Staggered reveal nos cards filhos
-  const items=sc.querySelectorAll('.area-card,.area-row,.quick-btn,.sim-card,.resumo-list-item,.padrao-card,.user-item,.obj-card');
+  const items=sc.querySelectorAll('.area-card,.area-row,.quick-btn,.sim-card,.resumo-list-item,.padrao-card,.user-head,.obj-card');
   items.forEach((el,i)=>{
     el.style.opacity='0';
     el.style.transform='translateY(16px)';
@@ -6483,6 +6509,23 @@ function setAdminTab(t,btn){
   if(t==='reportes')loadReportes();
 }
 
+// B99 — qual pessoa está com o painel aberto. Toda ação do admin (aprovar, revogar,
+// marcar pago, definir plano...) chama loadAdminUsers() de novo, e ela reescreve o
+// innerHTML INTEIRO. Sem guardar isso fora do render, cada clique fechava o painel e
+// obrigava a procurar a mesma pessoa outra vez — a cada ação.
+let _adminUidAberto=null;
+// Alterna sem re-renderizar: mexer só na classe preserva o scroll da lista.
+function toggleAdminUser(uid){
+  _adminUidAberto=(_adminUidAberto===uid)?null:uid;
+  const lista=document.getElementById('admin-users-list');
+  if(!lista)return;
+  lista.querySelectorAll('.user-row').forEach(function(row){
+    const on=row.dataset.uid===_adminUidAberto;
+    row.classList.toggle('open',on);
+    const h=row.querySelector('.user-head');
+    if(h)h.setAttribute('aria-expanded',on?'true':'false');
+  });
+}
 async function loadAdminUsers(){
   if(!isAdmin())return;
   const el=document.getElementById('admin-users-list');
@@ -6540,25 +6583,34 @@ async function loadAdminUsers(){
         </div>
       </div>`;
     };
-    const linha=([uid,u],rev)=>`<div class="user-item${rev?' revogado':''}${dupUids.has(uid)?' user-dup':''}">
-        <div class="user-item-info">
-          <div class="user-item-name">${sanitize(u.nome||u.email||uid)}</div>
-          <div class="user-item-email">${sanitize(u.email||'')}</div>
-          <div class="user-badges">
-            ${u.admin?'<span class="badge badge-admin">Admin</span>':''}
-            <span class="badge ${u.aprovado?'badge-ok':(rev?'badge-revog':'badge-pend')}">${u.aprovado?'Aprovado':(rev?'Revogado'+(u.revogadoEm?' · '+dt(u.revogadoEm):''):'Pendente'+(u.criadoEm?' · '+dt(u.criadoEm):''))}</span>
-            ${dupUids.has(uid)?'<span class="badge badge-dup">E-mail repetido</span>':''}
-            ${ehRenascido(u)?'<span class="badge badge-dup">Registro recriado no login</span>':''}
+    // B99 — cabeça sempre visível (quem é a pessoa e em que estado está) + painel que
+    // abre no clique (o que dá pra FAZER com ela). Os handlers são os mesmos de antes,
+    // só mudaram de lugar no HTML.
+    const aberto=uid=>uid===_adminUidAberto;
+    const linha=([uid,u],rev)=>`<div class="user-row${rev?' revogado':''}${dupUids.has(uid)?' user-dup':''}${aberto(uid)?' open':''}" data-uid="${sanitize(uid)}">
+        <button type="button" class="user-head" aria-expanded="${aberto(uid)?'true':'false'}" onclick="toggleAdminUser('${uid}')">
+          <div class="user-item-info">
+            <div class="user-item-name">${sanitize(u.nome||u.email||uid)}</div>
+            <div class="user-item-email">${sanitize(u.email||'')}</div>
+            <div class="user-badges">
+              ${u.admin?'<span class="badge badge-admin">Admin</span>':''}
+              <span class="badge ${u.aprovado?'badge-ok':(rev?'badge-revog':'badge-pend')}">${u.aprovado?'Aprovado':(rev?'Revogado'+(u.revogadoEm?' · '+dt(u.revogadoEm):''):'Pendente'+(u.criadoEm?' · '+dt(u.criadoEm):''))}</span>
+              ${dupUids.has(uid)?'<span class="badge badge-dup">E-mail repetido</span>':''}
+              ${ehRenascido(u)?'<span class="badge badge-dup">Registro recriado no login</span>':''}
+            </div>
           </div>
+          <svg class="user-head-seta" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="user-detalhe">
           <div class="user-item-email">1º acesso: ${dt(u.criadoEm)||'—'}</div>
           <div class="user-item-uid" title="Identificador da conta de login">UID ${sanitize(uid)}</div>
           ${u.aprovado?cobBloco(uid,u):''}
-        </div>
-        <div class="user-actions">
-          ${!u.aprovado?`<button class="btn-sm btn-approve" onclick="approveUser('${uid}')">${rev?'Reativar':'Aprovar'}</button>`:''}
-          ${u.aprovado&&uid!==currentUser.uid?`<button class="btn-sm btn-revoke" onclick="revokeUser('${uid}')">Revogar</button>`:''}
-          ${!u.admin?`<button class="btn-sm btn-mkadmin" onclick="makeAdmin('${uid}')">Admin</button>`:''}
-          ${uid!==currentUser.uid?`<button class="btn-sm btn-remove" onclick="removerUsuario('${uid}')">Remover</button>`:''}
+          <div class="user-actions">
+            ${!u.aprovado?`<button class="btn-sm btn-approve" onclick="approveUser('${uid}')">${rev?'Reativar':'Aprovar'}</button>`:''}
+            ${u.aprovado&&uid!==currentUser.uid?`<button class="btn-sm btn-revoke" onclick="revokeUser('${uid}')">Revogar</button>`:''}
+            ${!u.admin?`<button class="btn-sm btn-mkadmin" onclick="makeAdmin('${uid}')">Admin</button>`:''}
+            ${uid!==currentUser.uid?`<button class="btn-sm btn-remove" onclick="removerUsuario('${uid}')">Remover</button>`:''}
+          </div>
         </div>
       </div>`;
     const secao=(titulo,arr,rev)=>arr.length?`<div class="user-grupo">${titulo} · ${arr.length}</div>`+arr.map(x=>linha(x,rev)).join(''):'';
@@ -6568,7 +6620,9 @@ async function loadAdminUsers(){
       +(nDup?`<div class="cob-resumo dup-resumo">${nDup} e-mail${nDup!==1?'s':''} com mais de um registro — as linhas estão marcadas abaixo. Apagar a conta de login de vez: Firebase Console → Authentication.</div>`:'')
       +secao('Ativos',grupos.ativos,false)
       +secao('Aguardando aprovação',grupos.pend,false)
-      +secao('Revogados',grupos.revog,true);
+      +secao('Revogados',grupos.revog,true)
+      // Só aparece no desktop (CSS), e some assim que alguma .user-row estiver aberta.
+      +'<div class="hub-detalhe-vazio">Escolha uma pessoa na lista para ver as opções.</div>';
     el.innerHTML=html||'<p style="color:var(--text2);font-size:13px">Nenhum usuário.</p>';
   }catch(err){
     console.error('loadAdminUsers erro:',err);
@@ -7751,6 +7805,9 @@ let repRL={n:0,reset:Date.now()};
 function checkReporteRL(){const now=Date.now();if(now-repRL.reset>30000){repRL.n=0;repRL.reset=now;}if(repRL.n>=1)return false;repRL.n++;return true;}
 const REP_CATS=[['gabarito','Gabarito errado'],['fonte','Fonte/citação errada'],['digitacao','Erro de digitação'],['desatualizado','Desatualizado'],['outro','Outro']];
 const REP_CAT_LBL=Object.fromEntries(REP_CATS);
+// Reportes que não vêm do formulário de erro (não têm `categoria`) e precisam de um
+// rótulo próprio no painel, senão apareciam como "?".
+const REP_TIPO_LBL={exclusao:'Pedido de exclusão de conta',pagamento:'Pagamento informado'};
 function repPreview(tipo,id){
   try{
     if(tipo==='questao'){const q=allQuestoes[id];return q?('Q '+id+': '+(q.e||'')):('Questão '+id);}
@@ -7793,10 +7850,21 @@ async function enviarReporte(){
   if(!checkReporteRL()){showToast('Aguarde um momento antes de reportar de novo');return;}
   const desc=(document.getElementById('rep-desc').value||'').trim().slice(0,1000);
   const btn=document.getElementById('rep-send');if(btn)btn.disabled=true;
+  const prev=repPreview(repCtx.tipo,repCtx.id).slice(0,300);
+  const quem=(userProfile&&userProfile.nome)||(currentUser&&currentUser.email)||'anônimo';
+  // B99 — `texto` é OBRIGATÓRIO pela regra do RTDB (reportes/$id tem
+  // `.validate: newData.hasChildren(['texto'])`). Sem ele o push era REJEITADO e todo
+  // reporte de erro morria no catch com "Falha ao enviar" — inclusive para admin,
+  // porque `.validate` roda em qualquer escrita, não importa qual ramo do `.write`
+  // liberou. Só o push de exclusão de conta mandava `texto` e por isso funcionava.
+  // Cap de 2000 é o limite do validador do campo.
+  const texto=(REP_CAT_LBL[repCtx.cat]||repCtx.cat||'?')+' — '+repCtx.tipo+' '+repCtx.id
+    +(desc?' · '+desc:'')+(prev?' · '+prev:'')+' · '+quem;
   const rep={tipo:repCtx.tipo,itemId:repCtx.id,categoria:repCtx.cat,descricao:desc,
-    preview:repPreview(repCtx.tipo,repCtx.id).slice(0,300),
+    texto:texto.slice(0,2000),
+    preview:prev,
     uid:currentUser?currentUser.uid:'anon',
-    nome:(userProfile&&userProfile.nome)||(currentUser&&currentUser.email)||'anônimo',
+    nome:quem,
     criadoEm:Date.now(),status:'aberto'};
   try{await db.ref('reportes').push(rep);fecharReporte();showToast('Reporte enviado — obrigado!');}
   catch(e){console.error('reporte erro:',e);showToast('Falha ao enviar. Tente novamente.');if(btn)btn.disabled=false;}
@@ -7818,9 +7886,12 @@ async function loadReportes(){
       const key=e[0],r=e[1];
       const data=new Date(r.criadoEm||0).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
       html+='<div class="rep-item">'
-        +'<div class="rep-item-top"><span class="rep-item-cat">'+sanitize(REP_CAT_LBL[r.categoria]||r.categoria||'?')+'</span><span class="rep-item-id">'+sanitize(r.tipo||'')+' · '+sanitize(r.itemId||'')+'</span></div>'
-        +'<div class="rep-item-ctx">'+sanitize(r.preview||'')+'</div>'
+        +'<div class="rep-item-top"><span class="rep-item-cat">'+sanitize(REP_CAT_LBL[r.categoria]||REP_TIPO_LBL[r.tipo]||r.categoria||'?')+'</span><span class="rep-item-id">'+sanitize(r.tipo||'')+(r.itemId?' · '+sanitize(r.itemId):'')+'</span></div>'
+        +(r.preview?'<div class="rep-item-ctx">'+sanitize(r.preview)+'</div>':'')
         +(r.descricao?'<div class="rep-item-desc">'+sanitize(r.descricao)+'</div>':'')
+        // B99 — sem isto, reporte que só tem `texto` (pedido de exclusão de conta,
+        // aviso de pagamento) chegava ao painel como um cartão VAZIO.
+        +(r.texto&&!r.descricao?'<div class="rep-item-desc">'+sanitize(r.texto)+'</div>':'')
         +'<div class="rep-item-meta">'+sanitize(r.nome||'anônimo')+' · '+data+'</div>'
         +'<div class="rep-item-acts"><button class="rep-resolve" onclick="resolverReporte(\''+sanitize(key)+'\')">Resolver</button><button class="rep-copy" onclick="copiarReporte(\''+sanitize(key)+'\')">Copiar</button></div>'
         +'</div>';
