@@ -976,7 +976,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .admin-screen{padding:16px;background:transparent;}
 .admin-screen h2{font-family:var(--font-display);font-size:26px;font-weight:700;margin-bottom:2px;color:var(--text);letter-spacing:.02em;}
 .admin-screen>p{font-size:13px;color:var(--text2);margin-bottom:16px;}
-.admin-tabs{display:flex;gap:6px;margin-bottom:16px;}
+.admin-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
 .admin-tab{padding:8px 16px;background:var(--surface);border:1px solid var(--line-soft);border-radius:20px;font-size:12px;font-weight:700;color:var(--text2);box-shadow:var(--shadow);}
 .admin-tab.active{background:var(--navy);color:white;border-color:var(--navy);}
 .admin-section{display:none;}
@@ -4151,7 +4151,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.191';
+const APP_VERSAO='v1.192';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
