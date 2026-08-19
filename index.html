@@ -2174,6 +2174,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <button class="admin-tab" onclick="setAdminTab('flashcard',this)">+ Flashcard</button>
           <button class="admin-tab" onclick="setAdminTab('reportes',this)">⚐ Reportes<span class="rep-badge" id="rep-badge-tab" style="display:none">0</span></button>
           <button class="admin-tab" onclick="setAdminTab('avisos',this)">🔔 Avisos</button>
+          <button class="admin-tab" onclick="setAdminTab('metricas',this)">📊 Métricas</button>
         </div>
         <div class="admin-section active" id="admin-usuarios">
           <div id="admin-users-list"><p style="color:var(--text2);font-size:13px;">Carregando...</p></div>
@@ -2212,6 +2213,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <button class="btn-primary" onclick="enviarAviso()">Enviar aos usuários</button>
           <p class="auth-msg" id="av-msg" role="alert"></p>
           <p style="color:var(--text2);font-size:12px;margin-top:8px;">Aparece no sino de todo mundo na hora; o push no celular chega em até ~5 min.</p>
+        </div>
+        <div class="admin-section" id="admin-metricas">
+          <button class="btn-config-reset" onclick="loadMetricas()">Atualizar</button>
+          <div id="admin-metricas-list" style="margin-top:10px;"><p style="color:var(--text2);font-size:13px;">Clique em Atualizar.</p></div>
         </div>
       </div>
     </div>
@@ -4146,7 +4151,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.190';
+const APP_VERSAO='v1.191';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -6654,6 +6659,7 @@ function setAdminTab(t,btn){
   btn.classList.add('active');
   document.getElementById('admin-'+t).classList.add('active');
   if(t==='reportes')loadReportes();
+  if(t==='metricas')loadMetricas();
 }
 
 // B99 — qual pessoa está com o painel aberto. Toda ação do admin (aprovar, revogar,
@@ -7105,6 +7111,68 @@ async function enviarAviso(){
     document.getElementById('av-titulo').value='';
     document.getElementById('av-corpo').value='';
   }catch(err){showMsg('av-msg','Erro: '+err.message);}
+}
+
+// ═══════════════════════════════
+// MÉTRICAS (b103) — só leitura, dado que já é gravado hoje
+// ═══════════════════════════════
+// Nada de instrumentação nova: cadastro/plano vêm de usuarios/$uid, nivelamento e
+// retenção vêm de progresso/$uid (diagFeito, history[]). Calculado no cliente, sob
+// demanda (clique em Atualizar) — não roda sozinho pra não puxar progresso de todo
+// mundo toda vez que o admin abre o painel.
+// Retorna true/false se o usuário já tinha `diasDepois` dias de conta E history[] tem
+// uma entrada nesse dia local; retorna null se ainda não completou os dias (não elegível).
+function _metricaRetencao(criadoEm,history,diasDepois){
+  if(!criadoEm||!Array.isArray(history))return null;
+  const alvoMs=criadoEm+diasDepois*86400000;
+  if(Date.now()<alvoMs)return null;
+  const alvoDia=diaLocal(new Date(alvoMs));
+  return history.some(h=>h&&h.date===alvoDia);
+}
+function _metricaPct(ok,eleg){return eleg>0?Math.round(ok/eleg*100)+'%':'sem dados ainda';}
+async function loadMetricas(){
+  if(!isAdmin())return;
+  const el=document.getElementById('admin-metricas-list');
+  if(!el)return;
+  el.innerHTML='<p style="color:var(--text2);font-size:13px;">Carregando...</p>';
+  try{
+    const snap=await withTimeout(db.ref('usuarios').get(),8000);
+    const users=snap.exists()?snap.val():{};
+    const entradas=Object.entries(users).filter(([,u])=>u);
+    const aprovados=entradas.filter(([,u])=>u.aprovado===true);
+    const agora=Date.now(),DIA=86400000;
+    const cad7=entradas.filter(([,u])=>u.criadoEm&&agora-u.criadoEm<=7*DIA).length;
+    const cad30=entradas.filter(([,u])=>u.criadoEm&&agora-u.criadoEm<=30*DIA).length;
+    const planos={trial:0,mensal:0,anual:0};
+    aprovados.forEach(([,u])=>{const p=(u.cob&&u.cob.plano)||'trial';planos[p]=(planos[p]||0)+1;});
+
+    const progs=await Promise.all(aprovados.map(([uid])=>
+      withTimeout(db.ref('progresso/'+uid).get(),8000)
+        .then(s=>[uid,s.exists()?s.val():null]).catch(()=>[uid,null])
+    ));
+    const porUid=Object.fromEntries(progs);
+
+    let diagFeito=0,ret2ok=0,ret2eleg=0,ret7ok=0,ret7eleg=0;
+    aprovados.forEach(([uid,u])=>{
+      const p=porUid[uid]||{};
+      if(p.diagFeito)diagFeito++;
+      const r2=_metricaRetencao(u.criadoEm,p.history,2);
+      if(r2!==null){ret2eleg++;if(r2)ret2ok++;}
+      const r7=_metricaRetencao(u.criadoEm,p.history,7);
+      if(r7!==null){ret7eleg++;if(r7)ret7ok++;}
+    });
+
+    const linha=(rot,sub,val)=>'<div class="config-row"><div><div class="config-label">'+sanitize(rot)+
+      '</div><div class="config-sub">'+sanitize(sub)+'</div></div>'+
+      '<div style="font-size:19px;font-weight:800;color:var(--text)">'+sanitize(String(val))+'</div></div>';
+    el.innerHTML=
+      linha('Usuários aprovados',entradas.length+' cadastros no total',aprovados.length)+
+      linha('Cadastros — 7 dias',cad30+' nos últimos 30 dias',cad7)+
+      linha('Completaram o nivelamento',aprovados.length+' aprovados',_metricaPct(diagFeito,aprovados.length))+
+      linha('Retenção D2','voltou a estudar 2 dias depois',_metricaPct(ret2ok,ret2eleg))+
+      linha('Retenção D7','voltou a estudar 7 dias depois',_metricaPct(ret7ok,ret7eleg))+
+      linha('Trial / Mensal / Anual','distribuição de plano',planos.trial+' / '+planos.mensal+' / '+planos.anual);
+  }catch(err){el.innerHTML='<p style="color:var(--red);font-size:13px;">Erro: '+err.message+'</p>';}
 }
 
 // ═══════════════════════════════
