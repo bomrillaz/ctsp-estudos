@@ -1,0 +1,29 @@
+name: Aviso de novo cadastro CTSP
+
+# b103. Roda a cada 20 min e manda push só para o admin quando há cadastro novo desde o
+# último disparo (carimbo em sistema/avisoNovoUsuario/ultimoTs). Silencioso quando não há
+# nada novo. workflow_dispatch serve pra testar sem esperar o cron.
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '*/20 * * * *'
+
+jobs:
+  avisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências
+        working-directory: .github/scripts
+        run: npm install --no-audit --no-fund
+
+      - name: Avisar novo cadastro
+        working-directory: .github/scripts
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node avisar-novo-usuario.js

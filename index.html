@@ -404,6 +404,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .streak-days i.on{background:var(--ember);}
 .btn-logout{background:rgba(255,255,255,.12);color:white;border-radius:9px;padding:6px 8px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;}
 .btn-logout svg{width:16px;height:16px;}
+.btn-notif{position:relative;}
+.notif-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:800;line-height:1;}
+.notif-item{padding:12px 0;border-bottom:1px solid var(--border);}
+.notif-item:last-child{border-bottom:none;}
+.notif-item-titulo{font-weight:700;font-size:13.5px;color:var(--text);}
+.notif-item-corpo{font-size:13px;color:var(--text2);margin-top:3px;line-height:1.5;}
+.notif-item-data{font-size:11px;color:var(--text3);margin-top:5px;}
 
 /* CONTENT */
 .app-content{flex:1;overflow-y:auto;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);background:transparent;}
@@ -1766,8 +1773,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <!-- PENDING -->
       <div id="tab-pending" class="hidden">
         <div class="pending-box">
-          <strong style="color:var(--text);font-size:15px;">Conta criada com sucesso.</strong><br>
-          Seu acesso está aguardando liberação manual.<br>
+          <strong style="color:var(--text);font-size:15px;">Este acesso está aguardando liberação manual.</strong><br>
           <span style="display:inline-block;margin-top:10px;">A liberação costuma sair em <strong>até 24h</strong>. Assim que for liberada, é só entrar com o mesmo e-mail e senha — não precisa cadastrar de novo.</span>
           <span style="display:block;margin-top:12px;">
             <button class="pix-copiar" style="font-size:14px;padding:13px;" onclick="abrirPagamento(planoEscolhido())">Pagar com Pix</button>
@@ -1800,6 +1806,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <div class="streak-badge" id="hdr-streak" title="Sequência de estudo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1.5 3.5 5 5.2 5 9a5 5 0 0 1-10 0c0-2 .9-3.4 1.8-4.7.4 1.2 1.2 2 2.2 2.5C10.6 6.7 11 4.4 12 2z"/></svg><div class="streak-days" id="hdr-streak-days"></div></div>
       <button class="btn-logout" id="btn-tema" onclick="toggleTemaRapido()" title="Tema" aria-label="Alternar tema claro/escuro"></button>
       <button class="btn-logout" onclick="abrirBuscaGlobal()" title="Buscar" aria-label="Buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></button>
+      <button class="btn-logout btn-notif" onclick="abrirModalNotif()" title="Avisos" aria-label="Avisos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="notif-badge hidden" id="notif-badge">0</span></button>
       <div class="header-menu-wrap" id="header-menu-wrap">
         <button class="btn-logout" onclick="abrirModalConfig()" title="Configurações" aria-label="Configurações"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h.01a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg></button>
         <button class="btn-header-menu" onclick="toggleHeaderMenu()" title="Menu" aria-label="Menu">
@@ -2166,6 +2173,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <button class="admin-tab" onclick="setAdminTab('questao',this)">+ Questão</button>
           <button class="admin-tab" onclick="setAdminTab('flashcard',this)">+ Flashcard</button>
           <button class="admin-tab" onclick="setAdminTab('reportes',this)">⚐ Reportes<span class="rep-badge" id="rep-badge-tab" style="display:none">0</span></button>
+          <button class="admin-tab" onclick="setAdminTab('avisos',this)">🔔 Avisos</button>
         </div>
         <div class="admin-section active" id="admin-usuarios">
           <div id="admin-users-list"><p style="color:var(--text2);font-size:13px;">Carregando...</p></div>
@@ -2197,6 +2205,13 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         </div>
         <div class="admin-section" id="admin-reportes">
           <div id="admin-reportes-list"><p style="color:var(--text2);font-size:13px;">Carregando...</p></div>
+        </div>
+        <div class="admin-section" id="admin-avisos">
+          <div class="field"><label for="av-titulo">Título</label><input type="text" id="av-titulo" maxlength="120"></div>
+          <div class="field"><label for="av-corpo">Mensagem</label><textarea id="av-corpo" rows="3" maxlength="500"></textarea></div>
+          <button class="btn-primary" onclick="enviarAviso()">Enviar aos usuários</button>
+          <p class="auth-msg" id="av-msg" role="alert"></p>
+          <p style="color:var(--text2);font-size:12px;margin-top:8px;">Aparece no sino de todo mundo na hora; o push no celular chega em até ~5 min.</p>
         </div>
       </div>
     </div>
@@ -2529,6 +2544,16 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <!-- S60: versão visível para conferir num relance se o deploy já entrou no ar.
          Preenchida por JS a partir de APP_VERSAO — fonte única, não se desatualiza. -->
     <div class="config-versao" id="config-versao">—</div>
+  </div>
+</div>
+
+<!-- Modal Avisos (b103) -->
+<div class="modal-overlay hidden" id="modal-notif" onclick="fecharModalNotif(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-fechar-bar"><button class="modal-fechar" type="button" aria-label="Fechar" onclick="fecharModalNotif()">✕</button></div>
+    <div class="modal-title">Avisos</div>
+    <div class="modal-sub">Comunicados da Prontidão</div>
+    <div id="notif-lista"><p style="color:var(--text2);font-size:13px;">Nenhum aviso ainda.</p></div>
   </div>
 </div>
 <script src="data.js?v=187"></script>
@@ -3641,14 +3666,19 @@ async function doRegister(){
   try{
     const cred=await auth.createUserWithEmailAndPassword(e,p);
     const isAdm=e===ADMIN_EMAIL;
-    await db.ref('usuarios/'+cred.user.uid).set({nome,email:e,admin:isAdm,aprovado:isAdm,criadoEm:Date.now()});
-    if(!isAdm)showAuthTab('pending');
+    // Cadastro novo entra direto no teste de 7 dias (sem clique manual do admin) — o
+    // banco de questões já é público de qualquer forma, e quem corta acesso continua
+    // sendo o `aprovado` revogado manualmente no vencimento do pagamento. Diferente do
+    // "renascimento" pós-Remover logo abaixo, que continua trancando de propósito.
+    await db.ref('usuarios/'+cred.user.uid).set({nome,email:e,admin:isAdm,aprovado:true,criadoEm:Date.now()});
   }catch(err){showMsg('reg-msg',mensagemErroAuth(err,'Erro ao criar conta.'));}
   finally{btn.disabled=false;btn.textContent='Criar conta';}
 }
 
 function doLogout(){
   try{if(speechUtter&&speechSynthesis)speechSynthesis.cancel();}catch(e){}
+  try{db.ref('notificacoes').off();}catch(e){}
+  notifCache=[];
   auth.signOut().then(()=>{
     document.getElementById('app').classList.remove('active');
     document.getElementById('auth-screen').classList.add('active');
@@ -3819,6 +3849,7 @@ async function initApp(){
   renderResumos();
   renderPadroes();
   if(userProfile.admin||currentUser.email===ADMIN_EMAIL)loadAdminUsers();
+  iniciarListenerNotif();
   // Animação inicial do dashboard
   setTimeout(()=>{const sc=document.getElementById('screen-inicio');if(sc)animateBars(sc);},600);
   // S47: 1º acesso → nivelamento obrigatório (gera domínio); senão, splash normal
@@ -4115,7 +4146,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.189';
+const APP_VERSAO='v1.190';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -7018,6 +7049,65 @@ async function addFlashcard(){
 }
 
 // ═══════════════════════════════
+// AVISOS — central de notificações (b103)
+// ═══════════════════════════════
+// notificacoes/{id} = {titulo, corpo, ts, pushPendente} — só admin escreve (enviarAviso),
+// qualquer usuário aprovado lê. "Lido" é por usuário: usuarios/$uid/ultimaNotifLida
+// (timestamp), campo NOMEADO — escapa da trava $outro (mesmo padrão de email/nome/
+// criadoEm), então o próprio usuário pode gravar sem precisar de admin.
+// pushPendente:true é consumido por um workflow do GitHub Actions (polling, ~5min) que
+// manda o FCM de verdade e vira false — não é instantâneo por decisão de arquitetura
+// (nada de Cloud Function/webhook no projeto).
+let notifCache=[];
+function iniciarListenerNotif(){
+  if(!currentUser)return;
+  db.ref('notificacoes').orderByChild('ts').limitToLast(30).on('value',snap=>{
+    const v=snap.val()||{};
+    notifCache=Object.keys(v).map(id=>({id,...v[id]})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+    renderBadgeNotif();
+  });
+}
+function renderBadgeNotif(){
+  const badge=document.getElementById('notif-badge');
+  if(!badge)return;
+  const lida=(userProfile&&userProfile.ultimaNotifLida)||0;
+  const naoLidas=notifCache.filter(n=>(n.ts||0)>lida).length;
+  badge.textContent=naoLidas>9?'9+':String(naoLidas);
+  badge.classList.toggle('hidden',naoLidas===0);
+}
+function abrirModalNotif(){
+  const lista=document.getElementById('notif-lista');
+  lista.innerHTML=notifCache.length
+    ?notifCache.map(n=>'<div class="notif-item"><div class="notif-item-titulo">'+sanitize(n.titulo)+
+      '</div><div class="notif-item-corpo">'+sanitize(n.corpo)+
+      '</div><div class="notif-item-data">'+fmtData(n.ts)+'</div></div>').join('')
+    :'<p style="color:var(--text2);font-size:13px;">Nenhum aviso ainda.</p>';
+  document.getElementById('modal-notif').classList.remove('hidden');
+  const maisNova=notifCache.reduce((m,n)=>Math.max(m,n.ts||0),0);
+  if(currentUser&&maisNova>((userProfile&&userProfile.ultimaNotifLida)||0)){
+    userProfile.ultimaNotifLida=maisNova;
+    db.ref('usuarios/'+currentUser.uid).update({ultimaNotifLida:maisNova}).catch(()=>{});
+    renderBadgeNotif();
+  }
+}
+function fecharModalNotif(e){
+  if(!e||e.target===document.getElementById('modal-notif'))
+    document.getElementById('modal-notif').classList.add('hidden');
+}
+async function enviarAviso(){
+  if(!isAdmin())return;
+  const titulo=document.getElementById('av-titulo').value.trim();
+  const corpo=document.getElementById('av-corpo').value.trim();
+  if(!titulo||!corpo){showMsg('av-msg','Preencha título e mensagem.');return;}
+  try{
+    await db.ref('notificacoes').push({titulo,corpo,ts:Date.now(),pushPendente:true});
+    showMsg('av-msg','Aviso enviado!','ok');
+    document.getElementById('av-titulo').value='';
+    document.getElementById('av-corpo').value='';
+  }catch(err){showMsg('av-msg','Erro: '+err.message);}
+}
+
+// ═══════════════════════════════
 // ÍNDICE DE DOMÍNIO REAL
 // ═══════════════════════════════
 function calcDominio(){
@@ -8412,7 +8502,7 @@ document.addEventListener('keydown',e=>{
   if(rep&&rep.classList.contains('show')){fecharReporte();return;}
   const mais=document.getElementById('mais-overlay');
   if(mais&&mais.classList.contains('open')){fecharMais({target:mais,currentTarget:mais});return;}
-  const FECHAR_MODAL={'modal-busca':fecharBuscaGlobal,'modal-intro':fecharIntro,'modal-fim':fecharFim,'modal-config':fecharModalConfig};
+  const FECHAR_MODAL={'modal-busca':fecharBuscaGlobal,'modal-intro':fecharIntro,'modal-fim':fecharFim,'modal-config':fecharModalConfig,'modal-notif':fecharModalNotif};
   const aberto=document.querySelector('.modal-overlay:not(.hidden)');
   if(aberto&&FECHAR_MODAL[aberto.id])FECHAR_MODAL[aberto.id]({target:aberto,currentTarget:aberto});
 });
