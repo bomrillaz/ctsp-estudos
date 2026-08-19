@@ -1,0 +1,28 @@
+name: Push dos avisos CTSP
+
+# b103. Roda a cada 5 min e manda o push de verdade dos avisos disparados pelo painel
+# admin (central de notificações). Silencioso quando não há pushPendente:true.
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '*/5 * * * *'
+
+jobs:
+  avisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências
+        working-directory: .github/scripts
+        run: npm install --no-audit --no-fund
+
+      - name: Enviar avisos pendentes
+        working-directory: .github/scripts
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node enviar-avisos.js
