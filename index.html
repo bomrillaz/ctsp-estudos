@@ -857,7 +857,8 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .card-flip-wrap{perspective:1000px;width:100%;margin:0 auto 16px;}
 .card-flip{width:100%;min-height:200px;position:relative;transform-style:preserve-3d;transition:transform .5s;cursor:pointer;}
 .card-flip.flipped{transform:rotateY(180deg);}
-.card-face{position:absolute;inset:0;border-radius:18px;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+.card-face{position:absolute;inset:0;border-radius:18px;padding:24px;display:flex;flex-direction:column;align-items:center;text-align:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow-y:auto;}
+.card-face-inner{margin:auto 0;width:100%;}
 .card-front{background:var(--surface);border:1px solid var(--line-soft);box-shadow:var(--shadow-md);}
 .card-back{background:linear-gradient(150deg,var(--navy-2),var(--navy-deep));color:white;transform:rotateY(180deg);border:1px solid rgba(255,255,255,.06);}
 .card-label{font-family:var(--font-display);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.18em;opacity:.5;margin-bottom:12px;}
@@ -2163,46 +2164,19 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="screen" id="screen-admin">
       <div class="admin-screen">
         <h2>Painel Admin</h2>
-        <p>Gerencie usuários, questões e flashcards</p>
+        <p>Gerencie usuários, reportes e avisos</p>
         <div id="admin-sync" style="margin-bottom:14px;">
           <button class="btn-primary" onclick="sincronizarBanco()">Sincronizar banco (QI + FCI → Firebase)</button>
           <p class="auth-msg" id="sync-msg" role="alert"></p>
         </div>
         <div class="admin-tabs">
           <button class="admin-tab active" onclick="setAdminTab('usuarios',this)">Usuários</button>
-          <button class="admin-tab" onclick="setAdminTab('questao',this)">+ Questão</button>
-          <button class="admin-tab" onclick="setAdminTab('flashcard',this)">+ Flashcard</button>
           <button class="admin-tab" onclick="setAdminTab('reportes',this)">⚐ Reportes<span class="rep-badge" id="rep-badge-tab" style="display:none">0</span></button>
           <button class="admin-tab" onclick="setAdminTab('avisos',this)">🔔 Avisos</button>
           <button class="admin-tab" onclick="setAdminTab('metricas',this)">📊 Métricas</button>
         </div>
         <div class="admin-section active" id="admin-usuarios">
           <div id="admin-users-list"><p style="color:var(--text2);font-size:13px;">Carregando...</p></div>
-        </div>
-        <div class="admin-section" id="admin-questao">
-          <div class="field"><label for="q-area">Área</label>
-            <select id="q-area"><option value="AT1">AT1</option><option value="AT2">AT2</option><option value="AT3">AT3</option><option value="AT4">AT4</option><option value="AT5">AT5</option></select>
-          </div>
-          <div class="field"><label for="q-doc">Documento de referência</label><input type="text" id="q-doc" placeholder="Ex: RT CBMRS nº 14/2016"></div>
-          <div class="field"><label for="q-enun">Enunciado</label><textarea id="q-enun" rows="3"></textarea></div>
-          <div class="field"><label for="q-a">Opção A</label><input type="text" id="q-a"></div>
-          <div class="field"><label for="q-b">Opção B</label><input type="text" id="q-b"></div>
-          <div class="field"><label for="q-c">Opção C</label><input type="text" id="q-c"></div>
-          <div class="field"><label for="q-d">Opção D</label><input type="text" id="q-d"></div>
-          <div class="field"><label for="q-e">Opção E</label><input type="text" id="q-e"></div>
-          <div class="field"><label for="q-gab">Gabarito (A-E)</label><select id="q-gab"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option></select></div>
-          <div class="field"><label for="q-exp">Explicação</label><textarea id="q-exp" rows="2"></textarea></div>
-          <button class="btn-primary" onclick="addQuestao()">Salvar questão</button>
-          <p class="auth-msg" id="q-msg" role="alert"></p>
-        </div>
-        <div class="admin-section" id="admin-flashcard">
-          <div class="field"><label for="fc-area">Área</label>
-            <select id="fc-area"><option value="AT1">AT1</option><option value="AT2">AT2</option><option value="AT3">AT3</option><option value="AT4">AT4</option><option value="AT5">AT5</option></select>
-          </div>
-          <div class="field"><label for="fc-f">Frente (pergunta)</label><textarea id="fc-f" rows="2"></textarea></div>
-          <div class="field"><label for="fc-v">Verso (resposta)</label><textarea id="fc-v" rows="2"></textarea></div>
-          <button class="btn-primary" onclick="addFlashcard()">Salvar flashcard</button>
-          <p class="auth-msg" id="fc-msg" role="alert"></p>
         </div>
         <div class="admin-section" id="admin-reportes">
           <div id="admin-reportes-list"><p style="color:var(--text2);font-size:13px;">Carregando...</p></div>
@@ -4151,7 +4125,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.192';
+const APP_VERSAO='v1.193';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5729,14 +5703,18 @@ function renderCard(){
     <div class="card-flip-wrap">
       <div class="card-flip" id="card-flip-el" onclick="flipCard()">
         <div class="card-face card-front">
-          <div class="card-label">Frente — Pergunta</div>
-          <div class="card-area-tag" style="background:${aInfo.bg||'var(--paper-2)'};color:${aInfo.color||'var(--text2)'}">${aInfo.icon||''} ${area}</div>
-          <div class="card-text">${sanitize(fc.f)}</div>
-          <div class="card-hint">Toque para ver a resposta</div>
+          <div class="card-face-inner">
+            <div class="card-label">Frente — Pergunta</div>
+            <div class="card-area-tag" style="background:${aInfo.bg||'var(--paper-2)'};color:${aInfo.color||'var(--text2)'}">${aInfo.icon||''} ${area}</div>
+            <div class="card-text">${sanitize(fc.f)}</div>
+            <div class="card-hint">Toque para ver a resposta</div>
+          </div>
         </div>
         <div class="card-face card-back">
-          <div class="card-label" style="opacity:.6">Verso — Resposta</div>
-          <div class="card-text">${sanitize(fc.v)}</div>
+          <div class="card-face-inner">
+            <div class="card-label" style="opacity:.6">Verso — Resposta</div>
+            <div class="card-text">${sanitize(fc.v)}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -7018,40 +6996,6 @@ async function sincronizarBanco(){
     showMsg('sync-msg','Banco sincronizado (espelho completo): '+n+' questões + '+nfc+' flashcards.','ok');
     showToast('Banco sincronizado: '+n+' questões + '+nfc+' flashcards.');
   }catch(err){showMsg('sync-msg','Erro: '+err.message);}
-}
-
-async function addQuestao(){
-  if(!isAdmin())return;
-  const area=document.getElementById('q-area').value;
-  const doc2=document.getElementById('q-doc').value.trim();
-  const e=document.getElementById('q-enun').value.trim();
-  const ops=[document.getElementById('q-a'),document.getElementById('q-b'),document.getElementById('q-c'),document.getElementById('q-d'),document.getElementById('q-e')].map(x=>x.value.trim());
-  const g='ABCDE'.indexOf(document.getElementById('q-gab').value);
-  const exp=document.getElementById('q-exp').value.trim();
-  if(!e||ops.some(o=>!o)||!exp){showMsg('q-msg','Preencha todos os campos.');return;}
-  const id=area.toLowerCase()+'_'+Date.now();
-  try{
-    await db.ref('questoes/'+id).set({id,area,e,ops,g,doc:doc2,exp});
-    allQuestoes[id]={id,area,e,ops,g,doc:doc2,exp};
-    showMsg('q-msg','Questão salva!','ok');
-    ['q-doc','q-enun','q-a','q-b','q-c','q-d','q-e','q-exp'].forEach(x=>document.getElementById(x).value='');
-  }catch(err){showMsg('q-msg','Erro ao salvar: '+err.message);}
-}
-
-async function addFlashcard(){
-  if(!isAdmin())return;
-  const area=document.getElementById('fc-area').value;
-  const f=document.getElementById('fc-f').value.trim();
-  const v=document.getElementById('fc-v').value.trim();
-  if(!f||!v){showMsg('fc-msg','Preencha frente e verso.');return;}
-  const id='fc_'+Date.now();
-  try{
-    await db.ref('flashcards/'+id).set({id,a:area,f,v});
-    allFlashcards[id]={id,a:area,f,v};
-    showMsg('fc-msg','Flashcard salvo!','ok');
-    document.getElementById('fc-f').value='';
-    document.getElementById('fc-v').value='';
-  }catch(err){showMsg('fc-msg','Erro: '+err.message);}
 }
 
 // ═══════════════════════════════
