@@ -653,6 +653,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .area-prog-fill{height:100%;border-radius:3px;transition:width .4s;}
 
 .btn-weak{background:var(--red);color:white;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;flex-shrink:0;box-shadow:0 4px 12px rgba(211,36,18,.25);}
+/* b105: hierarquia real de botão — .btn-weak sozinho tem a MESMA cor do .btn-primary,
+   só muda tamanho; some quando espremido num container flex-column (align-items:stretch
+   estica tudo pra mesma largura). .btn-neutral tira a cor de destaque pra ações
+   secundárias/dispensáveis — token único, substitui o style="background:var(--bg)..." que
+   se repetia solto em vários pontos do arquivo. */
+.btn-weak.btn-neutral{background:var(--bg);color:var(--text2);box-shadow:none;}
 /* S51 MOBILE-FIT (bloco31) — corrige ESTOURO HORIZONTAL do painel no celular.
    Causa: filho flex com `flex:1` mantém `min-width:auto` e não encolhe abaixo da
    largura intrínseca do texto — o card é empurrado além da viewport e cria scroll
@@ -2000,7 +2006,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <div class="tela-h-sub">Escolha uma área ou modo especial</div>
           </div>
           <div class="hub-inicio" id="quiz-meta-cta"></div>
-          <button class="btn-intercalado" onclick="iniciarInterleaving()"><svg style="width:17px;height:17px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Intercalado — Alternar entre áreas</button>
+          <button class="btn-intercalado" onclick="abrirIntro('interleaving')"><svg style="width:17px;height:17px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Intercalado — Alternar entre áreas</button>
           <!-- BLOCO 34 (item 3): caminho SEM leitor de QR.
                O ebook mandava "Quiz → <nome do tópico>", mas a aba Quiz só lista ÁREAS
                e clicar numa área já dispara o quiz — esse caminho nunca existiu.
@@ -2377,7 +2383,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
       <input type="search" id="busca-global-input" placeholder="🔎 Buscar em resumos, flashcards, glossário e normas…" autocomplete="off" oninput="onBuscaGlobal(this.value)"
         style="flex:1;padding:11px 14px;border-radius:12px;border:1px solid var(--line-soft);background:var(--surface);color:var(--text);font-size:15px;font-family:inherit;box-sizing:border-box">
-      <button class="btn-weak" onclick="fecharBuscaGlobal()" style="background:var(--bg);color:var(--text2);padding:10px 12px;border-radius:10px;font-weight:700">Fechar</button>
+      <button class="btn-weak btn-neutral" onclick="fecharBuscaGlobal()" style="padding:10px 12px;border-radius:10px;font-weight:700">Fechar</button>
     </div>
     <div id="busca-global-resultados" style="overflow-y:auto;flex:1;min-height:0"></div>
   </div>
@@ -2389,7 +2395,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="modal-sub" id="intro-sub"></div>
     <div id="intro-body" style="margin:10px 0 4px"></div>
     <button class="btn-primary" id="intro-start" style="width:100%;margin-top:16px" onclick="introComecar()">Começar</button>
-    <button class="btn-weak" onclick="fecharIntro()" style="width:100%;margin-top:8px;background:var(--bg);color:var(--text2)">Agora não</button>
+    <button class="btn-weak btn-neutral" onclick="fecharIntro()" style="width:100%;margin-top:8px">Agora não</button>
   </div>
 </div>
 
@@ -3305,7 +3311,7 @@ function montarTreinoDoDia(tam=TREINO_TAM){
 // ── Tela-intro: apresenta a sessão ANTES de cair na 1ª questão (o que é, quantas,
 // só questões, o que acontece ao errar e ao terminar). Uma vez, um toque para começar.
 let _introAcao=null;
-function abrirIntro(tipo){
+function abrirIntro(tipo,arg,arg2){
   const g=id=>document.getElementById(id);
   let titulo,sub,itens,btn,acao;
   if(tipo==='diagnostico'){
@@ -3337,6 +3343,45 @@ function abrirIntro(tipo){
            ['Só questões','resumo e flashcard aparecem quando você erra de novo'],
            ['Sem meta fixa','pode sair quando quiser, sem compromisso']];
     btn='Começar'; acao=iniciarModoErro;
+  } else if(tipo==='quiz'){
+    const nome=arg==='TODAS'?'Quiz Geral':(AI[arg]?.nome||arg);
+    titulo=nome;
+    sub='20 questões desta área.';
+    itens=[['20 questões','sorteadas da área, priorizando revisão e novidade'],
+           ['Só questões','resumo e flashcard aparecem quando você erra'],
+           ['Sem meta fixa','pode sair quando quiser, sem compromisso']];
+    btn='Começar'; acao=()=>iniciarQuiz(arg);
+  } else if(tipo==='interleaving'){
+    titulo='Intercalado';
+    sub='20 questões alternando entre as 5 áreas.';
+    itens=[['20 questões','1 de cada área por rodada, prioriza revisão vencida'],
+           ['Só questões','resumo e flashcard aparecem quando você erra'],
+           ['Sem meta fixa','pode sair quando quiser, sem compromisso']];
+    btn='Começar'; acao=iniciarInterleaving;
+  } else if(tipo==='meta'){
+    const resta=Math.max(1,arg||1);
+    titulo='Meta do dia';
+    sub=resta+' quest'+(resta!==1?'ões':'ão')+' pra fechar a meta de hoje.';
+    itens=[[resta+' quest'+(resta!==1?'ões':'ão'),'questões novas e revisões, na medida do dia'],
+           ['Só questões','resumo e flashcard aparecem quando você erra'],
+           ['Sem meta fixa','pode sair quando quiser, sem compromisso']];
+    btn='Começar'; acao=iniciarMetaQuiz;
+  } else if(tipo==='topico'){
+    const n=Math.min(dose('questoes'),Object.values(allQuestoes).filter(q=>q.topico===arg).length);
+    titulo=nomeTopico(arg);
+    sub=n+' quest'+(n!==1?'ões':'ão')+' deste tópico.';
+    itens=[[n+' quest'+(n!==1?'ões':'ão'),'sorteadas do tópico, priorizando revisão e novidade'],
+           ['Só questões','resumo e flashcard aparecem quando você erra'],
+           ['Sem meta fixa','pode sair quando quiser, sem compromisso']];
+    btn='Começar'; acao=()=>praticarTopico(arg);
+  } else if(tipo==='ids'){
+    const n=(arg||[]).filter(id=>allQuestoes[id]).length;
+    titulo=arg2||'Alta incidência';
+    sub=n+' quest'+(n!==1?'ões':'ão')+' deste assunto.';
+    itens=[[n+' quest'+(n!==1?'ões':'ão'),'selecionadas por incidência nas provas anteriores'],
+           ['Só questões','resumo e flashcard aparecem quando você erra'],
+           ['Sem meta fixa','pode sair quando quiser, sem compromisso']];
+    btn='Começar'; acao=()=>praticarIds(arg,arg2);
   } else {
     titulo='Treino do dia';
     sub='Sua sessão de hoje, montada para você.';
@@ -4125,7 +4170,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.193';
+const APP_VERSAO='v1.195';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4630,7 +4675,7 @@ function renderFilaFoco(){
     const {area,pct}=areaMaisFraca();
     if(area&&pct<80){
       notas.push({cor:'var(--red)',titulo:AI[area].nome,sub:pct+'% de acertos — sua área mais fraca',
-        cta:'TREINAR',acao:'iniciarQuiz(\''+area+'\')'});
+        cta:'TREINAR',acao:"abrirIntro('quiz','"+area+"')"});
     }
   }
 
@@ -4924,7 +4969,7 @@ function estudarFraco(){
   const fraco=topicosFracos(1)[0];
   if(fraco){abrirFoco(fraco.t);return;}
   const {area}=areaMaisFraca();
-  if(area)iniciarQuiz(area);
+  if(area)abrirIntro('quiz',area);
 }
 
 function renderChart(){
@@ -5200,7 +5245,7 @@ function renderAreaList(){
     const icBox=`background:${a.bg};color:${a.color}`;
     const topicosHTML=tops.map(t=>{
       const nt=contQ[t]||0;
-      return `<div class="resumo-list-item" onclick="praticarTopico('${t}')">
+      return `<div class="resumo-list-item" onclick="abrirIntro('topico','${t}')">
         <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${a.icon}</div>
         <div style="flex:1"><div style="font-size:13px;font-weight:700">${sanitize(nomeTopico(t))}</div><div class="resumo-list-vence">${nt} quest${nt!==1?'ões':'ão'}</div></div>
         <div style="color:var(--text3);font-size:18px">→</div>
@@ -5216,7 +5261,7 @@ function renderAreaList(){
         <svg class="pg-area-chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
       </div>
       <div class="pg-area-topicos">
-        <div class="resumo-list-item" onclick="iniciarQuiz('${k}')">
+        <div class="resumo-list-item" onclick="abrirIntro('quiz','${k}')">
           <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${a.icon}</div>
           <div style="flex:1"><div style="font-size:13px;font-weight:700">Praticar toda a área</div><div class="resumo-list-vence">${n} quest${n!==1?'ões':'ão'}</div></div>
           <div style="color:var(--text3);font-size:18px">→</div>
@@ -5240,9 +5285,9 @@ function renderQuizHub(){
     const todayN=(userStats.history||[]).find(h=>h.date===today)?.n||0;
     const resta=Math.max(0,meta-todayN);
     cta.innerHTML = resta>0
-      ? `<button class="btn-primary" style="width:100%" onclick="iniciarMetaQuiz()">Iniciar meta de hoje · ${resta} quest${resta!==1?'ões':'ão'}</button>
+      ? `<button class="btn-primary" style="width:100%" onclick="abrirIntro('meta',${resta})">Iniciar meta de hoje · ${resta} quest${resta!==1?'ões':'ão'}</button>
          <div class="hub-hint">Questões novas e revisões, na medida do dia. Ou escolha uma área ou tópico abaixo.</div>`
-      : `<div class="hub-ok">✓ Meta de questões concluída hoje</div><button class="btn-weak" style="width:100%" onclick="iniciarMetaQuiz()">Responder mais assim mesmo</button>`;
+      : `<div class="hub-ok">✓ Meta de questões concluída hoje</div><button class="btn-weak" style="width:100%" onclick="abrirIntro('meta',1)">Responder mais assim mesmo</button>`;
   }
 }
 function iniciarMetaQuiz(){
@@ -5399,7 +5444,9 @@ function renderQuizBadge(q){
 
 // "Respondidas" some sem denominador nas sessões livres (pode ser interrompida sem
 // culpa); mantém X/Y só onde há meta fechada de verdade (Simulado, Nivelamento).
-const QUIZ_AREAS_LIVRES=['RAPIDO','INTELIGENTE','TREINO'];
+// b105: ERRO, INTERLEAVING e META tinham a mesma cara de "sem meta fixa" (texto do
+// abrirIntro já dizia isso) mas ficaram de fora da lista original — sweep aplicado.
+const QUIZ_AREAS_LIVRES=['RAPIDO','INTELIGENTE','TREINO','ERRO','INTERLEAVING','META'];
 function atualizarScoreV(){
   document.getElementById('quiz-score-v').textContent=
     QUIZ_AREAS_LIVRES.includes(quizArea)?String(quizSessao.t):quizSessao.t+'/'+quizQueue.length;
@@ -5561,22 +5608,54 @@ function atualizarCardTreino(){
 }
 function fecharFim(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('modal-fim').classList.add('hidden');}
 function fimIr(fn){document.getElementById('modal-fim').classList.add('hidden');if(typeof fn==='function')fn();}
-// Tela de conclusão do treino: fecha o objetivo do dia, revela o aproveitamento (só aqui,
-// não durante) e conduz ao próximo passo em vez de largar o usuário num menu.
-function mostrarFimTreino(){
+// b105: cada quizArea tem seu próximo passo natural — o card generaliza mostrarFimTreino
+// (que só existia pro Treino do dia) pra todos os fluxos que antes só levavam um toast solto.
+function configFimSessao(area){
+  switch(area){
+    case 'TREINO': return {titulo:'Treino do dia concluído!',diario:true,extras:[
+      {b:'Continuar com Estudo rápido',primaria:true,fn:iniciarEstudoRapido},
+      {b:'Treino focado no ponto fraco',fn:estudarFraco},
+      {b:'Refazer o treino',fn:irTreinoDoDia}]};
+    case 'RAPIDO': return {titulo:'Estudo Rápido concluído!',extras:[
+      {b:'Treino focado no ponto fraco',primaria:true,fn:estudarFraco},
+      {b:'Fazer mais um Estudo Rápido',fn:iniciarEstudoRapido}]};
+    case 'INTELIGENTE': return {titulo:'Treino Focado concluído!',extras:[
+      {b:'Ver meu Treino do dia',primaria:true,fn:()=>abrirIntro('treino')},
+      {b:'Fazer mais um Treino Focado',fn:()=>abrirIntro('focado')}]};
+    case 'ERRO': return {titulo:'Modo Erro concluído!',extras:[
+      {b:'Ver meu Treino do dia',primaria:true,fn:()=>abrirIntro('treino')},
+      {b:'Revisar mais erros',fn:()=>abrirIntro('erro')}]};
+    case 'INTERLEAVING': return {titulo:'Intercalado concluído!',extras:[
+      {b:'Ver meu Treino do dia',primaria:true,fn:()=>abrirIntro('treino')},
+      {b:'Fazer mais um Intercalado',fn:()=>abrirIntro('interleaving')}]};
+    case 'META': return {titulo:'Meta do dia concluída!',diario:true,extras:[
+      {b:'Ver meu Treino do dia',primaria:true,fn:()=>abrirIntro('treino')},
+      {b:'Responder mais',fn:()=>abrirIntro('meta',1)}]};
+    default: return {titulo:(AI[area]?.nome||'Sessão')+' concluída!',extras:[
+      {b:'Ver meu Treino do dia',primaria:true,fn:()=>abrirIntro('treino')},
+      {b:'Praticar esta área de novo',fn:()=>abrirIntro('quiz',area)}]};
+  }
+}
+// Tela de conclusão da sessão: fecha o objetivo (quando há), revela o aproveitamento (só
+// aqui, não durante) e conduz ao próximo passo em vez de largar o usuário num menu.
+function mostrarFimSessao(){
   const c=quizSessao.c,t=quizSessao.t,pct=t?Math.round(c/t*100):0;
   const g=id=>document.getElementById(id);
-  g('fim-title').textContent='Treino do dia concluído!';
-  g('fim-sub').textContent=pct>=70?'Mandou bem. Objetivo do dia cumprido.':pct>=50?'Bom trabalho — o reforço fixa o resto.':'O que vale é a constância; o que você errou volta espaçado.';
+  const cfg=configFimSessao(quizArea);
+  const subBase=pct>=70?(cfg.diario?'Mandou bem. Objetivo do dia cumprido.':'Mandou bem.'):pct>=50?'Bom trabalho — o reforço fixa o resto.':'O que vale é a constância; o que você errou volta espaçado.';
+  const md=tempoMedioQuestao();
+  const ritmo=md?` Ritmo ${fmtRitmo(md)}/questão${md>TEMPO_PROVA_POR_Q?' (acima dos 3min da prova)':''}.`:'';
+  g('fim-title').textContent=cfg.titulo;
+  g('fim-sub').textContent=subBase+ritmo;
   g('fim-score').textContent=c+' de '+t;
   g('fim-score-l').textContent='aproveitamento '+pct+'%';
-  g('fim-acoes').innerHTML=`
-    <button class="btn-primary" onclick="fimIr(iniciarEstudoRapido)">Continuar com Estudo rápido</button>
-    <button class="btn-weak" onclick="fimIr(estudarFraco)">Treino focado no ponto fraco</button>
-    <button class="btn-weak" onclick="fimIr(irResumosHub)">Resumos →</button>
-    <button class="btn-weak" onclick="fimIr(irCardsHub)">Flashcards →</button>
-    <button class="btn-weak" onclick="fimIr(irTreinoDoDia)">Refazer o treino</button>
-    <button class="btn-weak" onclick="fecharFim()" style="background:var(--bg);color:var(--text2)">Voltar ao início</button>`;
+  window._fimSessaoFns=cfg.extras.map(x=>x.fn);
+  g('fim-acoes').innerHTML=cfg.extras.map((x,i)=>
+    `<button class="${x.primaria?'btn-primary':'btn-weak btn-neutral'}" onclick="fimIr(_fimSessaoFns[${i}])">${x.b}</button>`
+  ).join('')+`
+    <button class="btn-weak btn-neutral" onclick="fimIr(irResumosHub)">Resumos →</button>
+    <button class="btn-weak btn-neutral" onclick="fimIr(irCardsHub)">Flashcards →</button>
+    <button class="btn-weak btn-neutral" onclick="fecharFim()">Voltar ao início</button>`;
   g('modal-fim').classList.remove('hidden');
 }
 
@@ -5597,17 +5676,10 @@ function finishQuiz(){
   if(quizArea==='TREINO'){
     userStats.treinoDia=diaKeyHoje();   // marca o objetivo do dia como cumprido
     saveProg();
-    renderDashboard();
     atualizarCardTreino();
-    mostrarFimTreino();                 // tela de conclusão + próximos passos
-    return;
   }
   renderDashboard();
-  // S53: devolve o ritmo junto do placar — só avisa quando estoura o orçamento
-  // de 3 min/questão da prova, para não virar cobrança em quem já está dentro.
-  const md=tempoMedioQuestao();
-  const ritmo=md?` · ritmo ${fmtRitmo(md)}/questão${md>TEMPO_PROVA_POR_Q?' (acima dos 3min da prova)':''}`:'';
-  showToast(`Sessão encerrada: ${quizSessao.c}/${quizSessao.t} acertos${ritmo}`);
+  mostrarFimSessao();   // tela de conclusão + próximos passos, para qualquer fluxo de questões
 }
 
 // ═══════════════════════════════
@@ -6120,7 +6192,7 @@ function blocoPraticarTopico(t){
   const n=Object.values(allQuestoes).filter(q=>q.topico===t).length;
   if(!n)return '';
   return `<div style="text-align:center;margin:-4px 0 12px">
-    <button class="btn-weak" onclick="praticarTopico('${t}')">Praticar ${sanitize(nomeTopico(t))} — ${n} ${n===1?'questão':'questões'}</button>
+    <button class="btn-weak" onclick="abrirIntro('topico','${t}')">Praticar ${sanitize(nomeTopico(t))} — ${n} ${n===1?'questão':'questões'}</button>
   </div>`;
 }
 
@@ -6551,7 +6623,7 @@ function tqSel(btn){
   btn.classList.add('sel');
   const code=btn.dataset.code,name=btn.dataset.name,pct=btn.dataset.pct,c=btn.dataset.cor,weak=btn.dataset.weak;
   const d=tq.querySelector('.tq-detail');
-  if(d)d.innerHTML='<span class="tq-dot" style="background:'+c+'"></span><b>'+sanitize(code)+'</b> · '+sanitize(name)+' — <b>'+sanitize(pct)+'</b>'+(weak?'<span class="tq-weak">ponto mais fraco</span>':'')+'<button type="button" class="tq-praticar" onclick="praticarTopico(\''+sanitize(code)+'\')">Praticar →</button>';
+  if(d)d.innerHTML='<span class="tq-dot" style="background:'+c+'"></span><b>'+sanitize(code)+'</b> · '+sanitize(name)+' — <b>'+sanitize(pct)+'</b>'+(weak?'<span class="tq-weak">ponto mais fraco</span>':'')+'<button type="button" class="tq-praticar" onclick="abrirIntro(\'topico\',\''+sanitize(code)+'\')">Praticar →</button>';
 }
 function toggleAreaTopicos(el){
   const row=el.closest('.pg-area-row');
@@ -6605,7 +6677,7 @@ function toggleTopicoItens(el){
 function praticarIncidencia(ix){
   const i=INCIDENCIA[ix];
   if(!i)return;
-  praticarIds(i.qs,i.assunto);
+  abrirIntro('ids',i.qs,i.assunto);
 }
 
 function togglePadrao(i){
@@ -7443,7 +7515,7 @@ function renderAgora(){
   el.innerHTML='<div class="pg-mod-h">E agora?</div>'
     +'<div class="pg-agora-body">'
       +'<div class="pg-agora-txt">Seu ponto mais frágil agora é <b style="color:'+a.color+'">'+sanitize(p.nome)+'</b> ('+sanitize(a.nome||'')+' · '+pct+'% de domínio).</div>'
-      +'<button class="btn-primary" type="button" onclick="praticarTopico(\''+sanitize(p.t)+'\')" style="width:100%;margin-top:10px;">Praticar '+sanitize(p.nome)+' →</button>'
+      +'<button class="btn-primary" type="button" onclick="abrirIntro(\'topico\',\''+sanitize(p.t)+'\')" style="width:100%;margin-top:10px;">Praticar '+sanitize(p.nome)+' →</button>'
     +'</div>';
 }
 

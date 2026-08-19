@@ -143,12 +143,20 @@ via `vm.runInContext` no MESMO contexto. jsdom não tem `requestAnimationFrame`/
 ## 5. MATERIAL DE REFERÊNCIA
 
 `materiais/` espelha a pasta oficial do Drive e é **gitignorada** — nunca commitar (material institucional).
-Subpastas: 5 áreas temáticas + `marca/` + `entregas/` + `produtos/` + `historico/` (+ `arquivo_morto/`).
+Subpastas: 5 áreas temáticas + `marca/` + `entregas/` + `produtos/`.
 
 **`materiais/entregas/`** é só planejamento e ferramentas (reorganizado no b67):
 `planos/` (PLANO_*.md) · `protocolo/` (instruções de projeto, LEIA-ME, migração) · `comercial/`
 (VENDAS_planos_e_copy.md) · `conteudo/` (CONTEUDO_PROGRAMATICO, `_analise/`, `_dados/`) · `seguranca/`
 (SEGURANCA_regras_rtdb.json) · `testes/` (harness de regressão) · `_tmp/`.
+
+**Plano executado = plano apagado (padrão desde o b105).** `PLANO_*.md` em `planos/` não tem serventia
+depois de rodado: o resultado já vira `_estado.md` + nota atômica em `licoes/`/`decisoes/` do vault, que é
+o destilado. Ao terminar de executar um plano: avisar o João e apagar o arquivo **no mesmo bloco** —
+não deixar acumular pra decidir depois. Duas exceções, ambas exigem avisar o João em vez de apagar direto:
+(1) o plano ficou bom o bastante pra virar nota de referência no vault (`20-processo/` ou `decisoes/`) —
+sugerir subir ele lá; (2) o plano é reaproveitável como **modelo padrão** pra rodar de novo em outro
+momento (ex.: checklist de auditoria) — sugerir guardar como template em vez de descartar.
 
 **`materiais/produtos/`** — fora de `entregas/`, é onde vivem os ENTREGÁVEIS físicos (PDF) e os scripts
 que os geram: `ebook/`, `flashcards/`, `plataforma/`. Cada script (`build_ebook.py`, `gen_flashcards.py`,
@@ -229,8 +237,9 @@ Conferência: Configurações → fim da tela mostra a versão.
 
 Memória do projeto vive no **vault Obsidian**, fora do repo:
 `C:\Users\Daiane\Documents\Claude\vault\10-projetos\prontidao-ctsp\`.
-`materiais/historico/` e `MEMORIA_INDICE.md` do repo estão **congelados** (arquivo morto da migração,
-b65) — não recebem mais gravação. Ver §12 sobre backup do vault.
+`materiais/historico/` e `MEMORIA_INDICE.md` do repo **foram removidos (b105)** — eram arquivo morto da
+migração (b65, congelados desde então) e todo o conteúdo útil já estava duplicado ou destilado no vault.
+Não recriar. Ver §12 sobre backup do vault.
 
 **Início** (obrigatório só quando a sessão mexer em código ou no banco):
 1. Ler `_estado.md` do vault — é a autoridade do **estado atual** (versão, contagens, pendências).
@@ -249,7 +258,7 @@ IA no meio.
 2. Criar/atualizar nota(s) atômica(s) em `licoes/` (o que muda conduta futura) ou `decisoes/` (o que foi
    fechado e por quê), linkadas ao bloco da sessão.
 3. Copiar o `.md` da sessão para `historico/` do vault, no mesmo formato dos blocos anteriores.
-4. **Não** escrever mais em `materiais/historico/` nem em `MEMORIA_INDICE.md` do repo.
+4. **Não** recriar `materiais/historico/` nem `MEMORIA_INDICE.md` no repo (removidos no b105).
 
 ---
 
@@ -268,10 +277,6 @@ O repositório do GitHub já é a segunda via do **produto** (`index.html`, `dat
 
 Confirmado (b65): `Documents\Claude\vault\` sincronizada com o Google Drive para desktop.
 
-**Congelado, não cresce mais:** `materiais/historico/` e `MEMORIA_INDICE.md` do repo — arquivo morto da
-migração (b65), preservados como estão. Cobertos pela sincronização de `materiais/` já existente; não
-recebem gravação nova.
-
 **Não precisa de backup:** as 5 áreas temáticas e `materiais/provas/` (~240 MB) já vieram do Drive
 e continuam lá; `materiais/prints/` é regenerável.
 
@@ -288,6 +293,29 @@ de graça.
 - **Honestidade acima de agradar.** Dizer quando algo não vale a pena e quando há limitação real. Nunca inventar fonte, número ou fato.
 - **Verificar antes de afirmar.** Pergunta sobre origem/histórico se responde abrindo o git ou o arquivo, nunca de memória.
 - **Ao corrigir uma ocorrência, varrer a CLASSE inteira.** Ao remover UI, caçar os writers órfãos do id removido.
+
+**Padrão de execução — mudanças de UI/estética (criado no b105 depois de 3 casos de correção
+incompleta: botão de confirmação do Quiz não propagado pro Estudo Rápido/Treino Focado, "só número de
+questões" sem acertos aplicado só no Treino Focado e não em Alternar/Iniciar Meta, hierarquia de botão
+resolvida só no card de fechamento do Treino Focado em vez de virar padrão, botão de fechar dashboard
+pedido 2 vezes):**
+- **Mapear os pontos de entrada ANTES de editar.** A mesma tela quase sempre tem mais de um caminho até
+  ela (ex.: Quiz normal, Estudo Rápido, Treino Focado, Modo Erro, "Alternar", "Iniciar meta" podem levar
+  à mesma tela de questão). `grep` por toda função/rota que chama o componente mexido — não só o botão
+  que o João citou no pedido — e listar os caminhos achados na resposta, mesmo que seja "só tem 1
+  caminho, conferido".
+- **Consertar a FONTE compartilhada, nunca o call site.** Se N telas chamam a mesma função de render, o
+  fix entra na função. Replicar call site por call site é o padrão que já falhou — sobra sempre algum
+  esquecido.
+- **Regra estética que o João define como "sempre"** (hierarquia primário/secundário, cor, espaçamento
+  etc.) vira **classe/token CSS reaproveitável**, nunca estilo pontual num componente só — senão o
+  próximo card/modal parecido nasce sem a regra de novo.
+- **Fechar overlay/modal = 3 caminhos sempre juntos**: botão X, Esc, clique fora. Ao implementar um,
+  checar os outros dois no mesmo commit, não um por reclamação.
+- **Declarar concluído = reportar a varredura, não só o fix.** "Apliquei em X. Conferi Y e Z — [tinham/
+  não tinham] o mesmo padrão." Reforça a nota de método do b81 (replicar correções acordadas), agora
+  como checklist explícito pra UI, não implícito.
+
 - **Desconfiar do TESTE antes do código** — já houve três casos de harness acusando falha falsa.
 - **Toda regra de conteúdo que importe precisa de um script que a meça.** Instrução não medida vira lembrança.
 - **Auditar não é corrigir.** Ou aplica na mesma sessão, ou a pendência entra como 🔴 com o custo explícito.
