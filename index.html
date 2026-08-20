@@ -187,18 +187,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media (prefers-reduced-motion: reduce){
 *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
 }
-/* ── Transição entre telas (View Transitions API) ── header e barra ficam ancorados (nome próprio),
-   só o conteúdo faz fade + leve deslize. Degrada para troca instantânea onde não há suporte. */
-.app-header{view-transition-name:ctsp-header;}
-.bottom-nav{view-transition-name:ctsp-nav;}
-@media (prefers-reduced-motion: no-preference){
-  ::view-transition-group(root){animation-duration:.30s;}
-  ::view-transition-old(root){animation:.22s var(--ease-out) both vt-old;}
-  ::view-transition-new(root){animation:.30s var(--ease-out) both vt-new;}
-}
-@keyframes vt-old{to{opacity:0;transform:translateY(-6px);}}
-@keyframes vt-new{from{opacity:0;transform:translateY(10px);}}
-
 /* AUTH */
 /* b59: o #auth-screen virou só o CONTÊINER das duas vistas. O layout de "cartão
    colado no rodapé sobre a foto" desceu para o #login-view — é dele, não da tela. */
@@ -395,15 +383,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .app-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--fire-line);opacity:.95;}
 .header-logo{width:34px;height:34px;background:transparent;padding:0;object-fit:contain;flex-shrink:0;}
 .header-titles{flex:1;}
-.header-title{color:white;font-family:var(--font-display);font-size:18px;font-weight:700;line-height:1.05;letter-spacing:.05em;text-transform:uppercase;}
-.header-sub{color:rgba(255,255,255,.55);font-family:var(--font-display);font-size:11px;letter-spacing:.18em;text-transform:uppercase;}
-.header-right{display:flex;align-items:center;gap:6px;}
-.streak-badge{background:rgba(240,136,60,.16);border:1px solid rgba(240,136,60,.35);color:var(--ember);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums;}
+.header-title{color:white;font-family:var(--font-display);font-size:18px;font-weight:700;line-height:1.05;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.header-sub{color:rgba(255,255,255,.55);font-family:var(--font-display);font-size:11px;letter-spacing:.18em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.header-right{display:flex;align-items:center;gap:4px;}
+.streak-badge{background:rgba(240,136,60,.16);border:1px solid rgba(240,136,60,.35);color:var(--ember);border-radius:20px;padding:3px 7px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums;flex-shrink:0;}
 .streak-badge svg{width:12px;height:12px;flex-shrink:0;}
-.streak-days{display:flex;gap:3px;}
-.streak-days i{width:7px;height:7px;border-radius:2px;background:rgba(255,255,255,.22);display:block;}
+.streak-days{display:flex;gap:2px;}
+.streak-days i{width:6px;height:6px;border-radius:2px;background:rgba(255,255,255,.22);display:block;}
 .streak-days i.on{background:var(--ember);}
-.btn-logout{background:rgba(255,255,255,.12);color:white;border-radius:9px;padding:6px 8px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.btn-logout{background:rgba(255,255,255,.12);color:white;border-radius:9px;padding:6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .btn-logout svg{width:16px;height:16px;}
 .btn-notif{position:relative;}
 .notif-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:800;line-height:1;}
@@ -984,8 +972,8 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .admin-screen{padding:16px;background:transparent;}
 .admin-screen h2{font-family:var(--font-display);font-size:26px;font-weight:700;margin-bottom:2px;color:var(--text);letter-spacing:.02em;}
 .admin-screen>p{font-size:13px;color:var(--text2);margin-bottom:16px;}
-.admin-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
-.admin-tab{padding:8px 16px;background:var(--surface);border:1px solid var(--line-soft);border-radius:20px;font-size:12px;font-weight:700;color:var(--text2);box-shadow:var(--shadow);}
+.admin-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:16px;}
+.admin-tab{padding:8px 16px;background:var(--surface);border:1px solid var(--line-soft);border-radius:20px;font-size:12px;font-weight:700;color:var(--text2);box-shadow:var(--shadow);text-align:center;}
 .admin-tab.active{background:var(--navy);color:white;border-color:var(--navy);}
 .admin-section{display:none;}
 .admin-section.active{display:block;}
@@ -1098,7 +1086,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .hidden{display:none!important;}
 
 /* Header dropdown menu */
-.header-menu-wrap{position:relative;display:flex;align-items:center;gap:6px;}
+.header-menu-wrap{position:relative;display:flex;align-items:center;gap:4px;}
 .btn-header-menu{background:rgba(255,255,255,.12);border:none;border-radius:9px;padding:6px 8px;display:flex;flex-direction:column;gap:4px;cursor:pointer;width:32px;height:32px;align-items:center;justify-content:center;position:relative;}
 .btn-header-menu::before{content:'';position:absolute;inset:-6px;}
 .btn-header-menu span{display:block;width:14px;height:2px;background:white;border-radius:2px;transition:all .2s;}
@@ -1365,6 +1353,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   .nav-collapse:hover{background:rgba(255,255,255,.08);color:#fff;}
   .nav-collapse svg{width:20px;height:20px;transition:transform .25s;}
   .app-header{margin-left:232px;}
+  .admin-tabs{display:flex;flex-wrap:nowrap;}
   .app-content{margin-left:232px;padding-bottom:40px;}
   /* fixos reposicionados para não caírem sob o rail */
   .toast{left:calc(50% + 116px);}
@@ -4171,7 +4160,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.196';
+const APP_VERSAO='v1.197';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
