@@ -281,9 +281,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .lp-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:18px 17px;box-shadow:var(--shadow);}
 .lp-card h3{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);margin-bottom:7px;letter-spacing:.02em;}
 .lp-card p{font-size:13.5px;line-height:1.6;color:var(--text2);}
-.lp-card-ic{color:var(--ember);font-size:13px;margin-bottom:9px;}
+.lp-card-ic{color:var(--ember-text);font-size:13px;margin-bottom:9px;}
 .lp-card-ciencia{border-top:3px solid var(--ember);}
-.lp-tag{display:inline-block;font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ember-deep);background:var(--amber-light);border-radius:20px;padding:4px 11px;margin-bottom:10px;}
+.lp-tag{display:inline-block;font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ember-text);background:var(--amber-light);border-radius:20px;padding:4px 11px;margin-bottom:10px;}
 .lp-nota-honesta{margin-top:16px;background:var(--surface);border-left:3px solid var(--navy);border-radius:0 12px 12px 0;padding:14px 16px;font-size:13.5px;line-height:1.6;color:var(--text2);}
 
 /* Para quem */
@@ -616,7 +616,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pg-status{text-align:center;font-size:12px;font-weight:700;margin:6px 0 2px;padding:6px 10px;border-radius:10px;line-height:1.35;}
 .pg-status:empty{display:none;}
 .pg-status.ok{color:var(--green);background:var(--green-light);}
-.pg-status.atencao{color:var(--ember-deep);background:var(--amber-light);}
+.pg-status.atencao{color:var(--ember-text);background:var(--amber-light);}
 .pg-status.alerta{color:var(--red-dark);background:var(--red-light);}
 /* P1 — atividade: linha de meta + rótulos + consistência */
 .pg-chart-plot{position:relative;height:80px;margin-top:14px;}
@@ -1022,9 +1022,9 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .cob-on{background:var(--navy);color:#fff;}
 .cob-resumo{background:var(--red-light);color:var(--red);font-size:12px;font-weight:800;padding:9px 12px;border-radius:10px;margin-bottom:12px;}
 /* B58 — sinalização de registro duplicado no painel admin. */
-.dup-resumo{background:var(--amber-light);color:var(--ember-deep);font-weight:700;line-height:1.45;}
+.dup-resumo{background:var(--amber-light);color:var(--ember-text);font-weight:700;line-height:1.45;}
 .user-row.user-dup>.user-head{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber) inset;}
-.badge-dup{background:var(--amber-light);color:var(--ember-deep);}
+.badge-dup{background:var(--amber-light);color:var(--ember-text);}
 .user-item-uid{font-size:10px;color:var(--text3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere;margin-top:2px;}
 /* Faixa de cobrança na Home do militar */
 .aviso-cob{border-radius:14px;padding:12px 14px;margin-bottom:14px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);}
@@ -1092,6 +1092,8 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .btn-header-menu span{display:block;width:14px;height:2px;background:white;border-radius:2px;transition:all .2s;}
 .header-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;box-shadow:var(--shadow-lg);overflow:hidden;min-width:150px;z-index:200;animation:scaleIn .18s var(--ease-out);}
 .header-dropdown button{display:block;width:100%;padding:13px 16px;text-align:left;font-size:14px;font-weight:600;color:var(--text);background:none;border:none;cursor:pointer;border-bottom:1px solid var(--line-soft);}
+.dd-icon{display:inline-flex;width:16px;height:16px;vertical-align:-3px;margin-right:8px;}
+.dd-icon svg{width:16px;height:16px;}
 .header-dropdown button:last-child{border-bottom:none;color:var(--red);}
 .header-dropdown button:active{background:var(--red-light);}
 
@@ -1205,7 +1207,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .badge-erro{background:var(--red-light);color:var(--red);}
 .badge-rev{background:var(--amber-light);color:var(--amber);}
 .badge-dom{background:var(--paper-2);color:var(--text2);}
-.fb-caderno{margin-top:8px;font-size:12px;font-weight:600;color:var(--ember-deep);}
+.fb-caderno{margin-top:8px;font-size:12px;font-weight:600;color:var(--ember-text);}
 html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 #save-flash{position:fixed;left:50%;bottom:80px;transform:translateX(-50%) translateY(8px);background:var(--green);color:#fff;font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,.18);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:9999;}
 #save-flash.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -1231,7 +1233,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .rep-badge{display:inline-flex;min-width:17px;height:17px;padding:0 4px;align-items:center;justify-content:center;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:800;margin-left:5px;}
 .rep-item{background:var(--surface);border:1px solid var(--line-soft);border-left:4px solid var(--ember);border-radius:12px;padding:12px;margin-bottom:10px;box-shadow:var(--shadow);}
 .rep-item-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;}
-.rep-item-cat{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ember-deep);background:var(--amber-light);padding:3px 8px;border-radius:7px;}
+.rep-item-cat{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ember-text);background:var(--amber-light);padding:3px 8px;border-radius:7px;}
 .rep-item-id{font-size:11px;color:var(--text3);font-weight:700;}
 .rep-item-ctx{font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.4;}
 .rep-item-desc{font-size:13px;color:var(--text);line-height:1.45;margin-bottom:8px;}
@@ -1801,15 +1803,15 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
     <div class="header-right">
       <div class="streak-badge" id="hdr-streak" title="Sequência de estudo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1.5 3.5 5 5.2 5 9a5 5 0 0 1-10 0c0-2 .9-3.4 1.8-4.7.4 1.2 1.2 2 2.2 2.5C10.6 6.7 11 4.4 12 2z"/></svg><div class="streak-days" id="hdr-streak-days"></div></div>
-      <button class="btn-logout" id="btn-tema" onclick="toggleTemaRapido()" title="Tema" aria-label="Alternar tema claro/escuro"></button>
       <button class="btn-logout" onclick="abrirBuscaGlobal()" title="Buscar" aria-label="Buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></button>
       <button class="btn-logout btn-notif" onclick="abrirModalNotif()" title="Avisos" aria-label="Avisos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="notif-badge hidden" id="notif-badge">0</span></button>
       <div class="header-menu-wrap" id="header-menu-wrap">
-        <button class="btn-logout" onclick="abrirModalConfig()" title="Configurações" aria-label="Configurações"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h.01a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg></button>
         <button class="btn-header-menu" onclick="toggleHeaderMenu()" title="Menu" aria-label="Menu">
           <span></span><span></span><span></span>
         </button>
         <div class="header-dropdown hidden" id="header-dropdown">
+          <button id="btn-tema" onclick="toggleTemaRapido();toggleHeaderMenu()"><span class="dd-icon" id="tema-icone"></span>Tema</button>
+          <button onclick="abrirModalConfig();toggleHeaderMenu()">⚙ Configurações</button>
           <button onclick="location.reload()">↺ Recarregar</button>
           <button onclick="doLogout()">→ Sair</button>
         </div>
@@ -2067,7 +2069,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
               <div class="sim-card-info"><h3>Simulado Real</h3><p>60 questões · proporção do edital (14/8/14/12/12) · 3 horas</p></div>
             </div>
             <div class="sim-card" onclick="iniciarSimulado('inteligente')">
-              <div class="sim-card-icon" style="background:var(--amber-light);color:var(--ember-deep);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></div>
+              <div class="sim-card-icon" style="background:var(--amber-light);color:var(--ember-text);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></div>
               <div class="sim-card-info"><h3>Mini Simulado</h3><p>15 questões cronometradas · foco nos seus pontos fracos</p></div>
             </div>
           </div>
@@ -2237,7 +2239,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
                 </div>
                 <div class="pg-gauge-wrap" id="pront-gauge"></div>
                 <div id="pront-status" class="pg-status"></div>
-                <div id="pront-aviso" style="display:none;font-size:11px;color:var(--ember-deep);background:var(--amber-light);border-radius:8px;padding:7px 9px;margin-top:8px;line-height:1.4;"><svg style="width:13px;height:13px;vertical-align:-1px;margin-right:3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Estimativa preliminar — baseada em poucas respostas. Vai ficar mais precisa conforme você estuda.</div>
+                <div id="pront-aviso" style="display:none;font-size:11px;color:var(--ember-text);background:var(--amber-light);border-radius:8px;padding:7px 9px;margin-top:8px;line-height:1.4;"><svg style="width:13px;height:13px;vertical-align:-1px;margin-right:3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Estimativa preliminar — baseada em poucas respostas. Vai ficar mais precisa conforme você estuda.</div>
               </div>
             </div>
           </div>
@@ -2564,7 +2566,7 @@ function aplicarTema(pref){
   document.documentElement.setAttribute('data-theme',dark?'dark':'light');
   const tc=document.querySelector('meta[name="theme-color"]');if(tc)tc.setAttribute('content',dark?'#0D1322':'#101B3D');
   document.querySelectorAll('#theme-seg button').forEach(b=>b.classList.toggle('on',b.dataset.t===pref));
-  const bt=document.getElementById('btn-tema');if(bt)bt.innerHTML=dark?_ICONE_SOL:_ICONE_LUA;
+  const bt=document.getElementById('tema-icone');if(bt)bt.innerHTML=dark?_ICONE_SOL:_ICONE_LUA;
 }
 // Botão rápido do header: alterna claro⇄escuro (o seletor Auto continua em Configurações).
 function toggleTemaRapido(){const dark=document.documentElement.getAttribute('data-theme')==='dark';setTema(dark?'claro':'escuro');}
@@ -4160,7 +4162,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.197';
+const APP_VERSAO='v1.198';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
