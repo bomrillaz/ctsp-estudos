@@ -46,7 +46,7 @@
 :root{
   /* ── Identidade "Manual Operacional" ── */
   --red:#D32412;--red-dark:#A51D0E;--red-mid:#BB2010;--red-light:#FBEDE6;
-  --ember:#F0883C;--ember-deep:#C77B1D;
+  --ember:#F0883C;--ember-deep:#C77B1D;--ember-text:#8F4A0E;
   --navy:#101B3D;--navy-2:#1B2A55;--navy-deep:#0B1430;
   --paper:#F7F3EC;--paper-2:#EFE9DD;--surface:#FFFFFF;
   --white:#FFFFFF;--bg:#EFE9DD;
@@ -77,6 +77,7 @@ html[data-theme="dark"]{
   --green:#46C07A;--green-light:#11301F;
   --amber:#E8A04C;--amber-light:#33260F;
   --blue:#5EA5DA;--blue-light:#13273D;
+  --ember-text:#F0883C;
   --at1:#FF6B4A;--at2:#F0993B;--at3:#5FAAE0;--at4:#E8718F;--at5:#93C45F;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.32);
   --shadow-md:0 2px 4px rgba(0,0,0,.34),0 10px 28px rgba(0,0,0,.42);
@@ -276,7 +277,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .lp-sec{padding:46px 0;}
 .lp-sec-papel2{background:var(--paper-2);}
 .lp-sec-escura{background:var(--navy);color:#fff;}
-.lp-label{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ember-deep);margin-bottom:14px;}
+.lp-label{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ember-text);margin-bottom:14px;}
 .lp-label i{display:block;width:26px;height:2px;background:var(--fire-line);flex-shrink:0;}
 .lp-label-claro{color:var(--ember);}
 .lp-h2{font-family:var(--font-display);font-size:clamp(26px,6.4vw,40px);font-weight:700;line-height:1.08;color:var(--text);letter-spacing:.01em;margin-bottom:14px;}
@@ -318,7 +319,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .lp-cotas span{display:block;font-family:var(--font-display);font-size:11.5px;font-weight:600;letter-spacing:.1em;color:var(--text3);}
 .lp-cotas b{display:block;font-family:var(--font-display);font-size:26px;font-weight:700;color:var(--text);line-height:1.1;font-variant-numeric:tabular-nums;}
 .lp-nao-faz{margin-top:26px;background:var(--navy-deep);border-radius:16px;padding:20px 18px;color:rgba(255,255,255,.78);}
-.lp-nao-faz-tit{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ember);margin-bottom:12px;}
+.lp-nao-faz-tit{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ember-text);margin-bottom:12px;}
 .lp-nao-faz ul{list-style:none;margin:0 0 12px;padding:0;}
 .lp-nao-faz li{position:relative;padding-left:22px;margin-bottom:8px;font-size:13.5px;line-height:1.6;}
 .lp-nao-faz li::before{content:'✕';position:absolute;left:0;color:var(--red);font-weight:800;font-size:12px;}
@@ -612,12 +613,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .tq-fill{width:100%;border-radius:8px;transition:height .6s cubic-bezier(.22,1,.36,1);}
 .tq-code{font-size:10.5px;font-weight:700;color:var(--text3);font-variant-numeric:tabular-nums;}
 .tq-col.sel .tq-track{box-shadow:inset 0 0 0 2px var(--ember);}
-.tq-col.sel .tq-code{color:var(--ember);}
+.tq-col.sel .tq-code{color:var(--ember-text);}
 .tq-col.weak .tq-code{color:var(--red);}
 .tq-detail{margin-top:14px;background:var(--paper-2);border-radius:12px;padding:11px 13px;font-size:12.5px;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap;line-height:1.4;}
 .tq-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .tq-weak{font-size:10px;font-weight:700;color:var(--red-dark);background:var(--red-light);padding:2px 8px;border-radius:20px;}
-.tq-praticar{margin-left:auto;font-size:11.5px;font-weight:800;color:var(--ember);background:color-mix(in srgb,var(--ember) 12%,transparent);border:none;border-radius:8px;cursor:pointer;padding:6px 10px;}
+.tq-praticar{margin-left:auto;font-size:11.5px;font-weight:800;color:var(--ember-text);background:color-mix(in srgb,var(--ember) 12%,transparent);border:none;border-radius:8px;cursor:pointer;padding:6px 10px;}
 .topico-vazio{font-size:11px;color:var(--text3);font-style:italic;padding:6px 0;}
 .pg-legend-line{background:var(--text2)!important;height:2px!important;}
 #pg-legenda-progresso{margin-top:4px;}
@@ -633,7 +634,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pg-chart-plot{position:relative;height:80px;margin-top:14px;}
 .pg-chart-plot .chart-bars{height:80px;margin-top:0;align-items:flex-end;}
 .pg-meta-line{position:absolute;left:0;right:0;border-top:1.5px dashed var(--ember);opacity:.55;pointer-events:none;z-index:1;}
-.pg-meta-lbl{position:absolute;right:0;top:-13px;font-size:9px;color:var(--ember);font-weight:700;background:var(--surface);padding:0 3px;}
+.pg-meta-lbl{position:absolute;right:0;top:-13px;font-size:9px;color:var(--ember-text);font-weight:700;background:var(--surface);padding:0 3px;}
 .pg-chart-labels{display:flex;gap:6px;margin-top:5px;}
 .pg-chart-labels .chart-bar-label{flex:1;text-align:center;margin-top:0;}
 .pg-streak{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;}
@@ -686,7 +687,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .foco-nota-info{flex:1;min-width:0;}
 .foco-nota-t{font-size:13.5px;font-weight:700;color:var(--text);overflow-wrap:anywhere;line-height:1.3;}
 .foco-nota-s{font-size:11.5px;color:var(--text2);overflow-wrap:anywhere;margin-top:1px;}
-.foco-nota-cta{font-size:11px;font-weight:800;color:var(--ember);flex-shrink:0;letter-spacing:.03em;}
+.foco-nota-cta{font-size:11px;font-weight:800;color:var(--ember-text);flex-shrink:0;letter-spacing:.03em;}
 /* Tela de Foco */
 .foco-head{background:linear-gradient(150deg,var(--navy-2) 0%,var(--navy) 60%,var(--navy-deep) 100%);
   color:#fff;padding:16px 16px 20px;}
@@ -2243,7 +2244,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
               <div class="pg-mod-h">Projeção para a prova <span class="info-btn" onclick="showInfo('prontidao')" aria-label="Mais informações">?</span></div>
               <div id="dash-pront" class="chart-wrap hidden">
                 <div style="display:flex;align-items:center;justify-content:flex-end;">
-                  <span style="font-size:12px;font-weight:700;color:var(--ember);" id="pront-dias"></span>
+                  <span style="font-size:12px;font-weight:700;color:var(--ember-text);" id="pront-dias"></span>
                 </div>
                 <div class="pg-gauge-wrap" id="pront-gauge"></div>
                 <div id="pront-status" class="pg-status"></div>
@@ -4170,7 +4171,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.195';
+const APP_VERSAO='v1.196';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
