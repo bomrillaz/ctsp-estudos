@@ -8,6 +8,11 @@ on:
   schedule:
     - cron: '*/20 * * * *'
 
+# Menor privilegio: estes jobs so leem o repo. O acesso ao Firebase vem do
+# service account no env, nao do GITHUB_TOKEN.
+permissions:
+  contents: read
+
 jobs:
   avisar:
     runs-on: ubuntu-latest
@@ -20,7 +25,7 @@ jobs:
 
       - name: Instalar dependências
         working-directory: .github/scripts
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Avisar novo cadastro
         working-directory: .github/scripts
