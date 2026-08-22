@@ -329,6 +329,12 @@ pedido 2 vezes):**
 - **Modelo:** Sonnet é o padrão. Opus só na fase de **decisão** de mudança estrutural ou de alto risco.
 - Skills: `code-reviewer` para lógica pesada · `senior-architect` para arquitetura ·
   `ui-ux-pro-max` para visual/acessibilidade · `playwright-skill` para testar o site · `document-skills` para PDF/Word/planilha.
+- **`simplify` não é padrão pra toda alteração — só compensa em mudança de lógica não-trivial** (várias
+  funções/arquivos tocados, mecanismo novo compartilhado, refactor). Custo real: 4 subagentes em
+  paralelo, ~300 mil tokens numa sessão comum (b118) — desperdício em fix de 1-2 linhas ou edição de
+  conteúdo (`data.js`). **Avisar o João e sugerir rodar quando o diff da sessão se encaixar no critério
+  acima**, ANTES do commit/push (decisão do b117: depois vira commit de correção em cima do que já foi
+  publicado) — não rodar em silêncio nem pular em silêncio, perguntar.
 
 ---
 
