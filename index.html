@@ -4202,7 +4202,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.201';
+const APP_VERSAO='v1.202';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -7040,8 +7040,12 @@ async function definirPlano(uid,plano){
   if(!isAdmin())return;
   const meio=plano==='anual'?'cartao':'pix';
   const prox=plano==='anual'?_cobAddMeses(Date.now(),COB_MESES_ANUAL):_cobAddMeses(Date.now(),1);
-  if(await _cobSet(uid,{plano,meio,prox,pago:Date.now()}))
-    showToast(plano==='anual'?`Anual no cartão · acesso até ${fmtData(prox)}`:`Mensal no Pix · vence ${fmtData(prox)}`);
+  const rotulo=plano==='anual'?`Anual no cartão · acesso até ${fmtData(prox)}`:`Mensal no Pix · vence ${fmtData(prox)}`;
+  // b115: confirmação com a data calculada ANTES de gravar. Sem isto, "Anual cartão"
+  // seguido de "Pago" (achando que um confirma o outro) empilha dois ciclos de 13 meses
+  // sem avisar — foi o que aconteceu com a conta da Daiane em 22/08/2026.
+  if(!confirm(`Definir plano ${plano==='anual'?'Anual':'Mensal'}?\n${rotulo}\n\nIsto marca como pago agora mesmo. Se o pagamento já foi feito em outra data, use o Firebase Console para corrigir depois.`))return;
+  if(await _cobSet(uid,{plano,meio,prox,pago:Date.now()}))showToast(rotulo);
   loadAdminUsers();
 }
 // "Pago" empurra o vencimento um ciclo à frente. Se já estava vencido, conta a partir de
@@ -7055,6 +7059,10 @@ async function marcarPago(uid){
   const plano=st.plano==='trial'?'mensal':st.plano;
   const base=(st.prox&&st.prox>Date.now())?st.prox:Date.now();
   const prox=_cobAddMeses(base,plano==='anual'?COB_MESES_ANUAL:1);
+  // b115: mostra de-onde-pra-onde o vencimento vai antes de gravar — é o que faltava
+  // pra pegar o caso de já ter acabado de definir o plano no mesmo atendimento.
+  const deTxt=st.prox?`de ${fmtData(st.prox)} `:'';
+  if(!confirm(`Marcar como pago?\nVencimento vai ${deTxt}para ${fmtData(prox)} (mais ${plano==='anual'?'13 meses':'1 mês'}).\n\nJá tinha acabado de definir o plano agora? Isto SOMA outro ciclo em cima — não repita.`))return;
   if(await _cobSet(uid,{plano,meio:(u.cob&&u.cob.meio)||(plano==='anual'?'cartao':'pix'),prox,pago:Date.now()}))
     showToast('Pago · próximo vencimento '+fmtData(prox));
   loadAdminUsers();
@@ -7066,6 +7074,7 @@ async function desfazerPago(uid){
   const st=estadoCobranca(u);
   if(st.plano==='trial'||!st.prox){showToast('Nada para desfazer.');return;}
   const prox=_cobAddMeses(st.prox,st.plano==='anual'?-COB_MESES_ANUAL:-1);
+  if(!confirm(`Desfazer o último pagamento?\nVencimento volta de ${fmtData(st.prox)} para ${fmtData(prox)}.`))return;
   if(await _cobSet(uid,{prox,pago:null}))showToast('Desfeito · vencimento voltou para '+fmtData(prox));
   loadAdminUsers();
 }
