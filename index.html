@@ -783,6 +783,23 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 /* Modal meta diária */
 .modal-overlay{position:fixed;inset:0;background:rgba(11,20,48,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:1000;display:flex;align-items:flex-end;justify-content:center;}
 .modal-overlay.hidden{display:none;}
+/* == TUTORIAL GUIADO (tour de onboarding) ==================================
+   Herda .modal-overlay so pelo display/hidden, z-index e integracao com o Esc.
+   Aqui quem escurece a tela e o .tour-spot (box-shadow gigante com buraco no
+   tamanho do alvo), nao o overlay - por isso o fundo e transparente e o
+   bottom-sheet padrao (e o align-items:center do desktop, linha ~1302) sao
+   anulados. Os filhos sao position:fixed e se autoposicionam por JS.
+   prefers-reduced-motion ja e tratado globalmente na regra universal acima. */
+#modal-tutorial{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;align-items:stretch;justify-content:stretch;}
+.tour-spot{position:fixed;top:0;left:0;width:0;height:0;border-radius:12px;box-shadow:0 0 0 9999px rgba(11,20,48,.72);pointer-events:none;transition:top .25s var(--ease-out),left .25s var(--ease-out),width .25s var(--ease-out),height .25s var(--ease-out);}
+.tour-box{position:fixed;top:0;left:0;width:calc(100% - 24px);max-width:320px;max-height:calc(100vh - 32px);overflow-y:auto;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow-lg);z-index:1001;}
+.tour-progress{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
+.tour-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px;}
+.tour-text{font-size:13.5px;line-height:1.5;color:var(--text2);}
+.tour-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:14px;}
+.tour-nav{display:flex;gap:8px;}
+.tour-nav .btn-primary{width:auto;padding:8px 16px;font-size:13px;border-radius:10px;}
+.tour-nav button:disabled{opacity:.4;pointer-events:none;}
 .modal-box{background:var(--surface);border-radius:24px 24px 0 0;padding:28px 22px 40px;width:100%;max-width:480px;position:relative;max-height:90vh;overflow-y:auto;overflow-x:hidden;}
 .modal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--fire-line);}
 .modal-fechar-bar{position:sticky;top:0;height:0;z-index:5;}
@@ -1812,6 +1829,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="header-dropdown hidden" id="header-dropdown">
           <button id="btn-tema" onclick="toggleTemaRapido();toggleHeaderMenu()"><span class="dd-icon" id="tema-icone"></span>Tema</button>
           <button onclick="abrirModalConfig();toggleHeaderMenu()">⚙ Configurações</button>
+          <button onclick="iniciarTutorial();toggleHeaderMenu()">🎓 Como funciona</button>
           <button onclick="location.reload()">↺ Recarregar</button>
           <button onclick="doLogout()">→ Sair</button>
         </div>
@@ -2531,6 +2549,23 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="modal-title">Avisos</div>
     <div class="modal-sub">Comunicados da Prontidão</div>
     <div id="notif-lista"><p style="color:var(--text2);font-size:13px;">Nenhum aviso ainda.</p></div>
+  </div>
+</div>
+<!-- TUTORIAL GUIADO - ultimo .modal-overlay do documento. A classe .modal-overlay
+     e deliberada: entrega o display:none do .hidden, o z-index e o Esc central. -->
+<div class="modal-overlay hidden" id="modal-tutorial" onclick="fecharTutorial(event)" role="dialog" aria-modal="true" aria-labelledby="tour-title">
+  <div class="tour-spot" id="tour-spot"></div>
+  <div class="tour-box" id="tour-box" onclick="event.stopPropagation()" aria-live="polite">
+    <div class="tour-progress" id="tour-progress"></div>
+    <div class="tour-title" id="tour-title"></div>
+    <div class="tour-text" id="tour-text"></div>
+    <div class="tour-actions">
+      <button class="btn-weak btn-neutral" onclick="fecharTutorial()">Pular</button>
+      <div class="tour-nav">
+        <button class="btn-weak btn-neutral" id="tour-voltar" onclick="tourVoltar()">Voltar</button>
+        <button class="btn-primary" id="tour-avancar" onclick="tourAvancar()">Avançar</button>
+      </div>
+    </div>
   </div>
 </div>
 <script src="data.js?v=187"></script>
@@ -4162,7 +4197,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.198';
+const APP_VERSAO='v1.199';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5663,6 +5698,7 @@ function finishQuiz(){
     renderDashboard();        // reflete o domínio recém-gerado
     navTo('inicio');
     showToast(`✅ Nivelamento concluído: ${quizSessao.c}/${quizSessao.t}. Seu perfil de domínio está pronto!`);
+    talvezIniciarTutorial(1500);   // 1,5s deixa o toast sair da frente antes do tour
     return;
   }
   if(quizArea==='TREINO'){
@@ -7666,7 +7702,181 @@ function mostrarSplash(){
 function fecharSplash(){
   const splash=document.getElementById('splash-screen');
   splash.classList.add('fade-out');
-  setTimeout(()=>{splash.classList.remove('active','fade-out');},400);
+  setTimeout(()=>{splash.classList.remove('active','fade-out');talvezIniciarTutorial(300);},400);
+}
+
+// ══════════════════════════════
+// TUTORIAL GUIADO (tour de onboarding)
+// ══════════════════════════════
+// Tour de spotlight: escurece a tela e destaca um elemento REAL por vez.
+// Dispara sozinho no 1o acesso (talvezIniciarTutorial) e pelo item "Como funciona"
+// do menu ☰ a qualquer hora.
+//
+// Estado 100% client-side: a flag mora em localStorage, NUNCA em usuarios/$uid --
+// campo novo num set() de usuario comum reprova no .validate e derruba o set()
+// INTEIRO (CLAUDE.md §2). Mesmo padrao de onboardDismiss/diagCardDismiss.
+//
+// Cada passo declara os ALVOS; passo sem alvo visivel e descartado ao montar a
+// lista. E isso que resolve mobile x desktop sem testar breakpoint: no mobile so
+// existe #nav-mais, no desktop (>=1024px) so existem os #nav-desk-*. Tambem cobre
+// de graca o #nav-desk-admin, que so e criado por JS para admin.
+const TOUR_PASSOS=[
+  {sel:'#metas-card',titulo:'Sua meta do dia',
+   texto:'Todo dia o app monta três metas para você: questões, flashcards e resumos. Bater as três é o objetivo mínimo do dia — o resto é bônus.'},
+  {sel:'#hdr-streak',titulo:'Sequência de dias',
+   texto:'Os quadradinhos mostram os últimos 7 dias. Estudar todo dia, mesmo pouco, rende mais que maratona de fim de semana.'},
+  {sel:'.header-right button[title="Buscar"]',titulo:'Busca',
+   texto:'Procure por assunto, questão ou norma em todo o material. Se não lembra onde está o conteúdo, comece por aqui.'},
+  {sel:'.btn-notif',titulo:'Avisos',
+   texto:'Recados e novidades da plataforma chegam aqui. Quando tiver algo novo, aparece um número no sino.'},
+  {sel:'#nav-quiz',titulo:'Quiz',
+   texto:'Onde você treina questões. O app escolhe o que cobrar pelo que você já acertou e há quanto tempo — não é sorteio.'},
+  {sel:'#nav-cards',titulo:'Flashcards',
+   texto:'Frente e verso, para fixar o que precisa sair na hora: definições, prazos e números. Cada card volta no dia certo para você não esquecer.'},
+  {sel:'#nav-resumos',titulo:'Resumos',
+   texto:'O conteúdo do edital destrinchado por tópico. Bom para revisar antes de encarar questão de um assunto novo.'},
+  // Mobile: os 4 destinos moram no bottom sheet "Mais".
+  {sel:'#nav-mais',titulo:'Mais',
+   texto:'Aqui dentro ficam o Simulado completo, a Consulta (glossário e normas), os Padrões das provas e o Meu progresso.'},
+  // Desktop (>=1024px): os mesmos 4 destinos ja ficam soltos no rail lateral.
+  {sel:['#nav-desk-simulado','#nav-desk-consulta','#nav-desk-padroes','#nav-desk-progresso'],
+   titulo:'Simulado, Consulta, Padrões e Meu progresso',
+   texto:'Simulado completo na proporção do edital, glossário e normas na Consulta, estatística das provas em Padrões, e seu domínio por área em Meu progresso.'},
+  {sel:'.btn-header-menu',titulo:'Menu',
+   texto:'Tema claro/escuro, configurações e sua conta. É por aqui também que você abre este tutorial de novo, quando quiser.'}
+];
+
+let _tourIdx=0,_tourLista=[],_tourRAF=0,_tourFocoAnterior=null;
+
+// Alvo so conta se EXISTE e tem area > 0 (display:none devolve rect 0x0).
+function _tourAlvos(p){
+  const sels=Array.isArray(p.sel)?p.sel:[p.sel];
+  const out=[];
+  sels.forEach(sel=>{
+    const el=document.querySelector(sel);
+    if(!el)return;
+    const r=el.getBoundingClientRect();
+    if(r.width>0&&r.height>0)out.push(el);
+  });
+  return out;
+}
+
+// Retangulo que cobre todos os alvos do passo (o rail do desktop sao 4 elementos).
+function _tourUniao(els){
+  let t=Infinity,l=Infinity,r=-Infinity,b=-Infinity;
+  els.forEach(el=>{const c=el.getBoundingClientRect();
+    t=Math.min(t,c.top);l=Math.min(l,c.left);r=Math.max(r,c.right);b=Math.max(b,c.bottom);});
+  return {top:t,left:l,right:r,bottom:b,width:r-l,height:b-t};
+}
+
+// So geometria. Chamada tambem pelos listeners de scroll/resize.
+function _tourPosicionar(){
+  const p=_tourLista[_tourIdx];if(!p)return;
+  const els=_tourAlvos(p);if(!els.length)return;
+  const u=_tourUniao(els),pad=8,marg=12;
+  const spot=document.getElementById('tour-spot'),box=document.getElementById('tour-box');
+  if(!spot||!box)return;
+  spot.style.top=(u.top-pad)+'px';
+  spot.style.left=(u.left-pad)+'px';
+  spot.style.width=(u.width+pad*2)+'px';
+  spot.style.height=(u.height+pad*2)+'px';
+  const bw=box.offsetWidth,bh=box.offsetHeight;
+  const vw=window.innerWidth,vh=window.innerHeight;
+  let top=u.bottom+pad+marg;                       // padrao: abaixo do alvo
+  if(top+bh>vh-8)top=u.top-pad-marg-bh;            // nao coube embaixo: por cima
+  if(top<8)top=Math.max(8,(vh-bh)/2);              // nao coube dos dois lados: centraliza
+  let left=u.left+u.width/2-bw/2;
+  left=Math.max(8,Math.min(left,vw-bw-8));         // clamp horizontal na viewport
+  box.style.top=top+'px';
+  box.style.left=left+'px';
+}
+
+function _tourRender(){
+  if(_tourIdx>=_tourLista.length){fecharTutorial();return;}
+  const p=_tourLista[_tourIdx];
+  const els=_tourAlvos(p);
+  if(!els.length){                                 // alvo sumiu em runtime: pula sem travar
+    _tourLista.splice(_tourIdx,1);
+    _tourRender();return;
+  }
+  const prog=document.getElementById('tour-progress'),tit=document.getElementById('tour-title'),
+        txt=document.getElementById('tour-text'),bv=document.getElementById('tour-voltar'),
+        ba=document.getElementById('tour-avancar');
+  // textContent, nunca innerHTML (§2) -- e string estatica, mas o padrao vale igual.
+  if(prog)prog.textContent=(_tourIdx+1)+' de '+_tourLista.length;
+  if(tit)tit.textContent=p.titulo;
+  if(txt)txt.textContent=p.texto;
+  if(bv)bv.disabled=(_tourIdx===0);
+  if(ba)ba.textContent=(_tourIdx===_tourLista.length-1)?'Concluir':'Avançar';
+  try{els[0].scrollIntoView({block:'center',behavior:'instant'});}
+  catch(_){try{els[0].scrollIntoView();}catch(__){}}
+  requestAnimationFrame(_tourPosicionar);          // mede depois do scroll assentar
+}
+
+function _tourReposicionar(){
+  if(_tourRAF)return;                              // throttle: 1 recalculo por frame
+  _tourRAF=requestAnimationFrame(()=>{_tourRAF=0;_tourPosicionar();});
+}
+
+// Mudar de faixa de viewport troca o conjunto de passos visiveis (tablet girando:
+// 768 -> 1024 tira o "Mais" e poe o rail do desktop). Remonta a lista mantendo o
+// passo atual, senao o denominador pula na cara do usuario ("1 de 9" -> "8 de 8").
+function _tourRemontar(){
+  const atual=_tourLista[_tourIdx];
+  const nova=TOUR_PASSOS.filter(p=>_tourAlvos(p).length>0);
+  if(nova.length===_tourLista.length&&nova.every((p,i)=>p===_tourLista[i]))return false;
+  const i=nova.indexOf(atual);
+  _tourLista=nova;
+  _tourIdx=i>=0?i:Math.min(_tourIdx,Math.max(0,nova.length-1));
+  return true;
+}
+function _tourAoRedimensionar(){
+  if(_tourRemontar())_tourRender();else _tourReposicionar();
+}
+
+function iniciarTutorial(){
+  navTo('inicio');                                 // navTo e SINCRONO (§2), sem await
+  _tourLista=TOUR_PASSOS.filter(p=>_tourAlvos(p).length>0);
+  if(!_tourLista.length)return;
+  _tourIdx=0;
+  _tourFocoAnterior=document.activeElement;
+  const m=document.getElementById('modal-tutorial');if(m)m.classList.remove('hidden');
+  window.addEventListener('scroll',_tourReposicionar,true);   // capture: pega scroll interno
+  window.addEventListener('resize',_tourAoRedimensionar);
+  _tourRender();
+  const ba=document.getElementById('tour-avancar');if(ba)ba.focus();
+}
+
+function tourAvancar(){_tourIdx++;_tourRender();}
+function tourVoltar(){if(_tourIdx>0){_tourIdx--;_tourRender();}}
+
+// Os 3 caminhos de fechar (§10) passam por aqui: botao Pular, Esc (FECHAR_MODAL) e
+// clique fora (o guard abaixo; o .tour-box tem stopPropagation no HTML).
+function fecharTutorial(e){
+  if(e&&e.target!==e.currentTarget)return;
+  window.removeEventListener('scroll',_tourReposicionar,true);
+  window.removeEventListener('resize',_tourAoRedimensionar);
+  if(_tourRAF){cancelAnimationFrame(_tourRAF);_tourRAF=0;}
+  const m=document.getElementById('modal-tutorial');if(m)m.classList.add('hidden');
+  try{localStorage.setItem('tutorialVisto','1');}catch(_){}
+  if(_tourFocoAnterior&&_tourFocoAnterior.focus){try{_tourFocoAnterior.focus();}catch(_){}}
+  _tourFocoAnterior=null;
+}
+
+// Gatilho automatico do 1o acesso. Chamada de DOIS pontos de entrada distintos --
+// usuario novo chega ao hub pelo fim do nivelamento (finishQuiz), nao pelo splash.
+// Deep link (#p=T1.1) de proposito NAO dispara: o usuario veio com intencao propria.
+function talvezIniciarTutorial(ms){
+  try{if(localStorage.getItem('tutorialVisto'))return;}catch(_){return;}
+  setTimeout(()=>{
+    try{if(localStorage.getItem('tutorialVisto'))return;}catch(_){return;}
+    if(document.querySelector('.modal-overlay:not(.hidden)'))return;   // outro modal na frente
+    const g=document.getElementById('onboard-gate');
+    if(g&&g.classList.contains('active'))return;
+    const sp=document.getElementById('splash-screen');
+    if(sp&&sp.classList.contains('active'))return;
+    iniciarTutorial();
+  },ms||300);
 }
 
 // ═══════════════════════════════
@@ -8578,7 +8788,7 @@ document.addEventListener('keydown',e=>{
   if(rep&&rep.classList.contains('show')){fecharReporte();return;}
   const mais=document.getElementById('mais-overlay');
   if(mais&&mais.classList.contains('open')){fecharMais({target:mais,currentTarget:mais});return;}
-  const FECHAR_MODAL={'modal-busca':fecharBuscaGlobal,'modal-intro':fecharIntro,'modal-fim':fecharFim,'modal-config':fecharModalConfig,'modal-notif':fecharModalNotif};
+  const FECHAR_MODAL={'modal-busca':fecharBuscaGlobal,'modal-intro':fecharIntro,'modal-fim':fecharFim,'modal-config':fecharModalConfig,'modal-notif':fecharModalNotif,'modal-tutorial':fecharTutorial};
   const aberto=document.querySelector('.modal-overlay:not(.hidden)');
   if(aberto&&FECHAR_MODAL[aberto.id])FECHAR_MODAL[aberto.id]({target:aberto,currentTarget:aberto});
 });
