@@ -3906,6 +3906,12 @@ async function initApp(){
   renderPadroes();
   if(userProfile.admin||currentUser.email===ADMIN_EMAIL)loadAdminUsers();
   iniciarListenerNotif();
+  // b116/etapa2 (S6): 'vencido' ainda ENTRA e LÊ o histórico normalmente — só a escrita
+  // é que a regra do RTDB já corta (etapa 1). Sem isto, a pessoa via o app inteiro normal
+  // e só descobria o vencimento quando um progresso falhasse em silêncio. Abre por cima do
+  // que já estiver na tela (onboarding/splash) — a folha de pagamento fecha sozinha e o
+  // resto do app segue acessível por baixo.
+  if(!userProfile.admin&&estadoCobranca(userProfile).estado==='vencido')abrirPagamento(planoAtual());
   // Animação inicial do dashboard
   setTimeout(()=>{const sc=document.getElementById('screen-inicio');if(sc)animateBars(sc);},600);
   // S47: 1º acesso → nivelamento obrigatório (gera domínio); senão, splash normal
@@ -4202,7 +4208,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.202';
+const APP_VERSAO='v1.203';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4492,9 +4498,11 @@ function _aplicarMetas(){
     }).join('');
   }
 }
-// BLOCO 55 — faixa de cobrança na Home. Só avisa; não bloqueia nada. Quem corta o acesso
-// continua sendo o `aprovado` (revogação manual no painel) — assim um erro de data nunca
-// tranca um assinante em dia do lado de fora.
+// BLOCO 55 — faixa de cobrança na Home. Não é o portão de acesso — só reforça o aviso a
+// cada visita à Home. Desde a etapa 2 (S6) o corte de verdade é DUPLO: a regra do RTDB
+// já nega a ESCRITA sozinha por data (etapa 1) e o `initApp()` abre a folha de pagamento
+// na cara de quem está 'vencido' assim que entra (ver o gate logo após `iniciarListenerNotif()`).
+// `aprovado` continua sendo o único corte de LEITURA — essa parte não mudou.
 function renderAvisoCobranca(){
   const el=document.getElementById('aviso-cobranca');
   if(!el)return;
@@ -8897,6 +8905,11 @@ document.addEventListener('keydown',e=>{
   if(info&&!info.classList.contains('hidden')){info.classList.add('hidden');return;}
   const rep=document.getElementById('rep-overlay');
   if(rep&&rep.classList.contains('show')){fecharReporte();return;}
+  // b116/etapa2: lacuna achada ao tocar aqui — pix-overlay usa a MESMA classe .rep-overlay
+  // do reportar-erro, mas ID próprio, então nunca tinha entrado nesta varredura de Esc.
+  // Ficou mais visível agora que a folha abre sozinha no login de quem está 'vencido'.
+  const pix=document.getElementById('pix-overlay');
+  if(pix&&pix.classList.contains('show')){fecharPagamento();return;}
   const mais=document.getElementById('mais-overlay');
   if(mais&&mais.classList.contains('open')){fecharMais({target:mais,currentTarget:mais});return;}
   const FECHAR_MODAL={'modal-busca':fecharBuscaGlobal,'modal-intro':fecharIntro,'modal-fim':fecharFim,'modal-config':fecharModalConfig,'modal-notif':fecharModalNotif,'modal-tutorial':fecharTutorial};

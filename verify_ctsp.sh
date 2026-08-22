@@ -38,6 +38,9 @@ echo "\"$t\"=$N"
 done
 echo "Cap.4_total=$(cat index.html ${DATA} | grep -o 'Cap\.4' | wc -l) (legitimo se todas as ocorrencias citarem MABOM)"
 
+echo "-- onclick com campo de texto livre interpolado (esperado 0 -- S4, PLANO_correcao_seguranca.md)"
+echo "onclick_texto_livre=$(grep -c "onclick=\"[^\"]*\${[^}]*\(nome\|email\|texto\|descricao\|titulo\|corpo\)" index.html || true)"
+
 echo "=== SINTAXE ==="
 python -c "
 import re

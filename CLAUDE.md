@@ -29,7 +29,12 @@ Dois arquivos no núcleo, mais a camada PWA:
 - Firebase: projeto `ctsp-estudos` · conta dona `jvictor.projetos.ti@gmail.com` (**não sugerir migração**)
 - RTDB: https://ctsp-estudos-default-rtdb.firebaseio.com · UID admin `DyNxtutn1aaemZk8cbMtGOnM0iG3`
 - Stack: HTML/CSS/JS puro + Firebase Auth + Realtime Database + GitHub Pages + Service Worker
-- reCAPTCHA v3: `6Lf1nw0tAAAAABuGxbqJzesfcIuZbXOLbMZf3_GY`
+- reCAPTCHA v3: `6Lf1nw0tAAAAABuGxbqJzesfcIuZbXOLbMZf3_GY` — chave **provisionada, não integrada** ao fluxo
+  de auth (só aparece na CSP; sem `grecaptcha.execute`/`render` no código). Falta backend — ver
+  `decisoes/recaptcha-nao-implementado-agora-falta-backend` do vault.
+- Padrão de marca transversal: `Documents\Claude\vault\30-marca\BOMRILLAZ_DESIGN.md` (o CTSP é a ORIGEM
+  do padrão). Mudança de paleta/tipografia/token de botão reconcilia com esse documento, não decide
+  isolada aqui.
 - **Prioridade de dispositivo: iPhone/iOS/Safari → Android → PC.** Regra de desktop sempre dentro de `@media`.
 - **IA generativa foi descontinuada (jul/2026).** Não repropor sem pedido explícito.
 - **"Virar app" = PWA, não nativo.** Cobrança roda por fora (Pix / link de cartão).
