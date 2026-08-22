@@ -327,8 +327,21 @@ pedido 2 vezes):**
 - **Subagente é caro.** Só com frentes realmente independentes ou verificação de alto risco — nunca no trivial.
   Subagentes **não** escrevem no mesmo arquivo em paralelo: edição em massa = executor único + revisor.
 - **Modelo:** Sonnet é o padrão. Opus só na fase de **decisão** de mudança estrutural ou de alto risco.
-- Skills: `code-reviewer` para lógica pesada · `senior-architect` para arquitetura ·
-  `ui-ux-pro-max` para visual/acessibilidade · `playwright-skill` para testar o site · `document-skills` para PDF/Word/planilha.
+- **Skills — já usadas no CTSP, ativar sozinho quando o cenário bater (sem perguntar):**
+  `code-review` (lógica pesada, antes do commit) · `web-design-guidelines` + `ui-ux-pro-max` (auditoria
+  estética/acessibilidade, WCAG — usadas no b72/b76) · `frontend-aesthetics`/`frontend-design` (polimento
+  visual de tela) · `pdf` (ebook/materiais) · `schedule` (rotina automatizada) · `security-review` (Opus,
+  decisão de risco alto) · `simplify` (só lógica não-trivial — ver regra abaixo) · `changelog-generator`
+  (nota de release pros assinantes).
+- **Skills — gatilho por cenário, ainda não usadas no CTSP: AVISAR ao reconhecer o cenário, depois usar.**
+  `playwright-skill` → tela SEM login sendo mexida (landing, tutorial, venda — regressão automatizada;
+  pós-login continua exigindo login manual do João, risco de sujar FSRS). `dataviz` → painel admin ganhar
+  visão de progresso/BKT por tópico. `content-creator`/`design`/`canvas-design` → divulgação de verdade
+  (banner, post de venda).
+- **Parqueadas, sem gatilho previsto** (usar só se necessidade concreta aparecer, não forçar):
+  `senior-architect`, `doc-coauthoring`, `deep-research`, `document-skills`/`docx`/`pptx`/`xlsx`,
+  `csv-data-summarizer`, `run`, `superpowers-dev-toolkit`. Avaliadas e descartadas: `gestor-de-tarefas`,
+  `mente-de-engenheiro` (conteúdo já coberto por este arquivo).
 - **`simplify` não é padrão pra toda alteração — só compensa em mudança de lógica não-trivial** (várias
   funções/arquivos tocados, mecanismo novo compartilhado, refactor). Custo real: 4 subagentes em
   paralelo, ~300 mil tokens numa sessão comum (b118) — desperdício em fix de 1-2 linhas ou edição de
