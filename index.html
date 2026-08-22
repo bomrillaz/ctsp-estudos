@@ -792,14 +792,19 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
    prefers-reduced-motion ja e tratado globalmente na regra universal acima. */
 #modal-tutorial{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;align-items:stretch;justify-content:stretch;}
 .tour-spot{position:fixed;top:0;left:0;width:0;height:0;border-radius:12px;box-shadow:0 0 0 9999px rgba(11,20,48,.72);pointer-events:none;transition:top .25s var(--ease-out),left .25s var(--ease-out),width .25s var(--ease-out),height .25s var(--ease-out);}
-.tour-box{position:fixed;top:0;left:0;width:calc(100% - 24px);max-width:320px;max-height:calc(100vh - 32px);overflow-y:auto;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow-lg);z-index:1001;}
+.tour-box{position:fixed;top:0;left:0;width:calc(100% - 24px);max-width:320px;max-height:calc(100vh - 32px);overflow-y:auto;display:flex;flex-direction:column;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow-lg);z-index:1001;}
 .tour-progress{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
 .tour-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px;}
-.tour-text{font-size:13.5px;line-height:1.5;color:var(--text2);}
+.tour-text{font-size:13.5px;line-height:1.5;color:var(--text2);overflow-y:auto;min-height:0;}
 .tour-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:14px;}
 .tour-nav{display:flex;gap:8px;}
 .tour-nav .btn-primary{width:auto;padding:8px 16px;font-size:13px;border-radius:10px;}
 .tour-nav button:disabled{opacity:.4;pointer-events:none;}
+/* Celular DEITADO (375px de altura): caixa alta nao cabe acima nem abaixo de um
+   alvo de largura cheia e acabava CENTRALIZADA em cima dele, tapando o spotlight.
+   Encurtar a caixa faz ela voltar a caber embaixo; so o texto rola (flex-column
+   acima), entao Pular/Avancar continuam visiveis. */
+@media (max-height:480px){.tour-box{max-height:min(40vh,calc(100vh - 32px));}}
 .modal-box{background:var(--surface);border-radius:24px 24px 0 0;padding:28px 22px 40px;width:100%;max-width:480px;position:relative;max-height:90vh;overflow-y:auto;overflow-x:hidden;}
 .modal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--fire-line);}
 .modal-fechar-bar{position:sticky;top:0;height:0;z-index:5;}
@@ -4197,7 +4202,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.199';
+const APP_VERSAO='v1.200';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -7716,37 +7721,72 @@ function fecharSplash(){
 // campo novo num set() de usuario comum reprova no .validate e derruba o set()
 // INTEIRO (CLAUDE.md §2). Mesmo padrao de onboardDismiss/diagCardDismiss.
 //
-// Cada passo declara os ALVOS; passo sem alvo visivel e descartado ao montar a
-// lista. E isso que resolve mobile x desktop sem testar breakpoint: no mobile so
-// existe #nav-mais, no desktop (>=1024px) so existem os #nav-desk-*. Tambem cobre
-// de graca o #nav-desk-admin, que so e criado por JS para admin.
+// Cada passo declara a TELA em que o alvo vive e o tour NAVEGA ate ela antes de
+// medir -- e por isso que o passo do Quiz abre o Quiz de verdade, com a tela viva
+// atras do escurecido, em vez de so acender o botao da barra.
+//
+// `casco:true` marca alvo que mora no header ou na barra de navegacao: existe em
+// qualquer tela, entao pode ser medido a qualquer momento. Passo SEM casco so e
+// mensuravel quando a tela dele esta ativa -- fora dela o rect e 0x0 e o passo
+// seria descartado por engano. Dai o veredito guardado em _tourVeredito.
+//
+// Passo sem alvo visivel e descartado. E isso que resolve mobile x desktop sem
+// testar breakpoint: no mobile so existe #nav-mais, no desktop (>=1024px) so
+// existem os #nav-desk-*. Tambem cobre de graca o #nav-desk-admin (so criado por
+// JS para admin) e os blocos do painel que dependem de dado ("Seu foco" nasce
+// .hidden, "Foco da semana" nasce vazio).
 const TOUR_PASSOS=[
-  {sel:'#metas-card',titulo:'Sua meta do dia',
+  // ── Painel (tela inicial): casco do topo + os cartoes de acao ──
+  {tela:'inicio',sel:'#metas-card',titulo:'Sua meta do dia',
    texto:'Todo dia o app monta três metas para você: questões, flashcards e resumos. Bater as três é o objetivo mínimo do dia — o resto é bônus.'},
-  {sel:'#hdr-streak',titulo:'Sequência de dias',
+  {tela:'inicio',casco:true,sel:'#hdr-streak',titulo:'Sequência de dias',
    texto:'Os quadradinhos mostram os últimos 7 dias. Estudar todo dia, mesmo pouco, rende mais que maratona de fim de semana.'},
-  {sel:'.header-right button[title="Buscar"]',titulo:'Busca',
+  {tela:'inicio',casco:true,sel:'.header-right button[title="Buscar"]',titulo:'Busca',
    texto:'Procure por assunto, questão ou norma em todo o material. Se não lembra onde está o conteúdo, comece por aqui.'},
-  {sel:'.btn-notif',titulo:'Avisos',
+  {tela:'inicio',casco:true,sel:'.btn-notif',titulo:'Avisos',
    texto:'Recados e novidades da plataforma chegam aqui. Quando tiver algo novo, aparece um número no sino.'},
-  {sel:'#nav-quiz',titulo:'Quiz',
-   texto:'Onde você treina questões. O app escolhe o que cobrar pelo que você já acertou e há quanto tempo — não é sorteio.'},
-  {sel:'#nav-cards',titulo:'Flashcards',
-   texto:'Frente e verso, para fixar o que precisa sair na hora: definições, prazos e números. Cada card volta no dia certo para você não esquecer.'},
-  {sel:'#nav-resumos',titulo:'Resumos',
-   texto:'O conteúdo do edital destrinchado por tópico. Bom para revisar antes de encarar questão de um assunto novo.'},
+  {tela:'inicio',sel:'.adapt-btn.rec',titulo:'Treino do dia',
+   texto:'O caminho recomendado. O app monta a fila sozinho: primeiro o que está vencido para revisar, depois seus pontos fracos e, por fim, assunto novo na proporção do edital. Na dúvida do que estudar, é por aqui.'},
+  {tela:'inicio',sel:'.quick-grid',titulo:'Estudo Rápido e Treino Focado',
+   texto:'Dois atalhos para quando o tempo é curto. Estudo Rápido são 10 questões soltas, de qualquer assunto. Treino Focado são 15 questões concentradas nos tópicos em que você vai pior.'},
+  // Dois blocos SEPARADOS de proposito: cada um nasce vazio por conta propria
+  // ("Seu foco" nasce .hidden, "Foco da semana" nasce sem HTML) e um titulo que
+  // anunciasse os dois mentiria quando so um aparecesse.
+  {tela:'inicio',sel:'#foco-bloco',titulo:'Seu foco',
+   texto:'Quando um tópico fica para trás, ele aparece aqui com resumo, flashcards e questões numa lista só — você roda tudo em sequência, sem voltar ao painel entre um item e outro.'},
+  {tela:'inicio',sel:'#dash-objetivo',titulo:'Foco da semana',
+   texto:'O tópico de menor domínio estimado no momento, com o percentual e o motivo do sistema ter escolhido ele. Vem com botão para começar por aí. Vai mudando conforme você responde.'},
+  {tela:'inicio',sel:'.ver-progresso',titulo:'Meu progresso',
+   texto:'Seu raio-x: domínio por área, cobertura do edital, evolução no tempo e projeção de nota. É onde você confere se está no rumo do corte.'},
+  // ── Quiz: 3 passos porque e a tela com mais caminho de entrada ──
+  {tela:'quiz',casco:true,sel:'#nav-quiz',titulo:'Quiz',
+   texto:'Abri a aba para você — é esta tela aqui atrás. É onde você treina questões: o app escolhe o que cobrar pelo que você já acertou e há quanto tempo, não é sorteio.'},
+  {tela:'quiz',sel:'.btn-intercalado',titulo:'Intercalado',
+   texto:'Mistura áreas diferentes na mesma sessão. É desconfortável de propósito: trocar de assunto obriga você a reconhecer o tipo de questão antes de responder, que é exatamente o que a prova cobra.'},
+  {tela:'quiz',sel:'#area-list .area-row',titulo:'Escolher área e tópico',
+   texto:'Toque uma área para abrir os tópicos dela. Dentro dá para praticar a área inteira ou só um tópico específico — útil quando você quer bater num assunto que sabe que cai.'},
+  // ── Flashcards e Resumos: 1 passo cada, com a tela ja aberta atras ──
+  {tela:'cards',casco:true,sel:'#nav-cards',titulo:'Flashcards',
+   texto:'Frente e verso, para fixar o que precisa sair na hora: definições, prazos e números. Nesta tela você inicia a meta do dia ou abre uma área abaixo para estudar um tópico avulso. Cada card volta no dia certo para você não esquecer.'},
+  {tela:'resumos',casco:true,sel:'#nav-resumos',titulo:'Resumos',
+   texto:'O conteúdo do edital destrinchado por tópico, também organizado por área. Bom para revisar antes de encarar questão de um assunto novo.'},
+  // ── Volta ao painel para os ultimos passos do casco ──
   // Mobile: os 4 destinos moram no bottom sheet "Mais".
-  {sel:'#nav-mais',titulo:'Mais',
+  {tela:'inicio',casco:true,sel:'#nav-mais',titulo:'Mais',
    texto:'Aqui dentro ficam o Simulado completo, a Consulta (glossário e normas), os Padrões das provas e o Meu progresso.'},
   // Desktop (>=1024px): os mesmos 4 destinos ja ficam soltos no rail lateral.
-  {sel:['#nav-desk-simulado','#nav-desk-consulta','#nav-desk-padroes','#nav-desk-progresso'],
+  {tela:'inicio',casco:true,sel:['#nav-desk-simulado','#nav-desk-consulta','#nav-desk-padroes','#nav-desk-progresso'],
    titulo:'Simulado, Consulta, Padrões e Meu progresso',
    texto:'Simulado completo na proporção do edital, glossário e normas na Consulta, estatística das provas em Padrões, e seu domínio por área em Meu progresso.'},
-  {sel:'.btn-header-menu',titulo:'Menu',
+  {tela:'inicio',casco:true,sel:'.btn-header-menu',titulo:'Menu',
    texto:'Tema claro/escuro, configurações e sua conta. É por aqui também que você abre este tutorial de novo, quando quiser.'}
 ];
 
-let _tourIdx=0,_tourLista=[],_tourRAF=0,_tourFocoAnterior=null;
+let _tourIdx=0,_tourLista=[],_tourRAF=0,_tourFocoAnterior=null,_tourReMedir=0;
+// Veredito de visibilidade por passo, guardado para o resize nao apagar passo de
+// tela que nao esta ativa (la todo alvo mede 0x0). WeakMap: a chave e o objeto do
+// passo, que vive em TOUR_PASSOS enquanto a pagina existir.
+const _tourVeredito=new WeakMap();
 
 // Alvo so conta se EXISTE e tem area > 0 (display:none devolve rect 0x0).
 function _tourAlvos(p){
@@ -7759,6 +7799,23 @@ function _tourAlvos(p){
     if(r.width>0&&r.height>0)out.push(el);
   });
   return out;
+}
+
+function _tourTelaAtiva(){
+  const sc=document.querySelector('.screen.active');
+  return sc?sc.id.replace('screen-',''):'';
+}
+
+// Mede so quem da para medir agora; para o resto devolve o ultimo veredito
+// conhecido (ou true, se ainda nao foi avaliado -- o passo entra e, se o alvo nao
+// existir mesmo, _tourRender o descarta ao chegar nele).
+function _tourAplicavel(p){
+  if(p.casco||(p.tela||'inicio')===_tourTelaAtiva()){
+    const v=_tourAlvos(p).length>0;
+    _tourVeredito.set(p,v);
+    return v;
+  }
+  return _tourVeredito.has(p)?_tourVeredito.get(p):true;
 }
 
 // Retangulo que cobre todos os alvos do passo (o rail do desktop sao 4 elementos).
@@ -7783,9 +7840,21 @@ function _tourPosicionar(){
   const bw=box.offsetWidth,bh=box.offsetHeight;
   const vw=window.innerWidth,vh=window.innerHeight;
   let top=u.bottom+pad+marg;                       // padrao: abaixo do alvo
-  if(top+bh>vh-8)top=u.top-pad-marg-bh;            // nao coube embaixo: por cima
-  if(top<8)top=Math.max(8,(vh-bh)/2);              // nao coube dos dois lados: centraliza
   let left=u.left+u.width/2-bw/2;
+  if(top+bh>vh-8){                                 // nao coube embaixo
+    const acima=u.top-pad-marg-bh;
+    if(acima>=8)top=acima;                         // ... coube por cima
+    else{
+      // Nem em cima nem embaixo: celular DEITADO (375px de altura) com alvo largo.
+      // Tentar ao LADO antes de centralizar -- centralizar tapa exatamente o que o
+      // spotlight esta mostrando, que e o unico ponto do tour.
+      const dir=u.right+pad+marg, esq=u.left-pad-marg-bw;
+      top=Math.max(8,Math.min(u.top,vh-bh-8));
+      if(dir+bw<=vw-8)left=dir;
+      else if(esq>=8)left=esq;
+      else top=Math.max(8,(vh-bh)/2);              // sem lugar em lado nenhum: centraliza
+    }
+  }
   left=Math.max(8,Math.min(left,vw-bw-8));         // clamp horizontal na viewport
   box.style.top=top+'px';
   box.style.left=left+'px';
@@ -7794,6 +7863,11 @@ function _tourPosicionar(){
 function _tourRender(){
   if(_tourIdx>=_tourLista.length){fecharTutorial();return;}
   const p=_tourLista[_tourIdx];
+  // Navega ANTES de medir. _navToInner(...,true) pula o stagger de entrada: os
+  // cards do painel entram com opacity:0/translateY(16px) e o spotlight fixaria
+  // um quadro intermediario da animacao em vez da posicao final.
+  const tela=p.tela||'inicio';
+  if(tela!==_tourTelaAtiva())_navToInner(tela,true);
   const els=_tourAlvos(p);
   if(!els.length){                                 // alvo sumiu em runtime: pula sem travar
     _tourLista.splice(_tourIdx,1);
@@ -7808,9 +7882,20 @@ function _tourRender(){
   if(txt)txt.textContent=p.texto;
   if(bv)bv.disabled=(_tourIdx===0);
   if(ba)ba.textContent=(_tourIdx===_tourLista.length-1)?'Concluir':'Avançar';
-  try{els[0].scrollIntoView({block:'center',behavior:'instant'});}
+  // Tela baixa (celular deitado): centralizar o alvo parte o espaco livre em duas
+  // metades e nenhuma comporta a caixa -- ela acabava por cima do alvo. Encostando
+  // o alvo no topo, toda a folga sobra embaixo, que e onde a caixa quer ficar.
+  // 480 e o MESMO numero do @media (max-height:480px) que encurta a .tour-box --
+  // sao as duas metades da mesma regra, mudar uma sem a outra reabre o bug.
+  const bloco=window.innerHeight<=480?'start':'center';
+  try{els[0].scrollIntoView({block:bloco,behavior:'instant'});}
   catch(_){try{els[0].scrollIntoView();}catch(__){}}
   requestAnimationFrame(_tourPosicionar);          // mede depois do scroll assentar
+  // Rede de seguranca: animacao de entrada disparada FORA do tour (navTo comum,
+  // logo antes de abrir) ainda pode estar correndo. 420ms cobre os 380ms da
+  // transicao mais o escalonamento -- medir antes fixaria um quadro intermediario.
+  if(_tourReMedir)clearTimeout(_tourReMedir);
+  _tourReMedir=setTimeout(_tourPosicionar,420);
 }
 
 function _tourReposicionar(){
@@ -7820,10 +7905,10 @@ function _tourReposicionar(){
 
 // Mudar de faixa de viewport troca o conjunto de passos visiveis (tablet girando:
 // 768 -> 1024 tira o "Mais" e poe o rail do desktop). Remonta a lista mantendo o
-// passo atual, senao o denominador pula na cara do usuario ("1 de 9" -> "8 de 8").
+// passo atual, senao o denominador pula na cara do usuario ("1 de 15" -> "14 de 14").
 function _tourRemontar(){
   const atual=_tourLista[_tourIdx];
-  const nova=TOUR_PASSOS.filter(p=>_tourAlvos(p).length>0);
+  const nova=TOUR_PASSOS.filter(_tourAplicavel);
   if(nova.length===_tourLista.length&&nova.every((p,i)=>p===_tourLista[i]))return false;
   const i=nova.indexOf(atual);
   _tourLista=nova;
@@ -7835,8 +7920,10 @@ function _tourAoRedimensionar(){
 }
 
 function iniciarTutorial(){
-  navTo('inicio');                                 // navTo e SINCRONO (§2), sem await
-  _tourLista=TOUR_PASSOS.filter(p=>_tourAlvos(p).length>0);
+  // _navToInner(...,true) em vez de navTo: mesma navegacao SINCRONA (§2), sem o
+  // stagger de entrada que atrapalharia a medicao do primeiro passo.
+  _navToInner('inicio',true);
+  _tourLista=TOUR_PASSOS.filter(_tourAplicavel);
   if(!_tourLista.length)return;
   _tourIdx=0;
   _tourFocoAnterior=document.activeElement;
@@ -7852,11 +7939,15 @@ function tourVoltar(){if(_tourIdx>0){_tourIdx--;_tourRender();}}
 
 // Os 3 caminhos de fechar (§10) passam por aqui: botao Pular, Esc (FECHAR_MODAL) e
 // clique fora (o guard abaixo; o .tour-box tem stopPropagation no HTML).
+// O tour navega entre telas, mas o ultimo passo e sempre do painel -- quem chega ao
+// fim volta para o inicio sozinho. Quem pula no meio fica na tela em que estava,
+// que e o comportamento esperado de quem interrompeu.
 function fecharTutorial(e){
   if(e&&e.target!==e.currentTarget)return;
   window.removeEventListener('scroll',_tourReposicionar,true);
   window.removeEventListener('resize',_tourAoRedimensionar);
   if(_tourRAF){cancelAnimationFrame(_tourRAF);_tourRAF=0;}
+  if(_tourReMedir){clearTimeout(_tourReMedir);_tourReMedir=0;}
   const m=document.getElementById('modal-tutorial');if(m)m.classList.add('hidden');
   try{localStorage.setItem('tutorialVisto','1');}catch(_){}
   if(_tourFocoAnterior&&_tourFocoAnterior.focus){try{_tourFocoAnterior.focus();}catch(_){}}
