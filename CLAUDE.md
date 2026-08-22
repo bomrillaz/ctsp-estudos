@@ -333,6 +333,11 @@ pedido 2 vezes):**
   visual de tela) · `pdf` (ebook/materiais) · `schedule` (rotina automatizada) · `security-review` (Opus,
   decisão de risco alto) · `simplify` (só lógica não-trivial — ver regra abaixo) · `changelog-generator`
   (nota de release pros assinantes).
+  **Gatilho do `changelog-generator` (decidido no b119): só SUGERIR, nunca rodar sozinho.** Quando uma
+  mudança criar, alterar ou remover uma experiência que a usuária final REALMENTE note (dashboard novo,
+  função nova ou removida) — avisar o João que é um bom momento pra considerar um aviso "o que mudou" via
+  central de notificações (sino/aba Avisos, já existe desde v1.190). NÃO inclui: CSS/token, painel admin,
+  CI, backend, refactor — nada que ela não perceba de fato. Quem decide rodar e publicar é o João.
 - **Skills — gatilho por cenário, ainda não usadas no CTSP: AVISAR ao reconhecer o cenário, depois usar.**
   `playwright-skill` → tela SEM login sendo mexida (landing, tutorial, venda — regressão automatizada;
   pós-login continua exigindo login manual do João, risco de sujar FSRS). `dataviz` → painel admin ganhar
