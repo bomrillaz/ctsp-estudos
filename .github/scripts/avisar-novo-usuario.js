@@ -14,6 +14,14 @@
    seguinte. Só olha planos pagos (`cob.prox`); trial não tem esse campo e não é avisado
    aqui (o "novo cadastro" já avisa o início do prazo).
 
+   b117: gatilho pra reabrir a decisão de bot-protection (ver
+   decisoes/recaptcha-nao-implementado-agora-falta-backend.md) — LIMIAR_CADASTRO_MASSA
+   cadastros novos NUMA SÓ EXECUÇÃO (janela de ~20min, o cron deste workflow) já foge do
+   padrão orgânico do projeto (poucos usuários reais, crescimento é por indicação). Não
+   bloqueia nada sozinho — só marca o push pro admin com 🚨 pra ele decidir se revisita a
+   decisão. Não cobre "spam" qualitativo (conta de aparência falsa mas cadastro isolado) —
+   esse sinal continua dependendo do João notar no painel.
+
    Segredo: FIREBASE_SERVICE_ACCOUNT (mesmo já usado por enviar-push.js).
    databaseURL é público (já vive no index.html). */
 
@@ -40,6 +48,7 @@ const CURSOR_REF = 'sistema/avisoNovoUsuario/ultimoTs';
 const VENC_MARCAS_REF = 'sistema/avisoVencimento';
 const VENC_JANELA_MS = 3 * 86400000; // mesma carência de 3 dias da regra do RTDB (S6)
 const LINK = 'https://bomrillaz.github.io/ctsp-estudos/';
+const LIMIAR_CADASTRO_MASSA = 3; // b117: gatilho do bot-protection, ver comentário no topo
 
 (async () => {
   const [usuariosSnap, cursorSnap, tokensSnap, uidsConhecidosSnap, vencMarcasSnap] = await Promise.all([
@@ -107,15 +116,19 @@ const LINK = 'https://bomrillaz.github.io/ctsp-estudos/';
 
   if (novos.length) {
     const nomes = novos.map(([, u]) => u.nome || u.email || 'usuário').slice(0, 5);
-    const corpo = novos.length === 1
+    const massa = novos.length >= LIMIAR_CADASTRO_MASSA;
+    const corpo = (novos.length === 1
       ? nomes[0] + ' acabou de se cadastrar.'
-      : novos.length + ' cadastros novos: ' + nomes.join(', ') + (novos.length > 5 ? '…' : '') + '.';
+      : novos.length + ' cadastros novos: ' + nomes.join(', ') + (novos.length > 5 ? '…' : '') + '.')
+      + (massa ? ' 🚨 Volume fora do padrão — reavaliar bot-protection?' : '');
+    const titulo = massa ? '🚨 Prontidão · possível cadastro em massa' : 'Prontidão · novo cadastro';
+    if (massa) console.log('ALERTA cadastro em massa:', novos.length, 'cadastros numa só execução (limiar', LIMIAR_CADASTRO_MASSA + ').');
     if (!tokens.length) {
       console.log('Sem token de push do admin cadastrado — nada a enviar. Cadastros novos:', corpo);
     } else {
       const resp = await msg.sendEachForMulticast({
         tokens,
-        data: { title: 'Prontidão · novo cadastro', body: corpo, icon: 'assets/icon-192.png', link: LINK }
+        data: { title: titulo, body: corpo, icon: 'assets/icon-192.png', link: LINK }
       });
       console.log('Push admin (cadastro) — sucesso:', resp.successCount, '· falha:', resp.failureCount);
     }

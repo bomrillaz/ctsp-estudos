@@ -1319,6 +1319,17 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   .user-row{margin-bottom:0;}
   /* FASE 3 — largura de leitura: texto longo não estica a coluna toda */
   .quiz-body,.quiz-feedback,.card-flip-wrap,.resumo-card,.sim-q-wrap,.sim-result-areas,.sim-ai-diag{max-width:720px;margin-inline:auto;}
+  /* b117 — tela de conteúdo ÚNICO (pergunta do Quiz em andamento / flashcard em estudo)
+     centraliza verticalmente, em vez de ficar colada no topo com vazio embaixo (achado
+     🟡-1 da auditoria b108). NÃO tocar no mestre-detalhe dos hubs acima — é tela
+     diferente. Quiz: o header (voltar/progresso) fica fixo no topo, só o corpo da
+     questão centra por baixo dele (margin:auto, mesmo truque do .card-face-inner).
+     Cards: sem header próprio no modo estudo, então o bloco inteiro (link voltar + meta
+     + card + botões) centra junto via justify-content — sem precisar de wrapper novo no
+     JS, cobre tanto a fila de cards quanto a tela de "revisão concluída". */
+  #quiz-running-view{display:flex;flex-direction:column;min-height:60vh;}
+  #quiz-running-view .quiz-body{margin-block:auto;}
+  #cards-body.cards-estudo{display:flex;flex-direction:column;justify-content:center;min-height:60vh;}
   .quiz-q-text,.resumo-texto{max-width:64ch;}
   /* FASE 5 (modais) — no desktop, diálogo centrado em vez de bottom-sheet */
   .modal-overlay,.rep-overlay{align-items:center;}
@@ -4208,7 +4219,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.203';
+const APP_VERSAO='v1.204';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5358,7 +5369,8 @@ function classeQuestao(q){
 function montarFilaEstudo(qs,n){
   const g={novo:[],errado:[],revisar:[],dominado:[]};
   (qs||[]).forEach(q=>{(g[classeQuestao(q)]||g.novo).push(q);});
-  const novos=shuffle(g.novo),erros=shuffle(g.errado),revisar=shuffle(g.revisar),dominado=shuffle(g.dominado);
+  const novos=shuffle(g.novo),erros=shuffle(g.errado),revisar=shuffle(g.revisar);
+  const dominado=g.dominado.slice().sort((a,b)=>questaoDue(a.id)-questaoDue(b.id)); // mais perto de vencer primeiro
   const nNovo=Math.round(n*0.6);
   const fila=[];
   fila.push(...novos.slice(0,nNovo));                          // 60% novas
@@ -5750,6 +5762,7 @@ function _hubCards(){
   const acervo=cardsPendentes(null).todos.length;
   const resta=Math.min(acervo,Math.max(0,dose('cards')-(hj.fc||0)));
   const body=document.getElementById('cards-body');
+  body.classList.remove('cards-estudo'); // b117: sai do modo estudo (centralização desktop só se aplica lá)
   const cta = resta>0
     ? `<button class="btn-primary" style="width:100%" onclick="iniciarMetaCards()">Iniciar meta de hoje · ${resta} card${resta!==1?'s':''}</button>
        <div class="hub-hint">Cards intercalados e espaçados. Ou toque um card abaixo para estudar avulso.</div>`
@@ -5760,6 +5773,7 @@ function iniciarMetaCards(){cardsModo='estudo';cardsUnico=false;cardsFiltroTopic
 function voltarHubCards(){cardsModo='hub';cardsUnico=false;renderCards();window.scrollTo(0,0);}
 // Modo estudo imersivo: um card por vez, sem o índice competindo pela atenção.
 function _estudoCards(){
+  document.getElementById('cards-body').classList.add('cards-estudo'); // b117: liga a centralização desktop
   const now=Date.now();
   const ehVencido=fc=>{const uc=userCards[fc.id];return !!(uc&&uc.reps>0&&uc.next&&uc.next<=now);};
   const pend=cardsPendentes();
@@ -5888,6 +5902,7 @@ function estudarCardUnico(id){
   const fc=allFlashcards[id]||Object.values(allFlashcards).find(x=>x.id===id);
   if(!fc)return;
   cardsModo='estudo';cardsUnico=true;cardsFiltroTopico=null;
+  document.getElementById('cards-body').classList.add('cards-estudo'); // b117: mesmo gatilho de _estudoCards()
   cardQueue=[fc];cardIdx=0;renderCard();
   window.scrollTo(0,0);
 }
@@ -8889,32 +8904,57 @@ document.addEventListener('keydown',e=>{
   }
 });
 
+// b117: fonte única dos overlays de tela cheia (fora info-tooltip, que não é modal, e
+// fora .modal-overlay, que já tem ID compartilhado via querySelector) — usada pelo Esc
+// (ação de fechar por tipo) E pelo focus-trap do Tab logo abaixo (só precisa saber QUAL
+// está aberto). Um overlay novo entra numa linha aqui, não em dois lugares separados
+// (é o que já mordeu o projeto: b116/etapa2 registrou pix-overlay ficando de fora da
+// varredura de Esc por reusar a classe .show de outro overlay). Mesma ordem de
+// prioridade de sempre: gate → splash → rep → pix → mais → modal genérico.
+const OVERLAYS_ATIVOS=[
+  {id:'onboard-gate',classe:'active',fechar:()=>adiarOnboard()},
+  {id:'splash-screen',classe:'active',fechar:()=>fecharSplash()},
+  {id:'rep-overlay',classe:'show',fechar:()=>fecharReporte()},
+  {id:'pix-overlay',classe:'show',fechar:()=>fecharPagamento()},
+  {id:'mais-overlay',classe:'open',fechar:el=>fecharMais({target:el,currentTarget:el})},
+];
+function overlayAberto(){
+  for(const o of OVERLAYS_ATIVOS){
+    const el=document.getElementById(o.id);
+    if(el&&el.classList.contains(o.classe))return el;
+  }
+  return document.querySelector('.modal-overlay:not(.hidden)');
+}
 // F1-03: Esc fecha o overlay visível mais ao topo. Listener PRÓPRIO — não usar o
 // handler S35 acima, que desiste cedo quando há modal aberto (justo o caso que
 // precisa funcionar aqui).
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
-  const gate=document.getElementById('onboard-gate');
-  if(gate&&gate.classList.contains('active')){adiarOnboard();return;}
-  // F2/correção: splash de retorno (streak + domínio por área) ficou fora da
-  // varredura de Esc do F1 por não ser um .modal-overlay — só tinha o botão
-  // "Iniciar estudos →". Reportado pelo João.
-  const splash=document.getElementById('splash-screen');
-  if(splash&&splash.classList.contains('active')){fecharSplash();return;}
+  // info-tooltip não entra em OVERLAYS_ATIVOS (não fecha por função própria, só troca a
+  // classe) — gate/splash bloqueiam a tela inteira antes do usuário conseguir abrir um
+  // tooltip, então checá-lo primeiro não muda o resultado prático, só simplifica a ordem.
   const info=document.getElementById('info-tooltip');
   if(info&&!info.classList.contains('hidden')){info.classList.add('hidden');return;}
-  const rep=document.getElementById('rep-overlay');
-  if(rep&&rep.classList.contains('show')){fecharReporte();return;}
-  // b116/etapa2: lacuna achada ao tocar aqui — pix-overlay usa a MESMA classe .rep-overlay
-  // do reportar-erro, mas ID próprio, então nunca tinha entrado nesta varredura de Esc.
-  // Ficou mais visível agora que a folha abre sozinha no login de quem está 'vencido'.
-  const pix=document.getElementById('pix-overlay');
-  if(pix&&pix.classList.contains('show')){fecharPagamento();return;}
-  const mais=document.getElementById('mais-overlay');
-  if(mais&&mais.classList.contains('open')){fecharMais({target:mais,currentTarget:mais});return;}
+  const overlay=overlayAberto();
+  if(!overlay)return;
+  const cfg=OVERLAYS_ATIVOS.find(o=>o.id===overlay.id);
+  if(cfg){cfg.fechar(overlay);return;}
   const FECHAR_MODAL={'modal-busca':fecharBuscaGlobal,'modal-intro':fecharIntro,'modal-fim':fecharFim,'modal-config':fecharModalConfig,'modal-notif':fecharModalNotif,'modal-tutorial':fecharTutorial};
-  const aberto=document.querySelector('.modal-overlay:not(.hidden)');
-  if(aberto&&FECHAR_MODAL[aberto.id])FECHAR_MODAL[aberto.id]({target:aberto,currentTarget:aberto});
+  if(FECHAR_MODAL[overlay.id])FECHAR_MODAL[overlay.id]({target:overlay,currentTarget:overlay});
+});
+
+// b117: focus-trap genérico — Tab não pode escapar do overlay/gate aberto pro app por
+// trás. Reaproveita overlayAberto() (mesma fonte usada pelo Esc acima).
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Tab')return;
+  const overlay=overlayAberto();
+  if(!overlay)return;
+  const focaveis=[...overlay.querySelectorAll('button,a[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')]
+    .filter(el=>!el.disabled&&el.offsetParent!==null);
+  if(!focaveis.length)return;
+  const primeiro=focaveis[0],ultimo=focaveis[focaveis.length-1];
+  if(e.shiftKey&&document.activeElement===primeiro){e.preventDefault();ultimo.focus();}
+  else if(!e.shiftKey&&document.activeElement===ultimo){e.preventDefault();primeiro.focus();}
 });
 
 // ── Fase 2: registro do Service Worker (offline + aviso de nova versao) ──
