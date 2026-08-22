@@ -4202,7 +4202,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.200';
+const APP_VERSAO='v1.201';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -8324,7 +8324,18 @@ const DOCS={
       <li><b>Não coletamos</b> CPF, endereço, telefone, localização, dados de cartão ou qualquer dado sensível.</li>
     </ul>
 
-    <h3>2. Para que servem</h3>
+    <h3>2. Cookies e armazenamento no seu aparelho</h3>
+    <p>A plataforma <b>não usa cookies</b> — nem próprios, nem de terceiros — e <b>não tem nenhuma ferramenta de análise, rastreamento ou publicidade</b> (não usamos Google Analytics, pixel de rede social ou similar). Nada aqui acompanha você por outros sites.</p>
+    <p>O que existe é armazenamento local do próprio navegador, usado só para o app funcionar:</p>
+    <ul>
+      <li><b>Sua sessão:</b> o Firebase Authentication guarda no seu navegador a credencial que mantém você logado entre uma visita e outra. Sair da conta apaga.</li>
+      <li><b>Suas preferências:</b> tema claro ou escuro, estado do menu lateral e do painel de metas, plano escolhido antes de confirmar o cadastro.</li>
+      <li><b>Cópia local do seu progresso:</b> um espelho das suas respostas e flashcards, para o app abrir rápido e continuar funcionando sem internet.</li>
+      <li><b>Cache do aplicativo:</b> os arquivos da plataforma ficam guardados no aparelho para que ela abra offline, como todo app instalável.</li>
+    </ul>
+    <p>Como esses itens são <b>estritamente necessários</b> para o serviço que você contratou, e nenhum deles serve para rastrear ou anunciar, não existe banner de consentimento a aceitar. Você pode apagar tudo a qualquer momento saindo da conta ou limpando os dados do site nas configurações do seu navegador — isso não afeta o seu progresso guardado na nuvem.</p>
+
+    <h3>3. Para que servem</h3>
     <ul>
       <li>Manter sua conta e liberar o acesso que você contratou — base legal: <b>execução do contrato</b>.</li>
       <li>Medir seu desempenho e montar o treino do dia — é a função central do serviço, também execução do contrato.</li>
@@ -8333,13 +8344,13 @@ const DOCS={
     </ul>
     <p>Seus dados <b>não são vendidos</b> nem usados para publicidade, e não alimentam perfis comerciais.</p>
 
-    <h3>3. Com quem são compartilhados</h3>
+    <h3>4. Com quem são compartilhados</h3>
     <p>Apenas com os serviços necessários para a plataforma funcionar, que atuam como operadores: <b>Google Firebase</b> (autenticação, banco de dados e notificações) e <b>GitHub Pages</b> (hospedagem das páginas). Esses serviços podem processar dados em servidores fora do Brasil; a transferência internacional se apoia nas cláusulas contratuais e nas garantias oferecidas por esses fornecedores. Nenhum outro terceiro recebe seus dados, salvo obrigação legal ou ordem judicial.</p>
 
-    <h3>4. Por quanto tempo ficam guardados</h3>
+    <h3>5. Por quanto tempo ficam guardados</h3>
     <p>Enquanto sua conta existir. Ao excluir a conta, os dados de cadastro e de progresso são apagados. Registros que a lei obriga a manter, se houver, são preservados apenas pelo prazo legal e sem uso para outra finalidade.</p>
 
-    <h3>5. Seus direitos</h3>
+    <h3>6. Seus direitos</h3>
     <p>A LGPD garante a você confirmar a existência do tratamento, acessar seus dados, corrigi-los, pedir anonimização ou eliminação, obter portabilidade, saber com quem foram compartilhados e revogar consentimento. Na prática, dentro do app:</p>
     <ul>
       <li><b>Acessar e portar:</b> Configurações → Backup do progresso → Exportar. Gera um arquivo com os seus dados de estudo.</li>
@@ -8349,13 +8360,13 @@ const DOCS={
     </ul>
     <p>Pedidos feitos por e-mail são respondidos em até 15 dias.</p>
 
-    <h3>6. Segurança</h3>
+    <h3>7. Segurança</h3>
     <p>O acesso ao banco é controlado por regras que limitam cada pessoa aos próprios dados, o tráfego é criptografado (HTTPS) e a senha nunca trafega nem é armazenada por nós em texto. Nenhum sistema é infalível: se ocorrer incidente com risco relevante aos seus dados, você e a ANPD serão comunicados.</p>
 
-    <h3>7. Crianças e adolescentes</h3>
+    <h3>8. Crianças e adolescentes</h3>
     <p>A plataforma é destinada a militares maiores de 18 anos e não se dirige a menores.</p>
 
-    <h3>8. Mudanças nesta Política</h3>
+    <h3>9. Mudanças nesta Política</h3>
     <p>Alterações relevantes serão avisadas na plataforma antes de valerem.</p>
 
     ${_docContato()}
