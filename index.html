@@ -2645,6 +2645,8 @@ function checkRateLimit(){const now=Date.now();if(now-loginAttempts.lastReset>60
 // STATE
 // ═══════════════════════════════
 let currentUser=null,userProfile=null;
+// b121: trava a corrida entre doRegister() e onAuthStateChanged (ver comentário em doRegister).
+let _registroEmAndamento=false;
 let userStats={correct:0,wrong:0,byArea:{},seenIds:[],history:[],streak:0,lastStudyDate:'',metaDiaria:10,rev:0,updatedAt:0};
 // ── S30 BUG-DATA: proteção de persistência ──
 const PROG_DEFAULT={correct:0,wrong:0,byArea:{},seenIds:[],history:[],streak:0,lastStudyDate:'',metaDiaria:10,rev:0,updatedAt:0};
@@ -3730,6 +3732,12 @@ async function doRegister(){
   if(p.length<6){showMsg('reg-msg','Senha mínimo 6 caracteres.');return;}
   const btn=document.querySelector('#tab-register .btn-primary');
   btn.disabled=true;btn.textContent='Criando...';
+  // b121: liga ANTES de createUserWithEmailAndPassword, que já dispara onAuthStateChanged
+  // em paralelo com o resto desta função. Sem a flag, o listener corre pra ler o nó (ainda
+  // vazio), acha "não existe" e cria um perfil de auto-reparo com aprovado:false por cima —
+  // silencioso (não lança erro aqui), sobrevive só na memória do cliente e trava a tela em
+  // "aguardando aprovação" mesmo com o banco correto por baixo (só sair/entrar mostra certo).
+  _registroEmAndamento=true;
   try{
     const cred=await auth.createUserWithEmailAndPassword(e,p);
     const isAdm=e===ADMIN_EMAIL;
@@ -3739,7 +3747,7 @@ async function doRegister(){
     // "renascimento" pós-Remover logo abaixo, que continua trancando de propósito.
     await db.ref('usuarios/'+cred.user.uid).set({nome,email:e,admin:isAdm,aprovado:true,criadoEm:Date.now()});
   }catch(err){showMsg('reg-msg',mensagemErroAuth(err,'Erro ao criar conta.'));}
-  finally{btn.disabled=false;btn.textContent='Criar conta';}
+  finally{btn.disabled=false;btn.textContent='Criar conta';_registroEmAndamento=false;}
 }
 
 function doLogout(){
@@ -3777,6 +3785,11 @@ auth.onAuthStateChanged(async user=>{
   const emailNorm=String(user.email||'').trim().toLowerCase();
   const isAdmEmail=emailNorm===String(ADMIN_EMAIL).toLowerCase();
   try{
+    // b121: se doRegister() está gravando o perfil agora, espera terminar antes de checar
+    // "existe" — sem isto, esta leitura corre na frente do write dele, acha o nó vazio e
+    // cria por cima um perfil de auto-reparo com aprovado:false. Teto de 2s por segurança
+    // (doRegister() sempre baixa a flag no finally, mesmo em erro).
+    for(let i=0;_registroEmAndamento&&i<40;i++)await new Promise(r=>setTimeout(r,50));
     const snap=await withTimeout(db.ref('usuarios/'+user.uid).get());
     if(!snap.exists()){
       // Auto-reparo: quem loga sem nó no banco ganha um. É a origem conhecida das
@@ -4219,7 +4232,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.204';
+const APP_VERSAO='v1.205';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
