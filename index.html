@@ -146,7 +146,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .onboard-sub{font-size:14px;line-height:1.5;color:var(--text2);margin-bottom:20px;}
 .onboard-btn{width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;}
 .onboard-btn:active{transform:scale(.98);}
-.onboard-foot{font-size:12px;color:var(--text3);margin-top:12px;}
 #splash-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(560px 320px at 82% 18%,rgba(240,136,60,.05),transparent 70%);pointer-events:none;}
 #splash-screen.active{display:flex;}
 #splash-screen.fade-out{opacity:0;transition:opacity .4s ease;}
@@ -163,6 +162,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .splash-sug-area{font-size:16px;font-weight:800;color:white;margin-bottom:4px;}
 .splash-sug-motivo{font-size:12px;color:rgba(255,255,255,.75);line-height:1.4;}
 .splash-btn{background:var(--red);color:white;border-radius:14px;padding:14px 36px;font-size:15px;font-weight:800;margin-top:8px;border:none;cursor:pointer;box-shadow:0 8px 24px rgba(211,36,18,.4);position:relative;}
+/* b123: variante de convite do splash (quem ainda não nivelou) */
+.splash-convite{background:rgba(255,255,255,.07);border-radius:16px;padding:16px 18px;width:100%;max-width:360px;border:1px solid rgba(255,255,255,.14);position:relative;}
+.splash-convite-t{font-size:17px;font-weight:800;color:white;margin-bottom:6px;}
+.splash-convite-s{font-size:13px;color:rgba(255,255,255,.75);line-height:1.5;margin-bottom:4px;}
+.splash-btn-primario{width:100%;margin-top:10px;}
+.splash-btn-fraco{background:transparent;color:rgba(255,255,255,.82);box-shadow:none;border:1px solid rgba(255,255,255,.28);font-weight:700;}
 @keyframes countUp{from{opacity:0;transform:scale(.5);}to{opacity:1;transform:scale(1);}}
 .splash-dias.animate{animation:countUp .5s cubic-bezier(.34,1.56,.64,1) forwards;}
 @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
@@ -1218,8 +1223,42 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .obj-card-pct{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;margin-top:6px;display:inline-block;}
 
 /* Botão voltar quiz */
+.btn-ghost-dark{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:white;}
 .btn-voltar-quiz{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:white;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;}
 .btn-voltar-quiz:active{opacity:.7;}
+/* b123: banner de instalação — casco fixo + duas formas (CTA de linha × guia vertical) */
+.install-banner{position:fixed;left:12px;right:12px;
+  bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));
+  z-index:200;background:var(--navy-2);color:#fff;
+  border:1px solid var(--glass-border);border-radius:var(--radius);
+  box-shadow:0 8px 24px rgba(11,20,48,.4);cursor:default;}
+.install-cta{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;padding:12px 14px;}
+.install-cta .install-head{flex:1;min-width:0;padding:0;margin:0;border:none;}
+.install-cta .install-sub{flex:1 1 auto;min-width:120px;font-size:12px;color:rgba(255,255,255,.75);line-height:1.4;}
+.install-btn{background:var(--ember);color:#1C1206;border:none;border-radius:9px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;}
+@media (min-width:1024px){.install-cta .install-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff;}}
+.install-guia{display:block;padding:14px 16px 16px;max-height:38vh;overflow-y:auto;}
+.install-guia .install-sub,.install-guia .install-btn{display:none;}
+.install-cta .install-passos,.install-cta .install-nota,.install-cta .install-ok{display:none;}
+.install-guia.nao-safari .install-passos,.install-guia.nao-safari .install-nota{display:none;}
+.install-guia .install-head{display:flex;align-items:center;gap:10px;padding-bottom:10px;
+  margin-bottom:12px;border-bottom:1px solid var(--glass-border);}
+.install-ico{width:32px;height:32px;border-radius:var(--radius-xs);flex-shrink:0;}
+.install-titulo{flex:1;font-family:var(--font-display);font-size:15px;font-weight:600;letter-spacing:.01em;}
+.install-x{min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;
+  background:transparent;border:none;color:rgba(255,255,255,.6);font-size:22px;line-height:1;cursor:pointer;}
+.install-passos{list-style:none;display:flex;flex-direction:column;gap:12px;}
+.install-passos li{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.55;color:rgba(255,255,255,.88);}
+.install-passos b{font-weight:700;color:#fff;}
+.install-num{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.16);
+  font-family:var(--font-display);font-size:12px;font-weight:700;display:flex;align-items:center;
+  justify-content:center;margin-top:1px;}
+.install-nota{margin-top:12px;font-size:11.5px;line-height:1.5;color:rgba(255,255,255,.6);}
+.install-nota-safari{display:none;}
+.install-guia.nao-safari .install-nota.install-nota-safari{display:block;}
+.install-ok{width:100%;margin-top:14px;}
+.install-glifo{width:15px;height:15px;vertical-align:-2px;display:inline-block;margin:0 1px;flex-shrink:0;}
+@media (min-width:1024px){.install-banner{left:auto;right:24px;max-width:420px;}}
 
 /* PAINEL DO DIA + selo salvo */
 /* (S64) CSS do card "Hoje" removido — o painel virou KPI no placar de "Meu progresso". */
@@ -1436,12 +1475,11 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 <!-- S47: gate de onboarding obrigatório (1º acesso) -->
 <div id="onboard-gate">
   <div class="onboard-box">
-    <button class="onboard-fechar" type="button" aria-label="Fechar" onclick="adiarOnboard()">✕</button>
+    <button class="onboard-fechar" type="button" aria-label="Fechar" onclick="fecharOnboard()">✕</button>
     <div class="onboard-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.2 7.8 14.3 14.3 7.8 16.2 9.7 9.7 16.2 7.8"/></svg></div>
-    <div class="onboard-title">Bem-vindo, Bombeiro!</div>
-    <div class="onboard-sub">Antes de começar, faça o <b>simulado de nivelamento</b>: 15 questões pelas 5 áreas do edital. Ele mede seu domínio inicial e faz a plataforma adaptar os estudos ao seu nível.</div>
+    <div class="onboard-title">Antes de responder</div>
+    <div class="onboard-sub">Pra registrar suas respostas, o app precisa saber de onde você está partindo. O <b>simulado de nivelamento</b> são 15 questões pelas 5 áreas do edital — é ele que faz a plataforma adaptar os estudos ao seu nível. Leva poucos minutos e só se faz uma vez.</div>
     <button class="onboard-btn" onclick="iniciarOnboardDiagnostico()">Começar nivelamento →</button>
-    <div class="onboard-foot">Leva poucos minutos</div>
   </div>
 </div>
 <div id="splash-screen">
@@ -1451,12 +1489,18 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="splash-sec">Domínio por área</div>
     <div id="splash-areas"></div>
   </div>
+  <div class="splash-convite" id="splash-convite">
+    <div class="splash-sug-label">Falta um passo</div>
+    <div class="splash-convite-t">Seu perfil ainda não foi calculado</div>
+    <div class="splash-convite-s">O simulado de nivelamento são 15 questões pelas 5 áreas do edital. É ele que faz o app parar de sugerir assunto no chute e começar a montar suas filas pelo que você erra.</div>
+    <button class="splash-btn splash-btn-primario" onclick="iniciarSplashDiagnostico()">Fazer o nivelamento →</button>
+  </div>
   <div class="splash-sugestao" id="splash-sugestao">
     <div class="splash-sug-label">Por onde começar</div>
     <div class="splash-sug-area" id="splash-sug-area">—</div>
     <div class="splash-sug-motivo" id="splash-sug-motivo"></div>
   </div>
-  <button class="splash-btn" onclick="fecharSplash()">Iniciar estudos →</button>
+  <button class="splash-btn" id="splash-btn-principal" onclick="fecharSplash()">Iniciar estudos →</button>
 </div>
 
 <!-- AUTH -->
@@ -3938,10 +3982,14 @@ async function initApp(){
   if(!userProfile.admin&&estadoCobranca(userProfile).estado==='vencido')abrirPagamento(planoAtual());
   // Animação inicial do dashboard
   setTimeout(()=>{const sc=document.getElementById('screen-inicio');if(sc)animateBars(sc);},600);
-  // S47: 1º acesso → nivelamento obrigatório (gera domínio); senão, splash normal
   // S50: se o usuário veio de um QR do ebook, o deep link substitui o splash.
-  if(!userStats.diagFeito&&!podeAdiarOnboard()){mostrarOnboard();}
-  else if(!consumirDeepLink()){mostrarSplash();}
+  // b123: o nivelamento saiu daqui (virou interceptação em responderQuiz). A ordem agora é:
+  // cobrança vencida > deep link do ebook > tour do 1º acesso > splash.
+  if(!consumirDeepLink()){
+    let viu=false;try{viu=!!localStorage.getItem('tutorialVisto');}catch(_){viu=true;}
+    if(!viu)talvezIniciarTutorial(600);   // 1º acesso: tour puro, SEM splash na frente
+    else mostrarSplash();
+  }
 }
 
 // ═══════════════════════════════
@@ -4232,7 +4280,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.205';
+const APP_VERSAO='v1.206';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5565,6 +5613,14 @@ function renderQuizQ(){
 async function responderQuiz(idx){
   if(quizAnswered)return;
   quizAnswered=true;
+  // b123: nivelamento obrigatório deixou de ser gate no load — vira interceptação AQUI,
+  // no único ponto por onde as 13 rotas de quiz gravam resposta. quizArea!=='DIAGNOSTICO'
+  // é a trava anti-loop: durante o próprio nivelamento diagFeito ainda é false.
+  if(!userStats.diagFeito&&quizArea!=='DIAGNOSTICO'){
+    quizAnswered=false;              // devolve a questão: ela ainda não foi respondida
+    mostrarOnboard();
+    return;
+  }
   registrarTempoQuestao(); // S53: fecha o cronômetro antes de qualquer await
   const q=quizQueue[quizIdx];
   const correta=q._shuffledG!==undefined?q._shuffledG:q.g;
@@ -6407,6 +6463,7 @@ function renderSimHome(){
 }
 
 function iniciarSimulado(modo){
+  if(!userStats.diagFeito){mostrarOnboard();return;}   // b123
   simModo=modo;simRespostas={};simOrdem={};simIdx=0;
   const qs=Object.values(allQuestoes);
   if(modo==='inteligente'){
@@ -7665,14 +7722,10 @@ function mostrarOnboard(){
 function esconderOnboard(){
   const g=document.getElementById('onboard-gate');if(g)g.classList.remove('active');
 }
-// F1-01: X/Esc adiam o nivelamento por 24h (localStorage) — nunca campo novo em usuarios/$uid.
-function podeAdiarOnboard(){
-  try{const t=localStorage.getItem('onboardDismiss');return !!t&&(Date.now()-Number(t))<86400000;}catch(_){return false;}
-}
-function adiarOnboard(){
-  try{localStorage.setItem('onboardDismiss',String(Date.now()));}catch(_){}
+// b123: nivelamento saiu do gate no load — vira interceptação em responderQuiz(). Sair do
+// gate não navega nada; a pessoa volta à tela exata em que estava (ver §3.2 do plano técnico).
+function fecharOnboard(){
   esconderOnboard();
-  if(!consumirDeepLink())mostrarSplash();
 }
 // F1-02: X do card de nivelamento na home adia por 7 dias (localStorage).
 function podeAdiarDiagCard(){
@@ -7687,16 +7740,43 @@ function iniciarOnboardDiagnostico(){
   esconderOnboard();   // libera a tela para o quiz do nivelamento
   iniciarDiagnostico();
 }
+// b123: convite do splash — fecha o splash ANTES (senão fica por cima, z-index maior
+// que o do quiz). Não reaproveitar iniciarOnboardDiagnostico(): ela mexe no gate, não no splash.
+function iniciarSplashDiagnostico(){
+  const sp=document.getElementById('splash-screen');
+  if(sp)sp.classList.remove('active','fade-out');
+  iniciarDiagnostico();
+}
 function mostrarSplash(){
   const splash=document.getElementById('splash-screen');
   splash.classList.add('active');
+  const nivelado=!!userStats.diagFeito;
 
-  // Dias de estudo
+  // Dias de estudo — b123: streak é verdadeiro e independente do nivelamento (só sobe por
+  // atividade real: questão, card ou resumo). Na variante de convite, some quando é 0 (um
+  // "0" gigante não convida a nada); com diagFeito segue igual a hoje.
   const dias=userStats.streak||0;
   const diasEl=document.getElementById('splash-dias');
-  diasEl.textContent='0';
-  diasEl.classList.remove('animate');
-  setTimeout(()=>{diasEl.classList.add('animate');diasEl.textContent=dias;},100);
+  const diasLabelEl=document.querySelector('.splash-dias-label');
+  const mostrarDias=nivelado||dias>0;
+  if(diasLabelEl)diasLabelEl.classList.toggle('hidden',!mostrarDias);
+  if(diasEl){
+    diasEl.classList.toggle('hidden',!mostrarDias);
+    diasEl.textContent='0';
+    diasEl.classList.remove('animate');
+    setTimeout(()=>{diasEl.classList.add('animate');diasEl.textContent=dias;},100);
+  }
+
+  const convite=document.getElementById('splash-convite');
+  const domWrap=document.querySelector('.splash-dominio-wrap');
+  const sugestao=document.getElementById('splash-sugestao');
+  const btnPrincipal=document.getElementById('splash-btn-principal');
+  if(convite)convite.classList.toggle('hidden',nivelado);
+  if(domWrap)domWrap.classList.toggle('hidden',!nivelado);
+  if(sugestao)sugestao.classList.toggle('hidden',!nivelado);
+  if(btnPrincipal)btnPrincipal.classList.toggle('splash-btn-fraco',!nivelado);
+
+  if(!nivelado)return;   // sem evidência nenhuma, não vale calcular domínio/sugestão à toa
 
   // Domínio por área — F2b: mesma fonte do #screen-progresso (dominioAreaBKT), não o
   // composto de calcDominio(). Este splash mostrava um "domínio" diferente do da tela de
@@ -7824,7 +7904,17 @@ const TOUR_PASSOS=[
    titulo:'Simulado, Consulta, Padrões e Meu progresso',
    texto:'Simulado completo na proporção do edital, glossário e normas na Consulta, estatística das provas em Padrões, e seu domínio por área em Meu progresso.'},
   {tela:'inicio',casco:true,sel:'.btn-header-menu',titulo:'Menu',
-   texto:'Tema claro/escuro, configurações e sua conta. É por aqui também que você abre este tutorial de novo, quando quiser.'}
+   texto:'Tema claro/escuro, configurações e sua conta. É por aqui também que você abre este tutorial de novo, quando quiser.'},
+  // b123: dois passos novos, no fim. #install-banner e #diag-card só existem/aparecem em
+  // parte dos casos (instalado, dispensado, já nivelado) — o filtro de visibilidade de alvo
+  // já existente descarta cada um sozinho quando não se aplica, sem `if` novo aqui.
+  {tela:'inicio',casco:true,sel:'#install-banner',
+   titulo:'Instalar e ser avisado',
+   texto:()=>ehIOS()
+     ? 'A faixa aqui embaixo ensina a colocar o app na tela de início do iPhone: Compartilhar, depois Adicionar à Tela de Início. Vale a pena — o lembrete de revisão do dia só chega depois que o app está instalado.'
+     : 'A faixa aqui embaixo instala o app na tela inicial. Ele passa a abrir em tela cheia, funciona sem internet e libera o lembrete diário das revisões vencidas.'},
+  {tela:'inicio',sel:'#diag-card',titulo:'Comece por aqui',
+   texto:'Antes de tudo, faça o simulado de nivelamento: 15 questões pelas 5 áreas. É com ele que o app descobre seu nível e passa a montar as filas de estudo em cima do que VOCÊ erra, não de um plano genérico. Leva poucos minutos e só se faz uma vez.'}
 ];
 
 let _tourIdx=0,_tourLista=[],_tourRAF=0,_tourFocoAnterior=null,_tourReMedir=0;
@@ -7923,8 +8013,8 @@ function _tourRender(){
         ba=document.getElementById('tour-avancar');
   // textContent, nunca innerHTML (§2) -- e string estatica, mas o padrao vale igual.
   if(prog)prog.textContent=(_tourIdx+1)+' de '+_tourLista.length;
-  if(tit)tit.textContent=p.titulo;
-  if(txt)txt.textContent=p.texto;
+  if(tit)tit.textContent=(typeof p.titulo==='function')?p.titulo():p.titulo;
+  if(txt)txt.textContent=(typeof p.texto==='function')?p.texto():p.texto;
   if(bv)bv.disabled=(_tourIdx===0);
   if(ba)ba.textContent=(_tourIdx===_tourLista.length-1)?'Concluir':'Avançar';
   // Tela baixa (celular deitado): centralizar o alvo parte o espaco livre em duas
@@ -7968,6 +8058,7 @@ function iniciarTutorial(){
   // _navToInner(...,true) em vez de navTo: mesma navegacao SINCRONA (§2), sem o
   // stagger de entrada que atrapalharia a medicao do primeiro passo.
   _navToInner('inicio',true);
+  avaliarConviteInstalar(true);   // b123: força o banner existir a tempo do passo do tour (R8/R9)
   _tourLista=TOUR_PASSOS.filter(_tourAplicavel);
   if(!_tourLista.length)return;
   _tourIdx=0;
@@ -8006,7 +8097,7 @@ function talvezIniciarTutorial(ms){
   try{if(localStorage.getItem('tutorialVisto'))return;}catch(_){return;}
   setTimeout(()=>{
     try{if(localStorage.getItem('tutorialVisto'))return;}catch(_){return;}
-    if(document.querySelector('.modal-overlay:not(.hidden)'))return;   // outro modal na frente
+    if(document.querySelector('.modal-overlay:not(.hidden), .rep-overlay.show'))return;   // outro modal ou folha de pagamento na frente (b123)
     const g=document.getElementById('onboard-gate');
     if(g&&g.classList.contains('active'))return;
     const sp=document.getElementById('splash-screen');
@@ -8925,7 +9016,7 @@ document.addEventListener('keydown',e=>{
 // varredura de Esc por reusar a classe .show de outro overlay). Mesma ordem de
 // prioridade de sempre: gate → splash → rep → pix → mais → modal genérico.
 const OVERLAYS_ATIVOS=[
-  {id:'onboard-gate',classe:'active',fechar:()=>adiarOnboard()},
+  {id:'onboard-gate',classe:'active',fechar:()=>fecharOnboard()},
   {id:'splash-screen',classe:'active',fechar:()=>fecharSplash()},
   {id:'rep-overlay',classe:'show',fechar:()=>fecharReporte()},
   {id:'pix-overlay',classe:'show',fechar:()=>fecharPagamento()},
@@ -9004,19 +9095,48 @@ if('serviceWorker' in navigator){
 let deferredPrompt=null;
 function ehStandalone(){return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true;}
 function ehIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent||'');}
+// b123 (R10): CriOS/FxiOS/EdgiOS no iPhone não têm o botão Compartilhar na barra de baixo —
+// só o Safari instala PWA de verdade nesse aparelho.
+function ehIOSNaoSafari(){return ehIOS()&&/CriOS|FxiOS|EdgiOS|OPiOS/i.test(navigator.userAgent||'');}
 function conviteDispensado(){try{var t=localStorage.getItem('installDismiss');return !!t&&(Date.now()-(+t)<2592000000);}catch(_){return false;}}
 function dispensarInstalar(){try{localStorage.setItem('installDismiss',String(Date.now()));}catch(_){}var el=document.getElementById('install-banner');if(el)el.style.display='none';}
 // F1-06: X do aviso de nova versão só esconde nesta sessão — reaparece no próximo deploy real.
 function dispensarSwUpdate(){var el=document.getElementById('sw-update');if(el)el.style.display='none';}
-function instalarApp(){var el=document.getElementById('install-banner');if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.finally(function(){deferredPrompt=null;if(el)el.style.display='none';});}}
-function avaliarConviteInstalar(){
-  if(ehStandalone()||conviteDispensado())return;
-  var el=document.getElementById('install-banner');if(!el)return;
-  var btn=document.getElementById('install-btn'),sub=document.getElementById('install-sub');
-  if(deferredPrompt){if(btn)btn.style.display='';el.style.display='flex';}
-  else if(ehIOS()){if(btn)btn.style.display='none';if(sub)sub.innerHTML='Toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.';el.style.display='flex';}
+// b123 (§6.5): antes usava .finally e ignorava a recusa — Android que recusava o prompt
+// perdia o convite de vez (sem deferredPrompt, o próximo load não achava mais o que mostrar).
+function instalarApp(){
+  var el=document.getElementById('install-banner');
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(function(r){
+    if(r&&r.outcome==='dismissed'){try{localStorage.setItem('installDismiss',String(Date.now()));}catch(_){}}
+    deferredPrompt=null;if(el)el.style.display='none';
+  });
 }
-window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredPrompt=e;avaliarConviteInstalar();});
+function avaliarConviteInstalar(forcar){
+  if(ehStandalone())return;                       // isto NUNCA se força
+  if(!forcar&&conviteDispensado())return;
+  // b123: não subir por cima do tour nem de overlay aberto — reavalia quando fechar (R5).
+  if(!forcar&&document.querySelector('.modal-overlay:not(.hidden), .rep-overlay.show, #onboard-gate.active, #splash-screen.active')){
+    setTimeout(avaliarConviteInstalar,4000);return;
+  }
+  var el=document.getElementById('install-banner');if(!el)return;
+  var tit=document.getElementById('install-titulo');
+  if(deferredPrompt){
+    el.classList.remove('install-guia','nao-safari');el.classList.add('install-cta');el.style.display='';
+    if(tit)tit.textContent=(window.innerWidth>=1024)?'Abrir em janela própria':'Instalar o app';
+  } else if(ehIOS()){
+    el.classList.remove('install-cta');el.classList.add('install-guia');
+    el.classList.toggle('nao-safari',ehIOSNaoSafari());
+    if(tit)tit.textContent='Instalar no iPhone';
+    el.style.display='';
+  }
+}
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();deferredPrompt=e;avaliarConviteInstalar();
+  const mt=document.getElementById('modal-tutorial');            // b123 (R9-bis)
+  if(mt&&!mt.classList.contains('hidden'))_tourRemontar();       // o passo agora tem alvo
+});
 
 // ── Fase 4: notificações push (FCM) ──────────────────────────────
 // VAPID: chave PÚBLICA do par "Certificados push da Web". Firebase Console →
@@ -9082,14 +9202,33 @@ window.addEventListener('load',function(){setTimeout(avaliarConviteInstalar,3000
   <button onclick="aplicarAtualizacao()" style="background:var(--ember);color:#1C1206;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer">Atualizar</button>
   <button onclick="dispensarSwUpdate()" aria-label="Dispensar" style="background:transparent;border:none;color:rgba(255,255,255,.6);font-size:20px;line-height:1;cursor:pointer;flex-shrink:0;padding:9px">×</button>
 </div>
-<div id="install-banner" style="display:none;position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:200;background:var(--navy-2);color:#fff;border:1px solid rgba(240,136,60,.4);border-radius:14px;padding:12px 14px;gap:12px;align-items:center;box-shadow:0 8px 24px rgba(11,20,48,.4);">
-  <img src="assets/icon-192.png" alt="" style="width:40px;height:40px;border-radius:10px;flex-shrink:0"/>
-  <div style="flex:1;min-width:0">
-    <div style="font-size:13px;font-weight:700">Instalar o app na tela inicial</div>
-    <div id="install-sub" style="font-size:12px;color:rgba(255,255,255,.75);line-height:1.4">Acesso rápido, tela cheia e funciona offline.</div>
+<div id="install-banner" style="display:none" class="install-banner" role="region"
+     aria-label="Como instalar o app na tela de início">
+  <div class="install-head">
+    <img src="assets/icon-192.png" alt="" class="install-ico">
+    <div class="install-titulo" id="install-titulo">Instalar no iPhone</div>
+    <button class="install-x" aria-label="Dispensar" onclick="dispensarInstalar()">×</button>
   </div>
-  <button id="install-btn" onclick="instalarApp()" style="display:none;background:var(--ember);color:#1C1206;border:none;border-radius:9px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">Instalar</button>
-  <button onclick="dispensarInstalar()" aria-label="Dispensar" style="background:transparent;border:none;color:rgba(255,255,255,.6);font-size:22px;line-height:1;cursor:pointer;flex-shrink:0;padding:11px">×</button>
+  <!-- só no modo .install-guia -->
+  <ol class="install-passos" role="list">
+    <li><span class="install-num" aria-hidden="true">1</span>
+        <span>Toque em <b>Compartilhar</b> <svg class="install-glifo" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+          <path d="M12 3.5v11" style="stroke:var(--ember)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M8.5 7 12 3.5 15.5 7" style="stroke:var(--ember)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M7.5 10.5H6a1.5 1.5 0 0 0-1.5 1.5v7A1.5 1.5 0 0 0 6 20.5h12a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-1.5" style="stroke:var(--ember)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>, na barra de baixo do Safari.</span></li>
+    <li><span class="install-num" aria-hidden="true">2</span>
+        <span>Role a lista e toque em <b>Adicionar à Tela de Início</b> <svg class="install-glifo" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+          <rect x="3.5" y="3.5" width="17" height="17" rx="4.5" style="stroke:var(--ember)" stroke-width="2"/>
+          <path d="M12 8.5v7M8.5 12h7" style="stroke:var(--ember)" stroke-width="2" stroke-linecap="round"/>
+        </svg>.</span></li>
+  </ol>
+  <p class="install-nota">Depois disso o app abre em tela cheia — e o lembrete de revisão só funciona a partir daí.</p>
+  <p class="install-nota install-nota-safari">Abra este endereço no <b>Safari</b> — só ele instala o app no iPhone.</p>
+  <button class="btn-ghost-dark install-ok" onclick="dispensarInstalar()">Entendi</button>
+  <!-- só no modo .install-cta -->
+  <div class="install-sub" id="install-sub">Acesso rápido, tela cheia e funciona offline.</div>
+  <button id="install-btn" class="install-btn" onclick="instalarApp()">Instalar</button>
 </div>
 </body>
 </html>
