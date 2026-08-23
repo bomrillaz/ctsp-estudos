@@ -305,6 +305,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .lp-passos h3{font-family:var(--font-display);font-size:19px;font-weight:700;color:var(--text);margin-bottom:4px;letter-spacing:.02em;}
 .lp-passos p{font-size:13.5px;line-height:1.6;color:var(--text2);}
 
+/* b126: bloco FIXO de instalação da landing (pré-login, sem X). Todas as variantes
+   moram no HTML e o JS só troca a classe da seção — mesmo padrão do casco único do
+   #install-banner (b124), onde style.display inline vencia qualquer classe. */
+.lp-inst-ios,.lp-inst-outro,.lp-inst-manual,.lp-inst-prompt,.lp-inst-btn{display:none;}
+#lp-instalar.v-ios .lp-inst-ios{display:block;}
+#lp-instalar.v-ios-outro .lp-inst-outro{display:block;}
+#lp-instalar.v-manual .lp-inst-manual{display:block;}
+#lp-instalar.v-prompt .lp-inst-prompt{display:block;}
+#lp-instalar.v-prompt .lp-inst-btn{display:inline-block;margin-top:22px;}
+
 /* Questões calibradas */
 .lp-duas{display:grid;gap:6px;margin-top:6px;}
 .lp-cotas{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap;}
@@ -1260,6 +1270,15 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .install-glifo{width:15px;height:15px;vertical-align:-2px;display:inline-block;margin:0 1px;flex-shrink:0;}
 @media (min-width:1024px){.install-banner{left:auto;right:24px;max-width:420px;}}
 
+/* b126: durante o tour o banner só aparece NO passo dedicado. A ocultação é por
+   visibility, NUNCA display:none — _tourAlvos() descarta alvo com rect 0x0 e o passo
+   "Instalar e ser avisado" sumiria da lista inteira. */
+.install-banner.tour-oculto{visibility:hidden;}
+/* Dispensar no meio do tour deixaria o spotlight iluminando o vazio: quem avança é o
+   botão do tour. O X e o "Entendi" voltam quando o convite é aberto pelo menu. */
+.install-banner.tour-ativo .install-x,
+.install-banner.tour-ativo .install-ok{display:none;}
+
 /* PAINEL DO DIA + selo salvo */
 /* (S64) CSS do card "Hoje" removido — o painel virou KPI no placar de "Meu progresso". */
 /* S47: selos de status da questão */
@@ -1763,13 +1782,43 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="lp-sec-in">
       <div class="lp-label"><i></i>08 · Dúvidas rápidas</div>
       <div class="lp-faq">
-        <div class="lp-card"><h3>Preciso instalar alguma coisa?</h3><p>Não. Abre no navegador. No celular dá para adicionar à tela de início e ela passa a abrir como aplicativo, inclusive sem internet.</p></div>
+        <div class="lp-card"><h3>Preciso instalar alguma coisa?</h3><p>Não. Abre no navegador, como qualquer site. Se quiser, dá para deixar como aplicativo na tela de início — o passo a passo está logo abaixo.</p></div>
         <div class="lp-card"><h3>E se o edital atrasar?</h3><p>O plano vale pelo período contratado a partir da assinatura, independente da data do edital. Por isso o anual, com 13 meses, costuma ser o mais seguro.</p></div>
         <div class="lp-card"><h3>Posso desistir depois de pagar?</h3><p>Pode. São 7 dias de arrependimento a contar do pagamento, com devolução integral, conforme o CDC.</p></div>
         <div class="lp-card"><h3>Perco o progresso se trocar de celular?</h3><p>Não. Ele fica na sua conta, e ainda dá para exportar um backup próprio em Configurações.</p></div>
         <div class="lp-card"><h3>Dá para dividir a conta com um colega?</h3><p>Tecnicamente até dá, mas quebra o que faz a plataforma funcionar: o sistema aprende com cada resposta para calcular o seu Domínio e montar o Treino do dia. Duas pessoas numa conta só embaralham as duas estimativas — nenhum dos dois fica com um treino que reflita o que ele mesmo sabe. Por isso o acesso é individual.</p></div>
       </div>
       <button type="button" class="lp-btn-linha" onclick="abrirDoc('faq')">Ver todas as perguntas</button>
+    </div>
+  </section>
+
+  <!-- ── 09 · INSTALAR ──
+       b126: bloco FIXO (sem X) que substitui o vazamento do #install-banner na tela
+       pré-login. As 4 variantes moram no HTML; o JS (montarInstalarLanding) só troca a
+       classe da seção — v-ios / v-ios-outro / v-manual / v-prompt. Nenhuma string entra
+       por innerHTML. Seção some inteira quando o app já está instalado. -->
+  <section class="lp-sec v-manual" id="lp-instalar">
+    <div class="lp-sec-in">
+      <div class="lp-label"><i></i>09 · Deixe como app</div>
+      <h2 class="lp-h2">Um atalho na tela de início e a Prontidão vira aplicativo.</h2>
+      <p class="lp-p">Não é obrigatório — mas instalado ele abre em tela cheia, sem barra de navegador, continua funcionando <b>sem internet</b> e é a única forma de receber o <b>lembrete diário das revisões vencidas</b>.</p>
+
+      <ol class="lp-passos lp-inst-ios">
+        <li><span class="lp-passo-n">1</span><div><h3>Toque em Compartilhar</h3><p>É o quadrado com a seta para cima, na barra de baixo do Safari.</p></div></li>
+        <li><span class="lp-passo-n">2</span><div><h3>Adicionar à Tela de Início</h3><p>Role a lista de opções até achar. Confirme em "Adicionar" e o ícone fica junto dos seus outros apps.</p></div></li>
+      </ol>
+
+      <div class="lp-nota-honesta lp-inst-outro">
+        <b>Abra no Safari.</b> No iPhone só o Safari coloca o app na tela de início — Chrome, Firefox e Edge não têm essa opção. Copie o endereço desta página e abra lá.
+      </div>
+
+      <ol class="lp-passos lp-inst-manual">
+        <li><span class="lp-passo-n">1</span><div><h3>Abra o menu do navegador</h3><p>No celular, os três pontinhos no canto. No computador, o ícone de instalar que aparece do lado direito da barra de endereço.</p></div></li>
+        <li><span class="lp-passo-n">2</span><div><h3>Escolha "Instalar aplicativo"</h3><p>Em alguns navegadores aparece como "Adicionar à tela inicial". No computador a Prontidão passa a abrir em janela própria, sem abas.</p></div></li>
+      </ol>
+
+      <p class="lp-p lp-p-mini lp-inst-prompt">Seu navegador instala direto — é só clicar no botão.</p>
+      <button type="button" class="lp-btn-cta lp-inst-btn" onclick="instalarApp()">Instalar agora</button>
     </div>
   </section>
 
@@ -1890,6 +1939,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <button id="btn-tema" onclick="toggleTemaRapido();toggleHeaderMenu()"><span class="dd-icon" id="tema-icone"></span>Tema</button>
           <button onclick="abrirModalConfig();toggleHeaderMenu()">⚙ Configurações</button>
           <button onclick="iniciarTutorial();toggleHeaderMenu()">🎓 Como funciona</button>
+          <button id="btn-instalar-app" class="hidden" onclick="abrirConviteInstalar();toggleHeaderMenu()">⬇ Instalar app</button>
           <button onclick="location.reload()">↺ Recarregar</button>
           <button onclick="doLogout()">→ Sair</button>
         </div>
@@ -3921,6 +3971,7 @@ function verLanding(){
   const l=document.getElementById('landing-view'),v=document.getElementById('login-view');
   if(v)v.classList.add('hidden');
   if(l)l.classList.remove('hidden');
+  montarInstalarLanding();                         // b126: variante certa ao voltar do login
   window.scrollTo(0,0);
 }
 // Quem chega deslogado cai na APRESENTAÇÃO, não no formulário. A única exceção é
@@ -4280,7 +4331,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.206';
+const APP_VERSAO='v1.207';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -7904,15 +7955,15 @@ const TOUR_PASSOS=[
    titulo:'Simulado, Consulta, Padrões e Meu progresso',
    texto:'Simulado completo na proporção do edital, glossário e normas na Consulta, estatística das provas em Padrões, e seu domínio por área em Meu progresso.'},
   {tela:'inicio',casco:true,sel:'.btn-header-menu',titulo:'Menu',
-   texto:'Tema claro/escuro, configurações e sua conta. É por aqui também que você abre este tutorial de novo, quando quiser.'},
+   texto:'Tema claro/escuro, configurações e sua conta. É por aqui também que você abre este tutorial de novo e instala o app na tela de início, quando quiser.'},
   // b123: dois passos novos, no fim. #install-banner e #diag-card só existem/aparecem em
   // parte dos casos (instalado, dispensado, já nivelado) — o filtro de visibilidade de alvo
   // já existente descarta cada um sozinho quando não se aplica, sem `if` novo aqui.
   {tela:'inicio',casco:true,sel:'#install-banner',
    titulo:'Instalar e ser avisado',
    texto:()=>ehIOS()
-     ? 'A faixa aqui embaixo ensina a colocar o app na tela de início do iPhone: Compartilhar, depois Adicionar à Tela de Início. Vale a pena — o lembrete de revisão do dia só chega depois que o app está instalado.'
-     : 'A faixa aqui embaixo instala o app na tela inicial. Ele passa a abrir em tela cheia, funciona sem internet e libera o lembrete diário das revisões vencidas.'},
+     ? 'A faixa aqui embaixo ensina a colocar o app na tela de início do iPhone: Compartilhar, depois Adicionar à Tela de Início. Vale a pena — o lembrete de revisão do dia só chega depois que o app está instalado. Se quiser deixar para depois, o convite volta no menu ☰, em "Instalar app".'
+     : 'A faixa aqui embaixo instala o app na tela inicial. Ele passa a abrir em tela cheia, funciona sem internet e libera o lembrete diário das revisões vencidas. Se quiser deixar para depois, o convite volta no menu ☰, em "Instalar app".'},
   {tela:'inicio',sel:'#diag-card',titulo:'Comece por aqui',
    texto:'Antes de tudo, faça o simulado de nivelamento: 15 questões pelas 5 áreas. É com ele que o app descobre seu nível e passa a montar as filas de estudo em cima do que VOCÊ erra, não de um plano genérico. Leva poucos minutos e só se faz uma vez.'}
 ];
@@ -7995,9 +8046,26 @@ function _tourPosicionar(){
   box.style.left=left+'px';
 }
 
+// b126: o banner de instalação só pode aparecer NO passo dedicado. Esconder com
+// display:none derrubaria o passo (rect 0x0 -> _tourAlvos descarta -> _tourRender dá
+// splice), então a ocultação é por visibility, que preserva a caixa de layout.
+function _tourSincronizarBanner(){
+  const el=document.getElementById('install-banner');if(!el)return;
+  const p=_tourLista[_tourIdx];
+  el.classList.add('tour-ativo');
+  el.classList.toggle('tour-oculto',!(p&&p.sel==='#install-banner'));
+}
+// Saída do tour pelos 3 caminhos: o banner some e volta ao estado limpo, SEM carimbar
+// dispensa — quem quiser de novo usa o item "Instalar app" do menu.
+function _tourLiberarBanner(){
+  const el=document.getElementById('install-banner');if(!el)return;
+  el.classList.remove('tour-ativo','tour-oculto');
+  el.style.display='none';
+}
 function _tourRender(){
   if(_tourIdx>=_tourLista.length){fecharTutorial();return;}
   const p=_tourLista[_tourIdx];
+  _tourSincronizarBanner();                        // b126: revela o banner só no passo dele
   // Navega ANTES de medir. _navToInner(...,true) pula o stagger de entrada: os
   // cards do painel entram com opacity:0/translateY(16px) e o spotlight fixaria
   // um quadro intermediario da animacao em vez da posicao final.
@@ -8058,7 +8126,12 @@ function iniciarTutorial(){
   // _navToInner(...,true) em vez de navTo: mesma navegacao SINCRONA (§2), sem o
   // stagger de entrada que atrapalharia a medicao do primeiro passo.
   _navToInner('inicio',true);
-  avaliarConviteInstalar(true);   // b123: força o banner existir a tempo do passo do tour (R8/R9)
+  // b123: o banner precisa EXISTIR e ser mensurável antes do filtro, senão o passo
+  // "Instalar e ser avisado" nem entra na lista — avaliarConviteInstalar() já garante
+  // display:'' nas plataformas elegíveis. simplify: o class-add manual de tour-ativo/
+  // tour-oculto que existia aqui era redundante — _tourRender() (chamado à frente, mesmo
+  // turno síncrono, sem repaint no meio) já sincroniza via _tourSincronizarBanner().
+  avaliarConviteInstalar();
   _tourLista=TOUR_PASSOS.filter(_tourAplicavel);
   if(!_tourLista.length)return;
   _tourIdx=0;
@@ -8085,6 +8158,7 @@ function fecharTutorial(e){
   if(_tourRAF){cancelAnimationFrame(_tourRAF);_tourRAF=0;}
   if(_tourReMedir){clearTimeout(_tourReMedir);_tourReMedir=0;}
   const m=document.getElementById('modal-tutorial');if(m)m.classList.add('hidden');
+  _tourLiberarBanner();                            // b126
   try{localStorage.setItem('tutorialVisto','1');}catch(_){}
   if(_tourFocoAnterior&&_tourFocoAnterior.focus){try{_tourFocoAnterior.focus();}catch(_){}}
   _tourFocoAnterior=null;
@@ -8302,6 +8376,10 @@ function showMsg(id,txt,tipo){
 function toggleHeaderMenu(){
   const dd=document.getElementById('header-dropdown');
   if(dd)dd.classList.toggle('hidden');
+  // b126: decidido a cada abertura em vez de uma vez no init — cobre de graça o app
+  // ser instalado no meio da sessão (aí o item some sozinho na próxima abertura).
+  const bi=document.getElementById('btn-instalar-app');
+  if(bi)bi.classList.toggle('hidden',ehStandalone());
 }
 // Fechar dropdown ao clicar fora
 document.addEventListener('click',function(e){
@@ -9098,44 +9176,91 @@ function ehIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent||'');}
 // b123 (R10): CriOS/FxiOS/EdgiOS no iPhone não têm o botão Compartilhar na barra de baixo —
 // só o Safari instala PWA de verdade nesse aparelho.
 function ehIOSNaoSafari(){return ehIOS()&&/CriOS|FxiOS|EdgiOS|OPiOS/i.test(navigator.userAgent||'');}
-function conviteDispensado(){try{var t=localStorage.getItem('installDismiss');return !!t&&(Date.now()-(+t)<2592000000);}catch(_){return false;}}
-function dispensarInstalar(){try{localStorage.setItem('installDismiss',String(Date.now()));}catch(_){}var el=document.getElementById('install-banner');if(el)el.style.display='none';}
+// b126: sem gatilho automático, "dispensar" é só fechar agora. O convite volta pelo
+// item "Instalar app" do menu ☰, então não há mais o que carimbar por 30 dias
+// (installDismiss saiu junto com conviteDispensado()).
+function dispensarInstalar(){var el=document.getElementById('install-banner');if(el)el.style.display='none';}
 // F1-06: X do aviso de nova versão só esconde nesta sessão — reaparece no próximo deploy real.
 function dispensarSwUpdate(){var el=document.getElementById('sw-update');if(el)el.style.display='none';}
-// b123 (§6.5): antes usava .finally e ignorava a recusa — Android que recusava o prompt
-// perdia o convite de vez (sem deferredPrompt, o próximo load não achava mais o que mostrar).
+// b123 (§6.5): antes usava .finally e ignorava a recusa. b126: o carimbo de recusa saiu
+// junto com o gatilho automático — quem recusar o prompt do Android reabre o convite pelo
+// menu ☰ (e sem deferredPrompt cai no fallback de instrução manual, que é honesto).
 function instalarApp(){
   var el=document.getElementById('install-banner');
   if(!deferredPrompt)return;
   deferredPrompt.prompt();
-  deferredPrompt.userChoice.then(function(r){
-    if(r&&r.outcome==='dismissed'){try{localStorage.setItem('installDismiss',String(Date.now()));}catch(_){}}
-    deferredPrompt=null;if(el)el.style.display='none';
+  deferredPrompt.userChoice.then(function(){
+    deferredPrompt=null;                       // o evento vale UMA vez, aceito ou recusado
+    // code-review: display:none aqui derrubaria o passo do tour se #install-btn for
+    // clicado durante ele — o botão não está entre os cobertos por .tour-ativo (só
+    // .install-x/.install-ok estão). Com o tour aberto, quem fecha o banner de vez é
+    // _tourLiberarBanner() (Avançar/Pular/Esc/clique fora), nunca esta função.
+    if(el&&!el.classList.contains('tour-ativo'))el.style.display='none';
+    montarInstalarLanding();                   // landing volta para a instrução manual
   });
 }
-function avaliarConviteInstalar(forcar){
+// simplify: fonte única da árvore de decisão de instalação — antes duplicada, em ordens
+// de branch diferentes, entre avaliarConviteInstalar() e montarInstalarLanding().
+function _varianteInstalar(){
+  if(deferredPrompt)return 'prompt';
+  if(ehIOSNaoSafari())return 'ios-outro';
+  if(ehIOS())return 'ios';
+  return 'manual';
+}
+// b126: só roda SOB DEMANDA — passo do tour, item "Instalar app" do menu ☰, ou o
+// beforeinstallprompt chegando com o tour já aberto. Não existe mais gatilho automático,
+// então caíram: o parâmetro `forcar`, a guarda de overlay aberto (que se reagendava
+// sozinha a cada 4s) e a guarda de dispensa. Quem chama, quer ver.
+function avaliarConviteInstalar(){
   if(ehStandalone())return;                       // isto NUNCA se força
-  if(!forcar&&conviteDispensado())return;
-  // b123: não subir por cima do tour nem de overlay aberto — reavalia quando fechar (R5).
-  if(!forcar&&document.querySelector('.modal-overlay:not(.hidden), .rep-overlay.show, #onboard-gate.active, #splash-screen.active')){
-    setTimeout(avaliarConviteInstalar,4000);return;
-  }
   var el=document.getElementById('install-banner');if(!el)return;
   var tit=document.getElementById('install-titulo');
-  if(deferredPrompt){
+  var v=_varianteInstalar();
+  if(v==='prompt'){
     el.classList.remove('install-guia','nao-safari');el.classList.add('install-cta');el.style.display='';
     if(tit)tit.textContent=(window.innerWidth>=1024)?'Abrir em janela própria':'Instalar o app';
-  } else if(ehIOS()){
+  } else if(v==='ios'||v==='ios-outro'){
     el.classList.remove('install-cta');el.classList.add('install-guia');
-    el.classList.toggle('nao-safari',ehIOSNaoSafari());
+    el.classList.toggle('nao-safari',v==='ios-outro');
     if(tit)tit.textContent='Instalar no iPhone';
     el.style.display='';
   }
+  // v==='manual': banner não tem forma própria — fica invisível (fallback é o toast do abrirConviteInstalar)
+}
+
+// b126: único caminho de mostrar o convite pós-login fora do tour (item do menu ☰).
+// Fora do iOS e sem deferredPrompt o banner não tem forma para assumir — aí a instrução
+// vai por toast, em vez de abrir um card vazio.
+function abrirConviteInstalar(){
+  if(ehStandalone()){showToast('O app já está instalado neste aparelho.');return;}
+  var el=document.getElementById('install-banner');
+  if(el)el.classList.remove('tour-ativo','tour-oculto');   // sobra de um tour interrompido
+  avaliarConviteInstalar();
+  if(el&&el.style.display==='none'){
+    showToast('No menu do navegador, escolha "Instalar aplicativo" ou "Adicionar à tela inicial".');
+  }
+}
+
+// b126: bloco FIXO da landing (#lp-instalar). NÃO é o #install-banner — aquele é o
+// convite sob demanda de dentro do app. Aqui é conteúdo de layout, sem X, e o JS só
+// escolhe a variante: nenhuma string passa por innerHTML.
+function montarInstalarLanding(){
+  var sec=document.getElementById('lp-instalar');if(!sec)return;
+  if(ehStandalone()){sec.classList.add('hidden');return;}  // já instalado: some inteira
+  sec.className='lp-sec v-'+_varianteInstalar();
 }
 window.addEventListener('beforeinstallprompt',function(e){
-  e.preventDefault();deferredPrompt=e;avaliarConviteInstalar();
-  const mt=document.getElementById('modal-tutorial');            // b123 (R9-bis)
-  if(mt&&!mt.classList.contains('hidden'))_tourRemontar();       // o passo agora tem alvo
+  e.preventDefault();deferredPrompt=e;                 // b126: SÓ captura — nunca mostra sozinho
+  montarInstalarLanding();                             // pré-login: instrução manual vira botão real
+  const mt=document.getElementById('modal-tutorial');
+  if(mt&&!mt.classList.contains('hidden')){            // b123 (R9-bis): o passo agora tem alvo
+    avaliarConviteInstalar();
+    // b126: remontar sem render deixava o "x de y" velho. simplify: _tourRender() já
+    // chama _tourSincronizarBanner() internamente — só sincroniza aqui de novo quando
+    // a lista NÃO mudou (senão seria a mesma leitura/toggle repetida à toa).
+    if(_tourRemontar())_tourRender();
+    else _tourSincronizarBanner();
+  }
 });
 
 // ── Fase 4: notificações push (FCM) ──────────────────────────────
@@ -9194,8 +9319,17 @@ async function ativarNotificacoes(){
     atualizarBotaoNotif();
   }catch(e){showToast('Falha ao ativar: '+(e&&e.message?e.message:'erro'));}
 }
-window.addEventListener('appinstalled',function(){deferredPrompt=null;var el=document.getElementById('install-banner');if(el)el.style.display='none';try{localStorage.setItem('installDismiss',String(Date.now()));}catch(_){}});
-window.addEventListener('load',function(){setTimeout(avaliarConviteInstalar,3000);});
+window.addEventListener('appinstalled',function(){
+  deferredPrompt=null;
+  var el=document.getElementById('install-banner');if(el)el.style.display='none';
+  montarInstalarLanding();                             // b126: a seção 09 da landing some
+});
+// b126: o listener de `load` que chamava avaliarConviteInstalar 3s depois de QUALQUER
+// carregamento foi REMOVIDO — era a causa raiz do vazamento pré-login (disparava na
+// landing e no login, sem checar se havia usuário). Pós-login o convite agora só sai do
+// passo do tour ou do item "Instalar app"; pré-login virou a seção fixa #lp-instalar,
+// montada aqui (a landing já está no DOM: este script fecha depois dela).
+montarInstalarLanding();
 </script>
 <div id="sw-update" role="status" style="display:none;position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:200;background:var(--navy-2);color:#fff;border:1px solid var(--ember);border-radius:12px;padding:10px 14px;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 8px 24px rgba(11,20,48,.4);">
   <span style="font-size:13px;font-weight:600">Nova versão disponível</span>
