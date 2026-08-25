@@ -268,6 +268,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 /* Seções */
 .lp-sec{padding:46px 0;}
+.lp-sec-compacta{padding:32px 0;}
+.lp-sec-espacosa{padding:60px 0;}
+#landing-view .lp-sec,#landing-view .lp-cta-final{opacity:0;transform:translateY(18px);transition:opacity .6s ease-out,transform .6s ease-out;}
+#landing-view .lp-sec.lp-in,#landing-view .lp-cta-final.lp-in{opacity:1;transform:translateY(0);}
+@media (prefers-reduced-motion:reduce){
+  #landing-view .lp-sec,#landing-view .lp-cta-final{opacity:1;transform:none;transition:none;}
+}
 .lp-sec-papel2{background:var(--paper-2);}
 .lp-sec-escura{background:var(--navy);color:#fff;}
 .lp-label{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ember-text);margin-bottom:14px;}
@@ -283,10 +290,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 /* Cards genéricos */
 .lp-cards3,.lp-ciencia,.lp-faq{display:grid;gap:12px;margin-top:22px;}
-.lp-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:18px 17px;box-shadow:var(--shadow);}
+.lp-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:18px 17px;box-shadow:var(--shadow);transition:transform .2s ease,box-shadow .2s ease;}
 .lp-card h3{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);margin-bottom:7px;letter-spacing:.02em;}
 .lp-card p{font-size:13.5px;line-height:1.6;color:var(--text2);}
-.lp-card-ic{color:var(--ember-text);font-size:13px;margin-bottom:9px;}
 .lp-card-ciencia{border-top:3px solid var(--ember);}
 .lp-tag{display:inline-block;font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ember-text);background:var(--amber-light);border-radius:20px;padding:4px 11px;margin-bottom:10px;}
 .lp-nota-honesta{margin-top:16px;background:var(--surface);border-left:3px solid var(--navy);border-radius:0 12px 12px 0;padding:14px 16px;font-size:13.5px;line-height:1.6;color:var(--text2);}
@@ -1405,8 +1411,15 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   .lp-hero-fita span{flex:1 1 0;padding:18px 10px;font-size:12.5px;}
   .lp-hero-fita b{font-size:30px;}
   .lp-sec{padding:72px 0;}
-  .lp-cards3{grid-template-columns:repeat(3,1fr);gap:16px;}
-  .lp-ciencia{grid-template-columns:repeat(3,1fr);gap:16px;}
+  .lp-sec-compacta{padding:56px 0;}
+  .lp-sec-espacosa{padding:96px 0;}
+  .lp-cards3{grid-template-columns:1.6fr 1fr;grid-template-rows:repeat(2,1fr);gap:16px;}
+  .lp-cards3 .lp-card:first-child{grid-column:1;grid-row:1/3;display:flex;flex-direction:column;justify-content:center;padding:30px 26px;}
+  .lp-cards3 .lp-card:first-child h3{font-size:22px;}
+  .lp-cards3 .lp-card:first-child p{font-size:15px;line-height:1.65;}
+  .lp-ciencia{grid-template-columns:repeat(3,1fr);gap:16px;align-items:start;}
+  .lp-ciencia .lp-card-ciencia:nth-child(2){margin-top:28px;}
+  .lp-ciencia .lp-card-ciencia:nth-child(3){margin-top:56px;}
   .lp-faq{grid-template-columns:repeat(2,1fr);gap:16px;}
   .lp-duas{grid-template-columns:1fr 1fr;gap:36px;}
   .lp-numeros{grid-template-columns:repeat(6,1fr);}
@@ -1476,6 +1489,11 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   .nav-item:hover{color:#fff;}
   .btn-primary:hover,.btn-revelar:hover,.quiz-next-btn:hover,.foco-cta:not(:disabled):hover{filter:brightness(1.06);}
   .card-btn:hover,.resumo-btn:hover,.inc-btn:hover,.admin-tab:hover,.auth-tab:hover{filter:brightness(.97);}
+  .lp-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+  .lp-btn-cta:hover{filter:brightness(1.06);}
+  .lp-btn-ghost:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.5);}
+  .lp-btn-linha:hover{background:rgba(11,20,48,.06);}
+  .lp-btn-linha-claro:hover{background:rgba(255,255,255,.1);}
 }
 </style>
 </head>
@@ -1562,7 +1580,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="lp-hero-in">
       <div class="lp-eyebrow">Preparação para o CTSP · CBMRS</div>
       <h1 class="lp-h1">O tempo que você tem<br><em>não dá</em> para estudar tudo.</h1>
-      <p class="lp-sub">Dá para estudar o certo. A Prontidão mede o que você já domina, guarda o que você ainda esquece e devolve, todo dia, só o que falta — na proporção em que o edital cobra.</p>
+      <p class="lp-sub">Dá para estudar o certo. A Prontidão mede o que você já domina, guarda o que você ainda esquece e devolve, todo dia, só o que falta, na proporção em que o edital cobra.</p>
       <div class="lp-hero-cta">
         <button type="button" class="lp-btn-cta" onclick="verLogin('register')">Começar com 7 dias grátis</button>
         <button type="button" class="lp-btn-linha" onclick="verLogin('login')">Já tenho conta</button>
@@ -1580,22 +1598,19 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <!-- ── 01 · O QUE É ── -->
   <section class="lp-sec">
     <div class="lp-sec-in">
-      <div class="lp-label"><i></i>01 · O que é</div>
+      <div class="lp-label"><i></i>O que é</div>
       <h2 class="lp-h2">Um instrutor que não esquece o que você errou.</h2>
       <p class="lp-p">A Prontidão é uma plataforma de estudo para o concurso interno de promoção a 2º Sargento do CBMRS. Não é uma pilha de PDF nem um banco de questões solto: é um sistema que acompanha cada resposta sua e usa isso para decidir o que colocar na sua frente amanhã.</p>
       <div class="lp-cards3">
         <div class="lp-card">
-          <div class="lp-card-ic">◆</div>
           <h3>Questões que explicam</h3>
-          <p>Cada alternativa vem com a justificativa em cima da norma — artigo, manual, portaria. Você entende por que errou, não só que errou.</p>
+          <p>Cada alternativa vem com a justificativa em cima da norma: artigo, manual, portaria. Você entende por que errou, não só que errou.</p>
         </div>
         <div class="lp-card">
-          <div class="lp-card-ic">◆</div>
           <h3>Revisão na hora certa</h3>
           <p>Flashcards e resumos voltam sozinhos no dia em que sua memória está prestes a soltar. Não antes, não depois.</p>
         </div>
         <div class="lp-card">
-          <div class="lp-card-ic">◆</div>
           <h3>Treino do dia pronto</h3>
           <p>Você abre e já tem a sessão montada. A decisão de o que estudar sai das suas costas.</p>
         </div>
@@ -1604,14 +1619,14 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   </section>
 
   <!-- ── 02 · PARA QUEM ── -->
-  <section class="lp-sec lp-sec-escura">
+  <section class="lp-sec lp-sec-escura lp-sec-compacta">
     <div class="lp-sec-in">
-      <div class="lp-label lp-label-claro"><i></i>02 · Para quem</div>
+      <div class="lp-label lp-label-claro"><i></i>Para quem</div>
       <h2 class="lp-h2 lp-h2-claro">Feito para quem estuda nas sobras do serviço.</h2>
       <ul class="lp-lista-quem">
-        <li><b>Você já é bombeiro.</b> Seu problema não é aprender do zero — é lembrar na hora exata da prova o que você já viu na rua e no manual.</li>
+        <li><b>Você já é bombeiro.</b> Seu problema não é aprender do zero. É lembrar na hora exata da prova o que você já viu na rua e no manual.</li>
         <li><b>Escala, família, cansaço.</b> Vinte minutos bem direcionados rendem mais do que três horas gastas relendo o que você já sabe.</li>
-        <li><b>É concurso interno.</b> Todo mundo teve acesso ao mesmo manual. A diferença não está em quem leu — está em quem retém.</li>
+        <li><b>É concurso interno.</b> Todo mundo teve acesso ao mesmo manual. A diferença não está em quem leu. Está em quem retém.</li>
       </ul>
     </div>
   </section>
@@ -1619,7 +1634,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <!-- ── 03 · COMO FUNCIONA ── -->
   <section class="lp-sec">
     <div class="lp-sec-in">
-      <div class="lp-label"><i></i>03 · Como funciona</div>
+      <div class="lp-label"><i></i>Como funciona</div>
       <h2 class="lp-h2">Três passos, e o ciclo se fecha sozinho.</h2>
       <ol class="lp-passos">
         <li>
@@ -1628,7 +1643,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         </li>
         <li>
           <span class="lp-passo-n">2</span>
-          <div><h3>A plataforma mede</h3><p>Cada resposta ajusta a estimativa de quanto você domina aquele tópico — descontando acerto por sorte e erro por descuido.</p></div>
+          <div><h3>A plataforma mede</h3><p>Cada resposta ajusta a estimativa de quanto você domina aquele tópico, descontando acerto por sorte e erro por descuido.</p></div>
         </li>
         <li>
           <span class="lp-passo-n">3</span>
@@ -1639,16 +1654,16 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   </section>
 
   <!-- ── 04 · A CIÊNCIA ── -->
-  <section class="lp-sec lp-sec-papel2">
+  <section class="lp-sec lp-sec-papel2 lp-sec-espacosa">
     <div class="lp-sec-in">
-      <div class="lp-label"><i></i>04 · A base científica</div>
+      <div class="lp-label"><i></i>A base científica</div>
       <h2 class="lp-h2">Não é opinião sobre como estudar. É o que a pesquisa já mostrou.</h2>
       <p class="lp-p">Três achados consolidados da psicologia cognitiva sustentam cada decisão da plataforma.</p>
       <div class="lp-ciencia">
         <article class="lp-card lp-card-ciencia">
           <div class="lp-tag">Curva do esquecimento</div>
           <h3>Conhecimento novo despenca em dias</h3>
-          <p>Hermann Ebbinghaus mediu isso ainda no século XIX: o que você aprende hoje evapora rápido se não for revisitado, e a queda é mais forte logo no começo. A resposta não é estudar mais — é <b>voltar no momento certo</b>. A plataforma agenda a revisão para o ponto em que você está prestes a esquecer: antes disso é desperdício, depois disso é recomeço.</p>
+          <p>Hermann Ebbinghaus mediu isso ainda no século XIX: o que você aprende hoje evapora rápido se não for revisitado, e a queda é mais forte logo no começo. A resposta não é estudar mais. É <b>voltar no momento certo</b>. A plataforma agenda a revisão para o ponto em que você está prestes a esquecer: antes disso é desperdício, depois disso é recomeço.</p>
         </article>
         <article class="lp-card lp-card-ciencia">
           <div class="lp-tag">Prática de recuperação</div>
@@ -1658,7 +1673,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <article class="lp-card lp-card-ciencia">
           <div class="lp-tag">Modelo adaptativo</div>
           <h3>BKT para medir, FSRS para agendar</h3>
-          <p>O <b>BKT</b> estima a probabilidade de você dominar cada tópico, descontando o acerto por sorte e o erro por desatenção — por isso ele não é a sua taxa de acerto. O <b>FSRS</b> calcula quando cada item precisa voltar, item por item. Juntos, montam o treino do dia sem que você precise decidir nada.</p>
+          <p>O <b>BKT</b> estima a probabilidade de você dominar cada tópico, descontando o acerto por sorte e o erro por desatenção. Por isso ele não é a sua taxa de acerto. O <b>FSRS</b> calcula quando cada item precisa voltar, item por item. Juntos, montam o treino do dia sem que você precise decidir nada.</p>
         </article>
       </div>
       <div class="lp-nota-honesta">
@@ -1676,10 +1691,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
        acerto. Nada aqui pode sugerir que a plataforma reproduz a prova ou sabe o
        que vai cair. O que se afirma é o sustentável: redação própria a partir da
        norma vigente + análise de INCIDÊNCIA das provas + cotas do edital. -->
-  <section class="lp-sec">
+  <section class="lp-sec lp-sec-espacosa">
     <div class="lp-sec-in">
-      <div class="lp-label"><i></i>05 · As questões</div>
-      <h2 class="lp-h2">Autorais, escritas do zero — e calibradas pelo padrão da banca.</h2>
+      <div class="lp-label"><i></i>As questões</div>
+      <h2 class="lp-h2">Autorais, escritas do zero e calibradas pelo padrão da banca.</h2>
       <div class="lp-duas">
         <div>
           <h3 class="lp-h3">Nenhuma questão copiada</h3>
@@ -1691,9 +1706,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         </div>
         <div>
           <h3 class="lp-h3">Calibradas pela incidência real</h3>
-          <p class="lp-p">Escrever do zero não significa escrever no escuro. As provas de 2017 a 2025 foram analisadas questão a questão para mapear o que a banca cobra, com que frequência e de que jeito — e é esse padrão que orienta o que se escreve e como se escreve.</p>
+          <p class="lp-p">Escrever do zero não significa escrever no escuro. As provas de 2017 a 2025 foram analisadas questão a questão para mapear o que a banca cobra, com que frequência e de que jeito. E é esse padrão que orienta o que se escreve e como se escreve.</p>
           <h3 class="lp-h3">Distribuídas pelas cotas reais do edital</h3>
-          <p class="lp-p">A prova tem 60 questões com cota fixa por área temática. O banco e o treino do dia respeitam essa proporção — estudar demais uma área de cota pequena não aumenta o teto dela.</p>
+          <p class="lp-p">A prova tem 60 questões com cota fixa por área temática. O banco e o treino do dia respeitam essa proporção. Estudar demais uma área de cota pequena não aumenta o teto dela.</p>
           <div class="lp-cotas">
             <div><span>AT1</span><b>14</b></div>
             <div><span>AT2</span><b>8</b></div>
@@ -1708,7 +1723,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="lp-nao-faz-tit">O que a Prontidão não faz</div>
         <ul>
           <li>Não reproduz a prova nem tem "questões que vão cair".</li>
-          <li>Não promete aprovação — nenhuma ferramenta séria promete.</li>
+          <li>Não promete aprovação. Nenhuma ferramenta séria promete.</li>
           <li>Não é material oficial do CBMRS nem da banca, e não tem vínculo institucional com eles.</li>
         </ul>
         <p>O que ela faz é te treinar no padrão que a banca de fato usou nas provas de 2024 e 2025, medido questão a questão.</p>
@@ -1719,9 +1734,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <!-- ── 06 · COMO FOI FEITO ── -->
   <section class="lp-sec lp-sec-escura">
     <div class="lp-sec-in">
-      <div class="lp-label lp-label-claro"><i></i>06 · Como foi feito</div>
+      <div class="lp-label lp-label-claro"><i></i>Como foi feito</div>
       <h2 class="lp-h2 lp-h2-claro">Nasceu do caderno de quem está fazendo a mesma prova.</h2>
-      <p class="lp-p lp-p-claro">A Prontidão começou como o material de estudo de um Bombeiro Militar do CBMRS se preparando para o próprio CTSP. Questões, resumos e flashcards são todos autorais, escritos a partir das mesmas normas que a prova cobra. O que era caderno virou plataforma quando ficou claro que o problema não era falta de conteúdo — era falta de método.</p>
+      <p class="lp-p lp-p-claro">A Prontidão começou como o material de estudo de um Bombeiro Militar do CBMRS se preparando para o próprio CTSP. Questões, resumos e flashcards são todos autorais, escritos a partir das mesmas normas que a prova cobra. O que era caderno virou plataforma quando ficou claro que o problema não era falta de conteúdo. Era falta de método.</p>
       <div class="lp-numeros">
         <div><b>533</b><span>questões no banco</span></div>
         <div><b>174</b><span>flashcards</span></div>
@@ -1739,9 +1754,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
        Bloco comercial do b58 REAPROVEITADO na íntegra: mesmos preços, mesmos dois
        avisos obrigatórios (vigência independente do edital + arrependimento do CDC).
        Só mudou o destino dos botões, que agora abrem a vista de login. -->
-  <section class="lp-sec" id="lp-planos">
+  <section class="lp-sec lp-sec-espacosa" id="lp-planos">
     <div class="lp-sec-in">
-      <div class="lp-label"><i></i>07 · Planos</div>
+      <div class="lp-label"><i></i>Planos</div>
       <section class="planos-wrap" id="planos" aria-labelledby="planos-tit">
         <h2 class="planos-tit" id="planos-tit">Escolha como estudar</h2>
         <p class="planos-sub">Sete dias para testar sem pagar nada. Depois, o plano que fizer sentido para o seu bolso e para o seu prazo.</p>
@@ -1752,7 +1767,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <div class="plano-preco"><span class="plano-valor">R$ 39,90</span><span class="plano-por">/mês</span></div>
             <div class="plano-cond">Pix à vista ou em até 12x de R$ 39,90 sem juros no cartão · total R$ 478,80</div>
             <ul class="plano-lista">
-              <li><b>13 meses de acesso</b> — o primeiro é por nossa conta</li>
+              <li><b>13 meses de acesso</b> (o primeiro é por nossa conta)</li>
               <li>Economia de R$ 239,90 no ano</li>
               <li>Paga uma vez e esquece: sem Pix todo mês</li>
             </ul>
@@ -1768,7 +1783,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <button class="btn-weak plano-btn-weak" onclick="verLogin('register','mensal')">Quero o mensal</button>
           </div>
         </div>
-        <div class="planos-trial">Comece com <b>7 dias grátis</b>. Sem cartão, sem compromisso — se não servir para você, é só não continuar.</div>
+        <div class="planos-trial">Comece com <b>7 dias grátis</b>. Sem cartão, sem compromisso. Se não servir para você, é só não continuar.</div>
         <div class="planos-aviso">
           O plano vale pelo período contratado a partir da assinatura, independente da data de publicação do edital do CTSP.
           Compras online têm <b>7 dias de arrependimento</b>, conforme o Código de Defesa do Consumidor.
@@ -1780,13 +1795,13 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <!-- ── 08 · DÚVIDAS ── -->
   <section class="lp-sec lp-sec-papel2">
     <div class="lp-sec-in">
-      <div class="lp-label"><i></i>08 · Dúvidas rápidas</div>
+      <div class="lp-label"><i></i>Dúvidas rápidas</div>
       <div class="lp-faq">
-        <div class="lp-card"><h3>Preciso instalar alguma coisa?</h3><p>Não. Abre no navegador, como qualquer site. Se quiser, dá para deixar como aplicativo na tela de início — o passo a passo está logo abaixo.</p></div>
+        <div class="lp-card"><h3>Preciso instalar alguma coisa?</h3><p>Não. Abre no navegador, como qualquer site. Se quiser, dá para deixar como aplicativo na tela de início. O passo a passo está logo abaixo.</p></div>
         <div class="lp-card"><h3>E se o edital atrasar?</h3><p>O plano vale pelo período contratado a partir da assinatura, independente da data do edital. Por isso o anual, com 13 meses, costuma ser o mais seguro.</p></div>
         <div class="lp-card"><h3>Posso desistir depois de pagar?</h3><p>Pode. São 7 dias de arrependimento a contar do pagamento, com devolução integral, conforme o CDC.</p></div>
         <div class="lp-card"><h3>Perco o progresso se trocar de celular?</h3><p>Não. Ele fica na sua conta, e ainda dá para exportar um backup próprio em Configurações.</p></div>
-        <div class="lp-card"><h3>Dá para dividir a conta com um colega?</h3><p>Tecnicamente até dá, mas quebra o que faz a plataforma funcionar: o sistema aprende com cada resposta para calcular o seu Domínio e montar o Treino do dia. Duas pessoas numa conta só embaralham as duas estimativas — nenhum dos dois fica com um treino que reflita o que ele mesmo sabe. Por isso o acesso é individual.</p></div>
+        <div class="lp-card"><h3>Dá para dividir a conta com um colega?</h3><p>Tecnicamente até dá, mas quebra o que faz a plataforma funcionar: o sistema aprende com cada resposta para calcular o seu Domínio e montar o Treino do dia. Duas pessoas numa conta só embaralham as duas estimativas. Nenhum dos dois fica com um treino que reflita o que ele mesmo sabe. Por isso o acesso é individual.</p></div>
       </div>
       <button type="button" class="lp-btn-linha" onclick="abrirDoc('faq')">Ver todas as perguntas</button>
     </div>
@@ -1799,9 +1814,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
        por innerHTML. Seção some inteira quando o app já está instalado. -->
   <section class="lp-sec v-manual" id="lp-instalar">
     <div class="lp-sec-in">
-      <div class="lp-label"><i></i>09 · Deixe como app</div>
+      <div class="lp-label"><i></i>Deixe como app</div>
       <h2 class="lp-h2">Um atalho na tela de início e a Prontidão vira aplicativo.</h2>
-      <p class="lp-p">Não é obrigatório — mas instalado ele abre em tela cheia, sem barra de navegador, continua funcionando <b>sem internet</b> e é a única forma de receber o <b>lembrete diário das revisões vencidas</b>.</p>
+      <p class="lp-p">Não é obrigatório, mas instalado ele abre em tela cheia, sem barra de navegador, continua funcionando <b>sem internet</b> e é a única forma de receber o <b>lembrete diário das revisões vencidas</b>.</p>
 
       <ol class="lp-passos lp-inst-ios">
         <li><span class="lp-passo-n">1</span><div><h3>Toque em Compartilhar</h3><p>É o quadrado com a seta para cima, na barra de baixo do Safari.</p></div></li>
@@ -1809,7 +1824,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       </ol>
 
       <div class="lp-nota-honesta lp-inst-outro">
-        <b>Abra no Safari.</b> No iPhone só o Safari coloca o app na tela de início — Chrome, Firefox e Edge não têm essa opção. Copie o endereço desta página e abra lá.
+        <b>Abra no Safari.</b> No iPhone só o Safari coloca o app na tela de início. Chrome, Firefox e Edge não têm essa opção. Copie o endereço desta página e abra lá.
       </div>
 
       <ol class="lp-passos lp-inst-manual">
@@ -1817,7 +1832,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <li><span class="lp-passo-n">2</span><div><h3>Escolha "Instalar aplicativo"</h3><p>Em alguns navegadores aparece como "Adicionar à tela inicial". No computador a Prontidão passa a abrir em janela própria, sem abas.</p></div></li>
       </ol>
 
-      <p class="lp-p lp-p-mini lp-inst-prompt">Seu navegador instala direto — é só clicar no botão.</p>
+      <p class="lp-p lp-p-mini lp-inst-prompt">Seu navegador instala direto. É só clicar no botão.</p>
       <button type="button" class="lp-btn-cta lp-inst-btn" onclick="instalarApp()">Instalar agora</button>
     </div>
   </section>
@@ -1826,7 +1841,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <section class="lp-cta-final">
     <div class="lp-sec-in">
       <h2 class="lp-h2 lp-h2-claro">A prova tem data. Sua memória, não.</h2>
-      <p class="lp-p lp-p-claro">Comece hoje com 7 dias grátis. Sem cartão, sem cobrança automática — se não servir, é só não continuar.</p>
+      <p class="lp-p lp-p-claro">Comece hoje com 7 dias grátis. Sem cartão, sem cobrança automática. Se não servir, é só não continuar.</p>
       <div class="lp-hero-cta">
         <button type="button" class="lp-btn-cta" onclick="verLogin('register')">Criar minha conta</button>
         <button type="button" class="lp-btn-linha lp-btn-linha-claro" onclick="verLogin('login')">Entrar</button>
@@ -1850,6 +1865,22 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
   </footer>
 </div><!-- /#landing-view -->
+<script>
+(function(){
+  var els=document.querySelectorAll('#landing-view .lp-sec,#landing-view .lp-cta-final');
+  if(!els.length)return;
+  if(!('IntersectionObserver' in window)||matchMedia('(prefers-reduced-motion:reduce)').matches){
+    els.forEach(function(el){el.classList.add('lp-in');});
+    return;
+  }
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){entry.target.classList.add('lp-in');io.unobserve(entry.target);}
+    });
+  },{threshold:.12,rootMargin:'0px 0px -60px 0px'});
+  els.forEach(function(el){io.observe(el);});
+})();
+</script>
 
 <div id="login-view" class="hidden">
   <picture>
@@ -4331,7 +4362,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.207';
+const APP_VERSAO='v1.208';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
