@@ -35,7 +35,15 @@ Dois arquivos no núcleo, mais a camada PWA:
 - Padrão de marca transversal: `Documents\Claude\vault\30-marca\BOMRILLAZ_DESIGN.md` (o CTSP é a ORIGEM
   do padrão). Mudança de paleta/tipografia/token de botão reconcilia com esse documento, não decide
   isolada aqui.
-- **Prioridade de dispositivo: iPhone/iOS/Safari → Android → PC.** Regra de desktop sempre dentro de `@media`.
+- **Prioridade de dispositivo (revisado): iOS, Android e PC têm prioridade IGUAL.** Era iPhone/Safari →
+  Android → PC porque o único usuário era o próprio autor; a plataforma virou produto comercial vendido a
+  colegas bombeiros, que não têm todos iPhone. Toda tela nova/alterada tem de ser conferida nas 3 frentes,
+  não só na que originou o pedido. Regra de desktop sempre dentro de `@media`.
+- **Direção de produto: comportar-se como app nativo, sem excluir o navegador puro.** No celular (iOS e
+  Android), pensar a experiência como se fosse instalada — mesmo antes de o usuário instalar o atalho. No
+  PC, como aplicativo de desktop (janela própria, sem cara de "site com abas"). Mas nunca degradar quem
+  decide não instalar: Chrome/Safari/Edge abertos direto no navegador têm de continuar 100% funcionais —
+  instalar é conveniência, não requisito.
 - **IA generativa foi descontinuada (jul/2026).** Não repropor sem pedido explícito.
 - **"Virar app" = PWA, não nativo.** Cobrança roda por fora (Pix / link de cartão).
 
@@ -119,8 +127,8 @@ pós-login (dashboard, domínio, FSRS, RTDB, sync) ou bug relatado que só apare
 saída** pro João abrir a aba (navegador embutido do chat ou Claude in Chrome) e logar ele mesmo. A IA
 nunca digita credencial, só recebe a aba já autenticada e testa sozinha dali (clicar, ler console/rede,
 abrir telas). Não é fallback pra quando lembrar — é o primeiro passo ao terminar a alteração.
-Exceção: bug específico de Safari/iOS precisa do aparelho físico (prioridade de dispositivo do §1), um
-browser genérico não reproduz. Cuidado: não completar sessão de estudo de verdade (Quiz/Treino/Cards)
+Exceção: bug específico de motor de navegador (Safari/iOS, Chrome/Android) precisa do aparelho físico —
+um browser genérico não reproduz o comportamento nativo daquela plataforma. Cuidado: não completar sessão de estudo de verdade (Quiz/Treino/Cards)
 durante o teste — só abrir a tela e confirmar que carrega sem erro, senão suja o histórico de revisão
 espaçada da conta real. Detalhe da técnica: `vault/10-projetos/prontidao-ctsp/licoes/
 login-manual-do-usuario-no-browser-embutido-destrava-teste-com-dado-real.md`.
