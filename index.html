@@ -478,7 +478,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .metas-head-title{font-size:13px;font-weight:700;color:#fff;}
 .metas-head-sub{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);}
 .metas-card.todas .metas-head-sub{color:#46C07A;}
-.dia-fechado{display:flex;align-items:center;gap:10px;background:rgba(70,192,122,.14);border:1px solid rgba(70,192,122,.35);border-radius:14px;padding:10px 12px;margin-top:10px;}
+.dia-fechado{display:flex;align-items:center;gap:10px;background:rgba(70,192,122,.14);border:1px solid rgba(70,192,122,.35);border-radius:14px;padding:10px 12px;margin-top:10px;animation:fadeUp .4s var(--ease-out);}
 .dia-fechado-ic{width:22px;height:22px;border-radius:50%;background:#46C07A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
 .dia-fechado-title{font-size:12.5px;font-weight:800;color:#fff;}
 .dia-fechado-sub{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.75);}
@@ -1498,9 +1498,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 /* ── FASE 5 — POLIMENTO: hover só em ponteiro fino (toque não dispara) ── */
 @media (hover:hover){
   .area-card:hover,.quick-btn:hover,.sim-card:hover,.area-row:hover,
-  .resumo-list-item:hover,.padrao-card:hover,.foco-nota:hover,.foco-item:hover{
+  .resumo-list-item:hover,.padrao-card:hover,.foco-nota:hover,.foco-item:hover,
+  .ver-progresso:hover{
     transform:translateY(-2px);box-shadow:var(--shadow-md);}
-  .adapt-btn:hover,.diag-card:hover{transform:translateY(-2px);}
+  .adapt-btn:hover,.diag-card:hover,.metas-head:hover{transform:translateY(-2px);}
   /* opção só reage no hover ANTES de responder (não sobrescreve certa/errada/selecionada) */
   .quiz-opt:not(.correta):not(.errada):not(.selected):hover{border-color:var(--navy);background:var(--paper-2);}
   .nav-item:hover{color:#fff;}
@@ -4379,7 +4380,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.217';
+const APP_VERSAO='v1.218';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4568,7 +4569,7 @@ function fecharMais(e){if(e&&e.target!==e.currentTarget)return;const o=document.
 function navMais(s){const o=document.getElementById('mais-overlay');if(o)o.classList.remove('open');navTo(s);}
 function animateScreenEntrance(sc){
   // Staggered reveal nos cards filhos
-  const items=sc.querySelectorAll('.area-card,.area-row,.quick-btn,.sim-card,.resumo-list-item,.padrao-card,.user-head,.obj-card,.adapt-btn,.metas-card,#foco-bloco,.ver-progresso,.btn-intercalado,.sim-hist-item');
+  const items=sc.querySelectorAll('.area-card,.area-row,.quick-btn,.sim-card,.resumo-list-item,.padrao-card,.user-head,.obj-card,.adapt-btn,.diag-card:not(.hidden),.metas-card,#foco-bloco,.ver-progresso,.btn-intercalado,.sim-hist-item');
   items.forEach((el,i)=>{
     el.style.opacity='0';
     el.style.transform='translateY(16px)';
