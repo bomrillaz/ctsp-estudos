@@ -20,17 +20,17 @@
      de verdade no Android (ícone, splash, tela cheia sem barra do Chrome) e para o
      app abrir em modo standalone depois de instalado. É ganho parcial, não conserto. -->
 <link rel="manifest" href="manifest.webmanifest"/>
-<title>Prontidão — Plataforma de Estudos para concursos internos do CBMRS</title>
+<title>Prontidão: Plataforma de Estudos para concursos internos do CBMRS</title>
 <meta name="description" content="Prontidão, a plataforma de estudos da Bomrillaz: 533 questões autorais conferidas contra a norma vigente, simulado no formato real da prova, flashcards com revisão espaçada e diagnóstico automático das suas áreas fracas."/>
 <meta property="og:type" content="website"/>
 <meta property="og:site_name" content="Prontidão · Bomrillaz"/>
-<meta property="og:title" content="Prontidão — sua preparação, medida por área e por tópico"/>
+<meta property="og:title" content="Prontidão: sua preparação, medida por área e por tópico"/>
 <meta property="og:description" content="533 questões autorais, simulado no formato real (60Q · 14/8/14/12/12), flashcards com revisão espaçada e um sistema que identifica seu ponto fraco e diz o que estudar."/>
 <meta property="og:image" content="https://bomrillaz.github.io/ctsp-estudos/assets/og-image.png"/>
 <meta property="og:url" content="https://bomrillaz.github.io/ctsp-estudos/"/>
 <meta property="og:locale" content="pt_BR"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="Prontidão — Plataforma de Estudos"/>
+<meta name="twitter:title" content="Prontidão: Plataforma de Estudos"/>
 <meta name="twitter:description" content="533 questões autorais, simulado no formato real e diagnóstico automático do seu desempenho."/>
 <meta name="twitter:image" content="https://bomrillaz.github.io/ctsp-estudos/assets/og-image.png"/>
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://*.googleapis.com https://*.gstatic.com https://*.firebase.com https://*.firebaseio.com https://*.firebaseapp.com https://www.recaptcha.net https://recaptcha.net https://www.google.com https://www.gstatic.com wss://*.firebaseio.com data: blob:; object-src 'none'; base-uri 'self'; form-action 'none';">
@@ -277,8 +277,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .lp-sec-papel2{background:var(--paper-2);}
 .lp-sec-escura{background:var(--navy);color:#fff;}
-.lp-label{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ember-text);margin-bottom:14px;}
-.lp-label i{display:block;width:26px;height:2px;background:var(--fire-line);flex-shrink:0;}
+.lp-label{font-family:var(--font-display);font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ember-text);margin-bottom:14px;}
 .lp-label-claro{color:var(--ember);}
 .lp-h2{font-family:var(--font-display);font-size:clamp(26px,6.4vw,40px);font-weight:700;line-height:1.08;color:var(--text);letter-spacing:.01em;margin-bottom:14px;}
 .lp-h2-claro{color:#fff;}
@@ -539,15 +538,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .theme-seg button{font-size:11px;font-weight:700;padding:7px 11px;border-radius:8px;background:transparent;color:var(--text2);transition:all .15s;}
 .theme-seg button.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow);}
 .dash-body{padding:16px 14px;background:transparent;}
-.sec-title{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:.13em;margin:4px 0 10px;display:flex;align-items:center;justify-content:space-between;position:relative;padding-left:18px;}
-.sec-title::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:11px;height:3px;border-radius:2px;background:var(--fire-line);}
+.sec-title{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:.13em;margin:4px 0 10px;display:flex;align-items:center;justify-content:space-between;}
 .sec-title a{font-size:11px;color:var(--red);font-weight:700;text-transform:none;letter-spacing:0;}
 /* ── Acordeão "Meu progresso" (consolidação dos 5 painéis de análise) ── */
 .mp-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:9px;overflow:hidden;}
 .mp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;cursor:pointer;}
 .mp-head:focus-visible{outline:3px solid var(--ember);outline-offset:-3px;border-radius:12px;}
-.mp-title{font-family:var(--font-display);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--text);display:flex;align-items:center;gap:7px;position:relative;padding-left:16px;}
-.mp-title::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:9px;height:3px;border-radius:2px;background:var(--fire-line);}
+.mp-title{font-family:var(--font-display);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--text);display:flex;align-items:center;gap:7px;}
 .mp-right{display:flex;align-items:center;gap:10px;flex:none;}
 .mp-chev{color:var(--text3);display:flex;transition:transform .22s ease;}
 .mp-item.open .mp-chev{transform:rotate(180deg);}
@@ -572,8 +569,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pg-kpi-delta.down{color:var(--red);}
 .pg-subline{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11.5px;color:var(--text2);margin-bottom:16px;padding:0 2px;}
 .pg-subline b{color:var(--text);font-variant-numeric:tabular-nums;}
-.pg-mod-h{font-family:var(--font-display);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text);margin:4px 0 10px;position:relative;padding-left:16px;}
-.pg-mod-h::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:10px;height:3px;border-radius:2px;background:var(--fire-line);}
+.pg-mod-h{font-family:var(--font-display);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text);margin:4px 0 10px;}
 .pg-legend{display:flex;flex-direction:column;gap:5px;margin:12px 0;font-size:10.5px;color:var(--text2);line-height:1.4;}
 .pg-legend i{display:inline-block;width:16px;height:8px;border-radius:2px;margin-right:7px;vertical-align:-1px;flex-shrink:0;}
 .pg-area-row{display:flex;gap:10px;padding:15px 0;border-top:1px solid var(--line-soft);}
@@ -1515,7 +1511,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <button class="onboard-fechar" type="button" aria-label="Fechar" onclick="fecharOnboard()">✕</button>
     <div class="onboard-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.2 7.8 14.3 14.3 7.8 16.2 9.7 9.7 16.2 7.8"/></svg></div>
     <div class="onboard-title">Antes de responder</div>
-    <div class="onboard-sub">Pra registrar suas respostas, o app precisa saber de onde você está partindo. O <b>simulado de nivelamento</b> são 15 questões pelas 5 áreas do edital — é ele que faz a plataforma adaptar os estudos ao seu nível. Leva poucos minutos e só se faz uma vez.</div>
+    <div class="onboard-sub">Pra registrar suas respostas, o app precisa saber de onde você está partindo. O <b>simulado de nivelamento</b> são 15 questões pelas 5 áreas do edital. É ele que faz a plataforma adaptar os estudos ao seu nível. Leva poucos minutos e só se faz uma vez.</div>
     <button class="onboard-btn" onclick="iniciarOnboardDiagnostico()">Começar nivelamento →</button>
   </div>
 </div>
@@ -1598,7 +1594,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <!-- ── 01 · O QUE É ── -->
   <section class="lp-sec">
     <div class="lp-sec-in">
-      <div class="lp-label"><i></i>O que é</div>
+      <div class="lp-label">O que é</div>
       <h2 class="lp-h2">Um instrutor que não esquece o que você errou.</h2>
       <p class="lp-p">A Prontidão é uma plataforma de estudo para o concurso interno de promoção a 2º Sargento do CBMRS. Não é uma pilha de PDF nem um banco de questões solto: é um sistema que acompanha cada resposta sua e usa isso para decidir o que colocar na sua frente amanhã.</p>
       <div class="lp-cards3">
@@ -1621,7 +1617,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <!-- ── 02 · PARA QUEM ── -->
   <section class="lp-sec lp-sec-escura lp-sec-compacta">
     <div class="lp-sec-in">
-      <div class="lp-label lp-label-claro"><i></i>Para quem</div>
+      <div class="lp-label lp-label-claro">Para quem</div>
       <h2 class="lp-h2 lp-h2-claro">Feito para quem estuda nas sobras do serviço.</h2>
       <ul class="lp-lista-quem">
         <li><b>Você já é bombeiro.</b> Seu problema não é aprender do zero. É lembrar na hora exata da prova o que você já viu na rua e no manual.</li>
@@ -1634,7 +1630,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <!-- ── 03 · COMO FUNCIONA ── -->
   <section class="lp-sec">
     <div class="lp-sec-in">
-      <div class="lp-label"><i></i>Como funciona</div>
+      <div class="lp-label">Como funciona</div>
       <h2 class="lp-h2">Três passos, e o ciclo se fecha sozinho.</h2>
       <ol class="lp-passos">
         <li>
@@ -1656,7 +1652,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <!-- ── 04 · A CIÊNCIA ── -->
   <section class="lp-sec lp-sec-papel2 lp-sec-espacosa">
     <div class="lp-sec-in">
-      <div class="lp-label"><i></i>A base científica</div>
+      <div class="lp-label">A base científica</div>
       <h2 class="lp-h2">Não é opinião sobre como estudar. É o que a pesquisa já mostrou.</h2>
       <p class="lp-p">Três achados consolidados da psicologia cognitiva sustentam cada decisão da plataforma.</p>
       <div class="lp-ciencia">
@@ -1693,7 +1689,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
        norma vigente + análise de INCIDÊNCIA das provas + cotas do edital. -->
   <section class="lp-sec lp-sec-espacosa">
     <div class="lp-sec-in">
-      <div class="lp-label"><i></i>As questões</div>
+      <div class="lp-label">As questões</div>
       <h2 class="lp-h2">Autorais, escritas do zero e calibradas pelo padrão da banca.</h2>
       <div class="lp-duas">
         <div>
@@ -1734,7 +1730,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <!-- ── 06 · COMO FOI FEITO ── -->
   <section class="lp-sec lp-sec-escura">
     <div class="lp-sec-in">
-      <div class="lp-label lp-label-claro"><i></i>Como foi feito</div>
+      <div class="lp-label lp-label-claro">Como foi feito</div>
       <h2 class="lp-h2 lp-h2-claro">Nasceu do caderno de quem está fazendo a mesma prova.</h2>
       <p class="lp-p lp-p-claro">A Prontidão começou como o material de estudo de um Bombeiro Militar do CBMRS se preparando para o próprio CTSP. Questões, resumos e flashcards são todos autorais, escritos a partir das mesmas normas que a prova cobra. O que era caderno virou plataforma quando ficou claro que o problema não era falta de conteúdo. Era falta de método.</p>
       <div class="lp-numeros">
@@ -1756,7 +1752,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
        Só mudou o destino dos botões, que agora abrem a vista de login. -->
   <section class="lp-sec lp-sec-espacosa" id="lp-planos">
     <div class="lp-sec-in">
-      <div class="lp-label"><i></i>Planos</div>
+      <div class="lp-label">Planos</div>
       <section class="planos-wrap" id="planos" aria-labelledby="planos-tit">
         <h2 class="planos-tit" id="planos-tit">Escolha como estudar</h2>
         <p class="planos-sub">Sete dias para testar sem pagar nada. Depois, o plano que fizer sentido para o seu bolso e para o seu prazo.</p>
@@ -1795,7 +1791,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <!-- ── 08 · DÚVIDAS ── -->
   <section class="lp-sec lp-sec-papel2">
     <div class="lp-sec-in">
-      <div class="lp-label"><i></i>Dúvidas rápidas</div>
+      <div class="lp-label">Dúvidas rápidas</div>
       <div class="lp-faq">
         <div class="lp-card"><h3>Preciso instalar alguma coisa?</h3><p>Não. Abre no navegador, como qualquer site. Se quiser, dá para deixar como aplicativo na tela de início. O passo a passo está logo abaixo.</p></div>
         <div class="lp-card"><h3>E se o edital atrasar?</h3><p>O plano vale pelo período contratado a partir da assinatura, independente da data do edital. Por isso o anual, com 13 meses, costuma ser o mais seguro.</p></div>
@@ -1814,7 +1810,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
        por innerHTML. Seção some inteira quando o app já está instalado. -->
   <section class="lp-sec v-manual" id="lp-instalar">
     <div class="lp-sec-in">
-      <div class="lp-label"><i></i>Deixe como app</div>
+      <div class="lp-label">Deixe como app</div>
       <h2 class="lp-h2">Um atalho na tela de início e a Prontidão vira aplicativo.</h2>
       <p class="lp-p">Não é obrigatório, mas instalado ele abre em tela cheia, sem barra de navegador, continua funcionando <b>sem internet</b> e é a única forma de receber o <b>lembrete diário das revisões vencidas</b>.</p>
 
@@ -1930,7 +1926,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <div id="tab-pending" class="hidden">
         <div class="pending-box">
           <strong style="color:var(--text);font-size:15px;">Este acesso está aguardando liberação manual.</strong><br>
-          <span style="display:inline-block;margin-top:10px;">A liberação costuma sair em <strong>até 24h</strong>. Assim que for liberada, é só entrar com o mesmo e-mail e senha — não precisa cadastrar de novo.</span>
+          <span style="display:inline-block;margin-top:10px;">A liberação costuma sair em <strong>até 24h</strong>. Assim que for liberada, é só entrar com o mesmo e-mail e senha, não precisa cadastrar de novo.</span>
           <span style="display:block;margin-top:12px;">
             <button class="pix-copiar" style="font-size:14px;padding:13px;" onclick="abrirPagamento(planoEscolhido())">Pagar com Pix</button>
           </span>
@@ -2303,9 +2299,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <div class="tela-h-title">Padrões das Provas</div>
           <div class="tela-h-sub">Metodologia e tópicos de alta incidência · CTSP 2024/2025</div>
         </div>
-        <div class="padroes-base">Metodologia validada contra as provas de 2017 a 2025 — os temas de alta incidência se confirmam nas provas recentes. O conteúdo do site segue as cotas e o programa do edital vigente.</div>
+        <div class="padroes-base">Metodologia validada contra as provas de 2017 a 2025: os temas de alta incidência se confirmam nas provas recentes. O conteúdo do site segue as cotas e o programa do edital vigente.</div>
         <div class="sec-title">Tipos de questão</div>
-        <div class="padroes-base">Medido nas <b>2 últimas provas</b> (109 questões): Caderno do Edital 004/2025 e a prova anterior. Duas provas são pouca base — onde a amostra não sustenta um percentual, mostramos a contagem crua.</div>
+        <div class="padroes-base">Medido nas <b>2 últimas provas</b> (109 questões): Caderno do Edital 004/2025 e a prova anterior. Duas provas são pouca base: onde a amostra não sustenta um percentual, mostramos a contagem crua.</div>
         <div id="padroes-lista"></div>
         <!-- B58: o bloco "Seu desempenho por formato" (BLOCO 35) foi REMOVIDO desta
              tela — decisão do João: o dado não mudava nenhuma decisão de estudo.
@@ -2977,7 +2973,7 @@ function mostrarAlertaConexao(on){
   alertaConexao=on;
   const el=document.getElementById('dash-reload-alert');if(!el)return;
   const sp=el.querySelector('span');
-  if(on){if(sp)sp.textContent='Sem conexão com o servidor — progresso protegido';el.style.display='flex';}
+  if(on){if(sp)sp.textContent='Sem conexão com o servidor: progresso protegido';el.style.display='flex';}
   else{if(sp)sp.textContent='Dados não carregaram';el.style.display='none';}
 }
 let userCards={};
@@ -3342,7 +3338,7 @@ function revisarTopico(t){
   const m=materialDoTopico(t);
   navTo('resumos');
   if(m.resumos.length)mostrarResumoDirecto(m.resumos[0].id);
-  else{renderResumos();showToast('Este tópico ainda não tem resumo — revise pelos flashcards.');}
+  else{renderResumos();showToast('Este tópico ainda não tem resumo. Revise pelos flashcards.');}
 }
 
 // Abre a aba de cards já filtrada por um tópico (usado no ciclo erro → flashcard).
@@ -3769,14 +3765,14 @@ dica:"Itens em algarismo romano e alternativas que os combinam. Um único item e
 estrategia:"Avalie item por item, nunca o conjunto. Ao achar um item falso, risque de uma vez todas as alternativas que o incluem.",
 exemplo:"a1_13"},
 {tipo:"Enunciado negativo (INCORRETA / EXCETO)",pct:17,medida:"17%",nota:"19 de 109 · TRANSVERSAL: vem junto de qualquer formato acima, não é um tipo à parte",corT:"var(--red)",transversal:true,
-dica:"Não é um formato: é o enunciado pedindo a alternativa ERRADA. A pegadinha costuma ser sutil — 'ÚTEIS' vs 'CORRIDOS', 'VEDADO' vs 'FACULTADO'.",
+dica:"Não é um formato: é o enunciado pedindo a alternativa ERRADA. A pegadinha costuma ser sutil: 'ÚTEIS' vs 'CORRIDOS', 'VEDADO' vs 'FACULTADO'.",
 estrategia:"Marque a palavra INCORRETA/EXCETO antes de ler as alternativas. Depois leia cada uma assumindo que está certa: a que destoar da norma é a resposta.",
 exemplo:"a1_07"},
-{tipo:"V/F Sequencial",pct:4,medida:"raro",nota:"4 de 109 questões — amostra pequena demais para cravar percentual",corT:"var(--at3)",
+{tipo:"V/F Sequencial",pct:4,medida:"raro",nota:"4 de 109 questões, amostra pequena demais para cravar percentual",corT:"var(--at3)",
 dica:"Marcar ( ) V ou F e escolher a sequência. Apareceu pouco nas duas últimas provas, mas vale reconhecer o formato.",
 estrategia:"Comece pelos itens de que você tem certeza: um V ou F certo já derruba várias sequências de uma vez.",
 exemplo:null},
-{tipo:"Correspondência Ordenada",pct:0,medida:"não caiu",nota:"0 de 109 questões nas provas de 2024 e 2025 — não priorize este formato",corT:"var(--text3)",
+{tipo:"Correspondência Ordenada",pct:0,medida:"não caiu",nota:"0 de 109 questões nas provas de 2024 e 2025, não priorize este formato",corT:"var(--text3)",
 dica:"Casar colunas ou numerar itens em ordem. NÃO apareceu em nenhuma das duas últimas provas analisadas.",
 estrategia:"Não vale gastar tempo treinando este formato. Fica listado apenas para você reconhecê-lo caso a banca mude o padrão.",
 exemplo:null}
@@ -4168,7 +4164,7 @@ async function loadUserData(){
   // S30 BUG-DATA: se o Firebase não respondeu, NUNCA seguir com zeros graváveis.
   if(!dataLoaded){
     const esp=lerEspelho();
-    if(esp){userStats={...PROG_DEFAULT,...esp};progressoLocalOk=true;showToast('Sem conexão — usando dados salvos no aparelho');}
+    if(esp){userStats={...PROG_DEFAULT,...esp};progressoLocalOk=true;showToast('Sem conexão: usando dados salvos no aparelho');}
     const espCards=lerEspelhoCards();
     if(espCards)userCards=espCards; // flashcards do espelho local enquanto offline
     mostrarAlertaConexao(true);
@@ -4199,7 +4195,7 @@ async function loadUserData(){
     if(savePendente&&progressoLocalOk){
       // Progresso local (espelho + sessão) vence: este aparelho tinha o último estado bom.
       dataLoaded=true;savePendente=false;mostrarAlertaConexao(false);
-      saveProg();showToast('Conexão restabelecida — progresso sincronizado');
+      saveProg();showToast('Conexão restabelecida, progresso sincronizado');
       renderDashboard();updateBadges();return;
     }
     if(s.exists()||lerEspelho()){
@@ -4261,7 +4257,7 @@ async function saveProg(){
   }catch(e){
     console.warn('saveProg 1ª tentativa:',e.message);
     try{await ref.set(bktParaFirebase(userStats));}
-    catch(e2){savePendente=true;showToast('Sem conexão — progresso guardado no aparelho');}
+    catch(e2){savePendente=true;showToast('Sem conexão: progresso guardado no aparelho');}
   }finally{
     _saveEmCurso=false;
     sincronizarAgendaPush(); // atualiza a data da próxima revisão p/ o push condicional
@@ -4362,7 +4358,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.215';
+const APP_VERSAO='v1.216';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5194,7 +5190,7 @@ function renderChart(){
   const ml=document.getElementById('atividade-meta');
   if(ml){const mb=Math.min(78,Math.round(meta/maxN*72));ml.style.bottom=mb+'px';ml.innerHTML='<span class="pg-meta-lbl">meta '+meta+'</span>';}
   const ct=document.getElementById('chart-total-week');
-  if(ct)ct.textContent=totalSemana>0?totalSemana+' essa semana':'Comece hoje — seu progresso aparece aqui';
+  if(ct)ct.textContent=totalSemana>0?totalSemana+' essa semana':'Comece hoje: seu progresso aparece aqui';
   const st=document.getElementById('atividade-streak');
   if(st)st.innerHTML='<span class="pg-streak-badge">'+naMeta+'/7 dias na meta</span>'+((userStats.streak||0)>0?'<span class="pg-streak-badge">'+userStats.streak+' dias seguidos</span>':'');
   {const g=document.getElementById('glance-semana');if(g)g.innerHTML=totalSemana>0?totalSemana+'<small> q</small>':'—';}
@@ -5688,7 +5684,7 @@ function renderQuizQ(){
   btnRevelar.textContent='👁 Revelar alternativas';
   const dica=document.createElement('div');
   dica.className='revelar-dica';
-  dica.textContent='Tente responder de cabeça antes de ver as opções — lembrar sem dica fixa melhor o conteúdo.';
+  dica.textContent='Tente responder de cabeça antes de ver as opções: lembrar sem dica fixa melhor o conteúdo.';
   btnRevelar.onclick=()=>{opts.style.display='flex';btnRevelar.remove();dica.remove();};
   opts.parentNode.insertBefore(btnRevelar,opts);
   opts.parentNode.insertBefore(dica,opts);
@@ -5850,7 +5846,7 @@ function mostrarFimSessao(){
   const c=quizSessao.c,t=quizSessao.t,pct=t?Math.round(c/t*100):0;
   const g=id=>document.getElementById(id);
   const cfg=configFimSessao(quizArea);
-  const subBase=pct>=70?(cfg.diario?'Mandou bem. Objetivo do dia cumprido.':'Mandou bem.'):pct>=50?'Bom trabalho — o reforço fixa o resto.':'O que vale é a constância; o que você errou volta espaçado.';
+  const subBase=pct>=70?(cfg.diario?'Mandou bem. Objetivo do dia cumprido.':'Mandou bem.'):pct>=50?'Bom trabalho, o reforço fixa o resto.':'O que vale é a constância; o que você errou volta espaçado.';
   const md=tempoMedioQuestao();
   const ritmo=md?` Ritmo ${fmtRitmo(md)}/questão${md>TEMPO_PROVA_POR_Q?' (acima dos 3min da prova)':''}.`:'';
   g('fim-title').textContent=cfg.titulo;
@@ -5947,7 +5943,7 @@ function _estudoCards(){
     body.innerHTML=`<div class="cards-done">
       <div class="cards-done-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.5 13l1.5 8-5-3-5 3 1.5-8"/></svg></div>
       <div class="cards-done-title">${restam>0?'✓ Meta de flashcards concluída':'Revisão concluída!'}</div>
-      <div class="cards-done-sub">${restam>0?`Memória ativada. Agora fixe respondendo — recuperar em prova consolida ainda mais.`:(filtro?'Todos os cards deste tópico foram revisados.':'Todos os cards revisados. Fixe com questões no Treino.')}</div>
+      <div class="cards-done-sub">${restam>0?`Memória ativada. Agora fixe respondendo: recuperar em prova consolida ainda mais.`:(filtro?'Todos os cards deste tópico foram revisados.':'Todos os cards revisados. Fixe com questões no Treino.')}</div>
       ${origemReforco==='quiz'?`<button class="btn-weak" style="margin-top:12px" onclick="voltarAoQuizDoReforco()">← Voltar à questão</button>`:''}
       ${origemReforco!=='quiz'?`<button class="btn-primary" style="margin-top:12px;width:100%" onclick="abrirIntro('treino')">Fixar no Treino do dia →</button>`:''}
       ${restam>0&&origemReforco!=='quiz'?`<button class="btn-weak" style="margin-top:8px" onclick="maisCards()">Fazer mais ${Math.min(dose('cards'),restam)}</button>`:''}
@@ -6158,7 +6154,7 @@ function snippetResumo(r,q){
 function renderBuscaResultados(q,resumos,cards,glossario,normas){
   glossario=glossario||[];normas=normas||[];
   if(!resumos.length&&!cards.length&&!glossario.length&&!normas.length){
-    return `<div style="text-align:center;padding:30px 16px;color:var(--text2)">Nada encontrado para “<b>${sanitize(q)}</b>”.<br><span style="font-size:12.5px;color:var(--text3)">Tente outra palavra — o assunto, não a pergunta inteira.</span></div>`;
+    return `<div style="text-align:center;padding:30px 16px;color:var(--text2)">Nada encontrado para “<b>${sanitize(q)}</b>”.<br><span style="font-size:12.5px;color:var(--text3)">Tente outra palavra, não a pergunta inteira.</span></div>`;
   }
   const item=(titulo,corpo,tag,onclick)=>`<div class="resumo-list-item"${onclick?` onclick="${onclick}" style="cursor:pointer"`:' style="border-left:3px solid var(--blue)"'}>
       <div style="font-weight:700;font-size:14px">${titulo}</div>
@@ -6176,11 +6172,11 @@ function renderBuscaResultados(q,resumos,cards,glossario,normas){
   }
   if(glossario.length){
     h+=`<div class="busca-grupo" style="margin-top:14px">Glossário · ${glossario.length}</div>`;
-    h+=glossario.map(t=>item(destacarBusca(t.t+(t.x?' — '+t.x:''),q),destacarBusca(t.d,q),'',`abrirGlossarioBusca(${GLOSARIO.indexOf(t)})`)).join('');
+    h+=glossario.map(t=>item(destacarBusca(t.t+(t.x?' ('+t.x+')':''),q),destacarBusca(t.d,q),'',`abrirGlossarioBusca(${GLOSARIO.indexOf(t)})`)).join('');
   }
   if(normas.length){
     h+=`<div class="busca-grupo" style="margin-top:14px">Normas · ${normas.length}</div>`;
-    h+=normas.map(n=>item(destacarBusca(n.s,q),destacarBusca(n.n+' — '+n.d,q),'',`abrirNormaBusca(${NORMAS.indexOf(n)})`)).join('');
+    h+=normas.map(n=>item(destacarBusca(n.s,q),destacarBusca(n.n+': '+n.d,q),'',`abrirNormaBusca(${NORMAS.indexOf(n)})`)).join('');
   }
   return h;
 }
@@ -6246,7 +6242,7 @@ function toggleAcc(btn){const it=btn.closest('.acc-item');if(!it)return;const op
 function gloCard(t){
   return `<div class="acc-item" id="glo-${GLOSARIO.indexOf(t)}">
     <button class="acc-head" type="button" aria-expanded="false" onclick="toggleAcc(this)">
-      <span class="acc-head-main"><span class="acc-sigla">${sanitize(t.t)}${t.x?` <small>— ${sanitize(t.x)}</small>`:''}</span></span>
+      <span class="acc-head-main"><span class="acc-sigla">${sanitize(t.t)}${t.x?` <small>(${sanitize(t.x)})</small>`:''}</span></span>
       ${_CHEV_ACC}
     </button>
     <div class="acc-body">
@@ -6291,7 +6287,7 @@ function renderNormas(){
   const cont=document.getElementById('normas-content');if(!cont)return;
   const areas=[['AT1','Segurança Contra Incêndios'],['AT2','Combate a Incêndios'],['AT3','Buscas e Salvamentos'],['AT4','Direito'],['AT5','Normas e Doc. Técnica']];
   const lista=(typeof NORMAS!=='undefined')?NORMAS:[];
-  let h=`<div style="font-size:11.5px;color:var(--text3);margin-bottom:12px">O que cada norma do edital aborda — toque para ver o resumo.</div>`;
+  let h=`<div style="font-size:11.5px;color:var(--text3);margin-bottom:12px">O que cada norma do edital aborda. Toque para ver o resumo.</div>`;
   areas.forEach(([a,nome])=>{
     const g=lista.filter(n=>n.a===a);if(!g.length)return;
     h+=`<div class="busca-grupo">${a} · ${sanitize(nome)}</div>`;
@@ -6334,7 +6330,7 @@ function _hubResumos(){
   const content=document.getElementById('resumos-content');
   const cta = fila.length>0
     ? `<button class="btn-primary" style="width:100%" onclick="iniciarMetaResumos()">Iniciar meta de hoje · ${fila.length} resumo${fila.length!==1?'s':''}</button>
-       <div class="hub-hint">Leitura é preparo — o teste fica no Treino. Ou toque um resumo abaixo para ler avulso.</div>`
+       <div class="hub-hint">Leitura é preparo, o teste fica no Treino. Ou toque um resumo abaixo para ler avulso.</div>`
     : (acervo>0
         ? `<div class="hub-ok">✓ Meta de resumos concluída hoje</div><button class="btn-weak" style="width:100%" onclick="iniciarMetaResumos()">Ler mais assim mesmo</button>`
         : `<div class="hub-ok">✓ Resumos em dia</div><div class="hub-hint">Próximas revisões já agendadas. Fixe com questões no Treino.</div>`);
@@ -6352,7 +6348,7 @@ function _estudoResumos(){
     content.innerHTML=(acervo>0
       ? `<div style="text-align:center;padding:22px 12px 8px;">
            <div style="font-size:15px;font-weight:800;color:var(--green);margin-bottom:4px">✓ Meta de resumos concluída</div>
-           <div style="font-size:12.5px;color:var(--text2)">Terreno preparado. Agora <b>teste o que leu</b> — recuperar fixa muito mais que reler.</div>
+           <div style="font-size:12.5px;color:var(--text2)">Terreno preparado. Agora <b>teste o que leu</b>: recuperar fixa muito mais que reler.</div>
          </div>
          <div style="text-align:center;margin-bottom:10px"><button class="btn-primary" style="width:100%" onclick="abrirIntro('treino')">Testar no Treino do dia →</button></div>
          <div style="text-align:center;margin-bottom:10px"><button class="btn-weak" onclick="maisResumos()">Ler mais ${Math.min(dose('resumos'),acervo)} resumo${Math.min(dose('resumos'),acervo)!==1?'s':''}</button></div>`
@@ -6384,7 +6380,7 @@ function _estudoResumos(){
       <button class="resumo-audio-btn" id="resumo-audio-btn" onclick="ouvirResumo('${r.id}')">▶ Ouvir este resumo</button>
       <div class="resumo-avaliar">
         <div class="resumo-avaliar-title">Como foi? (agenda próxima revisão)</div>
-        <div style="font-size:11.5px;color:var(--text3);margin:-4px 0 8px">Toque uma opção para concluir — só ler não baixa a fila do dia.</div>
+        <div style="font-size:11.5px;color:var(--text3);margin:-4px 0 8px">Toque uma opção para concluir. Só ler não baixa a fila do dia.</div>
         <div class="resumo-btns">
           <button class="resumo-btn dif" onclick="avaliarResumo('dif')">Difícil<br><small>Em breve</small></button>
           <button class="resumo-btn med" onclick="avaliarResumo('med')">Médio<br><small>Em 3 dias</small></button>
@@ -6482,7 +6478,7 @@ function mostrarResumoDirecto(id){
       </div>`:`
       <div class="resumo-avaliar">
         <div class="resumo-avaliar-title">Como foi?</div>
-        <div style="font-size:11.5px;color:var(--text3);margin:-4px 0 8px">Toque uma opção para concluir — só ler não baixa a fila do dia.</div>
+        <div style="font-size:11.5px;color:var(--text3);margin:-4px 0 8px">Toque uma opção para concluir. Só ler não baixa a fila do dia.</div>
         <div class="resumo-btns">
           <button class="resumo-btn dif" onclick="avaliarResumo('dif')">Difícil</button>
           <button class="resumo-btn med" onclick="avaliarResumo('med')">Médio</button>
@@ -6907,7 +6903,7 @@ function mostrarExemplo(qid){
   quizQueue=[q];quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;quizArea=q.area;
   document.getElementById('quiz-home-view').classList.add('hidden');
   document.getElementById('quiz-running-view').classList.remove('hidden');
-  document.getElementById('quiz-area-tag').textContent='Exemplo — '+q.area;
+  document.getElementById('quiz-area-tag').textContent='Exemplo: '+q.area;
   renderQuizQ();
 }
 
@@ -7212,7 +7208,7 @@ async function _cobSet(uid,obj){
   try{await db.ref('usuarios/'+uid+'/cob').update(obj);return true;}
   catch(err){
     console.error('cob erro:',err);
-    showToast('Não gravou a cobrança: '+err.message+' — confira as regras do RTDB.');
+    showToast('Não gravou a cobrança: '+err.message+'. Confira as regras do RTDB.');
     return false;
   }
 }
@@ -7242,7 +7238,7 @@ async function marcarPago(uid){
   // b115: mostra de-onde-pra-onde o vencimento vai antes de gravar — é o que faltava
   // pra pegar o caso de já ter acabado de definir o plano no mesmo atendimento.
   const deTxt=st.prox?`de ${fmtData(st.prox)} `:'';
-  if(!confirm(`Marcar como pago?\nVencimento vai ${deTxt}para ${fmtData(prox)} (mais ${plano==='anual'?'13 meses':'1 mês'}).\n\nJá tinha acabado de definir o plano agora? Isto SOMA outro ciclo em cima — não repita.`))return;
+  if(!confirm(`Marcar como pago?\nVencimento vai ${deTxt}para ${fmtData(prox)} (mais ${plano==='anual'?'13 meses':'1 mês'}).\n\nJá tinha acabado de definir o plano agora? Isto SOMA outro ciclo em cima, não repita.`))return;
   if(await _cobSet(uid,{plano,meio:(u.cob&&u.cob.meio)||(plano==='anual'?'cartao':'pix'),prox,pago:Date.now()}))
     showToast('Pago · próximo vencimento '+fmtData(prox));
   loadAdminUsers();
@@ -7271,7 +7267,7 @@ async function voltarParaTeste(uid){
 // já corrige o caso comum automaticamente, mas este botão força a sincronização quando preciso.
 async function sincronizarBanco(){
   if(!isAdmin())return;
-  if(!confirm('Sincronizar questões (QI) e flashcards (FCI) com o Firebase?\n\nEspelho completo: o Firebase passa a ser IDÊNTICO ao index.html — adiciona itens novos, atualiza existentes E remove do Firebase qualquer item que não exista mais no QI/FCI local (órfãos de limpezas/consolidações anteriores).'))return;
+  if(!confirm('Sincronizar questões (QI) e flashcards (FCI) com o Firebase?\n\nEspelho completo: o Firebase passa a ser IDÊNTICO ao index.html. Adiciona itens novos, atualiza existentes E remove do Firebase qualquer item que não exista mais no QI/FCI local (órfãos de limpezas/consolidações anteriores).'))return;
   const mapa={};
   Object.entries(QI).forEach(([area,qs])=>{
     const areaKey=area.replace(/B$/,'');
@@ -7686,7 +7682,7 @@ function renderAreaDetalhe(k){
   const proj=r?(r.proj[k]||0):0;
   const projTxt=(!r||nResp<5)?'estimativa inicial':('~'+proj.toFixed(1).replace('.',',')+' de '+cota+' pts');
   const pos=temEv?posicaoArea(k,perfil):null;
-  const posTxt=pos?(pos.pos+'ª de '+pos.de+' áreas com dados'):'ainda sem posição — poucas respostas';
+  const posTxt=pos?(pos.pos+'ª de '+pos.de+' áreas com dados'):'ainda sem posição, poucas respostas';
   const dec=temEv?decompoePorque(k):null;
   const serie=serieSemanalArea(k);
   let evoChip;
@@ -7950,7 +7946,7 @@ function fecharSplash(){
 const TOUR_PASSOS=[
   // ── Painel (tela inicial): casco do topo + os cartoes de acao ──
   {tela:'inicio',sel:'#metas-card',titulo:'Sua meta do dia',
-   texto:'Todo dia o app monta três metas para você: questões, flashcards e resumos. Bater as três é o objetivo mínimo do dia — o resto é bônus.'},
+   texto:'Todo dia o app monta três metas para você: questões, flashcards e resumos. Bater as três é o objetivo mínimo do dia; o resto é bônus.'},
   {tela:'inicio',casco:true,sel:'#hdr-streak',titulo:'Sequência de dias',
    texto:'Os quadradinhos mostram os últimos 7 dias. Estudar todo dia, mesmo pouco, rende mais que maratona de fim de semana.'},
   {tela:'inicio',casco:true,sel:'.header-right button[title="Buscar"]',titulo:'Busca',
@@ -7965,18 +7961,18 @@ const TOUR_PASSOS=[
   // ("Seu foco" nasce .hidden, "Foco da semana" nasce sem HTML) e um titulo que
   // anunciasse os dois mentiria quando so um aparecesse.
   {tela:'inicio',sel:'#foco-bloco',titulo:'Seu foco',
-   texto:'Quando um tópico fica para trás, ele aparece aqui com resumo, flashcards e questões numa lista só — você roda tudo em sequência, sem voltar ao painel entre um item e outro.'},
+   texto:'Quando um tópico fica para trás, ele aparece aqui com resumo, flashcards e questões numa lista só. Você roda tudo em sequência, sem voltar ao painel entre um item e outro.'},
   {tela:'inicio',sel:'#dash-objetivo',titulo:'Foco da semana',
    texto:'O tópico de menor domínio estimado no momento, com o percentual e o motivo do sistema ter escolhido ele. Vem com botão para começar por aí. Vai mudando conforme você responde.'},
   {tela:'inicio',sel:'.ver-progresso',titulo:'Meu progresso',
    texto:'Seu raio-x: domínio por área, cobertura do edital, evolução no tempo e projeção de nota. É onde você confere se está no rumo do corte.'},
   // ── Quiz: 3 passos porque e a tela com mais caminho de entrada ──
   {tela:'quiz',casco:true,sel:'#nav-quiz',titulo:'Quiz',
-   texto:'Abri a aba para você — é esta tela aqui atrás. É onde você treina questões: o app escolhe o que cobrar pelo que você já acertou e há quanto tempo, não é sorteio.'},
+   texto:'Abri a aba para você, é esta tela aqui atrás. É onde você treina questões: o app escolhe o que cobrar pelo que você já acertou e há quanto tempo, não é sorteio.'},
   {tela:'quiz',sel:'.btn-intercalado',titulo:'Intercalado',
    texto:'Mistura áreas diferentes na mesma sessão. É desconfortável de propósito: trocar de assunto obriga você a reconhecer o tipo de questão antes de responder, que é exatamente o que a prova cobra.'},
   {tela:'quiz',sel:'#area-list .area-row',titulo:'Escolher área e tópico',
-   texto:'Toque uma área para abrir os tópicos dela. Dentro dá para praticar a área inteira ou só um tópico específico — útil quando você quer bater num assunto que sabe que cai.'},
+   texto:'Toque uma área para abrir os tópicos dela. Dentro dá para praticar a área inteira ou só um tópico específico, útil quando você quer bater num assunto que sabe que cai.'},
   // ── Flashcards e Resumos: 1 passo cada, com a tela ja aberta atras ──
   {tela:'cards',casco:true,sel:'#nav-cards',titulo:'Flashcards',
    texto:'Frente e verso, para fixar o que precisa sair na hora: definições, prazos e números. Nesta tela você inicia a meta do dia ou abre uma área abaixo para estudar um tópico avulso. Cada card volta no dia certo para você não esquecer.'},
@@ -7998,7 +7994,7 @@ const TOUR_PASSOS=[
   {tela:'inicio',casco:true,sel:'#install-banner',
    titulo:'Instalar e ser avisado',
    texto:()=>ehIOS()
-     ? 'A faixa aqui embaixo ensina a colocar o app na tela de início do iPhone: Compartilhar, depois Adicionar à Tela de Início. Vale a pena — o lembrete de revisão do dia só chega depois que o app está instalado. Se quiser deixar para depois, o convite volta no menu ☰, em "Instalar app".'
+     ? 'A faixa aqui embaixo ensina a colocar o app na tela de início do iPhone: Compartilhar, depois Adicionar à Tela de Início. Vale a pena: o lembrete de revisão do dia só chega depois que o app está instalado. Se quiser deixar para depois, o convite volta no menu ☰, em "Instalar app".'
      : 'A faixa aqui embaixo instala o app na tela inicial. Ele passa a abrir em tela cheia, funciona sem internet e libera o lembrete diário das revisões vencidas. Se quiser deixar para depois, o convite volta no menu ☰, em "Instalar app".'},
   {tela:'inicio',sel:'#diag-card',titulo:'Comece por aqui',
    texto:'Antes de tudo, faça o simulado de nivelamento: 15 questões pelas 5 áreas. É com ele que o app descobre seu nível e passa a montar as filas de estudo em cima do que VOCÊ erra, não de um plano genérico. Leva poucos minutos e só se faz uma vez.'}
@@ -8297,9 +8293,9 @@ async function resetarStreak(){
 async function reiniciarEstudos(){
   if(!currentUser){showToast('Você precisa estar logado.');return;}
   if(!dataLoaded){showToast('Aguarde os dados carregarem antes de reiniciar.');return;}
-  const c=prompt('Isso vai APAGAR TODO o seu progresso — questões, flashcards, histórico, streak e revisões. Esta ação NÃO pode ser desfeita.\n\nDica: dá para exportar um backup antes (botão Exportar).\n\nPara confirmar, digite REINICIAR:');
+  const c=prompt('Isso vai APAGAR TODO o seu progresso: questões, flashcards, histórico, streak e revisões. Esta ação NÃO pode ser desfeita.\n\nDica: dá para exportar um backup antes (botão Exportar).\n\nPara confirmar, digite REINICIAR:');
   if(c===null)return;
-  if((c||'').trim().toUpperCase()!=='REINICIAR'){showToast('Confirmação incorreta — nada foi apagado.');return;}
+  if((c||'').trim().toUpperCase()!=='REINICIAR'){showToast('Confirmação incorreta. Nada foi apagado.');return;}
   try{
     showToast('Reiniciando...');
     const agora=Date.now();
@@ -8326,7 +8322,7 @@ async function reiniciarEstudos(){
     const csi=document.getElementById('config-streak-info');if(csi)csi.textContent='0 dias seguidos';
     fecharModalConfig();
     if(typeof setScreen==='function')setScreen('inicio');
-    showToast('Tudo zerado — bons estudos! 🚒');
+    showToast('Tudo zerado! Bons estudos! 🚒');
   }catch(e){
     console.error('reiniciarEstudos:',e);
     showToast('Falha ao reiniciar. Tente de novo.');
@@ -8347,10 +8343,10 @@ async function excluirMinhaConta(){
   if(!currentUser){showToast('Você precisa estar logado.');return;}
   const c=prompt('EXCLUIR A CONTA apaga seu cadastro, todo o seu progresso e encerra o acesso. Não há como desfazer.\n\nSe quiser guardar uma cópia, cancele agora e use Configurações → Backup do progresso → Exportar.\n\nPara confirmar, digite EXCLUIR:');
   if(c===null)return;
-  if((c||'').trim().toUpperCase()!=='EXCLUIR'){showToast('Confirmação incorreta — nada foi apagado.');return;}
+  if((c||'').trim().toUpperCase()!=='EXCLUIR'){showToast('Confirmação incorreta. Nada foi apagado.');return;}
   const senha=prompt('Por segurança, digite sua senha para confirmar a exclusão:');
   if(senha===null)return;
-  if(!senha){showToast('Senha vazia — exclusão cancelada.');return;}
+  if(!senha){showToast('Senha vazia. Exclusão cancelada.');return;}
   const uid=currentUser.uid,email=currentUser.email;
   try{
     showToast('Excluindo...');
@@ -8359,7 +8355,7 @@ async function excluirMinhaConta(){
   }catch(e){
     console.error('excluirMinhaConta reauth:',e);
     showToast(e.code==='auth/wrong-password'||e.code==='auth/invalid-credential'
-      ?'Senha incorreta — nada foi apagado.'
+      ?'Senha incorreta. Nada foi apagado.'
       :'Não foi possível confirmar sua identidade. Nada foi apagado.');
     return;
   }
@@ -8375,7 +8371,7 @@ async function excluirMinhaConta(){
     console.warn('exclusao usuarios:',e.message);
     try{
       await db.ref('reportes').push({
-        texto:'PEDIDO DE EXCLUSAO DE CONTA (LGPD) — uid '+uid+' · '+email
+        texto:'PEDIDO DE EXCLUSAO DE CONTA (LGPD) · uid '+uid+' · '+email
           +' · o proprio usuario pediu a exclusao e as regras do RTDB bloquearam a remocao do registro. Apagar manualmente em usuarios/'+uid+' e em Authentication.',
         tipo:'exclusao',criadoEm:Date.now()
       });
@@ -8391,7 +8387,7 @@ async function excluirMinhaConta(){
     alert('Conta excluída. Seus dados foram apagados.');
   }else{
     alert('Seus dados de estudo foram apagados e seu acesso foi encerrado.\n\n'
-      +'A remoção final do registro precisa de uma última ação do responsável — o pedido já foi registrado e será concluído em até 15 dias, como manda a LGPD.\n\n'
+      +'A remoção final do registro precisa de uma última ação do responsável. O pedido já foi registrado e será concluído em até 15 dias, como manda a LGPD.\n\n'
       +'Dúvidas: '+EMPRESA.email);
   }
   try{await auth.signOut();}catch(e){}
@@ -8459,7 +8455,7 @@ function _docContato(){
 }
 function _docRodape(){
   let s='<div class="doc-meta">'+EMPRESA.produto+' · '+EMPRESA.marca
-    +' — responsável: '+EMPRESA.responsavel;
+    +' · responsável: '+EMPRESA.responsavel;
   if(EMPRESA.cnpj)s+=' · CNPJ '+EMPRESA.cnpj;
   s+='<br>Versão de '+EMPRESA.vigencia+'.</div>';
   return s;
@@ -8469,14 +8465,14 @@ const DOCS={
     <p>O <b>${EMPRESA.produto}</b> nasceu do estudo de um Bombeiro Militar do CBMRS para o CTSP. Não é material oficial da Corporação, não é endossado pelo CBMRS nem pela banca, e não tem qualquer vínculo institucional com eles.</p>
     <h3>De onde vem o conteúdo</h3>
     <ul>
-      <li><b>533 questões autorais</b>, redigidas do zero para esta plataforma e conferidas contra a norma vigente — legislação, manuais e o programa do Edital 004/ABM-DENS/2025 e seu aditamento.</li>
+      <li><b>533 questões autorais</b>, redigidas do zero para esta plataforma e conferidas contra a norma vigente: legislação, manuais e o programa do Edital 004/ABM-DENS/2025 e seu aditamento.</li>
       <li><b>78 resumos e 174 flashcards</b> autorais, escritos a partir das mesmas fontes.</li>
-      <li>Nada foi copiado de outro material. As provas públicas de 2017 a 2025 foram analisadas para mapear o que a banca cobra e como cobra — esse padrão orienta a redação, mas nenhuma questão de terceiro entra no banco.</li>
+      <li>Nada foi copiado de outro material. As provas públicas de 2017 a 2025 foram analisadas para mapear o que a banca cobra e como cobra. Esse padrão orienta a redação, mas nenhuma questão de terceiro entra no banco.</li>
     </ul>
     <h3>A regra que vale quando as fontes brigam</h3>
     <p>Se o gabarito antigo de uma prova conflita com a norma que está em vigor hoje, <b>vale a norma</b>. A explicação diz isso abertamente em vez de repetir um gabarito vencido.</p>
     <h3>Como a plataforma decide o que te dar</h3>
-    <p>Cada resposta sua ajusta uma estimativa de quanto você domina aquele tópico. O treino do dia monta a sessão nesta ordem: primeiro o que está vencido de revisão, depois os tópicos mais fracos, depois assunto novo — priorizando as áreas que valem mais pontos na prova. Você não precisa decidir o que estudar; a tela decide e explica por quê.</p>
+    <p>Cada resposta sua ajusta uma estimativa de quanto você domina aquele tópico. O treino do dia monta a sessão nesta ordem: primeiro o que está vencido de revisão, depois os tópicos mais fracos, depois assunto novo, priorizando as áreas que valem mais pontos na prova. Você não precisa decidir o que estudar; a tela decide e explica por quê.</p>
     <h3>O que ela não faz</h3>
     <p>Não promete aprovação, não substitui a leitura da norma e não adivinha o que vai cair. O que ela faz é impedir que você estude só o que já sabe.</p>
     <h3>Erros</h3>
@@ -8485,19 +8481,19 @@ const DOCS={
 
   faq:{titulo:'Perguntas frequentes',html:()=>`
     <h3>Preciso instalar alguma coisa?</h3>
-    <p>Não. Abre no navegador do celular ou do computador. No celular dá para adicionar à tela de início e ela passa a abrir como aplicativo, inclusive <b>sem internet</b> — o conteúdo fica salvo no aparelho. Seu progresso sincroniza assim que a conexão volta.</p>
+    <p>Não. Abre no navegador do celular ou do computador. No celular dá para adicionar à tela de início e ela passa a abrir como aplicativo, inclusive <b>sem internet</b>: o conteúdo fica salvo no aparelho. Seu progresso sincroniza assim que a conexão volta.</p>
     <h3>Como funciona o teste grátis?</h3>
-    <p>São <b>7 dias</b> contados do seu primeiro acesso, sem cartão. Terminado o teste, você escolhe se assina. Se não assinar, o acesso simplesmente para — não há cobrança automática.</p>
+    <p>São <b>7 dias</b> contados do seu primeiro acesso, sem cartão. Terminado o teste, você escolhe se assina. Se não assinar, o acesso simplesmente para. Não há cobrança automática.</p>
     <h3>Por que meu acesso fica "aguardando liberação"?</h3>
     <p>A liberação é manual, feita pelo responsável, e costuma sair em até 24h. É o que permite vender sem cobrança automática recorrente.</p>
     <h3>Qual a diferença entre o mensal e o anual?</h3>
-    <p>O mensal é R$ 59,90 por Pix a cada 30 dias, sem fidelidade. O anual é R$ 478,80 em até 12x de R$ 39,90 sem juros no cartão e dá <b>13 meses</b> de acesso — o primeiro por nossa conta.</p>
+    <p>O mensal é R$ 59,90 por Pix a cada 30 dias, sem fidelidade. O anual é R$ 478,80 em até 12x de R$ 39,90 sem juros no cartão e dá <b>13 meses</b> de acesso: o primeiro por nossa conta.</p>
     <h3>E se o edital atrasar ou a prova mudar de data?</h3>
     <p>O plano vale pelo período contratado a partir da assinatura, independente da data do edital. É por isso que o anual, com 13 meses, costuma ser o mais seguro para quem não sabe quando a prova sai.</p>
     <h3>Posso desistir depois de pagar?</h3>
     <p>Pode. Por ser compra online, você tem <b>7 dias de arrependimento</b> a contar do pagamento, conforme o Código de Defesa do Consumidor, com devolução integral. Depois desse prazo, o plano segue até o fim do período contratado.</p>
     <h3>Posso dividir a conta com um colega?</h3>
-    <p>Não. O sistema aprende com cada resposta para calcular o seu Domínio e montar o Treino do dia — se duas pessoas respondem pela mesma conta, as estimativas dos dois ficam erradas, e nenhum dos dois recebe um treino que reflita o que sabe de verdade. Por isso o acesso é individual e a conta compartilhada é bloqueada.</p>
+    <p>Não. O sistema aprende com cada resposta para calcular o seu Domínio e montar o Treino do dia: se duas pessoas respondem pela mesma conta, as estimativas dos dois ficam erradas, e nenhum dos dois recebe um treino que reflita o que sabe de verdade. Por isso o acesso é individual e a conta compartilhada é bloqueada.</p>
     <h3>Perco meu progresso se trocar de celular?</h3>
     <p>Não. Ele fica na sua conta. Em Configurações ainda dá para exportar um arquivo de backup e restaurar depois, se quiser uma cópia própria.</p>
     <h3>Achei um erro numa questão. E agora?</h3>
@@ -8544,7 +8540,7 @@ const DOCS={
     </ul>
 
     <h3>6. Exatidão do conteúdo</h3>
-    <p>Todo o material é conferido contra a norma vigente na data em que é publicado, e quando o gabarito antigo de uma prova conflita com a lei em vigor, prevalece a lei. Ainda assim, normas mudam e erros acontecem: o conteúdo é fornecido para estudo, sem garantia de que esteja isento de falhas. Reporte o erro pelo botão da própria questão — a correção é tratada como prioridade.</p>
+    <p>Todo o material é conferido contra a norma vigente na data em que é publicado, e quando o gabarito antigo de uma prova conflita com a lei em vigor, prevalece a lei. Ainda assim, normas mudam e erros acontecem: o conteúdo é fornecido para estudo, sem garantia de que esteja isento de falhas. Reporte o erro pelo botão da própria questão; a correção é tratada como prioridade.</p>
 
     <h3>7. Disponibilidade</h3>
     <p>O serviço é prestado com o melhor esforço, sem garantia de funcionamento ininterrupto. Pode haver interrupção por manutenção, falha de terceiros (hospedagem, autenticação, provedor de internet) ou caso fortuito. Interrupções prolongadas e imputáveis a nós geram compensação em dias de acesso.</p>
@@ -8563,11 +8559,11 @@ const DOCS={
 
   privacidade:{titulo:'Política de Privacidade',html:()=>`
     <p>Esta Política explica quais dados o <b>${EMPRESA.produto}</b> coleta, por que coleta e o que você pode exigir a respeito, conforme a Lei Geral de Proteção de Dados (Lei 13.709/2018).</p>
-    <p><b>Controlador dos dados:</b> ${EMPRESA.responsavel}${EMPRESA.cnpj?' — CNPJ '+EMPRESA.cnpj:''}. Contato: <b>${EMPRESA.email}</b>.</p>
+    <p><b>Controlador dos dados:</b> ${EMPRESA.responsavel}${EMPRESA.cnpj?', CNPJ '+EMPRESA.cnpj:''}. Contato: <b>${EMPRESA.email}</b>.</p>
 
     <h3>1. Que dados são coletados</h3>
     <ul>
-      <li><b>Cadastro:</b> nome e e-mail. A senha é guardada e verificada pelo Firebase Authentication (Google) — nós não temos acesso a ela.</li>
+      <li><b>Cadastro:</b> nome e e-mail. A senha é guardada e verificada pelo Firebase Authentication (Google); nós não temos acesso a ela.</li>
       <li><b>Uso da plataforma:</b> questões respondidas, acertos e erros, flashcards e resumos vistos, datas de revisão, sequência de dias e configurações de estudo.</li>
       <li><b>Notificações (opcional):</b> se você ativar os lembretes, é guardado um identificador do aparelho para envio. Desativar remove esse identificador.</li>
       <li><b>Segurança:</b> o acesso é protegido por login com senha e as regras do banco de dados impedem qualquer usuário de ver ou alterar dados de outra pessoa.</li>
@@ -8575,7 +8571,7 @@ const DOCS={
     </ul>
 
     <h3>2. Cookies e armazenamento no seu aparelho</h3>
-    <p>A plataforma <b>não usa cookies</b> — nem próprios, nem de terceiros — e <b>não tem nenhuma ferramenta de análise, rastreamento ou publicidade</b> (não usamos Google Analytics, pixel de rede social ou similar). Nada aqui acompanha você por outros sites.</p>
+    <p>A plataforma <b>não usa cookies</b>, nem próprios nem de terceiros, e <b>não tem nenhuma ferramenta de análise, rastreamento ou publicidade</b> (não usamos Google Analytics, pixel de rede social ou similar). Nada aqui acompanha você por outros sites.</p>
     <p>O que existe é armazenamento local do próprio navegador, usado só para o app funcionar:</p>
     <ul>
       <li><b>Sua sessão:</b> o Firebase Authentication guarda no seu navegador a credencial que mantém você logado entre uma visita e outra. Sair da conta apaga.</li>
@@ -8583,14 +8579,14 @@ const DOCS={
       <li><b>Cópia local do seu progresso:</b> um espelho das suas respostas e flashcards, para o app abrir rápido e continuar funcionando sem internet.</li>
       <li><b>Cache do aplicativo:</b> os arquivos da plataforma ficam guardados no aparelho para que ela abra offline, como todo app instalável.</li>
     </ul>
-    <p>Como esses itens são <b>estritamente necessários</b> para o serviço que você contratou, e nenhum deles serve para rastrear ou anunciar, não existe banner de consentimento a aceitar. Você pode apagar tudo a qualquer momento saindo da conta ou limpando os dados do site nas configurações do seu navegador — isso não afeta o seu progresso guardado na nuvem.</p>
+    <p>Como esses itens são <b>estritamente necessários</b> para o serviço que você contratou, e nenhum deles serve para rastrear ou anunciar, não existe banner de consentimento a aceitar. Você pode apagar tudo a qualquer momento saindo da conta ou limpando os dados do site nas configurações do seu navegador; isso não afeta o seu progresso guardado na nuvem.</p>
 
     <h3>3. Para que servem</h3>
     <ul>
-      <li>Manter sua conta e liberar o acesso que você contratou — base legal: <b>execução do contrato</b>.</li>
-      <li>Medir seu desempenho e montar o treino do dia — é a função central do serviço, também execução do contrato.</li>
-      <li>Enviar lembretes de revisão — base legal: <b>seu consentimento</b>, revogável a qualquer momento.</li>
-      <li>Proteger a plataforma contra fraude e uso indevido — base legal: <b>legítimo interesse</b>.</li>
+      <li>Manter sua conta e liberar o acesso que você contratou, base legal: <b>execução do contrato</b>.</li>
+      <li>Medir seu desempenho e montar o treino do dia: é a função central do serviço, também execução do contrato.</li>
+      <li>Enviar lembretes de revisão, base legal: <b>seu consentimento</b>, revogável a qualquer momento.</li>
+      <li>Proteger a plataforma contra fraude e uso indevido, base legal: <b>legítimo interesse</b>.</li>
     </ul>
     <p>Seus dados <b>não são vendidos</b> nem usados para publicidade, e não alimentam perfis comerciais.</p>
 
@@ -8662,7 +8658,7 @@ function fecharDoc(){
 // para o mesmo texto de propósito, para não divergirem de novo.
 function showInfo(tipo){
   const HISTORICO='Sua taxa de acerto acumulada naquela área: acertos ÷ questões respondidas. '
-    +'É um retrato do passado, não do seu nível de hoje — conta TODAS as tentativas, então um erro '
+    +'É um retrato do passado, não do seu nível de hoje: conta TODAS as tentativas, então um erro '
     +'antigo continua pesando mesmo depois de você acertar a mesma questão, e refazer uma questão soma de novo. '
     +'Por isso ele quase não se mexe depois de algumas centenas de respostas. '
     +'A porcentagem só aparece a partir de '+MIN_RESP_CONF+' respostas na área; abaixo disso a tela diz "poucos dados" '
@@ -8671,39 +8667,39 @@ function showInfo(tipo){
   const textos={
     desempenho:HISTORICO,
     evolucao:HISTORICO,
-    dominio:'O quanto você domina o conteúdo HOJE, de 0 a 100 — a média dos tópicos da área, ponderada '
+    dominio:'O quanto você domina o conteúdo HOJE, de 0 a 100: a média dos tópicos da área, ponderada '
       +'pelo número de questões de cada um. Não é sua taxa de acerto acumulada: acertar 90% de dez questões '
       +'fáceis não faz o domínio ir a 90; o cálculo desconta acerto por sorte e erro por descuido, igual ao '
-      +'domínio por tópico. ATENÇÃO: este número CAI sozinho com o tempo, sem você errar nada — conhecimento '
+      +'domínio por tópico. ATENÇÃO: este número CAI sozinho com o tempo, sem você errar nada. Conhecimento '
       +'sem revisão esfria, e o app prefere avisar antes da prova a deixar confiante com um dado velho. '
       +'Quanto mais você já acertou um tópico, mais devagar ele esfria; revisar levanta o número de novo. '
       +'As questões de uma área só entram na conta a partir de '+MIN_RESP_CONF+' respostas, para o número não '
-      +'inflar com pouca base. Domínio baixo numa área é o sinal mais direto de onde estudar — abra a área e '
+      +'inflar com pouca base. Domínio baixo numa área é o sinal mais direto de onde estudar: abra a área e '
       +'vá pelos tópicos mais fracos. Ao selecionar uma área, a tela também mostra POR QUÊ: o quanto você já '
-      +'praticou em Quiz, Cards e Resumos daquela área, apontando a frente mais fraca como gargalo — isso é '
+      +'praticou em Quiz, Cards e Resumos daquela área, apontando a frente mais fraca como gargalo. Isso é '
       +'diagnóstico, não entra na conta do número grande do topo.',
     cobertura:'Quanto do material você já viu: questões, flashcards e resumos que você abriu pelo menos uma vez, '
-      +'dividido pelo total que existe na área. Mede caminho percorrido, não acerto — dá para ter 100% de cobertura '
+      +'dividido pelo total que existe na área. Mede caminho percorrido, não acerto: dá para ter 100% de cobertura '
       +'e domínio baixo, e isso só quer dizer que você passou por tudo sem fixar. '
       +'Cobertura baixa numa área perto da prova é o aviso de que existe conteúdo que você ainda nem abriu.',
     bkt:'A chance de você acertar uma questão nova daquele tópico, estimada a cada resposta sua. '
-      +'Não é a sua média de acertos no tópico: o cálculo desconta acerto por sorte e erro por descuido — '
+      +'Não é a sua média de acertos no tópico: o cálculo desconta acerto por sorte e erro por descuido; '
       +'o sistema assume que uma em cada cinco acertadas pode ter sido chute e que uma em cada dez erradas foi desatenção. '
       +'Esses dois números são premissas do modelo, iguais para todo mundo, não uma medida sua. '
-      +'ATENÇÃO: este número CAI sozinho com o tempo, sem você errar nada. É de propósito — conhecimento sem revisão '
+      +'ATENÇÃO: este número CAI sozinho com o tempo, sem você errar nada. É de propósito: conhecimento sem revisão '
       +'esfria, e o app prefere te avisar antes da prova a te deixar confiante com um dado velho. '
       +'Quanto mais vezes você acerta um tópico, mais devagar ele esfria. Revisar o tópico levanta o número de novo. '
       +'O treino do dia usa exatamente isso para escolher o que te dar.',
     prontidao:'Quantos pontos dos 60 da prova você faria se ela fosse hoje. '
-      +'Cada área entra pela cota do edital (AT1 14 · AT2 8 · AT3 14 · AT4 12 · AT5 12) multiplicada pelo seu domínio nela — '
+      +'Cada área entra pela cota do edital (AT1 14 · AT2 8 · AT3 14 · AT4 12 · AT5 12) multiplicada pelo seu domínio nela; '
       +'por isso ir bem numa área de cota pequena move pouco o total. '
       +'Não é nota garantida nem previsão do resultado: é a melhor estimativa possível com o que você respondeu até agora, '
       +'e ela erra mais no começo. Abaixo de '+MIN_RESP_PRONT+' respostas a tela marca como preliminar. '
-      +'Se o número estiver abaixo do corte, abra "Por área" e veja onde está a maior distância entre a cota e o que você faz — '
+      +'Se o número estiver abaixo do corte, abra "Por área" e veja onde está a maior distância entre a cota e o que você faz: '
       +'é ali que cada hora de estudo rende mais ponto. '
       +'Defina a data da prova em Configurações para ver a contagem regressiva.',
     acuracia:'Sua taxa de acerto somando todas as áreas: acertos ÷ questões respondidas, todas as tentativas incluídas. '
-      +'É o mesmo tipo de número do histórico por área, só que geral — olha para trás, não para o seu nível de agora. '
+      +'É o mesmo tipo de número do histórico por área, só que geral: olha para trás, não para o seu nível de agora. '
       +'O símbolo ao lado compara com a semana anterior, e só aparece quando já existe base para comparar. '
       +'Se ele estiver alto e o seu Domínio baixo, quer dizer que você acertou muito no que já treinou e ainda não encostou no resto.'
   };
@@ -8819,7 +8815,7 @@ function abrirPagamento(plano){
     cart.appendChild(tit);
     const sub=document.createElement('div');
     sub.className='pix-cartao-sub';
-    sub.textContent='O total é '+p.txt+' em qualquer opção — em menos parcelas seu limite libera mais rápido.';
+    sub.textContent='O total é '+p.txt+' em qualquer opção; em menos parcelas seu limite libera mais rápido.';
     cart.appendChild(sub);
     const linha=document.createElement('div');
     linha.className='pix-parcelas';
@@ -8870,7 +8866,7 @@ function abrirPagamento(plano){
   document.getElementById('pix-fallback').value=PIX_BRCODE;
   document.getElementById('pix-aviso').textContent=
     'O código não vem com valor preenchido: digite '+p.txt+' no app do seu banco. '
-    +'Na confirmação vai aparecer o nome '+PIX_NOME+' — é a conta certa.';
+    +'Na confirmação vai aparecer o nome '+PIX_NOME+': é a conta certa.';
   const bt=document.getElementById('pix-copiar');
   bt.onclick=function(){copiarPix(bt);};
   document.getElementById('pix-ja-btn').onclick=function(){avisarPagamento(plano);};
@@ -8898,7 +8894,7 @@ async function avisarPagamento(plano){
   const btn=document.getElementById('pix-ja-btn');if(btn)btn.disabled=true;
   const quem=(userProfile&&userProfile.nome)||currentUser.email||'sem nome';
   const rep={
-    texto:('PAGAMENTO INFORMADO — '+p.rotulo+' '+p.txt+' · '+quem+' · '+(currentUser.email||'')
+    texto:('PAGAMENTO INFORMADO · '+p.rotulo+' '+p.txt+' · '+quem+' · '+(currentUser.email||'')
       +' · uid '+currentUser.uid).slice(0,2000),
     tipo:'pagamento',plano:plano,uid:currentUser.uid,nome:quem,
     criadoEm:Date.now(),status:'aberto'};
@@ -8954,7 +8950,7 @@ async function enviarReporte(){
   // porque `.validate` roda em qualquer escrita, não importa qual ramo do `.write`
   // liberou. Só o push de exclusão de conta mandava `texto` e por isso funcionava.
   // Cap de 2000 é o limite do validador do campo.
-  const texto=(REP_CAT_LBL[repCtx.cat]||repCtx.cat||'?')+' — '+repCtx.tipo+' '+repCtx.id
+  const texto=(REP_CAT_LBL[repCtx.cat]||repCtx.cat||'?')+' · '+repCtx.tipo+' '+repCtx.id
     +(desc?' · '+desc:'')+(prev?' · '+prev:'')+' · '+quem;
   const rep={tipo:repCtx.tipo,itemId:repCtx.id,categoria:repCtx.cat,descricao:desc,
     texto:texto.slice(0,2000),
@@ -8962,7 +8958,7 @@ async function enviarReporte(){
     uid:currentUser?currentUser.uid:'anon',
     nome:quem,
     criadoEm:Date.now(),status:'aberto'};
-  try{await db.ref('reportes').push(rep);fecharReporte();showToast('Reporte enviado — obrigado!');}
+  try{await db.ref('reportes').push(rep);fecharReporte();showToast('Reporte enviado, obrigado!');}
   catch(e){console.error('reporte erro:',e);showToast('Falha ao enviar. Tente novamente.');if(btn)btn.disabled=false;}
 }
 async function loadReportes(){
@@ -9319,7 +9315,7 @@ if(pushCapaz()){
     // App ABERTO: o SW não dispara notificação em foreground; mostramos um toast.
     fcmMessaging.onMessage(function(payload){
       var n=(payload&&payload.notification)||{};
-      if(n.title)showToast(n.title+(n.body?' — '+n.body:''));
+      if(n.title)showToast(n.title+(n.body?': '+n.body:''));
     });
   }catch(_){ fcmMessaging=null; fcmSuportado=false; }
 }
@@ -9334,7 +9330,7 @@ function atualizarBotaoNotif(){
   if(st==='indisponivel'){btn.textContent='Indisponível';btn.disabled=true;if(sub)sub.textContent='Este navegador não suporta notificações push (no iPhone, instale o app na tela inicial primeiro).';return;}
   btn.disabled=false;
   if(st==='granted'){btn.textContent='Ativado';btn.disabled=true;if(sub)sub.textContent='Você receberá o lembrete diário de revisões.';}
-  else if(st==='denied'){btn.textContent='Bloqueado';btn.disabled=true;if(sub)sub.textContent='Permissão negada — libere nas configurações do navegador.';}
+  else if(st==='denied'){btn.textContent='Bloqueado';btn.disabled=true;if(sub)sub.textContent='Permissão negada. Libere nas configurações do navegador.';}
   else{btn.textContent='Ativar';if(sub)sub.textContent='Lembrete diário das revisões vencidas';}
 }
 async function ativarNotificacoes(){
@@ -9393,8 +9389,8 @@ montarInstalarLanding();
           <path d="M12 8.5v7M8.5 12h7" style="stroke:var(--ember)" stroke-width="2" stroke-linecap="round"/>
         </svg>.</span></li>
   </ol>
-  <p class="install-nota">Depois disso o app abre em tela cheia — e o lembrete de revisão só funciona a partir daí.</p>
-  <p class="install-nota install-nota-safari">Abra este endereço no <b>Safari</b> — só ele instala o app no iPhone.</p>
+  <p class="install-nota">Depois disso o app abre em tela cheia, e o lembrete de revisão só funciona a partir daí.</p>
+  <p class="install-nota install-nota-safari">Abra este endereço no <b>Safari</b>: só ele instala o app no iPhone.</p>
   <button class="btn-ghost-dark install-ok" onclick="dispensarInstalar()">Entendi</button>
   <!-- só no modo .install-cta -->
   <div class="install-sub" id="install-sub">Acesso rápido, tela cheia e funciona offline.</div>
