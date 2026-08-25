@@ -724,8 +724,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .foco-barra-txt{font-size:13px;font-weight:800;flex-shrink:0;}
 .foco-barra-topico{font-size:11.5px;opacity:.7;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 /* Entrada de código do tópico (caminho sem leitor de QR) */
-.cod-wrap{background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;padding:11px 12px;margin-bottom:12px;max-width:100%;}
-.cod-label{display:block;font-size:11.5px;font-weight:700;color:var(--text2);margin-bottom:7px;overflow-wrap:anywhere;}
+.cod-wrap{border-top:1px solid var(--line-soft);padding:12px 2px 0;margin-bottom:14px;max-width:100%;}
+.cod-label{display:block;font-size:11.5px;font-weight:600;color:var(--text3);margin-bottom:7px;overflow-wrap:anywhere;}
 .cod-row{display:flex;gap:8px;}
 .cod-input{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;
   font-size:15px;font-weight:700;color:var(--text);background:var(--paper);text-transform:uppercase;}
@@ -854,10 +854,15 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .quiz-opt.selected{border-color:var(--navy);background:#F2F4FA;}
 .quiz-opt.selected .quiz-opt-letter{background:var(--navy);color:white;}
 .quiz-opt.correta{border-color:var(--green);background:var(--green-light);}
-.quiz-opt.correta .quiz-opt-letter{background:var(--green);color:white;}
+.quiz-opt.correta .quiz-opt-letter{background:var(--green);color:transparent;position:relative;}
 .quiz-opt.errada{border-color:var(--red);background:var(--red-light);}
-.quiz-opt.errada .quiz-opt-letter{background:var(--red);color:white;}
-.quiz-feedback{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;padding:14px;margin-top:16px;box-shadow:var(--shadow);display:none;}
+.quiz-opt.errada .quiz-opt-letter{background:var(--red);color:transparent;position:relative;}
+/* Distinção correta/errada não pode depender só de cor — sobrepõe glifo ✓/✕ no lugar da letra */
+.quiz-opt.correta .quiz-opt-letter::after,
+.quiz-opt.errada .quiz-opt-letter::after{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-weight:800;color:#fff;}
+.quiz-opt.correta .quiz-opt-letter::after{content:'✓';font-size:13px;}
+.quiz-opt.errada .quiz-opt-letter::after{content:'✕';font-size:11px;}
+.quiz-feedback{background:var(--surface);border:1px solid var(--line-soft);border-left-width:4px;border-radius:14px;padding:14px;margin-top:16px;box-shadow:var(--shadow);display:none;transition:border-color .2s;}
 .quiz-feedback.show{display:block;}
 .quiz-feedback-title{font-size:12px;font-weight:800;margin-bottom:6px;}
 .quiz-feedback-text{font-size:13px;color:var(--text2);line-height:1.55;}
@@ -1139,8 +1144,8 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 /* Streak pill no hero */
 
 /* Quiz intercalado — cor consistente */
-.btn-intercalado{width:100%;padding:14px;background:var(--navy);color:white;border-radius:16px;font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;border:none;transition:all .2s var(--ease-out);box-shadow:0 6px 18px rgba(16,27,61,.25);}
-.btn-intercalado:active{transform:scale(.97);}
+.btn-intercalado{width:100%;padding:12px 14px;background:var(--surface);color:var(--text2);border:1.5px solid var(--line-soft);border-radius:14px;font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .2s var(--ease-out);box-shadow:none;}
+.btn-intercalado:active{transform:scale(.98);background:var(--paper-2);}
 .mt14{margin-top:14px;}
 
 /* Info button */
@@ -4396,7 +4401,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.221';
+const APP_VERSAO='v1.222';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5803,6 +5808,7 @@ async function responderQuiz(idx){
   // Feedback
   const fb=document.getElementById('quiz-feedback');
   fb.classList.add('show');
+  fb.style.borderLeftColor=acertou?'var(--green)':'var(--red)';
   document.getElementById('quiz-fb-title').textContent=acertou?'Correto':'Incorreto';
   document.getElementById('quiz-fb-title').style.color=acertou?'var(--green)':'var(--red)';
   // CONT-01: mostrar a alternativa marcada × a correta
