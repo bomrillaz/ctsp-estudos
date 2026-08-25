@@ -551,9 +551,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .mp-body{display:none;padding:0 14px 14px;}
 .mp-item.open .mp-body{display:block;}
 /* Atalho da home para a aba "Meu progresso" */
-.ver-progresso{width:100%;display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 14px;cursor:pointer;text-align:left;margin-top:4px;}
+.ver-progresso{width:100%;display:flex;align-items:center;gap:12px;background:var(--blue-light);border:1px solid transparent;border-radius:14px;padding:13px 14px;cursor:pointer;text-align:left;margin-top:4px;}
 .ver-progresso:focus-visible{outline:3px solid var(--ember);outline-offset:-3px;}
-.ver-progresso-ic{width:34px;height:34px;border-radius:9px;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ver-progresso-ic{width:34px;height:34px;border-radius:9px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .ver-progresso-ic svg{width:18px;height:18px;}
 .ver-progresso-txt{flex:1;min-width:0;display:flex;flex-direction:column;}
 .ver-progresso-t{font-size:14px;font-weight:700;color:var(--text);}
@@ -1472,6 +1472,27 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   body.sidebar-collapsed .app-content{margin-left:64px;}
   body.sidebar-collapsed .toast{left:calc(50% + 32px);}
   body.sidebar-collapsed #save-flash{left:calc(50% + 32px);}
+}
+
+/* ── b132 — Início em duas colunas no desktop (mesmo breakpoint da sidebar).
+   Antes a tela ficava uma coluna única esticada, com metade da viewport vazia
+   em telas largas. Reordena só via grid-column/grid-row em cima do HTML que já
+   existe (ids não mudam de lugar, JS/tour continuam achando tudo). ── */
+@media (min-width:1024px){
+  #screen-inicio .dash-body{
+    display:grid;grid-template-columns:1.6fr 1fr;column-gap:24px;row-gap:0;align-items:start;
+  }
+  #screen-inicio .dash-body>.diag-card,
+  #screen-inicio .dash-body>.sec-title,
+  #screen-inicio .dash-body>.adapt-btn.rec,
+  #screen-inicio .dash-body>#foco-bloco,
+  #screen-inicio .dash-body>#dash-objetivo{grid-column:1;}
+  #screen-inicio .dash-body>.quick-grid,
+  #screen-inicio .dash-body>.ver-progresso{grid-column:2;}
+  #screen-inicio .dash-body>.quick-grid{grid-template-columns:1fr;}
+  /* na coluna estreita do desktop, empilha texto/seta em vez de espremer numa linha só */
+  #screen-inicio .dash-body>.ver-progresso{flex-direction:column;align-items:flex-start;gap:8px;}
+  #screen-inicio .dash-body>.ver-progresso .ver-progresso-arw{align-self:flex-end;margin-top:-22px;}
 }
 
 /* ── FASE 5 — POLIMENTO: hover só em ponteiro fino (toque não dispara) ── */
@@ -4358,7 +4379,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.216';
+const APP_VERSAO='v1.217';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
