@@ -1474,25 +1474,37 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   body.sidebar-collapsed #save-flash{left:calc(50% + 32px);}
 }
 
-/* ── b132 — Início em duas colunas no desktop (mesmo breakpoint da sidebar).
+/* ── b132/b133 — Início em duas colunas no desktop (mesmo breakpoint da sidebar).
    Antes a tela ficava uma coluna única esticada, com metade da viewport vazia
-   em telas largas. Reordena só via grid-column/grid-row em cima do HTML que já
-   existe (ids não mudam de lugar, JS/tour continuam achando tudo). ── */
+   em telas largas. b132 tentou só grid-column em cima do HTML plano: como as duas
+   colunas dividem as MESMAS linhas de grid, um item alto numa coluna esticava a
+   linha inteira e desalinhava o par (ex.: "Meu progresso" caía na linha de "Foco
+   da semana" em vez da de "Seu foco", sobrando meio card de vazio). b133 corrige
+   agrupando os itens em dois wrappers reais (.dash-col-l/.dash-col-r) — cada
+   coluna passa a crescer pela própria altura, sem depender da outra. `display:
+   contents` nos wrappers + `order` nos filhos mantêm o celular no MESMO fluxo/
+   ordem de sempre (ids não mudam de lugar, JS/tour continuam achando tudo);
+   o grid deixa de existir e vira flex só a partir do breakpoint desktop. ── */
+#screen-inicio .dash-body{display:flex;flex-direction:column;}
+#screen-inicio .dash-body>.dash-col-l,
+#screen-inicio .dash-body>.dash-col-r{display:contents;}
+#screen-inicio .dash-body .dash-col-l>.diag-card{order:1;}
+#screen-inicio .dash-body .dash-col-l>.sec-title{order:2;}
+#screen-inicio .dash-body .dash-col-l>.adapt-btn.rec{order:3;}
+#screen-inicio .dash-body .dash-col-r>.quick-grid{order:4;}
+#screen-inicio .dash-body .dash-col-l>#foco-bloco{order:5;}
+#screen-inicio .dash-body .dash-col-l>#dash-objetivo{order:6;}
+#screen-inicio .dash-body .dash-col-r>.ver-progresso{order:7;}
 @media (min-width:1024px){
-  #screen-inicio .dash-body{
-    display:grid;grid-template-columns:1.6fr 1fr;column-gap:24px;row-gap:0;align-items:start;
-  }
-  #screen-inicio .dash-body>.diag-card,
-  #screen-inicio .dash-body>.sec-title,
-  #screen-inicio .dash-body>.adapt-btn.rec,
-  #screen-inicio .dash-body>#foco-bloco,
-  #screen-inicio .dash-body>#dash-objetivo{grid-column:1;}
-  #screen-inicio .dash-body>.quick-grid,
-  #screen-inicio .dash-body>.ver-progresso{grid-column:2;}
-  #screen-inicio .dash-body>.quick-grid{grid-template-columns:1fr;}
+  #screen-inicio .dash-body{flex-direction:row;column-gap:24px;align-items:flex-start;}
+  #screen-inicio .dash-body>.dash-col-l,
+  #screen-inicio .dash-body>.dash-col-r{display:flex;flex-direction:column;}
+  #screen-inicio .dash-body>.dash-col-l{flex:1.6;}
+  #screen-inicio .dash-body>.dash-col-r{flex:1;}
+  #screen-inicio .dash-body .dash-col-r>.quick-grid{grid-template-columns:1fr;}
   /* na coluna estreita do desktop, empilha texto/seta em vez de espremer numa linha só */
-  #screen-inicio .dash-body>.ver-progresso{flex-direction:column;align-items:flex-start;gap:8px;}
-  #screen-inicio .dash-body>.ver-progresso .ver-progresso-arw{align-self:flex-end;margin-top:-22px;}
+  #screen-inicio .dash-body .dash-col-r>.ver-progresso{flex-direction:column;align-items:flex-start;gap:8px;}
+  #screen-inicio .dash-body .dash-col-r>.ver-progresso .ver-progresso-arw{align-self:flex-end;margin-top:-22px;}
 }
 
 /* ── FASE 5 — POLIMENTO: hover só em ponteiro fino (toque não dispara) ── */
@@ -2072,6 +2084,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <button onclick="location.reload()" style="background:var(--red);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">Recarregar</button>
       </div>
       <div class="dash-body">
+       <div class="dash-col-l">
         <!-- FEAT-01: Simulado de nivelamento (onboarding) -->
         <div id="diag-card" class="diag-card hidden" onclick="abrirIntro('diagnostico')">
           <button class="diag-card-fechar" type="button" aria-label="Fechar" onclick="adiarDiagCard(event)">✕</button>
@@ -2106,6 +2119,17 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           </div>
           <div class="adapt-btn-arrow">→</div>
         </div>
+        <!-- S65: "Seu foco" + "Foco da semana" — agora abaixo de "Estudar agora". -->
+        <div id="foco-bloco" class="foco-bloco hidden">
+          <div class="foco-bloco-head">
+            <span class="sec-title" style="margin:0">Seu foco</span>
+            <span class="foco-bloco-n" id="foco-bloco-n"></span>
+          </div>
+          <div id="foco-fila"></div>
+        </div>
+        <div id="dash-objetivo" style="margin-bottom:12px"></div>
+       </div>
+       <div class="dash-col-r">
         <div class="quick-grid">
           <div class="quick-btn" onclick="abrirIntro('rapido')">
             <div class="quick-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
@@ -2119,21 +2143,13 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <div class="quick-btn-sub">15 questões · pontos fracos</div>
           </div>
         </div>
-        <!-- S65: "Seu foco" + "Foco da semana" — agora abaixo de "Estudar agora". -->
-        <div id="foco-bloco" class="foco-bloco hidden">
-          <div class="foco-bloco-head">
-            <span class="sec-title" style="margin:0">Seu foco</span>
-            <span class="foco-bloco-n" id="foco-bloco-n"></span>
-          </div>
-          <div id="foco-fila"></div>
-        </div>
-        <div id="dash-objetivo" style="margin-bottom:12px"></div>
         <!-- Painéis de análise migraram para a aba "Meu progresso" (bottom sheet "Mais"). -->
         <button class="ver-progresso" onclick="navTo('progresso')">
           <span class="ver-progresso-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span>
           <span class="ver-progresso-txt"><span class="ver-progresso-t">Meu progresso</span><span class="ver-progresso-s">Domínio, cobertura, evolução e projeção</span></span>
           <span class="ver-progresso-arw">→</span>
         </button>
+       </div>
       </div>
     </div>
 
@@ -4380,7 +4396,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.219';
+const APP_VERSAO='v1.220';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
