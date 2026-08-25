@@ -4396,7 +4396,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.220';
+const APP_VERSAO='v1.221';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4584,8 +4584,15 @@ function abrirMais(){const o=document.getElementById('mais-overlay');if(o)o.clas
 function fecharMais(e){if(e&&e.target!==e.currentTarget)return;const o=document.getElementById('mais-overlay');if(o)o.classList.remove('open');}
 function navMais(s){const o=document.getElementById('mais-overlay');if(o)o.classList.remove('open');navTo(s);}
 function animateScreenEntrance(sc){
-  // Staggered reveal nos cards filhos
-  const items=sc.querySelectorAll('.area-card,.area-row,.quick-btn,.sim-card,.resumo-list-item,.padrao-card,.user-head,.obj-card,.adapt-btn,.diag-card:not(.hidden),.metas-card,#foco-bloco,.ver-progresso,.btn-intercalado,.sim-hist-item');
+  // Staggered reveal nos cards filhos. Exclui o que está dentro de um acordeão
+  // FECHADO (.pg-area-topicos, display:none) — Quiz/Cards/Resumos usam o mesmo
+  // índice Área→Tópico, mas Cards/Resumos aninham 1 item por FLASHCARD/RESUMO
+  // (dezenas por área) contra 1 por TÓPICO no Quiz. Sem o filtro, querySelectorAll
+  // pega esses itens ocultos também, e o índice do stagger (i*55ms) infla até a
+  // 2ª/3ª área começar a aparecer só segundos depois — different por área conforme
+  // o acervo, sem padrão. Só o cabeçalho da área (visível) deve entrar na conta.
+  const items=[...sc.querySelectorAll('.area-card,.area-row,.quick-btn,.sim-card,.resumo-list-item,.padrao-card,.user-head,.obj-card,.adapt-btn,.diag-card:not(.hidden),.metas-card,#foco-bloco,.ver-progresso,.btn-intercalado,.sim-hist-item')]
+    .filter(el=>!el.closest('.pg-area-topicos'));
   items.forEach((el,i)=>{
     el.style.opacity='0';
     el.style.transform='translateY(16px)';
