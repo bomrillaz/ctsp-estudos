@@ -832,13 +832,15 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 
 .quiz-header{background:linear-gradient(160deg,var(--navy-2),var(--navy));padding:14px 16px;color:white;position:relative;}
 .quiz-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--fire-line);opacity:.85;}
-.quiz-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.quiz-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .quiz-area-tag{background:rgba(240,136,60,.15);border:1px solid rgba(240,136,60,.35);color:var(--ember);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;}
-.quiz-score-box{background:rgba(255,255,255,.1);border-radius:10px;padding:6px 12px;text-align:center;}
-.quiz-score-v{font-family:var(--font-display);font-size:18px;font-weight:700;line-height:1;}
-.quiz-score-l{font-size:9px;opacity:.8;font-weight:600;}
-.quiz-prog{height:4px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden;}
+/* Header do quiz tinha 2 chips (área + placar) competindo na mesma linha; o placar
+   vira legenda inline do progresso — só a área continua como chip. */
+.quiz-prog-row{display:flex;align-items:center;gap:10px;}
+.quiz-prog{flex:1;height:4px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden;}
 .quiz-prog-fill{height:100%;background:var(--fire-line);border-radius:2px;transition:width .3s;}
+.quiz-score-v{flex-shrink:0;font-family:var(--font-display);font-size:13px;font-weight:700;color:rgba(255,255,255,.92);white-space:nowrap;}
+.quiz-score-l{font-family:inherit;font-weight:600;font-size:9px;opacity:.65;text-transform:uppercase;letter-spacing:.05em;margin-left:4px;}
 .quiz-body{padding:16px 14px;background:var(--surface);border-radius:0 0 18px 18px;box-shadow:var(--shadow);}
 .quiz-q-num{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text3);letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;}
 .quiz-q-text{font-size:15.5px;font-weight:600;color:var(--text);line-height:1.55;margin-bottom:16px;}
@@ -977,6 +979,9 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .resumos-list{display:flex;flex-direction:column;gap:10px;}
 .resumo-list-item{background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px;cursor:pointer;}
 .resumo-list-vence{font-size:11px;color:var(--text3);}
+/* "Praticar toda a área" é a ação do painel, não mais um tópico igual aos de baixo */
+.quiz-area-cta{background:var(--paper-2);}
+.quiz-area-cta:active{background:var(--border);}
 
 /* ═══ PADRÕES ═══ */
 .padroes-screen{padding:16px;background:transparent;}
@@ -2220,9 +2225,11 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <div class="quiz-meta">
             <button class="btn-voltar-quiz" onclick="voltarMenuQuiz()">← Voltar</button>
             <div class="quiz-area-tag" id="quiz-area-tag">Quiz</div>
-            <div class="quiz-score-box"><div class="quiz-score-v" id="quiz-score-v">0/0</div><div class="quiz-score-l">Respondidas</div></div>
           </div>
-          <div class="quiz-prog"><div class="quiz-prog-fill" id="quiz-prog-fill" style="width:0%"></div></div>
+          <div class="quiz-prog-row">
+            <div class="quiz-prog"><div class="quiz-prog-fill" id="quiz-prog-fill" style="width:0%"></div></div>
+            <div><span class="quiz-score-v" id="quiz-score-v">0/0</span><span class="quiz-score-l">respondidas</span></div>
+          </div>
         </div>
         <div class="quiz-body">
           <div class="quiz-q-num" id="quiz-q-num"></div>
@@ -4401,7 +4408,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.222';
+const APP_VERSAO='v1.223';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5506,7 +5513,7 @@ function renderAreaList(){
         <svg class="pg-area-chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
       </div>
       <div class="pg-area-topicos">
-        <div class="resumo-list-item" onclick="abrirIntro('quiz','${k}')">
+        <div class="resumo-list-item quiz-area-cta" onclick="abrirIntro('quiz','${k}')">
           <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${a.icon}</div>
           <div style="flex:1"><div style="font-size:13px;font-weight:700">Praticar toda a área</div><div class="resumo-list-vence">${n} quest${n!==1?'ões':'ão'}</div></div>
           <div style="color:var(--text3);font-size:18px">→</div>
