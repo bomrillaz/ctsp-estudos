@@ -2157,7 +2157,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <div class="tela-h-sub">Escolha uma área ou modo especial</div>
           </div>
           <div class="hub-inicio" id="quiz-meta-cta"></div>
-          <button class="btn-intercalado" onclick="abrirIntro('interleaving')"><svg style="width:17px;height:17px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Intercalado — Alternar entre áreas</button>
+          <button class="btn-intercalado" onclick="abrirIntro('interleaving')"><svg style="width:17px;height:17px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Intercalado: alternar entre áreas</button>
           <!-- BLOCO 34 (item 3): caminho SEM leitor de QR.
                O ebook mandava "Quiz → <nome do tópico>", mas a aba Quiz só lista ÁREAS
                e clicar numa área já dispara o quiz — esse caminho nunca existiu.
@@ -2208,7 +2208,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <div style="padding:14px 14px 0">
         <div class="tela-header" style="margin-bottom:0">
           <div class="tela-h-title">Flashcards</div>
-          <div class="tela-h-sub">Memorização rápida — frente e verso</div>
+          <div class="tela-h-sub">Memorização rápida, frente e verso</div>
         </div>
       </div>
       <div class="cards-body" id="cards-body"></div>
@@ -3650,10 +3650,10 @@ function renderProntidao(){
   if(stEl){
     const falta=corte-total;
     let txt,cls;
-    if(lo>=corte){txt='Acima do corte ('+corte+') — projeção sólida';cls='ok';}
-    else if(total>=corte){txt='No caminho — acima do corte ('+corte+'), mas ainda na margem';cls='atencao';}
-    else if(hi>=corte){txt='Logo abaixo do corte — faltam '+falta+' ponto'+(falta!==1?'s':'')+' (a faixa ainda alcança '+corte+')';cls='atencao';}
-    else{txt='Abaixo do corte — faltam '+falta+' ponto'+(falta!==1?'s':'')+' para '+corte;cls='alerta';}
+    if(lo>=corte){txt='Acima do corte ('+corte+'), projeção sólida';cls='ok';}
+    else if(total>=corte){txt='No caminho: acima do corte ('+corte+'), mas ainda na margem';cls='atencao';}
+    else if(hi>=corte){txt='Logo abaixo do corte: faltam '+falta+' ponto'+(falta!==1?'s':'')+' (a faixa ainda alcança '+corte+')';cls='atencao';}
+    else{txt='Abaixo do corte: faltam '+falta+' ponto'+(falta!==1?'s':'')+' para '+corte;cls='alerta';}
     stEl.textContent=txt;stEl.className='pg-status '+cls;
   }
   const avisoEl=document.getElementById('pront-aviso');
@@ -3680,12 +3680,12 @@ function renderLegendaProgresso(){
   el.innerHTML=
      // B58 §4.6 / F2b: "o quanto você acerta" contradizia o tooltip (domínio NÃO é taxa de acerto);
      // e a legenda dizia "esfria sozinho" sem dizer QUANTO — agora diz.
-     '<span><i style="background:linear-gradient(90deg,var(--red),var(--amber),var(--green))"></i>Domínio — seu nível de hoje no conteúdo; sem revisão, cai pela metade a cada '+BKT_MV_PISO_D+' a '+BKT_MV_TETO_D+' dias (mais devagar quanto mais você já acertou)</span>'
-    +'<span><i style="background:var(--blue)"></i>Cobertura — o quanto do edital você já viu</span>'
-    +'<span><i class="pg-legend-line"></i>Evolução — seu acerto por semana</span>'
-    +'<span><i style="background:var(--green)"></i>Projeção — acertos esperados na cota da área</span>'
+     '<span><i style="background:linear-gradient(90deg,var(--red),var(--amber),var(--green))"></i>Domínio: seu nível de hoje no conteúdo; sem revisão, cai pela metade a cada '+BKT_MV_PISO_D+' a '+BKT_MV_TETO_D+' dias (mais devagar quanto mais você já acertou)</span>'
+    +'<span><i style="background:var(--blue)"></i>Cobertura: o quanto do edital você já viu</span>'
+    +'<span><i class="pg-legend-line"></i>Evolução: seu acerto por semana</span>'
+    +'<span><i style="background:var(--green)"></i>Projeção: acertos esperados na cota da área</span>'
     +faixas
-    +'<span><i style="background:var(--text3)"></i>Cinza — amostra insuficiente, não é nota baixa</span>'
+    +'<span><i style="background:var(--text3)"></i>Cinza: amostra insuficiente, não é nota baixa</span>'
     +'<span style="flex-basis:100%;font-size:11px;color:var(--text3);">As cores por área (AT1–AT5) são identidade visual, não escala de desempenho.</span>';
 }
 
@@ -4362,7 +4362,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.208';
+const APP_VERSAO='v1.215';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -4500,7 +4500,7 @@ function _navToInner(s,skipStagger){
   document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   const sc=document.getElementById('screen-'+s);
-  if(sc){sc.classList.add('active');if(!skipStagger)animateScreenEntrance(sc);}
+  if(sc)sc.classList.add('active');
   _marcarNav(s);
   window.scrollTo(0,0);
   // Voltar ao painel encerra o ciclo de foco — senão a barra flutuante ficaria
@@ -4515,6 +4515,11 @@ function _navToInner(s,skipStagger){
   if(s==='progresso'){renderDashboard();}
   if(s==='foco'){renderFoco();}
   if(s==='admin'&&isAdmin()){loadAdminUsers();loadReportes();}
+  // BLOCO 34+redesign pós-login: a animação de entrada roda SÓ DEPOIS dos renders de
+  // cada tela — antes disso, animava elementos que renderAreaList/renderCards/etc.
+  // substituem via innerHTML no MESMO tick, então o style de fade nunca chegava a
+  // aparecer (achado da auditoria do Quiz).
+  if(sc&&!skipStagger)animateScreenEntrance(sc);
   // BLOCO 34: a barra de retorno ao foco depende da tela ATUAL, então é atualizada
   // aqui, depois do troca-de-classe — em qualquer navegação, não só nas do foco.
   atualizarBarraFoco();
@@ -4546,7 +4551,7 @@ function fecharMais(e){if(e&&e.target!==e.currentTarget)return;const o=document.
 function navMais(s){const o=document.getElementById('mais-overlay');if(o)o.classList.remove('open');navTo(s);}
 function animateScreenEntrance(sc){
   // Staggered reveal nos cards filhos
-  const items=sc.querySelectorAll('.area-card,.area-row,.quick-btn,.sim-card,.resumo-list-item,.padrao-card,.user-head,.obj-card');
+  const items=sc.querySelectorAll('.area-card,.area-row,.quick-btn,.sim-card,.resumo-list-item,.padrao-card,.user-head,.obj-card,.adapt-btn,.metas-card,#foco-bloco,.ver-progresso,.btn-intercalado,.sim-hist-item');
   items.forEach((el,i)=>{
     el.style.opacity='0';
     el.style.transform='translateY(16px)';
@@ -4868,7 +4873,7 @@ function renderFilaFoco(){
   if(!notas.length){
     const {area,pct}=areaMaisFraca();
     if(area&&pct<80){
-      notas.push({cor:'var(--red)',titulo:AI[area].nome,sub:pct+'% de acertos — sua área mais fraca',
+      notas.push({cor:'var(--red)',titulo:AI[area].nome,sub:pct+'% de acertos, sua área mais fraca',
         cta:'TREINAR',acao:"abrirIntro('quiz','"+area+"')"});
     }
   }
@@ -4969,12 +4974,12 @@ function renderFoco(){
   const prox=todas.find(x=>!x.feito);
   if(cta){
     cta.disabled=!prox;
-    cta.textContent=prox?(feitas?'Continuar':'Começar')+' — '+({resumo:'ler o resumo',cards:'revisar os cards',questoes:'responder as questões'}[prox.tipo]):'Tópico concluído ✓';
+    cta.textContent=prox?(feitas?'Continuar':'Começar')+': '+({resumo:'ler o resumo',cards:'revisar os cards',questoes:'responder as questões'}[prox.tipo]):'Tópico concluído ✓';
   }
   const rod=document.getElementById('foco-rodape');
   if(rod){
     rod.textContent=prox
-      ? 'Cada etapa volta para cá quando terminar — você não precisa passar pelo painel.'
+      ? 'Cada etapa volta para cá quando terminar. Você não precisa passar pelo painel.'
       : 'Este tópico sai da sua fila de foco. Se o domínio cair de novo, ele volta sozinho.';
   }
   // Conclusão do tópico: grava com o domínio DO MOMENTO, para saber depois se caiu.
@@ -5806,7 +5811,7 @@ function treinoFeitoHoje(){return userStats.treinoDia===diaKeyHoje();}
 function atualizarCardTreino(){
   const tb=document.getElementById('treino-badge'),tsub=document.getElementById('treino-sub');
   if(!tb||!tsub)return;
-  if(treinoFeitoHoje()){tb.textContent='✓ Concluído hoje';tb.style.color='var(--green)';tsub.textContent='Objetivo do dia cumprido — refaça se quiser';}
+  if(treinoFeitoHoje()){tb.textContent='✓ Concluído hoje';tb.style.color='var(--green)';tsub.textContent='Objetivo do dia cumprido. Refaça se quiser.';}
   else{tb.textContent='Recomendado agora';tb.style.color='var(--blue)';tsub.textContent='Revisão vencida + ponto fraco + assunto novo';}
 }
 function fecharFim(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('modal-fim').classList.add('hidden');}
@@ -5982,7 +5987,7 @@ function renderCard(){
       <div class="card-flip" id="card-flip-el" onclick="flipCard()">
         <div class="card-face card-front">
           <div class="card-face-inner">
-            <div class="card-label">Frente — Pergunta</div>
+            <div class="card-label">Frente · Pergunta</div>
             <div class="card-area-tag" style="background:${aInfo.bg||'var(--paper-2)'};color:${aInfo.color||'var(--text2)'}">${aInfo.icon||''} ${area}</div>
             <div class="card-text">${sanitize(fc.f)}</div>
             <div class="card-hint">Toque para ver a resposta</div>
@@ -5990,7 +5995,7 @@ function renderCard(){
         </div>
         <div class="card-face card-back">
           <div class="card-face-inner">
-            <div class="card-label" style="opacity:.6">Verso — Resposta</div>
+            <div class="card-label" style="opacity:.6">Verso · Resposta</div>
             <div class="card-text">${sanitize(fc.v)}</div>
           </div>
         </div>
@@ -6399,7 +6404,7 @@ function blocoPraticarTopico(t){
   const n=Object.values(allQuestoes).filter(q=>q.topico===t).length;
   if(!n)return '';
   return `<div style="text-align:center;margin:-4px 0 12px">
-    <button class="btn-weak" onclick="abrirIntro('topico','${t}')">Praticar ${sanitize(nomeTopico(t))} — ${n} ${n===1?'questão':'questões'}</button>
+    <button class="btn-weak" onclick="abrirIntro('topico','${t}')">Praticar ${sanitize(nomeTopico(t))}: ${n} ${n===1?'questão':'questões'}</button>
   </div>`;
 }
 
@@ -6716,7 +6721,7 @@ function gerarDiagnostico(pct,byArea){
 
   const leitura = pct>=70 ? 'Desempenho consistente.'
                 : pct>=50 ? 'Base formada, com lacunas concentradas.'
-                : 'Base ainda irregular — priorize revisão antes de novo simulado.';
+                : 'Base ainda irregular. Priorize revisão antes de novo simulado.';
 
   const focos=linhas.filter(l=>l.perda>0).slice(0,2);
   const alvo=focos.length
@@ -6831,7 +6836,7 @@ function tqSel(btn){
   btn.classList.add('sel');
   const code=btn.dataset.code,name=btn.dataset.name,pct=btn.dataset.pct,c=btn.dataset.cor,weak=btn.dataset.weak;
   const d=tq.querySelector('.tq-detail');
-  if(d)d.innerHTML='<span class="tq-dot" style="background:'+c+'"></span><b>'+sanitize(code)+'</b> · '+sanitize(name)+' — <b>'+sanitize(pct)+'</b>'+(weak?'<span class="tq-weak">ponto mais fraco</span>':'')+'<button type="button" class="tq-praticar" onclick="abrirIntro(\'topico\',\''+sanitize(code)+'\')">Praticar →</button>';
+  if(d)d.innerHTML='<span class="tq-dot" style="background:'+c+'"></span><b>'+sanitize(code)+'</b> · '+sanitize(name)+': <b>'+sanitize(pct)+'</b>'+(weak?'<span class="tq-weak">ponto mais fraco</span>':'')+'<button type="button" class="tq-praticar" onclick="abrirIntro(\'topico\',\''+sanitize(code)+'\')">Praticar →</button>';
 }
 function toggleAreaTopicos(el){
   const row=el.closest('.pg-area-row');
@@ -7028,7 +7033,7 @@ async function loadAdminUsers(){
     // Contador de quem precisa de ação — é o número que você olha primeiro.
     const acao=grupos.ativos.filter(([,u])=>['vencido','vencendo'].includes(estadoCobranca(u).estado)&&!u.admin).length;
     const html=(acao?`<div class="cob-resumo">${acao} assinatura${acao!==1?'s':''} para cobrar</div>`:'')
-      +(nDup?`<div class="cob-resumo dup-resumo">${nDup} e-mail${nDup!==1?'s':''} com mais de um registro — as linhas estão marcadas abaixo. Apagar a conta de login de vez: Firebase Console → Authentication.</div>`:'')
+      +(nDup?`<div class="cob-resumo dup-resumo">${nDup} e-mail${nDup!==1?'s':''} com mais de um registro. As linhas estão marcadas abaixo. Apagar a conta de login de vez: Firebase Console → Authentication.</div>`:'')
       +secao('Ativos',grupos.ativos,false)
       +secao('Aguardando aprovação',grupos.pend,false)
       +secao('Revogados',grupos.revog,true)
@@ -7037,7 +7042,7 @@ async function loadAdminUsers(){
     el.innerHTML=html||'<p style="color:var(--text2);font-size:13px">Nenhum usuário.</p>';
   }catch(err){
     console.error('loadAdminUsers erro:',err);
-    const msg=err.message==='timeout'?'Tempo limite — toque para tentar novamente':'Erro: '+err.message;
+    const msg=err.message==='timeout'?'Tempo limite: toque para tentar novamente':'Erro: '+err.message;
     el.innerHTML=`<p style="color:var(--red);font-size:13px">${msg}</p><button onclick="loadAdminUsers()" style="margin-top:8px;padding:10px 16px;background:var(--red);color:white;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;">Tentar novamente</button>`;
   }
 }
@@ -7400,7 +7405,7 @@ async function loadMetricas(){
       '<div style="font-size:19px;font-weight:800;color:var(--text)">'+sanitize(String(val))+'</div></div>';
     el.innerHTML=
       linha('Usuários aprovados',entradas.length+' cadastros no total',aprovados.length)+
-      linha('Cadastros — 7 dias',cad30+' nos últimos 30 dias',cad7)+
+      linha('Cadastros em 7 dias',cad30+' nos últimos 30 dias',cad7)+
       linha('Completaram o nivelamento',aprovados.length+' aprovados',_metricaPct(diagFeito,aprovados.length))+
       linha('Retenção D2','voltou a estudar 2 dias depois',_metricaPct(ret2ok,ret2eleg))+
       linha('Retenção D7','voltou a estudar 7 dias depois',_metricaPct(ret7ok,ret7eleg))+
@@ -7770,10 +7775,10 @@ function renderObjetivoSemana(){
   const cor=pct>=80?'var(--green)':pct>=60?'var(--amber)':'var(--red)';
   const bg=pct>=80?'var(--green-light)':pct>=60?'var(--amber-light)':'var(--red-light)';
   const motivo=p.n===0
-    ?'Tópico ainda não praticado — comece por aqui para o sistema mapear seu domínio.'
-    :`Menor domínio estimado (BKT) entre seus tópicos, com base em ${p.n} resposta${p.n>1?'s':''}.${p.n<3?' Estimativa preliminar — responda mais para confirmar.':''}`;
+    ?'Tópico ainda não praticado. Comece por aqui para o sistema mapear seu domínio.'
+    :`Menor domínio estimado (BKT) entre seus tópicos, com base em ${p.n} resposta${p.n>1?'s':''}.${p.n<3?' Estimativa preliminar. Responda mais para confirmar.':''}`;
   el.innerHTML=`<div class="obj-card">
-    <div class="obj-card-label">Foco da semana — sistema definiu</div>
+    <div class="obj-card-label">Foco da semana · sistema definiu</div>
     <div class="obj-card-area">${a.icon||''} ${sanitize(p.nome)}</div>
     <div class="obj-card-motivo">${motivo} <span style="opacity:.7">(${p.t} · ${p.area})</span></div>
     <span class="obj-card-pct" style="background:${bg};color:${cor}">${pct}% de domínio</span>
