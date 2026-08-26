@@ -2009,12 +2009,12 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <p>Plataforma de Estudos · por Bomrillaz</p>
     </div>
     <div class="auth-card">
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="tab-btn-login" onclick="showAuthTab('login')">Entrar</button>
-        <button class="auth-tab" id="tab-btn-register" onclick="showAuthTab('register')">Cadastrar</button>
+      <div class="auth-tabs" role="tablist" aria-label="Entrar ou cadastrar">
+        <button class="auth-tab active" id="tab-btn-login" role="tab" aria-selected="true" aria-controls="tab-login" onclick="showAuthTab('login')">Entrar</button>
+        <button class="auth-tab" id="tab-btn-register" role="tab" aria-selected="false" aria-controls="tab-register" onclick="showAuthTab('register')">Cadastrar</button>
       </div>
       <!-- LOGIN -->
-      <div id="tab-login">
+      <div id="tab-login" role="tabpanel" aria-labelledby="tab-btn-login">
         <div class="field"><label for="login-email">E-mail</label><input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email"></div>
         <div class="field"><label for="login-pass">Senha</label>
           <div class="field-pass-wrap">
@@ -2027,7 +2027,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <p class="auth-msg" id="login-msg" role="alert"></p>
       </div>
       <!-- REGISTER -->
-      <div id="tab-register" class="hidden">
+      <div id="tab-register" class="hidden" role="tabpanel" aria-labelledby="tab-btn-register">
         <div class="field"><label for="reg-nome">Nome</label><input type="text" id="reg-nome" placeholder="Seu nome completo" autocomplete="name"></div>
         <div class="field"><label for="reg-email">E-mail</label><input type="email" id="reg-email" placeholder="seu@email.com" autocomplete="email"></div>
         <div class="field"><label for="reg-pass">Senha</label>
@@ -2270,7 +2270,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <div id="quiz-home-view">
         <div class="quiz-home">
           <div class="tela-header">
-            <div class="tela-h-title">Quiz</div>
+            <h2 class="tela-h-title">Quiz</h2>
             <div class="tela-h-sub">Escolha uma área ou modo especial</div>
           </div>
           <div class="hub-inicio" id="quiz-meta-cta"></div>
@@ -2301,7 +2301,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           </div>
           <div class="quiz-prog-row">
             <div class="quiz-prog"><div class="quiz-prog-fill" id="quiz-prog-fill" style="width:0%"></div></div>
-            <div><span class="quiz-score-v" id="quiz-score-v">0/0</span><span class="quiz-score-l">respondidas</span></div>
+            <div aria-live="polite" aria-atomic="true"><span class="quiz-score-v" id="quiz-score-v">0/0</span><span class="quiz-score-l">respondidas</span></div>
           </div>
         </div>
         <div class="quiz-body">
@@ -2326,7 +2326,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="screen" id="screen-cards">
       <div style="padding:14px 14px 0">
         <div class="tela-header" style="margin-bottom:0">
-          <div class="tela-h-title">Flashcards</div>
+          <h2 class="tela-h-title">Flashcards</h2>
           <div class="tela-h-sub">Memorização rápida, frente e verso</div>
         </div>
       </div>
@@ -2338,7 +2338,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <div id="sim-home-view">
         <div class="sim-home">
           <div class="tela-header">
-            <div class="tela-h-title">Simulado</div>
+            <h2 class="tela-h-title">Simulado</h2>
             <div class="tela-h-sub">Escolha o modo de simulado</div>
           </div>
           <div class="sim-cards">
@@ -2394,7 +2394,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="screen" id="screen-resumos">
       <div class="resumos-screen">
         <div class="tela-header">
-          <div class="tela-h-title">Resumos</div>
+          <h2 class="tela-h-title">Resumos</h2>
           <div class="tela-h-sub">Revisão espaçada por dificuldade</div>
         </div>
         <div id="resumos-content"></div>
@@ -2404,22 +2404,22 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="screen" id="screen-consulta">
       <div class="resumos-screen">
         <div class="tela-header">
-          <div class="tela-h-title">Consulta</div>
+          <h2 class="tela-h-title">Consulta</h2>
           <div class="tela-h-sub">Glossário e mapa das normas do edital</div>
         </div>
-        <div class="sub-tabs" id="consulta-subtabs">
-          <button class="sub-tab active" data-sub="glossario" onclick="setConsultaSub('glossario')">Glossário</button>
-          <button class="sub-tab" data-sub="normas" onclick="setConsultaSub('normas')">Normas</button>
+        <div class="sub-tabs" id="consulta-subtabs" role="tablist" aria-label="Seções da Consulta">
+          <button class="sub-tab active" id="consulta-tab-glossario" role="tab" aria-selected="true" aria-controls="glossario-content" data-sub="glossario" onclick="setConsultaSub('glossario')">Glossário</button>
+          <button class="sub-tab" id="consulta-tab-normas" role="tab" aria-selected="false" aria-controls="normas-content" data-sub="normas" onclick="setConsultaSub('normas')">Normas</button>
         </div>
-        <div id="glossario-content"></div>
-        <div id="normas-content" class="hidden"></div>
+        <div id="glossario-content" role="tabpanel" aria-labelledby="consulta-tab-glossario"></div>
+        <div id="normas-content" class="hidden" role="tabpanel" aria-labelledby="consulta-tab-normas"></div>
       </div>
     </div>
     <!-- PADRÕES -->
     <div class="screen" id="screen-padroes">
       <div class="padroes-screen">
         <div class="tela-header">
-          <div class="tela-h-title">Padrões das Provas</div>
+          <h2 class="tela-h-title">Padrões das Provas</h2>
           <div class="tela-h-sub">Metodologia e tópicos de alta incidência · CTSP 2024/2025</div>
         </div>
         <div class="padroes-base">Metodologia validada contra as provas de 2017 a 2025: os temas de alta incidência se confirmam nas provas recentes. O conteúdo do site segue as cotas e o programa do edital vigente.</div>
@@ -2445,26 +2445,26 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <button class="btn-admin-util" onclick="sincronizarBanco()">Sincronizar banco (QI + FCI → Firebase)</button>
           <p class="auth-msg" id="sync-msg" role="alert"></p>
         </div>
-        <div class="admin-tabs">
-          <button class="admin-tab active" onclick="setAdminTab('usuarios',this)">Usuários</button>
-          <button class="admin-tab" onclick="setAdminTab('reportes',this)">⚐ Reportes<span class="rep-badge" id="rep-badge-tab" style="display:none">0</span></button>
-          <button class="admin-tab" onclick="setAdminTab('avisos',this)">🔔 Avisos</button>
-          <button class="admin-tab" onclick="setAdminTab('metricas',this)">📊 Métricas</button>
+        <div class="admin-tabs" role="tablist" aria-label="Seções do painel admin">
+          <button class="admin-tab active" id="admin-tab-usuarios" role="tab" aria-selected="true" aria-controls="admin-usuarios" onclick="setAdminTab('usuarios',this)">Usuários</button>
+          <button class="admin-tab" id="admin-tab-reportes" role="tab" aria-selected="false" aria-controls="admin-reportes" onclick="setAdminTab('reportes',this)">⚐ Reportes<span class="rep-badge" id="rep-badge-tab" style="display:none">0</span></button>
+          <button class="admin-tab" id="admin-tab-avisos" role="tab" aria-selected="false" aria-controls="admin-avisos" onclick="setAdminTab('avisos',this)">🔔 Avisos</button>
+          <button class="admin-tab" id="admin-tab-metricas" role="tab" aria-selected="false" aria-controls="admin-metricas" onclick="setAdminTab('metricas',this)">📊 Métricas</button>
         </div>
-        <div class="admin-section active" id="admin-usuarios">
+        <div class="admin-section active" id="admin-usuarios" role="tabpanel" aria-labelledby="admin-tab-usuarios">
           <div id="admin-users-list"><p style="color:var(--text2);font-size:13px;">Carregando...</p></div>
         </div>
-        <div class="admin-section" id="admin-reportes">
+        <div class="admin-section" id="admin-reportes" role="tabpanel" aria-labelledby="admin-tab-reportes">
           <div id="admin-reportes-list"><p style="color:var(--text2);font-size:13px;">Carregando...</p></div>
         </div>
-        <div class="admin-section" id="admin-avisos">
+        <div class="admin-section" id="admin-avisos" role="tabpanel" aria-labelledby="admin-tab-avisos">
           <div class="field"><label for="av-titulo">Título</label><input type="text" id="av-titulo" maxlength="120"></div>
           <div class="field"><label for="av-corpo">Mensagem</label><textarea id="av-corpo" rows="3" maxlength="500"></textarea></div>
           <button class="btn-primary" onclick="enviarAviso()">Enviar aos usuários</button>
           <p class="auth-msg" id="av-msg" role="alert"></p>
           <p style="color:var(--text2);font-size:12px;margin-top:8px;">Aparece no sino de todo mundo na hora; o push no celular chega em até ~5 min.</p>
         </div>
-        <div class="admin-section" id="admin-metricas">
+        <div class="admin-section" id="admin-metricas" role="tabpanel" aria-labelledby="admin-tab-metricas">
           <button class="btn-config-reset" onclick="loadMetricas()">Atualizar</button>
           <div id="admin-metricas-list" style="margin-top:10px;"><p style="color:var(--text2);font-size:13px;">Clique em Atualizar.</p></div>
         </div>
@@ -2475,7 +2475,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="screen" id="screen-progresso">
       <div style="padding:14px 14px 0">
         <div class="tela-header">
-          <div class="tela-h-title">Meu progresso</div>
+          <h2 class="tela-h-title">Meu progresso</h2>
           <div class="tela-h-sub">Domínio, cobertura, evolução e projeção para a prova</div>
         </div>
       </div>
@@ -2504,13 +2504,13 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
                 <div class="ring-center"><div class="dominio-geral-pct" id="dominio-geral-num">0%</div></div>
               </div>
               <div class="pg-hero-info">
-                <div class="pg-hero-label">de domínio geral <span class="info-btn" onclick="showInfo('dominio')" aria-label="Mais informações">?</span></div>
+                <div class="pg-hero-label">de domínio geral <span class="info-btn" onclick="showInfo('dominio')" aria-label="O que é domínio geral">?</span></div>
                 <div class="pg-hero-faixa" id="dominio-geral-faixa"></div>
               </div>
             </div>
             <div class="pg-hero-div"></div>
             <div id="pg-projecao">
-              <div class="pg-mod-h">Projeção para a prova <span class="info-btn" onclick="showInfo('prontidao')" aria-label="Mais informações">?</span></div>
+              <div class="pg-mod-h">Projeção para a prova <span class="info-btn" onclick="showInfo('prontidao')" aria-label="Como a projeção para a prova é calculada">?</span></div>
               <div id="dash-pront" class="chart-wrap hidden">
                 <div style="display:flex;align-items:center;justify-content:flex-end;">
                   <span style="font-size:12px;font-weight:700;color:var(--ember-text);" id="pront-dias"></span>
@@ -2543,12 +2543,12 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
                blocos que já existiam; IDs e renderVereditos()/renderAreaDetalhe() não mudam. -->
           <div class="pg-area-grid">
             <div id="pg-vereditos" class="pg-vereditos-wrap">
-              <div class="pg-mod-h">Por área <span class="info-btn" onclick="showInfo('dominio')" aria-label="Mais informações">?</span></div>
-              <div id="pg-vereditos-list" class="pg-vereditos-list" role="tablist" aria-label="Selecionar área"></div>
+              <div class="pg-mod-h">Por área <span class="info-btn" onclick="showInfo('dominio')" aria-label="O que é domínio por área">?</span></div>
+              <div id="pg-vereditos-list" class="pg-vereditos-list" role="tablist" aria-orientation="vertical" aria-label="Selecionar área"></div>
             </div>
             <!-- Nível 2/3: domínio da área + projeção + posição entre as 5 + colunas de tópico
                  (reusa topicosAreaHTML) + decomposição "por que isso aconteceu" (D4). -->
-            <div id="pg-area-detalhe" class="pg-area-detalhe"></div>
+            <div id="pg-area-detalhe" class="pg-area-detalhe" role="tabpanel"></div>
           </div>
 
           <!-- E AGORA? — fecho em ação: o tópico mais frágil, com atalho de prática. -->
@@ -3913,9 +3913,10 @@ exemplo:null}
 // ═══════════════════════════════
 function showAuthTab(t){
   ['login','register','pending'].forEach(x=>{
-    document.getElementById('tab-'+x).classList.toggle('hidden',x!==t);
+    const painel=document.getElementById('tab-'+x);
+    painel.classList.toggle('hidden',x!==t);
     const btn=document.getElementById('tab-btn-'+x);
-    if(btn)btn.classList.toggle('active',x===t);
+    if(btn){btn.classList.toggle('active',x===t);btn.setAttribute('aria-selected',x===t?'true':'false');}
   });
 }
 
@@ -4486,7 +4487,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.235';
+const APP_VERSAO='v1.236';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -6352,7 +6353,11 @@ function abrirFlashcardBusca(id){
 let _consultaSub='glossario';
 function setConsultaSub(which){
   _consultaSub=which;
-  document.querySelectorAll('#consulta-subtabs .sub-tab').forEach(b=>b.classList.toggle('active',b.dataset.sub===which));
+  document.querySelectorAll('#consulta-subtabs .sub-tab').forEach(b=>{
+    const sel=b.dataset.sub===which;
+    b.classList.toggle('active',sel);
+    b.setAttribute('aria-selected',sel?'true':'false'); // D/S8: qual aba está ativa não pode existir só na cor
+  });
   const map={glossario:'glossario-content',normas:'normas-content'};
   Object.entries(map).forEach(([k,id])=>{const el=document.getElementById(id);if(el)el.classList.toggle('hidden',k!==which);});
   if(which==='glossario')renderGlossario();
@@ -7050,9 +7055,10 @@ function mostrarExemplo(qid){
 function isAdmin(){return currentUser&&(currentUser.email===ADMIN_EMAIL||(userProfile&&userProfile.admin===true));}
 
 function setAdminTab(t,btn){
-  document.querySelectorAll('.admin-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.admin-tab').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});
   document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
-  btn.classList.add('active');
+  btn.classList.add('active');btn.setAttribute('aria-selected','true'); // D/S8
+
   document.getElementById('admin-'+t).classList.add('active');
   if(t==='reportes')loadReportes();
   if(t==='metricas')loadMetricas();
@@ -7746,7 +7752,7 @@ function renderVereditos(){
     const domPct=temEv?Math.round(dominioAreaBKT(k,perfil)*100):null;
     const domCorV=domPct!==null?domCor(domPct):'var(--text3)';
     const vtxt=(vereditos[k]||[]).join(' · ');
-    return '<button type="button" class="pg-veredito-row'+(sel?' sel':'')+'" role="tab" aria-selected="'+sel+'" data-area="'+k+'" onclick="selecionarAreaPg(\''+k+'\')">'
+    return '<button type="button" class="pg-veredito-row'+(sel?' sel':'')+'" id="pg-tab-'+k+'" role="tab" aria-selected="'+sel+'" aria-controls="pg-area-detalhe" data-area="'+k+'" onclick="selecionarAreaPg(\''+k+'\')">'
       +'<span class="pg-veredito-ic" style="color:'+a.color+'">'+a.icon+'</span>'
       +'<span class="pg-veredito-main">'
         +'<span class="pg-veredito-nome">'+k+'</span>'
@@ -7777,6 +7783,9 @@ function selecionarAreaPg(k){
     btn.classList.toggle('sel',sel);
     btn.setAttribute('aria-selected',sel?'true':'false');
   });
+  // D/S8: o painel é um só e troca de dono a cada aba, então o rótulo tem de seguir a aba ativa.
+  const _det=document.getElementById('pg-area-detalhe');
+  if(_det)_det.setAttribute('aria-labelledby','pg-tab-'+k);
   renderAreaDetalhe(k);
 }
 
@@ -9245,6 +9254,35 @@ document.addEventListener('keydown',e=>{
     return;
   }
   if(document.querySelector('.modal-overlay:not(.hidden)'))return; // modal aberto: não interceptar
+  // D/S8 — setas em tablist (WAI-ARIA APG). Um handler só, dentro do delegate global,
+  // servindo os 3 tablists do app (Consulta, Admin, Progresso). NÃO usa roving tabindex:
+  // tirar os tabs do fluxo de Tab mudaria o comportamento de quem já navega hoje. As setas
+  // são adição pura — Tab continua percorrendo aba por aba como sempre.
+  const tabFocado=e.target&&e.target.closest?e.target.closest('[role="tab"]'):null;
+  // e.repeat: segurar a seta faria o SO repetir ~20x/s. Em Admin cada troca de aba
+  // dispara loadReportes()/loadMetricas(), que leem o RTDB inteiro — key-repeat viraria
+  // rajada de leitura. Ignorar a repeticao mantem 1 troca por toque.
+  if(tabFocado&&!e.repeat){
+    const lista=tabFocado.closest('[role="tablist"]');
+    // APG: em tablist horizontal so Esquerda/Direita; no vertical so Cima/Baixo.
+    const vert=lista&&lista.getAttribute('aria-orientation')==='vertical';
+    const proximo=e.key===(vert?'ArrowDown':'ArrowRight');
+    const anterior=e.key===(vert?'ArrowUp':'ArrowLeft');
+    if(proximo||anterior||e.key==='Home'||e.key==='End'){
+      const tabs=lista?Array.prototype.slice.call(lista.querySelectorAll('[role="tab"]')):[];
+      const i=tabs.indexOf(tabFocado);
+      if(i>-1&&tabs.length>1){
+        e.preventDefault();
+        let j;
+        if(e.key==='Home')j=0;
+        else if(e.key==='End')j=tabs.length-1;
+        else if(proximo)j=(i+1)%tabs.length;
+        else j=(i-1+tabs.length)%tabs.length;
+        tabs[j].focus();tabs[j].click();
+        return;
+      }
+    }
+  }
   if(e.key==='Enter'){
     const as=document.getElementById('auth-screen');
     if(as&&as.classList.contains('active')){doLogin();return;}
