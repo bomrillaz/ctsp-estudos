@@ -439,7 +439,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 /* pip aposentado — a pílula deslizante (.nav-indicator) é o indicador de ativo */
 .nav-indicator{position:absolute;top:8px;bottom:8px;left:4px;width:calc((100% - 8px) / 5);border-radius:16px;background:rgba(240,136,60,.15);border:1px solid rgba(240,136,60,.24);transition:transform .34s var(--ease-spring);pointer-events:none;z-index:0;}
 .nav-item{z-index:1;}
-.nav-badge{position:absolute;top:7px;right:calc(50% - 19px);background:var(--red-solid);color:white;border-radius:10px;font-size:9px;font-weight:800;padding:1px 5px;min-width:16px;text-align:center;box-shadow:0 0 0 2px rgba(13,21,48,.96);}
+.nav-badge{position:absolute;top:7px;right:calc(50% - 19px);background:var(--red-solid);color:white;border-radius:10px;font-size:11px;font-weight:800;padding:1px 5px;min-width:16px;text-align:center;box-shadow:0 0 0 2px rgba(13,21,48,.96);}
 /* ── PAINEL "MAIS" (bottom sheet) ── */
 .sheet-overlay{position:fixed;inset:0;z-index:200;background:rgba(11,20,48,.45);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .25s;}
 .sheet-overlay.open{opacity:1;pointer-events:auto;}
@@ -567,7 +567,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pg-placar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
 .pg-kpi{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);}
 .pg-kpi-v{font-family:var(--font-display);font-size:26px;font-weight:700;color:var(--text);line-height:1;display:flex;align-items:baseline;gap:6px;}
-.pg-kpi-l{font-size:10.5px;color:var(--text2);margin-top:4px;font-weight:600;}
+.pg-kpi-l{font-size:11px;color:var(--text2);margin-top:4px;font-weight:600;}
 .pg-kpi-delta{font-size:11px;font-weight:800;}
 .pg-kpi-delta.up{color:var(--green);}
 .pg-kpi-delta.down{color:var(--red);}
@@ -582,7 +582,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pg-legend i{display:inline-block;width:16px;height:8px;border-radius:2px;margin-right:7px;vertical-align:-1px;flex-shrink:0;}
 .pg-area-row{display:flex;gap:10px;padding:15px 0;border-top:1px solid var(--line-soft);}
 .pg-area-row:first-of-type{border-top:none;}
-.pg-area-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);min-width:60px;}
+.pg-area-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);min-width:60px;}
 /* P1 — sparkline de evolução por área */
 .pg-area-evo .pg-area-tag{color:var(--text3);}
 .pg-spark{width:118px;height:34px;flex-shrink:0;}
@@ -647,7 +647,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pg-chart-plot{position:relative;height:80px;margin-top:14px;}
 .pg-chart-plot .chart-bars{height:80px;margin-top:0;align-items:flex-end;}
 .pg-meta-line{position:absolute;left:0;right:0;border-top:1.5px dashed var(--ember);opacity:.55;pointer-events:none;z-index:1;}
-.pg-meta-lbl{position:absolute;right:0;top:-13px;font-size:9px;color:var(--ember-text);font-weight:700;background:var(--surface);padding:0 3px;}
+.pg-meta-lbl{position:absolute;right:0;top:-14px;font-size:11px;color:var(--ember-text);font-weight:700;background:var(--surface);padding:0 3px;}
 .pg-chart-labels{display:flex;gap:6px;margin-top:5px;}
 .pg-chart-labels .chart-bar-label{flex:1;text-align:center;margin-top:0;}
 .pg-streak{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;}
@@ -704,7 +704,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 /* Tela de Foco */
 .foco-head{background:linear-gradient(150deg,var(--navy-2) 0%,var(--navy) 60%,var(--navy-deep) 100%);
   color:#fff;padding:16px 16px 20px;}
-.foco-head-tag{font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.65;margin-top:12px;}
+.foco-head-tag{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.65;margin-top:12px;}
 .foco-head-titulo{font-family:var(--font-display);font-size:21px;font-weight:700;line-height:1.25;margin-top:3px;overflow-wrap:anywhere;}
 .foco-head-sub{font-size:12.5px;opacity:.72;margin-top:5px;overflow-wrap:anywhere;}
 .foco-prog{height:6px;border-radius:6px;background:rgba(255,255,255,.16);overflow:hidden;margin-top:14px;}
@@ -755,7 +755,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .adapt-btn-arrow{font-size:20px;font-weight:700;opacity:.9;}
 /* Acento "recomendado" do Treino do dia — âmbar (não some no escuro) */
 .adapt-btn.rec{border:2px solid var(--ember);}
-#treino-badge{color:var(--ember);}
+#treino-badge{color:var(--ember);font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px;}
 #treino-badge.badge-feito{color:#46C07A;}
 /* No escuro, o card navy some no fundo navy: sobe o tom e reforça a sombra */
 html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#151f40);box-shadow:0 6px 22px rgba(0,0,0,.55);}
@@ -804,7 +804,7 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .chart-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
 .chart-bar{width:100%;background:rgba(16,27,61,.08);border-radius:6px 6px 0 0;transition:height .5s var(--ease-out);min-height:4px;}
 .chart-bar.hoje{background:linear-gradient(180deg,var(--ember),var(--red));}
-.chart-bar-label{font-size:9px;color:var(--text3);font-weight:600;margin-top:3px;}
+.chart-bar-label{font-size:11px;color:var(--text3);font-weight:600;margin-top:3px;}
 
 /* Modal meta diária */
 .modal-overlay{position:fixed;inset:0;background:rgba(11,20,48,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:1000;display:flex;align-items:flex-end;justify-content:center;}
@@ -849,7 +849,7 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .quiz-prog{flex:1;height:4px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden;}
 .quiz-prog-fill{height:100%;background:var(--fire-line);border-radius:2px;transition:width .3s;}
 .quiz-score-v{flex-shrink:0;font-family:var(--font-display);font-size:13px;font-weight:700;color:rgba(255,255,255,.92);white-space:nowrap;}
-.quiz-score-l{font-family:inherit;font-weight:600;font-size:9px;opacity:.65;text-transform:uppercase;letter-spacing:.05em;margin-left:4px;}
+.quiz-score-l{font-family:inherit;font-weight:600;font-size:11px;opacity:.65;text-transform:uppercase;letter-spacing:.05em;margin-left:4px;}
 .quiz-body{padding:16px 14px;background:var(--surface);border-radius:0 0 18px 18px;box-shadow:var(--shadow);}
 .quiz-q-num{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text3);letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;}
 .quiz-q-text{font-size:15.5px;font-weight:600;color:var(--text);line-height:1.55;margin-bottom:16px;}
@@ -1244,7 +1244,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .pg-area-detalhe-nome{font-family:var(--font-display);font-size:13.5px;font-weight:700;color:var(--text);letter-spacing:.01em;}
 .pg-area-detalhe-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--line-soft);}
 .pg-area-detalhe-v{display:block;font-family:var(--font-display);font-size:22px;font-weight:700;line-height:1;}
-.pg-area-detalhe-l{display:block;font-size:10px;color:var(--text3);margin-top:4px;font-weight:600;}
+.pg-area-detalhe-l{display:block;font-size:11px;color:var(--text3);margin-top:4px;font-weight:600;}
 .pg-area-detalhe-line{display:flex;align-items:center;gap:8px;margin:14px 0;}
 
 /* F2a/D4 — decomposição "por que isso aconteceu" (Quiz/Cards/Resumos + gargalo). */
@@ -2196,7 +2196,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="adapt-btn rec" onclick="abrirIntro('treino')">
           <div class="adapt-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></div>
           <div class="adapt-btn-info">
-            <div id="treino-badge" style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px">Recomendado agora</div>
+            <div id="treino-badge">Recomendado agora</div>
             <div class="adapt-btn-title">Treino do dia</div>
             <div id="treino-sub" class="adapt-btn-sub">Revisão vencida + ponto fraco + assunto novo</div>
           </div>
@@ -3911,12 +3911,20 @@ exemplo:null}
 // ═══════════════════════════════
 // AUTH
 // ═══════════════════════════════
+// D/S8 — fonte única do que "ativar uma aba" significa. As 4 telas com aba decidem QUEM é o
+// ativo de jeitos diferentes (array de ids, dataset, o próprio botão recebido) e usam nomes de
+// classe de estado diferentes ('active' e 'sel'), mas o efeito é sempre o mesmo par: classe +
+// aria-selected. Sem uma fonte só, a próxima aba do app nasce sem o aria-selected e volta a
+// existir só na cor — é o call-site-por-call-site que o CLAUDE.md §10 proíbe.
+function marcarTab(btn,ativo,cls){
+  if(!btn)return;
+  btn.classList.toggle(cls||'active',ativo);
+  btn.setAttribute('aria-selected',ativo?'true':'false');
+}
 function showAuthTab(t){
   ['login','register','pending'].forEach(x=>{
-    const painel=document.getElementById('tab-'+x);
-    painel.classList.toggle('hidden',x!==t);
-    const btn=document.getElementById('tab-btn-'+x);
-    if(btn){btn.classList.toggle('active',x===t);btn.setAttribute('aria-selected',x===t?'true':'false');}
+    document.getElementById('tab-'+x).classList.toggle('hidden',x!==t);
+    marcarTab(document.getElementById('tab-btn-'+x),x===t);
   });
 }
 
@@ -4487,7 +4495,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.236';
+const APP_VERSAO='v1.237';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -6353,11 +6361,7 @@ function abrirFlashcardBusca(id){
 let _consultaSub='glossario';
 function setConsultaSub(which){
   _consultaSub=which;
-  document.querySelectorAll('#consulta-subtabs .sub-tab').forEach(b=>{
-    const sel=b.dataset.sub===which;
-    b.classList.toggle('active',sel);
-    b.setAttribute('aria-selected',sel?'true':'false'); // D/S8: qual aba está ativa não pode existir só na cor
-  });
+  document.querySelectorAll('#consulta-subtabs .sub-tab').forEach(b=>marcarTab(b,b.dataset.sub===which));
   const map={glossario:'glossario-content',normas:'normas-content'};
   Object.entries(map).forEach(([k,id])=>{const el=document.getElementById(id);if(el)el.classList.toggle('hidden',k!==which);});
   if(which==='glossario')renderGlossario();
@@ -7055,9 +7059,9 @@ function mostrarExemplo(qid){
 function isAdmin(){return currentUser&&(currentUser.email===ADMIN_EMAIL||(userProfile&&userProfile.admin===true));}
 
 function setAdminTab(t,btn){
-  document.querySelectorAll('.admin-tab').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});
+  document.querySelectorAll('.admin-tab').forEach(b=>marcarTab(b,false));
   document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
-  btn.classList.add('active');btn.setAttribute('aria-selected','true'); // D/S8
+  marcarTab(btn,true);
 
   document.getElementById('admin-'+t).classList.add('active');
   if(t==='reportes')loadReportes();
@@ -7778,11 +7782,7 @@ function renderVereditos(){
 
 function selecionarAreaPg(k){
   pgAreaSel=k;
-  document.querySelectorAll('#pg-vereditos-list .pg-veredito-row').forEach(btn=>{
-    const sel=btn.dataset.area===k;
-    btn.classList.toggle('sel',sel);
-    btn.setAttribute('aria-selected',sel?'true':'false');
-  });
+  document.querySelectorAll('#pg-vereditos-list .pg-veredito-row').forEach(btn=>marcarTab(btn,btn.dataset.area===k,'sel'));
   // D/S8: o painel é um só e troca de dono a cada aba, então o rótulo tem de seguir a aba ativa.
   const _det=document.getElementById('pg-area-detalhe');
   if(_det)_det.setAttribute('aria-labelledby','pg-tab-'+k);
@@ -9255,14 +9255,18 @@ document.addEventListener('keydown',e=>{
   }
   if(document.querySelector('.modal-overlay:not(.hidden)'))return; // modal aberto: não interceptar
   // D/S8 — setas em tablist (WAI-ARIA APG). Um handler só, dentro do delegate global,
-  // servindo os 3 tablists do app (Consulta, Admin, Progresso). NÃO usa roving tabindex:
-  // tirar os tabs do fluxo de Tab mudaria o comportamento de quem já navega hoje. As setas
-  // são adição pura — Tab continua percorrendo aba por aba como sempre.
-  const tabFocado=e.target&&e.target.closest?e.target.closest('[role="tab"]'):null;
-  // e.repeat: segurar a seta faria o SO repetir ~20x/s. Em Admin cada troca de aba
-  // dispara loadReportes()/loadMetricas(), que leem o RTDB inteiro — key-repeat viraria
-  // rajada de leitura. Ignorar a repeticao mantem 1 troca por toque.
-  if(tabFocado&&!e.repeat){
+  // servindo QUALQUER tablist do app: a busca é por role, sem id fixo, então tablist nova já
+  // nasce coberta (hoje são 4 — Entrar/Cadastrar, Consulta, Admin e Progresso). NÃO usa roving
+  // tabindex: tirar os tabs do fluxo de Tab mudaria o comportamento de quem já navega hoje.
+  // As setas são adição pura — Tab continua percorrendo aba por aba como sempre.
+  // e.repeat: segurar a seta faria o SO repetir ~20x/s. Em Admin cada troca de aba dispara
+  // loadReportes()/loadMetricas(), que leem o RTDB inteiro — key-repeat viraria rajada de
+  // leitura. Ignorar a repetição mantém 1 troca por toque.
+  // O teste de tecla vem ANTES do closest(): este é o listener de tecla mais quente do app
+  // (1-5 respondem o quiz, Enter avança) e não vale andar na árvore do DOM a cada toque.
+  const teclaDeAba=e.key==='ArrowRight'||e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='ArrowDown'||e.key==='Home'||e.key==='End';
+  const tabFocado=(teclaDeAba&&!e.repeat&&e.target&&e.target.closest)?e.target.closest('[role="tab"]'):null;
+  if(tabFocado){
     const lista=tabFocado.closest('[role="tablist"]');
     // APG: em tablist horizontal so Esquerda/Direita; no vertical so Cima/Baixo.
     const vert=lista&&lista.getAttribute('aria-orientation')==='vertical';
