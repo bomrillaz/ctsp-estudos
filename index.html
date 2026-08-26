@@ -961,8 +961,8 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .busca-grupo{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:8px;}
 .lista-topico{font-size:12.5px;font-weight:700;color:var(--text2);margin:11px 0 6px 2px;}
 /* BLOCO 55 — cabeçalho de tópico clicável dentro do acordeão de Cards */
-.lista-topico-acao{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;border-radius:8px;padding:4px 6px;margin-left:0;transition:background .15s;}
-.lista-topico-acao:hover,.lista-topico-acao:focus-visible{background:var(--paper-2);}
+.lista-topico-acao{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;border-radius:8px;padding:8px 10px;margin:11px 0 6px 0;transition:background .15s;background:var(--paper-2);}
+.lista-topico-acao:hover,.lista-topico-acao:focus-visible{background:var(--border);}
 .lt-acao{font-size:11px;font-weight:800;color:var(--ember,var(--navy));flex-shrink:0;}
 mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px;}
 .resumo-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:16px;box-shadow:var(--shadow-md);margin-bottom:16px;}
@@ -971,7 +971,10 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .resumo-dif-tag{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;}
 .resumo-titulo{font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:10px;letter-spacing:.01em;}
 .resumo-texto{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:14px;}
-.resumo-audio-btn{width:100%;padding:12px;background:var(--red-light);color:var(--red);border-radius:12px;font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;}
+/* Neutro em repouso: --red-light aqui competia de cor com o botão "Difícil" logo abaixo
+   (mesma avaliação por dificuldade), como se ouvir o áudio tivesse relação com achar difícil.
+   Fica vermelho só tocando (.playing), que já é o sinal de "ao vivo" — motivado, não decorativo. */
+.resumo-audio-btn{width:100%;padding:12px;background:var(--paper-2);color:var(--text2);border-radius:12px;font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;}
 .resumo-audio-btn.playing{background:var(--red);color:white;}
 .resumo-avaliar{margin-top:4px;}
 .resumo-avaliar-title{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.13em;margin-bottom:8px;text-align:center;}
@@ -1010,14 +1013,17 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .padrao-dica{background:var(--amber-light);border-radius:10px;padding:10px 12px;font-size:13px;color:#7A5212;line-height:1.5;margin-bottom:10px;border-left:3px solid var(--ember-deep);}
 .padrao-estrategia{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:10px;}
 .padrao-exemplo-btn{width:100%;padding:10px;background:var(--red-light);color:var(--red);border-radius:10px;font-size:12px;font-weight:700;}
-.incidencia-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;padding:14px;box-shadow:var(--shadow);margin-bottom:10px;}
-.incidencia-row{display:block;padding:10px 0;border-bottom:1px solid var(--line-soft);}
+/* 14 assuntos viviam como linhas com só um "border-bottom" dentro de UM card só —
+   o padrão "planilha" que o resto do app não usa em nenhuma lista (resumo-list-item,
+   padrao-card, acc-item, user-row são todos cartão-por-item). Vira lista de cartões
+   igual às vizinhas, com o mesmo respiro do .padrao-card logo acima na mesma tela. */
+.incidencia-list{display:flex;flex-direction:column;gap:10px;}
+.incidencia-row{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;padding:14px;box-shadow:var(--shadow);}
 /* Bloco B — ações por assunto de alta incidência */
 .incidencia-acoes{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
 .inc-btn{font-size:11.5px;font-weight:700;padding:6px 11px;border-radius:9px;border:1px solid var(--line-soft);background:var(--paper-2);color:var(--text2);}
 .inc-btn.praticar{background:var(--red);border-color:var(--red);color:#fff;}
 .inc-btn.revisar{background:var(--surface);}
-.incidencia-row:last-child{border-bottom:none;}
 .incidencia-assunto{font-size:13px;color:var(--text);}
 .incidencia-prob{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;}
 
@@ -1025,6 +1031,13 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .admin-screen{padding:16px;background:transparent;}
 .admin-screen h2{font-family:var(--font-display);font-size:26px;font-weight:700;margin-bottom:2px;color:var(--text);letter-spacing:.02em;}
 .admin-screen>p{font-size:13px;color:var(--text2);margin-bottom:16px;}
+/* "Sincronizar banco" é manutenção rara (só depois de editar QI/FCI), mas ficava com o mesmo
+   .btn-primary vermelho sólido das ações do dia a dia — e some acima das 4 abas, então
+   qualquer aba (inclusive Avisos, que TEM seu próprio primário "Enviar aos usuários") mostrava
+   2 botões vermelhos de peso máximo ao mesmo tempo. Neutro aqui deixa o primário de cada aba
+   ser o único "mais forte" da tela. */
+.btn-admin-util{width:100%;padding:14px;background:var(--paper-2);color:var(--text2);border:1px solid var(--line-soft);border-radius:14px;font-size:14px;font-weight:700;}
+.btn-admin-util:active{background:var(--border);}
 .admin-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:16px;}
 .admin-tab{padding:8px 16px;background:var(--surface);border:1px solid var(--line-soft);border-radius:20px;font-size:12px;font-weight:700;color:var(--text2);box-shadow:var(--shadow);text-align:center;}
 .admin-tab.active{background:var(--navy);color:white;border-color:var(--navy);}
@@ -1317,6 +1330,12 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 /* ── Reporte de erros ── */
 .rep-link{display:inline-flex;align-items:center;gap:5px;margin-top:10px;background:none;border:none;color:var(--text3);font-size:11.5px;font-weight:600;cursor:pointer;padding:4px 0;text-decoration:underline;text-underline-offset:2px;}
 .rep-link:hover{color:var(--red);}
+/* Cards: ações terciárias da tela de conclusão (limpar filtro / voltar ao hub) viravam
+   uma pilha de até 3 btn-weak cheios competindo com o CTA primário. Vira link de texto
+   lado a lado, só "Fazer mais N" continua como botão (é a única ação secundária real). */
+.cards-done-links{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:16px;margin-top:12px;}
+.cards-done-link{background:none;border:none;color:var(--text3);font-size:12.5px;font-weight:700;cursor:pointer;padding:4px 2px;text-decoration:underline;text-underline-offset:2px;}
+.cards-done-link:hover,.cards-done-link:focus-visible{color:var(--text2);}
 .rep-overlay{position:fixed;inset:0;background:rgba(11,20,48,.55);display:flex;align-items:flex-end;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s;}
 .rep-overlay.show{opacity:1;pointer-events:auto;}
 .rep-sheet{background:var(--surface);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -8px 32px rgba(16,27,61,.22);transform:translateY(20px);transition:transform .25s var(--ease-out);max-height:86vh;overflow-y:auto;}
@@ -1424,6 +1443,15 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   #quiz-running-view .quiz-body{margin-block:auto;}
   #cards-body.cards-estudo{display:flex;flex-direction:column;justify-content:center;min-height:60vh;}
   .quiz-q-text,.resumo-texto{max-width:64ch;}
+  /* Consulta nunca ganhou a largura de leitura da FASE 3 acima: glossário/normas usam o
+     MESMO .resumos-screen do hub de Resumos, mas aqui é lista contínua (sem mestre-detalhe),
+     então virava acordeão esticado borda a borda em telas largas. Selector com #screen-consulta
+     na frente — não pode virar .resumos-screen sozinho, isso encolheria o grid de verdade do
+     hub de Resumos (mestre-detalhe da FASE 3/B99, larguras diferentes de propósito). */
+  #screen-consulta .resumos-screen{max-width:720px;margin-inline:auto;}
+  /* Padrões tinha o mesmo bug: .padroes-screen nunca ganhou largura de leitura, esticava
+     borda a borda em telas largas (cabeçalho + "Tipos de questão" + lista de assuntos). */
+  #screen-padroes .padroes-screen{max-width:720px;margin-inline:auto;}
   /* FASE 5 (modais) — no desktop, diálogo centrado em vez de bottom-sheet */
   .modal-overlay,.rep-overlay{align-items:center;}
   .modal-box{border-radius:24px;max-width:460px;}
@@ -2382,7 +2410,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
              propósito: preserva a série histórica caso a tela volte. Não apagar
              formatoDe()/registrarFormato() achando que é código morto. -->
         <div class="sec-title mt14">Tópicos de alta incidência</div>
-        <div class="incidencia-card" id="incidencia-lista"></div>
+        <div class="incidencia-list" id="incidencia-lista"></div>
       </div>
     </div>
 
@@ -2392,7 +2420,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <h2>Painel Admin</h2>
         <p>Gerencie usuários, reportes e avisos</p>
         <div id="admin-sync" style="margin-bottom:14px;">
-          <button class="btn-primary" onclick="sincronizarBanco()">Sincronizar banco (QI + FCI → Firebase)</button>
+          <button class="btn-admin-util" onclick="sincronizarBanco()">Sincronizar banco (QI + FCI → Firebase)</button>
           <p class="auth-msg" id="sync-msg" role="alert"></p>
         </div>
         <div class="admin-tabs">
@@ -4436,7 +4464,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.224';
+const APP_VERSAO='v1.229';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -6033,8 +6061,10 @@ function _estudoCards(){
       ${origemReforco==='quiz'?`<button class="btn-weak" style="margin-top:12px" onclick="voltarAoQuizDoReforco()">← Voltar à questão</button>`:''}
       ${origemReforco!=='quiz'?`<button class="btn-primary" style="margin-top:12px;width:100%" onclick="abrirIntro('treino')">Fixar no Treino do dia →</button>`:''}
       ${restam>0&&origemReforco!=='quiz'?`<button class="btn-weak" style="margin-top:8px" onclick="maisCards()">Fazer mais ${Math.min(dose('cards'),restam)}</button>`:''}
-      ${filtro&&origemReforco!=='quiz'?`<button class="btn-weak" style="margin-top:8px;background:var(--paper-2);color:var(--text2)" onclick="limparFiltroCards()">Ver todos os tópicos</button>`:''}
-      ${origemReforco!=='quiz'?`<button class="btn-weak" style="margin-top:8px" onclick="voltarHubCards()">← Voltar aos flashcards</button>`:''}
+      ${origemReforco!=='quiz'?`<div class="cards-done-links">
+        ${filtro?`<button class="cards-done-link" onclick="limparFiltroCards()">Ver todos os tópicos</button>`:''}
+        <button class="cards-done-link" onclick="voltarHubCards()">← Voltar aos flashcards</button>
+      </div>`:''}
     </div>`;
     return;
   }
@@ -6516,10 +6546,11 @@ function renderResumoLista(){
       let itens='';
       doTopico.forEach(r=>{
         const ur=userStats['resumo_'+r.id];
-        const vence=ur?.next?new Date(ur.next).toLocaleDateString('pt-BR'):'Hoje';
+        const ehNovoR2=!ur||!ur.reps; // igual ao selo Novo/Revisão de Cards (S47) — sem isso, resumo nunca lido aparecia como "Revisão: Hoje"
+        const vence=ehNovoR2?'Novo':`Revisão: ${ur?.next?new Date(ur.next).toLocaleDateString('pt-BR'):'Hoje'}`;
         itens+=`<div class="resumo-list-item" onclick="mostrarResumoDirecto('${r.id}')">
           <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${aInfo.icon}</div>
-          <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">${sanitize(r.titulo)}</div><div class="resumo-list-vence">Revisão: ${vence}</div></div>
+          <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">${sanitize(r.titulo)}</div><div class="resumo-list-vence">${vence}</div></div>
         </div>`;
       });
       dentro+=hubTopicoHTML(sanitize(nomeTopico(t)),`${doTopico.length}${nPendT?` · ${nPendT} a revisar`:''}`,itens);
