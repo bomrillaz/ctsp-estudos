@@ -114,7 +114,7 @@ input,select,textarea{font-family:inherit;outline:none;}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,
 .quiz-opt:focus-visible,.nav-item:focus-visible,.auth-tab:focus-visible,.quick-btn:focus-visible,
 .adapt-btn:focus-visible,.diag-card:focus-visible,.btn-weak:focus-visible{
-  outline:2px solid transparent;box-shadow:0 0 0 3px rgba(240,136,60,.45);border-radius:var(--radius-xs);
+  outline:2px solid var(--ember-deep);outline-offset:2px;border-radius:var(--radius-xs);
 }
 /* Ícones inline do sistema */
 .ai-ic{width:1.05em;height:1.05em;display:inline-block;vertical-align:-0.16em;}
@@ -2251,7 +2251,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
          para cumprir uma etapa (ler resumo, ver cards). Sem ela o caminho de volta
          seria o painel, que é justamente o que este bloco veio eliminar. -->
     <div id="foco-barra" class="foco-barra hidden" role="button" tabindex="0"
-         onclick="voltarAoFoco()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();voltarAoFoco();}">
+         onclick="voltarAoFoco()">
       <span class="foco-barra-txt">← Voltar ao foco</span>
       <span class="foco-barra-topico" id="foco-barra-topico"></span>
     </div>
@@ -2568,7 +2568,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 
           <!-- COMO LER ESTA TELA — rodapé, fechado por padrão (reusa .mp-item/toggleMp). -->
           <div class="mp-item" id="pg-legenda-progresso">
-            <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMp(this);}">
+            <div class="mp-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMp(this)">
               <span class="mp-title">Como ler esta tela</span>
               <span class="mp-right"><span class="mp-chev"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></span>
             </div>
@@ -4477,7 +4477,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.230';
+const APP_VERSAO='v1.231';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5028,8 +5028,7 @@ function renderFilaFoco(){
   const n=document.getElementById('foco-bloco-n');
   if(n)n.textContent=notas.length+(notas.length===1?' item':' itens');
   fila.innerHTML=notas.map(o=>
-    `<div class="foco-nota" role="button" tabindex="0" onclick="${o.acao}"
-       onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${o.acao}}">
+    `<div class="foco-nota" role="button" tabindex="0" onclick="${o.acao}">
       <span class="foco-nota-pip" style="background:${o.cor}"></span>
       <span class="foco-nota-info">
         <span class="foco-nota-t">${sanitize(o.titulo)}</span>
@@ -5083,8 +5082,7 @@ function renderFoco(){
     if(!itens.length)return '';
     return `<div class="foco-etapa-tit">${titulo}</div>`+itens.map(it=>
       `<div class="foco-item ${it.feito?'feito':''}" role="button" tabindex="0"
-         onclick="focoAbrirEtapa('${it.tipo}','${it.id}')"
-         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();focoAbrirEtapa('${it.tipo}','${it.id}')}">
+         onclick="focoAbrirEtapa('${it.tipo}','${it.id}')">
         <span class="foco-check">${it.feito?'✓':''}</span>
         <span class="foco-item-txt">${sanitize(it.titulo)}</span>
         <span class="foco-item-meta">${it.feito?'':'→'}</span>
@@ -5566,14 +5564,14 @@ function renderAreaList(){
     const icBox=`background:${a.bg};color:${a.color}`;
     const topicosHTML=tops.map(t=>{
       const nt=contQ[t]||0;
-      return `<div class="resumo-list-item" onclick="abrirIntro('topico','${t}')">
+      return `<div class="resumo-list-item" role="button" tabindex="0" onclick="abrirIntro('topico','${t}')">
         <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${a.icon}</div>
         <div style="flex:1"><div style="font-size:13px;font-weight:700">${sanitize(nomeTopico(t))}</div><div class="resumo-list-vence">${nt} quest${nt!==1?'ões':'ão'}</div></div>
         <div style="color:var(--text3);font-size:18px">→</div>
       </div>`;
     }).join('');
     html+=`<div class="pg-area-row quiz-area-row" data-area="${k}">
-      <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAreaTopicos(this);}">
+      <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false">
         <div class="area-row-icon" style="${icBox}">${a.icon}</div>
         <div class="area-row-info">
           <div class="area-row-name">${k} · ${sanitize(a.nome||'')}</div>
@@ -5582,7 +5580,7 @@ function renderAreaList(){
         <svg class="pg-area-chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
       </div>
       <div class="pg-area-topicos">
-        <div class="resumo-list-item quiz-area-cta" onclick="abrirIntro('quiz','${k}')">
+        <div class="resumo-list-item quiz-area-cta" role="button" tabindex="0" onclick="abrirIntro('quiz','${k}')">
           <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${a.icon}</div>
           <div style="flex:1"><div style="font-size:13px;font-weight:700">Praticar toda a área</div><div class="resumo-list-vence">${n} quest${n!==1?'ões':'ão'}</div></div>
           <div style="color:var(--text3);font-size:18px">→</div>
@@ -6154,10 +6152,10 @@ function renderCardLista(){
     tops.forEach(t=>{
       const doTopico=doArea.filter(fc=>topicoDe(fc)===t);
       const nPendT=doTopico.filter(pendente).length;
-      let itens=`<div class="lista-topico lista-topico-acao" role="button" tabindex="0" onclick="revisarCardsDoTopico('${t}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();revisarCardsDoTopico('${t}');}">Estudar o tópico inteiro<span class="lt-acao">${doTopico.length} card${doTopico.length!==1?'s':''} →</span></div>`;
+      let itens=`<div class="lista-topico lista-topico-acao" role="button" tabindex="0" onclick="revisarCardsDoTopico('${t}')">Estudar o tópico inteiro<span class="lt-acao">${doTopico.length} card${doTopico.length!==1?'s':''} →</span></div>`;
       doTopico.forEach(fc=>{
         const uc=userCards[fc.id];const rot=(uc&&uc.reps>0)?'Revisão':'Novo';
-        itens+=`<div class="resumo-list-item" onclick="estudarCardUnico('${fc.id}')">
+        itens+=`<div class="resumo-list-item" role="button" tabindex="0" onclick="estudarCardUnico('${fc.id}')">
           <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${aInfo.icon||''}</div>
           <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">${sanitize(fc.f)}</div><div class="resumo-list-vence">${rot}</div></div>
         </div>`;
@@ -6165,7 +6163,7 @@ function renderCardLista(){
       dentro+=hubTopicoHTML(sanitize(nomeTopico(t)),`${doTopico.length}${nPendT?` · ${nPendT} pend.`:''}`,itens);
     });
     html+=`<div class="pg-area-row quiz-area-row" data-area="${a}">
-      <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAreaTopicos(this);}">
+      <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false">
         <div class="area-row-icon" style="${icBox}">${aInfo.icon||''}</div>
         <div class="area-row-info">
           <div class="area-row-name">${a} · ${sanitize(aInfo.nome||'')}</div>
@@ -6285,7 +6283,7 @@ function renderBuscaResultados(q,resumos,cards,glossario,normas){
   if(!resumos.length&&!cards.length&&!glossario.length&&!normas.length){
     return `<div style="text-align:center;padding:30px 16px;color:var(--text2)">Nada encontrado para “<b>${sanitize(q)}</b>”.<br><span style="font-size:12.5px;color:var(--text3)">Tente outra palavra, não a pergunta inteira.</span></div>`;
   }
-  const item=(titulo,corpo,tag,onclick)=>`<div class="resumo-list-item"${onclick?` onclick="${onclick}" style="cursor:pointer"`:' style="border-left:3px solid var(--blue)"'}>
+  const item=(titulo,corpo,tag,onclick)=>`<div class="resumo-list-item"${onclick?` role="button" tabindex="0" onclick="${onclick}" style="cursor:pointer"`:' style="border-left:3px solid var(--blue)"'}>
       <div style="font-weight:700;font-size:14px">${titulo}</div>
       <div style="font-size:12.5px;color:var(--text2);margin-top:3px;line-height:1.5">${corpo}</div>
       ${tag?`<div style="font-size:10.5px;color:var(--text3);margin-top:4px">${tag}</div>`:''}
@@ -6561,7 +6559,7 @@ function renderResumoLista(){
         const ur=userStats['resumo_'+r.id];
         const ehNovoR2=!ur||!ur.reps; // igual ao selo Novo/Revisão de Cards (S47) — sem isso, resumo nunca lido aparecia como "Revisão: Hoje"
         const vence=ehNovoR2?'Novo':`Revisão: ${ur?.next?new Date(ur.next).toLocaleDateString('pt-BR'):'Hoje'}`;
-        itens+=`<div class="resumo-list-item" onclick="mostrarResumoDirecto('${r.id}')">
+        itens+=`<div class="resumo-list-item" role="button" tabindex="0" onclick="mostrarResumoDirecto('${r.id}')">
           <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${aInfo.icon}</div>
           <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">${sanitize(r.titulo)}</div><div class="resumo-list-vence">${vence}</div></div>
         </div>`;
@@ -6569,7 +6567,7 @@ function renderResumoLista(){
       dentro+=hubTopicoHTML(sanitize(nomeTopico(t)),`${doTopico.length}${nPendT?` · ${nPendT} a revisar`:''}`,itens);
     });
     html+=`<div class="pg-area-row quiz-area-row" data-area="${a}">
-      <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAreaTopicos(this);}">
+      <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false">
         <div class="area-row-icon" style="${icBox}">${aInfo.icon}</div>
         <div class="area-row-info">
           <div class="area-row-name">${a} · ${sanitize(aInfo.nome||'')}</div>
@@ -6896,7 +6894,7 @@ function renderPadroes(){
   // B58: o card abre no clique desde sempre, mas não tinha NENHUM sinal disso — nem
   // chevron, nem role, nem teclado. Era um div clicável mudo. Chevron reaproveitado
   // do padrão dos outros acordeões (.pg-area-chev / .hub-topico-chev / .pg-sub-chev).
-  lista.innerHTML=PADROES.map((p,i)=>`<div class="padrao-card" id="pad-${i}" role="button" tabindex="0" aria-expanded="false" onclick="togglePadrao(${i})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();togglePadrao(${i});}">
+  lista.innerHTML=PADROES.map((p,i)=>`<div class="padrao-card" id="pad-${i}" role="button" tabindex="0" aria-expanded="false" onclick="togglePadrao(${i})">
     <div class="padrao-top">
       <div class="padrao-pct-badge" style="background:color-mix(in srgb, ${p.corT} 14%, transparent);color:${p.corT}">${sanitize(p.medida)}</div>
       <div class="padrao-info"><h3>${sanitize(p.tipo)}</h3><p>${sanitize(p.nota)}</p></div>
@@ -6988,7 +6986,7 @@ function toggleAreaTopicos(el){
 // já chegam sanitizados pelo chamador (é HTML montado, não texto de banco cru).
 function hubTopicoHTML(nome,contaTxt,itensHTML){
   return '<div class="hub-topico">'
-    +'<div class="hub-topico-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleTopicoItens(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleTopicoItens(this);}">'
+    +'<div class="hub-topico-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleTopicoItens(this)">'
       +'<span class="hub-topico-nome">'+nome+'</span>'
       +'<span class="hub-topico-n">'+contaTxt+'</span>'
       +'<svg class="hub-topico-chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>'

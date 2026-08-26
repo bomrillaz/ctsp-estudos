@@ -1,3 +1,9 @@
 .tmp/
 materiais/
 .github/scripts/node_modules/
+
+# b140 — instalador do impeccable (npx impeccable install) espalha por .github/ e .claude/.
+# Ferramenta de design local, não faz parte do produto. .claude/ já era untracked.
+.github/agents/
+.github/hooks/
+.github/skills/
