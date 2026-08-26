@@ -929,6 +929,11 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .sim-home p{font-size:13px;color:var(--text2);margin-bottom:18px;}
 .sim-cards{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
 .sim-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;align-items:center;gap:14px;cursor:pointer;transition:transform .2s var(--ease-out),box-shadow .2s;}
+/* auditoria b138 — Simulado Real e Mini Simulado tinham peso visual idêntico apesar de não
+   serem equivalentes (Real é o formato de prova de verdade, Mini é o atalho). Mesmo tratamento
+   de "ação do painel" que .quiz-area-cta/.lista-topico-acao já usam: fundo --paper-2 promove
+   sem precisar de cor nova nem de mexer no ícone. */
+.sim-card-principal{background:var(--paper-2);}
 .sim-card:active{transform:scale(.98);}
 .sim-card-icon{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
 .sim-card-icon svg{width:22px;height:22px;}
@@ -1430,7 +1435,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   #admin-users-list:has(.user-row.open) .hub-detalhe-vazio{display:none;}
   .user-row{margin-bottom:0;}
   /* FASE 3 — largura de leitura: texto longo não estica a coluna toda */
-  .quiz-body,.quiz-feedback,.card-flip-wrap,.resumo-card,.sim-q-wrap,.sim-result-areas,.sim-ai-diag{max-width:720px;margin-inline:auto;}
+  .quiz-body,.quiz-feedback,.card-flip-wrap,.resumo-card,.sim-q-wrap,.sim-result{max-width:720px;margin-inline:auto;}
+  /* auditoria b138 — antes só .sim-result-areas/.sim-ai-diag tinham a coluna de leitura; o
+     botão "Voltar ao início" (width:100% direto no HTML) ficava largo até 1040px, destoando
+     do conteúdo estreito acima. Escopar o PAI (.sim-result) resolve o filho e o botão juntos. */
   /* b117 — tela de conteúdo ÚNICO (pergunta do Quiz em andamento / flashcard em estudo)
      centraliza verticalmente, em vez de ficar colada no topo com vazio embaixo (achado
      🟡-1 da auditoria b108). NÃO tocar no mestre-detalhe dos hubs acima — é tela
@@ -1452,6 +1460,11 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   /* Padrões tinha o mesmo bug: .padroes-screen nunca ganhou largura de leitura, esticava
      borda a borda em telas largas (cabeçalho + "Tipos de questão" + lista de assuntos). */
   #screen-padroes .padroes-screen{max-width:720px;margin-inline:auto;}
+  /* Simulado tinha o mesmo bug (auditoria b138): .sim-home é o MESMO padrão de wrapper
+     (padding:16px;background:transparent) de .resumos-screen/.padroes-screen acima, mas nunca
+     ganhou a largura de leitura — o Histórico ficava esticado até a borda do .screen (1040px),
+     com "data · questões" na esquerda e o "score %" perdido lá longe na direita. */
+  #screen-simulado .sim-home{max-width:720px;margin-inline:auto;}
   /* FASE 5 (modais) — no desktop, diálogo centrado em vez de bottom-sheet */
   .modal-overlay,.rep-overlay{align-items:center;}
   .modal-box{border-radius:24px;max-width:460px;}
@@ -2320,7 +2333,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <div class="tela-h-sub">Escolha o modo de simulado</div>
           </div>
           <div class="sim-cards">
-            <div class="sim-card" onclick="iniciarSimulado('completo')">
+            <div class="sim-card sim-card-principal" onclick="iniciarSimulado('completo')">
               <div class="sim-card-icon" style="background:var(--red-light);color:var(--red);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
               <div class="sim-card-info"><h3>Simulado Real</h3><p>60 questões · proporção do edital (14/8/14/12/12) · 3 horas</p></div>
             </div>
@@ -4464,7 +4477,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.229';
+const APP_VERSAO='v1.230';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
