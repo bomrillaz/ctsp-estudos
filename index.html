@@ -97,7 +97,7 @@ html[data-theme="dark"] .diag-card{background:linear-gradient(135deg,#7E180B,#C2
 html[data-theme="dark"] .quick-btn.destaque{border-color:#4A2B1A;background:linear-gradient(180deg,#241A14,var(--surface));}
 html[data-theme="dark"] .quiz-fb-erro .fb-correta{color:var(--green);}
 html[data-theme="dark"] .padrao-dica{color:var(--amber);}
-html[data-theme="dark"] .badge-admin,html[data-theme="dark"] .btn-mkadmin{color:var(--amber);}
+html[data-theme="dark"] .badge-admin{color:var(--amber);}
 /* .link-inline usa var(--navy) fixo (pensado pra fundo claro) — no tema escuro o
    .auth-card é var(--surface) quase da mesma cor, deixando "Termos de Uso"/"Política
    de Privacidade" ilegíveis (reportado pelo João, 13/08/2026). .lp-rodape já tem a
@@ -1081,7 +1081,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .btn-sm{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;}
 .btn-approve{background:var(--green-light);color:var(--green);}
 .btn-revoke{background:var(--red-light);color:var(--red);}
-.btn-mkadmin{background:var(--amber-light);color:#8A5A0E;}
+.btn-mkadmin{background:var(--red-light);color:var(--red);border:1.5px solid var(--red);padding:3.5px 8.5px;}
 .btn-remove{background:var(--paper-2);color:var(--text2);border:1px solid var(--line-soft);}
 /* BLOCO 55 — controle de cobrança no painel do admin */
 .cob-bloco{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line-soft);}
@@ -4486,7 +4486,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.233';
+const APP_VERSAO='v1.234';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -7190,6 +7190,7 @@ async function approveUser(uid){
 }
 async function revokeUser(uid){
   if(!isAdmin())return;
+  if(!confirm('Revogar o acesso deste usuário agora?\n\nO app fecha pra ele(a) no próximo carregamento. Dá pra reverter aprovando de novo.'))return;
   await db.ref('usuarios/'+uid).update({aprovado:false});   // isto é o que corta o acesso
   // Carimbo é só rótulo da lista. Vai em chamada separada porque `revogadoEm` é chave
   // nova: se a regra `$outros` do RTDB barrar, a revogação NÃO pode cair junto.
@@ -7210,7 +7211,11 @@ async function removerUsuario(uid){
     showToast('Não foi possível remover: '+err.message);
   }
 }
-async function makeAdmin(uid){if(!isAdmin())return;await db.ref('usuarios/'+uid).update({admin:true,aprovado:true});loadAdminUsers();showToast('Admin concedido!');}
+async function makeAdmin(uid){
+  if(!isAdmin())return;
+  if(!confirm('Tornar este usuário ADMIN?\n\nEle(a) ganha acesso total ao painel (usuários, cobrança, reportes). Não existe botão para desfazer aqui — só pelo Firebase Console.'))return;
+  await db.ref('usuarios/'+uid).update({admin:true,aprovado:true});loadAdminUsers();showToast('Admin concedido!');
+}
 
 // ═══════════════════════════════
 // COBRANÇA (bloco 55)
