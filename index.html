@@ -177,6 +177,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes fadeInDown{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+@keyframes screenIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 @keyframes scaleIn{from{opacity:0;transform:scale(.92);}to{opacity:1;transform:scale(1);}}
 @keyframes slideInRight{from{opacity:0;transform:translateX(24px);}to{opacity:1;transform:translateX(0);}}
 @keyframes barGrow{from{width:0!important;}to{}}
@@ -192,9 +194,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media (prefers-reduced-motion: no-preference){
 .quiz-opt.correta{animation:optPulse .45s var(--ease-out);}
 .quiz-opt.errada{animation:optShake .4s ease;}
-}
-@media (prefers-reduced-motion: reduce){
-*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
 }
 /* AUTH */
 /* b59: o #auth-screen virou só o CONTÊINER das duas vistas. O layout de "cartão
@@ -458,7 +457,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 /* SCREENS */
 .screen{display:none;animation:none;}
-.screen.active{display:block;animation:fadeUp .38s var(--ease-out) both;}
+.screen.active{display:block;animation:screenIn .2s var(--ease-out) both;}
 
 /* ═══ DASHBOARD ═══ */
 .dash-hero{background:linear-gradient(150deg,var(--navy-2) 0%,var(--navy) 55%,var(--navy-deep) 100%);padding:18px 16px 24px;color:white;position:relative;overflow:hidden;}
@@ -534,7 +533,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .acc-chev svg{width:18px;height:18px;}
 .acc-item.open .acc-chev{transform:rotate(180deg);}
 .acc-body{display:none;padding:2px 14px 14px;}
-.acc-item.open .acc-body{display:block;}
+.acc-item.open .acc-body{display:block;animation:fadeInDown .18s var(--ease-out);}
 .acc-def{font-size:13px;color:var(--text2);line-height:1.6;}
 .acc-fonte{font-size:10.5px;color:var(--text3);margin-top:8px;}
 /* S30: seletor de tema */
@@ -595,7 +594,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pg-area-chev{transition:transform .2s;flex-shrink:0;}
 .pg-area-row.open .pg-area-chev{transform:rotate(180deg);}
 .pg-area-topicos{display:none;margin-top:2px;padding-left:2px;}
-.pg-area-row.open .pg-area-topicos{display:block;animation:fadeIn .2s;}
+.pg-area-row.open .pg-area-topicos{display:block;animation:fadeInDown .18s var(--ease-out);}
 /* A2 (bloco 53) — acordeão do Quiz: reaproveita .pg-area-row/.pg-area-topicos/toggleAreaTopicos, layout em coluna */
 .pg-area-row.quiz-area-row{display:block;padding:0;border-top:none;}
 .pg-area-row.quiz-area-row .area-row{margin-bottom:0;}
@@ -615,7 +614,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .hub-topico-chev{flex-shrink:0;color:var(--text3);transition:transform .2s;}
 .hub-topico.open .hub-topico-chev{transform:rotate(180deg);}
 .hub-topico-itens{display:none;padding:0 0 9px;}
-.hub-topico.open .hub-topico-itens{display:block;animation:fadeIn .2s;}
+.hub-topico.open .hub-topico-itens{display:block;animation:fadeInDown .18s var(--ease-out);}
 .hub-detalhe-vazio{display:none;}
 /* Domínio por tópico em COLUNAS interativas (liga o % da área aos tópicos) */
 .tq{margin-top:6px;}
@@ -874,7 +873,7 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .quiz-opt.correta .quiz-opt-letter::after{content:'✓';font-size:13px;}
 .quiz-opt.errada .quiz-opt-letter::after{content:'✕';font-size:11px;}
 .quiz-feedback{background:var(--surface);border:1px solid var(--line-soft);border-left-width:4px;border-radius:14px;padding:14px;margin-top:16px;box-shadow:var(--shadow);display:none;transition:border-color .2s;}
-.quiz-feedback.show{display:block;}
+.quiz-feedback.show{display:block;animation:fadeInDown .15s var(--ease-out);}
 .quiz-feedback-title{font-size:12px;font-weight:800;margin-bottom:6px;}
 .quiz-feedback-text{font-size:13px;color:var(--text2);line-height:1.55;}
 /* Bloco B — ciclo erro → flashcard: fecha o laço entre errar e memorizar */
@@ -1019,7 +1018,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 /* S60: versão do app, discreta no fim das Configurações. */
 .config-versao{margin-top:18px;text-align:center;font-family:var(--font-display);font-size:11px;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;}
 .padrao-detail{display:none;border-top:1px solid var(--line-soft);padding-top:12px;margin-top:2px;}
-.padrao-card.open .padrao-detail{display:block;}
+.padrao-card.open .padrao-detail{display:block;animation:fadeInDown .18s var(--ease-out);}
 .padrao-dica{background:var(--amber-light);border-radius:10px;padding:10px 12px;font-size:13px;color:#7A5212;line-height:1.5;margin-bottom:10px;border-left:3px solid var(--ember-deep);}
 .padrao-estrategia{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:10px;}
 .padrao-exemplo-btn{width:100%;padding:10px;background:var(--red-light);color:var(--red);border-radius:10px;font-size:12px;font-weight:700;}
@@ -4495,7 +4494,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.237';
+const APP_VERSAO='v1.238';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -7863,7 +7862,8 @@ function renderAreaDetalhe(k){
     +'<div class="pg-area-detalhe-topicos">'+topicosAreaHTML(k,perfil)+'</div>'
   +'</div>';
   // Estética (D3/1a): troca de área é uma transição lateral ≤200ms, não um salto seco.
-  // O guard global de prefers-reduced-motion (:174) já zera esta duração quando cabível.
+  // O guard global de prefers-reduced-motion (regra universal no topo do CSS) já zera
+  // esta duração quando cabível.
   el.style.transition='none';el.style.opacity='0';el.style.transform='translateX(8px)';
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     el.style.transition='opacity .18s var(--ease-out), transform .18s var(--ease-out)';
