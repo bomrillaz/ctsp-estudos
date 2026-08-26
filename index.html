@@ -148,7 +148,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .onboard-logo svg{width:100%;height:100%;}
 .onboard-title{font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px;}
 .onboard-sub{font-size:14px;line-height:1.5;color:var(--text2);margin-bottom:20px;}
-.onboard-btn{width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;}
+.onboard-btn{width:100%;padding:14px;background:var(--red-solid);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;}
 .onboard-btn:active{transform:scale(.98);}
 #splash-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(560px 320px at 82% 18%,rgba(240,136,60,.05),transparent 70%);pointer-events:none;}
 #splash-screen.active{display:flex;}
@@ -418,7 +418,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .btn-logout{background:rgba(255,255,255,.12);color:white;border-radius:9px;padding:6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .btn-logout svg{width:16px;height:16px;}
 .btn-notif{position:relative;}
-.notif-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:800;line-height:1;}
+.notif-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center;background:var(--red-solid);color:#fff;border-radius:9px;font-size:10px;font-weight:800;line-height:1;}
 .notif-item{padding:12px 0;border-bottom:1px solid var(--border);}
 .notif-item:last-child{border-bottom:none;}
 .notif-item-titulo{font-weight:700;font-size:13.5px;color:var(--text);}
@@ -985,7 +985,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
    (mesma avaliação por dificuldade), como se ouvir o áudio tivesse relação com achar difícil.
    Fica vermelho só tocando (.playing), que já é o sinal de "ao vivo" — motivado, não decorativo. */
 .resumo-audio-btn{width:100%;padding:12px;background:var(--paper-2);color:var(--text2);border-radius:12px;font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;}
-.resumo-audio-btn.playing{background:var(--red);color:white;}
+.resumo-audio-btn.playing{background:var(--red-solid);color:white;}
 .resumo-avaliar{margin-top:4px;}
 .resumo-avaliar-title{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.13em;margin-bottom:8px;text-align:center;}
 .resumo-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
@@ -1190,7 +1190,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .info-tooltip-box{background:var(--surface);border-radius:20px;padding:24px;max-width:340px;width:100%;}
 .info-tooltip-title{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);margin-bottom:10px;}
 .info-tooltip-text{font-size:13px;color:var(--text2);line-height:1.6;}
-.info-tooltip-close{width:100%;padding:12px;background:var(--red);color:white;border-radius:12px;font-size:14px;font-weight:700;margin-top:16px;border:none;cursor:pointer;}
+.info-tooltip-close{width:100%;padding:12px;background:var(--red-solid);color:white;border-radius:12px;font-size:14px;font-weight:700;margin-top:16px;border:none;cursor:pointer;}
 
 /* Dash meta sem cursor */
 
@@ -1365,7 +1365,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .rep-cancel{background:var(--bg);color:var(--text2);}
 .rep-send{background:var(--red-solid);color:#fff;box-shadow:0 4px 14px rgba(var(--red-solid-rgb),.28);}
 .rep-send:disabled{opacity:.5;cursor:default;box-shadow:none;}
-.rep-badge{display:inline-flex;min-width:17px;height:17px;padding:0 4px;align-items:center;justify-content:center;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:800;margin-left:5px;}
+.rep-badge{display:inline-flex;min-width:17px;height:17px;padding:0 4px;align-items:center;justify-content:center;background:var(--red-solid);color:#fff;border-radius:9px;font-size:10px;font-weight:800;margin-left:5px;}
 .rep-item{background:var(--surface);border:1px solid var(--line-soft);border-left:4px solid var(--ember);border-radius:12px;padding:12px;margin-bottom:10px;box-shadow:var(--shadow);}
 .rep-item-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;}
 .rep-item-cat{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ember-text);background:var(--amber-light);padding:3px 8px;border-radius:7px;}
@@ -2164,7 +2164,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <!-- Alerta dados não carregados -->
       <div id="dash-reload-alert" style="display:none;background:var(--red-light);border:1px solid var(--border);border-radius:12px;margin:12px 14px 0;padding:10px 14px;align-items:center;gap:10px;justify-content:space-between;">
         <span style="color:var(--red-dark);font-size:12px;font-weight:600;">Dados não carregaram</span>
-        <button onclick="location.reload()" style="background:var(--red);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">Recarregar</button>
+        <button onclick="location.reload()" style="background:var(--red-solid);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">Recarregar</button>
       </div>
       <div class="dash-body">
        <div class="dash-col-l">
@@ -2369,7 +2369,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <div class="quiz-opts" id="sim-opts"></div>
           <div style="display:flex;gap:8px;margin-top:14px;">
             <button onclick="simPrev()" style="flex:1;padding:12px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:700;color:var(--text2);">← Anterior</button>
-            <button onclick="simNext()" style="flex:1;padding:12px;background:var(--red);color:white;border-radius:12px;font-size:14px;font-weight:700;">Próxima →</button>
+            <button onclick="simNext()" style="flex:1;padding:12px;background:var(--red-solid);color:white;border-radius:12px;font-size:14px;font-weight:700;">Próxima →</button>
           </div>
         </div>
       </div>
@@ -2385,7 +2385,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <div class="sim-result-label" id="sim-result-label"></div>
           <div class="sim-result-areas" id="sim-result-areas"></div>
           <div class="sim-ai-diag" id="sim-ai-diag"></div>
-          <button onclick="voltarSimHome()" style="width:100%;padding:14px;background:var(--red);color:white;border-radius:12px;font-size:15px;font-weight:700;">Voltar ao início</button>
+          <button onclick="voltarSimHome()" style="width:100%;padding:14px;background:var(--red-solid);color:white;border-radius:12px;font-size:15px;font-weight:700;">Voltar ao início</button>
         </div>
       </div>
     </div>
@@ -4486,7 +4486,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.234';
+const APP_VERSAO='v1.235';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -7176,7 +7176,7 @@ async function loadAdminUsers(){
   }catch(err){
     console.error('loadAdminUsers erro:',err);
     const msg=err.message==='timeout'?'Tempo limite: toque para tentar novamente':'Erro: '+err.message;
-    el.innerHTML=`<p style="color:var(--red);font-size:13px">${msg}</p><button onclick="loadAdminUsers()" style="margin-top:8px;padding:10px 16px;background:var(--red);color:white;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;">Tentar novamente</button>`;
+    el.innerHTML=`<p style="color:var(--red);font-size:13px">${msg}</p><button onclick="loadAdminUsers()" style="margin-top:8px;padding:10px 16px;background:var(--red-solid);color:white;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;">Tentar novamente</button>`;
   }
 }
 
@@ -7920,7 +7920,7 @@ function renderObjetivoSemana(){
     <div class="obj-card-area">${a.icon||''} ${sanitize(p.nome)}</div>
     <div class="obj-card-motivo">${motivo} <span style="opacity:.7">(${p.t} · ${p.area})</span></div>
     <span class="obj-card-pct" style="background:${bg};color:${cor}">${pct}% de domínio</span>
-    <button onclick="iniciarEstudoTopico('${p.t}')" style="display:block;width:100%;margin-top:10px;padding:10px;background:var(--red);color:white;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;">Estudar este tópico agora →</button>
+    <button onclick="iniciarEstudoTopico('${p.t}')" style="display:block;width:100%;margin-top:10px;padding:10px;background:var(--red-solid);color:white;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;">Estudar este tópico agora →</button>
   </div>`;
 }
 
@@ -9133,7 +9133,7 @@ async function loadReportes(){
     });
     el.innerHTML=html;
   }catch(err){
-    el.innerHTML='<p style="color:var(--red);font-size:13px">Erro: '+sanitize(err.message)+'</p><button onclick="loadReportes()" style="margin-top:8px;padding:10px 16px;background:var(--red);color:#fff;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;">Tentar novamente</button>';
+    el.innerHTML='<p style="color:var(--red);font-size:13px">Erro: '+sanitize(err.message)+'</p><button onclick="loadReportes()" style="margin-top:8px;padding:10px 16px;background:var(--red-solid);color:#fff;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;">Tentar novamente</button>';
   }
 }
 async function resolverReporte(key){
