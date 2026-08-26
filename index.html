@@ -46,6 +46,10 @@
 :root{
   /* ── Identidade "Manual Operacional" ── */
   --red:#D32412;--red-dark:#A51D0E;--red-mid:#BB2010;--red-light:#FBEDE6;
+  /* S4: fundo sólido com texto branco (botão primário) precisa de AA nos dois temas —
+     --red sozinho clareia no escuro (#F05B43) pra servir de TEXTO/acento e reprova 4.5:1
+     como fundo. --red-solid fica fixo, não muda de tema. */
+  --red-solid:#D32412;--red-solid-rgb:211,36,18;
   --ember:#F0883C;--ember-deep:#C77B1D;--ember-text:#8F4A0E;
   --navy:#101B3D;--navy-2:#1B2A55;--navy-deep:#0B1430;
   --paper:#F7F3EC;--paper-2:#EFE9DD;--surface:#FFFFFF;
@@ -221,8 +225,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .field label{display:block;font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.12em;}
 .field input,.field select,.field textarea{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:11px;font-size:16px;color:var(--text);background:var(--surface);transition:border-color .2s,box-shadow .2s;}
 .field input:focus,.field select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(16,27,61,.08);background:var(--surface);}
-.btn-primary{width:100%;padding:14px;background:var(--red);color:white;border-radius:14px;font-size:15px;font-weight:700;letter-spacing:.02em;transition:all .2s var(--ease-out);box-shadow:0 6px 20px rgba(211,36,18,.28);}
-.btn-primary:active{transform:scale(.97);box-shadow:0 2px 8px rgba(211,36,18,.2);}
+.btn-primary{width:100%;padding:14px;background:var(--red-solid);color:white;border-radius:14px;font-size:15px;font-weight:700;letter-spacing:.02em;transition:all .2s var(--ease-out);box-shadow:0 6px 20px rgba(var(--red-solid-rgb),.28);}
+.btn-primary:active{transform:scale(.97);box-shadow:0 2px 8px rgba(var(--red-solid-rgb),.2);}
 .btn-primary:disabled{opacity:.6;}
 .auth-msg{font-size:12px;text-align:center;margin-top:10px;min-height:18px;color:var(--red);}
 .auth-msg.ok{color:var(--green);}
@@ -435,7 +439,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 /* pip aposentado — a pílula deslizante (.nav-indicator) é o indicador de ativo */
 .nav-indicator{position:absolute;top:8px;bottom:8px;left:4px;width:calc((100% - 8px) / 5);border-radius:16px;background:rgba(240,136,60,.15);border:1px solid rgba(240,136,60,.24);transition:transform .34s var(--ease-spring);pointer-events:none;z-index:0;}
 .nav-item{z-index:1;}
-.nav-badge{position:absolute;top:7px;right:calc(50% - 19px);background:var(--red);color:white;border-radius:10px;font-size:9px;font-weight:800;padding:1px 5px;min-width:16px;text-align:center;box-shadow:0 0 0 2px rgba(13,21,48,.96);}
+.nav-badge{position:absolute;top:7px;right:calc(50% - 19px);background:var(--red-solid);color:white;border-radius:10px;font-size:9px;font-weight:800;padding:1px 5px;min-width:16px;text-align:center;box-shadow:0 0 0 2px rgba(13,21,48,.96);}
 /* ── PAINEL "MAIS" (bottom sheet) ── */
 .sheet-overlay{position:fixed;inset:0;z-index:200;background:rgba(11,20,48,.45);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .25s;}
 .sheet-overlay.open{opacity:1;pointer-events:auto;}
@@ -479,7 +483,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .metas-head-sub{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);}
 .metas-card.todas .metas-head-sub{color:#46C07A;}
 .dia-fechado{display:flex;align-items:center;gap:10px;background:rgba(70,192,122,.14);border:1px solid rgba(70,192,122,.35);border-radius:14px;padding:10px 12px;margin-top:10px;animation:fadeUp .35s var(--ease-out);}
-.dia-fechado-ic{width:22px;height:22px;border-radius:50%;background:#46C07A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+.dia-fechado-ic{width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
 .dia-fechado-title{font-size:12.5px;font-weight:800;color:#fff;}
 .dia-fechado-sub{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.75);}
 .metas-chev{color:rgba(255,255,255,.5);display:flex;flex-shrink:0;transition:transform .25s ease;}
@@ -662,7 +666,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .area-card:active{transform:scale(.97);}
 .area-prog-fill{height:100%;border-radius:3px;transition:width .4s;}
 
-.btn-weak{background:var(--red);color:white;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;flex-shrink:0;box-shadow:0 4px 12px rgba(211,36,18,.25);}
+.btn-weak{background:var(--red-solid);color:white;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;flex-shrink:0;box-shadow:0 4px 12px rgba(var(--red-solid-rgb),.25);}
 /* b105: hierarquia real de botão — .btn-weak sozinho tem a MESMA cor do .btn-primary,
    só muda tamanho; some quando espremido num container flex-column (align-items:stretch
    estica tudo pra mesma largura). .btn-neutral tira a cor de destaque pra ações
@@ -706,7 +710,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .foco-prog{height:6px;border-radius:6px;background:rgba(255,255,255,.16);overflow:hidden;margin-top:14px;}
 .foco-prog-fill{height:100%;width:0%;background:var(--ember);border-radius:6px;transition:width .5s var(--ease-out);}
 .foco-body{padding:16px 14px 90px;}
-.foco-cta{display:block;width:100%;background:var(--ember);color:#fff;border-radius:14px;padding:14px;
+.foco-cta{display:block;width:100%;background:var(--ember);color:var(--navy-deep);border-radius:14px;padding:14px;
   font-size:15px;font-weight:800;box-shadow:0 6px 18px rgba(240,136,60,.28);margin-bottom:16px;}
 .foco-cta:disabled{background:var(--paper-2);color:var(--text3);box-shadow:none;}
 .foco-etapa-tit{font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin:14px 0 7px;}
@@ -752,6 +756,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 /* Acento "recomendado" do Treino do dia — âmbar (não some no escuro) */
 .adapt-btn.rec{border:2px solid var(--ember);}
 #treino-badge{color:var(--ember);}
+#treino-badge.badge-feito{color:#46C07A;}
 /* No escuro, o card navy some no fundo navy: sobe o tom e reforça a sombra */
 html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#151f40);box-shadow:0 6px 22px rgba(0,0,0,.55);}
 .diag-card{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,var(--red-dark),var(--red));color:#fff;border-radius:18px;padding:16px 18px;margin-bottom:14px;cursor:pointer;box-shadow:0 10px 28px rgba(165,29,14,.32);transition:transform .2s var(--ease-out);}
@@ -1176,7 +1181,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .mt14{margin-top:14px;}
 
 /* Info button */
-.info-btn{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:rgba(16,27,61,.1);color:var(--text2);font-size:9px;font-weight:800;cursor:pointer;margin-left:4px;vertical-align:middle;transition:background .2s;flex-shrink:0;}
+.info-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(16,27,61,.1);color:var(--text2);font-size:11px;font-weight:800;cursor:pointer;margin-left:4px;vertical-align:middle;transition:background .2s;flex-shrink:0;}
 .info-btn:active{background:rgba(16,27,61,.22);}
 
 /* Info tooltip modal */
@@ -2359,7 +2364,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <div class="quiz-doc" id="sim-q-doc"></div>
           <div class="quiz-opts" id="sim-opts"></div>
           <div style="display:flex;gap:8px;margin-top:14px;">
-            <button onclick="simPrev()" style="flex:1;padding:12px;background:white;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:700;color:var(--text2);">← Anterior</button>
+            <button onclick="simPrev()" style="flex:1;padding:12px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:700;color:var(--text2);">← Anterior</button>
             <button onclick="simNext()" style="flex:1;padding:12px;background:var(--red);color:white;border-radius:12px;font-size:14px;font-weight:700;">Próxima →</button>
           </div>
         </div>
@@ -4477,7 +4482,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.231';
+const APP_VERSAO='v1.232';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -5932,8 +5937,8 @@ function treinoFeitoHoje(){return userStats.treinoDia===diaKeyHoje();}
 function atualizarCardTreino(){
   const tb=document.getElementById('treino-badge'),tsub=document.getElementById('treino-sub');
   if(!tb||!tsub)return;
-  if(treinoFeitoHoje()){tb.textContent='✓ Concluído hoje';tb.style.color='var(--green)';tsub.textContent='Objetivo do dia cumprido. Refaça se quiser.';}
-  else{tb.textContent='Recomendado agora';tb.style.color='var(--blue)';tsub.textContent='Revisão vencida + ponto fraco + assunto novo';}
+  if(treinoFeitoHoje()){tb.textContent='✓ Concluído hoje';tb.classList.add('badge-feito');tsub.textContent='Objetivo do dia cumprido. Refaça se quiser.';}
+  else{tb.textContent='Recomendado agora';tb.classList.remove('badge-feito');tsub.textContent='Revisão vencida + ponto fraco + assunto novo';}
 }
 function fecharFim(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('modal-fim').classList.add('hidden');}
 function fimIr(fn){document.getElementById('modal-fim').classList.add('hidden');if(typeof fn==='function')fn();}
@@ -6389,7 +6394,7 @@ function normaCard(n){
 }
 function renderGlossario(){
   const cont=document.getElementById('glossario-content');if(!cont)return;
-  cont.innerHTML=`<input type="search" id="glo-filtro" placeholder="🔎 Filtrar termos…" autocomplete="off" oninput="filtrarGlossario(this.value)" style="width:100%;padding:10px 13px;border-radius:11px;border:1px solid var(--line-soft);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:10px">
+  cont.innerHTML=`<input type="search" id="glo-filtro" placeholder="🔎 Filtrar termos…" aria-label="Filtrar termos do glossário" autocomplete="off" oninput="filtrarGlossario(this.value)" style="width:100%;padding:10px 13px;border-radius:11px;border:1px solid var(--line-soft);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:10px">
     <div id="glo-count" style="font-size:11.5px;color:var(--text3);margin-bottom:6px"></div>
     <div id="glo-lista"></div>`;
   filtrarGlossario('');
