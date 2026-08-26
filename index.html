@@ -1201,7 +1201,11 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .config-sub{font-size:11px;color:var(--text2);margin-top:2px;}
 .config-input{border:1.5px solid var(--border);border-radius:10px;padding:8px 12px;font-size:14px;font-weight:700;color:var(--text);background:var(--surface);width:160px;text-align:center;}
 .config-input:focus{border-color:var(--navy);}
-.btn-config-reset{background:var(--red-light);color:var(--red);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;}
+.btn-config-reset{background:var(--bg);color:var(--text2);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;}
+/* Lote C — vermelho vira exclusivo de ação destrutiva; o resto de Configurações usa
+   .btn-config-reset neutro. Borda de verdade (não só cor) porque button{border:none}
+   global zera largura, não só cor. */
+.btn-destrutivo{background:var(--red-light);color:var(--red);border:1.5px solid var(--red);border-radius:10px;padding:7px 13px;font-size:12px;font-weight:700;}
 
 /* ═══ ÍNDICE DE DOMÍNIO ═══ */
 /* F2a: o número vira o anel-herói do cartão de topo (.pg-hero-*, ver bloco P1/gauge
@@ -2684,10 +2688,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- Modal Configurações -->
-<div class="modal-overlay hidden" id="modal-config" onclick="fecharModalConfig(event)">
+<div class="modal-overlay hidden" id="modal-config" role="dialog" aria-modal="true" aria-labelledby="modal-config-title" onclick="fecharModalConfig(event)">
   <div class="modal-box" onclick="event.stopPropagation()">
     <div class="modal-fechar-bar"><button class="modal-fechar" type="button" aria-label="Fechar" onclick="fecharModalConfig()">✕</button></div>
-    <div class="modal-title">Configurações</div>
+    <div class="modal-title" id="modal-config-title">Configurações</div>
     <div class="modal-sub">Personalize sua experiência de estudo</div>
     <div class="config-row">
       <div>
@@ -2774,7 +2778,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="config-label" style="color:var(--red)">Reiniciar do zero</div>
         <div class="config-sub">Apaga TODO o progresso (questões, cards, histórico, revisões)</div>
       </div>
-      <button class="btn-config-reset" style="color:var(--red);border-color:var(--red)" onclick="reiniciarEstudos()">Reiniciar</button>
+      <button class="btn-destrutivo" onclick="reiniciarEstudos()">Reiniciar</button>
     </div>
     <!-- BLOCO C (b58) — direito de eliminação (LGPD art. 18, VI). Separado do
          "Reiniciar" de propósito: um zera o estudo, o outro encerra a conta. -->
@@ -2783,7 +2787,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="config-label" style="color:var(--red)">Excluir minha conta</div>
         <div class="config-sub">Apaga seus dados e encerra o acesso. Não tem desfazer.</div>
       </div>
-      <button class="btn-config-reset" style="color:var(--red);border-color:var(--red)" onclick="excluirMinhaConta()">Excluir</button>
+      <button class="btn-destrutivo" onclick="excluirMinhaConta()">Excluir</button>
     </div>
     <div class="config-row" style="border-top:1px solid var(--border);margin-top:8px;padding-top:14px;">
       <div>
@@ -4482,7 +4486,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.232';
+const APP_VERSAO='v1.233';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -8372,6 +8376,7 @@ function abrirModalConfig(){
   if(provaInp)provaInp.value=userStats.dataProva||'';
   atualizarBotaoNotif();
   document.getElementById('modal-config').classList.remove('hidden');
+  setTimeout(()=>{document.querySelector('#modal-config .modal-fechar')?.focus();},60);
 }
 
 function fecharModalConfig(e){
