@@ -2520,7 +2520,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
                 </div>
                 <div class="pg-gauge-wrap" id="pront-gauge"></div>
                 <div id="pront-status" class="pg-status"></div>
-                <div id="pront-aviso" style="display:none;font-size:11px;color:var(--ember-text);background:var(--amber-light);border-radius:8px;padding:7px 9px;margin-top:8px;line-height:1.4;"><svg style="width:13px;height:13px;vertical-align:-1px;margin-right:3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Estimativa preliminar — baseada em poucas respostas. Vai ficar mais precisa conforme você estuda.</div>
+                <div id="pront-aviso" style="display:none;font-size:11px;color:var(--ember-text);background:var(--amber-light);border-radius:8px;padding:7px 9px;margin-top:8px;line-height:1.4;"><svg style="width:13px;height:13px;vertical-align:-1px;margin-right:3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Estimativa preliminar: baseada em poucas respostas. Vai ficar mais precisa conforme você estuda.</div>
               </div>
             </div>
           </div>
@@ -4515,7 +4515,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.239';
+const APP_VERSAO='v1.240';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -7243,7 +7243,7 @@ async function removerUsuario(uid){
 }
 async function makeAdmin(uid){
   if(!isAdmin())return;
-  if(!confirm('Tornar este usuário ADMIN?\n\nEle(a) ganha acesso total ao painel (usuários, cobrança, reportes). Não existe botão para desfazer aqui — só pelo Firebase Console.'))return;
+  if(!confirm('Tornar este usuário ADMIN?\n\nEle(a) ganha acesso total ao painel (usuários, cobrança, reportes). Não existe botão para desfazer aqui, só pelo Firebase Console.'))return;
   await db.ref('usuarios/'+uid).update({admin:true,aprovado:true});loadAdminUsers();showToast('Admin concedido!');
 }
 
