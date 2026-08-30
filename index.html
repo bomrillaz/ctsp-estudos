@@ -1375,6 +1375,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .rep-item-ctx{font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.4;}
 .rep-item-desc{font-size:13px;color:var(--text);line-height:1.45;margin-bottom:8px;}
 .rep-item-meta{font-size:10.5px;color:var(--text3);margin-bottom:8px;}
+.rep-item-diag{margin-bottom:8px;}
+.rep-item-diag summary{font-size:11px;color:var(--text3);cursor:pointer;}
+.rep-item-diag pre{font-size:10.5px;color:var(--text2);white-space:pre-wrap;word-break:break-word;margin:6px 0 0;line-height:1.4;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
 .rep-item-acts{display:flex;gap:7px;}
 .rep-item-acts button{padding:7px 12px;border-radius:9px;font-size:11.5px;font-weight:700;border:none;cursor:pointer;}
 .rep-resolve{background:var(--green);color:#fff;}
@@ -4515,7 +4518,54 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.240';
+const APP_VERSAO='v1.241';
+
+// ═══════════════════════════════
+// B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
+// ═══════════════════════════════
+// O botão "Reportar erro" carregava só o que a pessoa digita, e não havia nenhum
+// `window.onerror` no arquivo: se o app quebrasse, o bombeiro fechava e sumia, e
+// reproduzir o "deu erro" virava adivinhação. Aqui ficam os últimos 5 erros de JS
+// da sessão, anexados ao reporte no momento do envio — sem serviço externo, sem custo.
+// Deduplicado por mensagem: erro em loop dentro de um requestAnimationFrame encheria
+// as 5 vagas com a mesma linha e apagaria justamente o erro que importa.
+const _ERR_MAX=5;
+const _ERR_T0=Date.now();
+const _errBuf=[];
+function _errPush(msg,src,ln,col){
+  // Handler de erro que lança erro é o pior resultado possível deste bloco.
+  try{
+    msg=String(msg==null?'erro':msg).slice(0,200);
+    const ult=_errBuf[_errBuf.length-1];
+    if(ult&&ult.m===msg){ult.n++;return;}
+    const onde=src?String(src).split('/').pop().slice(0,40)+(ln?':'+ln+(col?':'+col:''):''):'';
+    _errBuf.push({m:msg,o:onde,t:Math.round((Date.now()-_ERR_T0)/1000),n:1});
+    if(_errBuf.length>_ERR_MAX)_errBuf.shift();
+  }catch(e){}
+}
+window.addEventListener('error',function(ev){try{_errPush(ev&&ev.message,ev&&ev.filename,ev&&ev.lineno,ev&&ev.colno);}catch(e){}});
+window.addEventListener('unhandledrejection',function(ev){try{const r=ev&&ev.reason;_errPush('promise: '+((r&&r.message)||r),'',0,0);}catch(e){}});
+
+// String Única anexada aos TRÊS fluxos que escrevem em `reportes` (reporte de erro,
+// aviso de pagamento e o push do catch da exclusão de conta). Fonte compartilhada:
+// não replicar isto em call site. Sem e-mail nem nome — esses campos já vão separados
+// no reporte, e diagnóstico é técnico. Teto de 1000 chars porque a regra do RTDB só
+// valida o tamanho de `texto`: campo sem teto é convite a abuso.
+function _diagReporte(extra){
+  try{
+    const pwa=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;
+    const p=['v='+APP_VERSAO,
+      'tela='+(_tourTelaAtiva()||'?'),
+      'modo='+(pwa?'app':'navegador'),
+      'rede='+(navigator.onLine?'on':'off'),
+      'ua='+String(navigator.userAgent||'').slice(0,120)];
+    if(extra)p.push('ctx='+String(extra).slice(0,200));
+        // Mais RECENTE primeiro: o teto de 1000 chars corta o fim da string, e o erro
+    // que interessa no reporte e o ultimo que aconteceu, nao o primeiro.
+    if(_errBuf.length)p.push('erros='+_errBuf.slice().reverse().map(function(e){return '['+e.t+'s]'+(e.n>1?' x'+e.n:'')+' '+e.m+(e.o?' @'+e.o:'');}).join(' | '));
+    return p.join(' · ').slice(0,1000);
+  }catch(e){return 'diag indisponivel';}
+}
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava
@@ -8546,7 +8596,7 @@ async function excluirMinhaConta(){
       await db.ref('reportes').push({
         texto:'PEDIDO DE EXCLUSAO DE CONTA (LGPD) · uid '+uid+' · '+email
           +' · o proprio usuario pediu a exclusao e as regras do RTDB bloquearam a remocao do registro. Apagar manualmente em usuarios/'+uid+' e em Authentication.',
-        tipo:'exclusao',criadoEm:Date.now()
+        tipo:'exclusao',diag:_diagReporte('exclusao bloqueada: '+((e&&e.message)||e)),criadoEm:Date.now()
       });
     }catch(e2){console.warn('reporte de exclusao:',e2.message);}
   }
@@ -9070,6 +9120,7 @@ async function avisarPagamento(plano){
     texto:('PAGAMENTO INFORMADO · '+p.rotulo+' '+p.txt+' · '+quem+' · '+(currentUser.email||'')
       +' · uid '+currentUser.uid).slice(0,2000),
     tipo:'pagamento',plano:plano,uid:currentUser.uid,nome:quem,
+    diag:_diagReporte(),
     criadoEm:Date.now(),status:'aberto'};
   try{
     await db.ref('reportes').push(rep);
@@ -9130,6 +9181,7 @@ async function enviarReporte(){
     preview:prev,
     uid:currentUser?currentUser.uid:'anon',
     nome:quem,
+    diag:_diagReporte(),
     criadoEm:Date.now(),status:'aberto'};
   try{await db.ref('reportes').push(rep);fecharReporte();showToast('Reporte enviado, obrigado!');}
   catch(e){console.error('reporte erro:',e);showToast('Falha ao enviar. Tente novamente.');if(btn)btn.disabled=false;}
@@ -9158,6 +9210,8 @@ async function loadReportes(){
         // aviso de pagamento) chegava ao painel como um cartão VAZIO.
         +(r.texto&&!r.descricao?'<div class="rep-item-desc">'+sanitize(r.texto)+'</div>':'')
         +'<div class="rep-item-meta">'+sanitize(r.nome||'anônimo')+' · '+data+'</div>'
+        // B149 — recolhido por padrão: é ruído em 90% dos casos e o painel não pode virar log.
+        +(r.diag?'<details class="rep-item-diag"><summary>Diagnóstico técnico</summary><pre>'+sanitize(r.diag)+'</pre></details>':'')
         +'<div class="rep-item-acts"><button class="rep-resolve" onclick="resolverReporte(\''+sanitize(key)+'\')">Resolver</button><button class="rep-copy" onclick="copiarReporte(\''+sanitize(key)+'\')">Copiar</button></div>'
         +'</div>';
     });
@@ -9173,7 +9227,7 @@ async function resolverReporte(key){
 }
 function copiarReporte(key){
   const all=window.__repCache||{};const r=all[key];if(!r)return;
-  const txt='[REPORTE CTSP]\n'+'Tipo: '+r.tipo+' ('+r.itemId+')\n'+'Categoria: '+(REP_CAT_LBL[r.categoria]||r.categoria)+'\n'+'Item: '+(r.preview||'')+'\n'+'Queixa: '+(r.descricao||'(sem descrição)')+'\n'+'Por: '+(r.nome||'anônimo');
+  const txt='[REPORTE CTSP]\n'+'Tipo: '+r.tipo+' ('+r.itemId+')\n'+'Categoria: '+(REP_CAT_LBL[r.categoria]||r.categoria)+'\n'+'Item: '+(r.preview||'')+'\n'+'Queixa: '+(r.descricao||'(sem descrição)')+'\n'+'Por: '+(r.nome||'anônimo')+(r.diag?'\nDiag: '+r.diag:'');
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(()=>showToast('Copiado!'),()=>showToast('Não foi possível copiar'));}
   else showToast('Cópia não suportada');
 }
