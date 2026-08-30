@@ -476,6 +476,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .dash-stat-div{width:1px;background:rgba(255,255,255,.13);margin:5px 0;flex-shrink:0;}
 /* Meta do dia — recolhível (padrão fechado; cada meta batida "brota" sozinha) */
 .metas-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:4px 6px;position:relative;z-index:1;}
+/* A1 Parte 2 (b155): dia 1 com o diag-card visível — override visual só, não grava
+   preferência (renderDashboard toggla via JS, nunca localStorage). */
+.metas-card.dia1-oculto{display:none;}
 .metas-head{width:100%;background:none;border:none;color:inherit;display:flex;align-items:center;gap:10px;padding:9px 8px;cursor:pointer;text-align:left;border-radius:12px;}
 .metas-head:focus-visible{outline:2px solid var(--ember);outline-offset:-2px;}
 .metas-head-ic{width:22px;height:22px;flex-shrink:0;color:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;}
@@ -544,6 +547,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .theme-seg button{font-size:11px;font-weight:700;padding:7px 11px;border-radius:8px;background:transparent;color:var(--text2);transition:all .15s;}
 .theme-seg button.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow);}
 .dash-body{padding:16px 14px;background:transparent;}
+/* A1 (b155): skeleton enquanto dataLoaded===false — sem isto o veterano via o próprio
+   progresso zerado por um instante a cada load. Toggle em renderDashboard(). */
+.dash-body.carregando .diag-card,.dash-body.carregando .adapt-btn,.dash-body.carregando .quick-btn,.dash-body.carregando .ver-progresso{pointer-events:none;opacity:.6;}
+.dash-body.carregando .pg-kpi-v,.dash-body.carregando .pg-subline b,.dash-body.carregando .dominio-geral-pct,.dash-body.carregando .pg-hero-faixa{color:transparent;background:linear-gradient(90deg,var(--border) 25%,var(--paper-2) 37%,var(--border) 63%);background-size:400% 100%;animation:dashSkeleton 1.4s ease infinite;border-radius:6px;display:inline-block;min-width:2.4em;}
+@keyframes dashSkeleton{0%{background-position:100% 0}100%{background-position:0 0}}
 .sec-title{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:.13em;margin:4px 0 10px;display:flex;align-items:center;justify-content:space-between;}
 .sec-title a{font-size:11px;color:var(--red);font-weight:700;text-transform:none;letter-spacing:0;}
 /* ── Acordeão "Meu progresso" (consolidação dos 5 painéis de análise) ── */
@@ -2172,7 +2180,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <span style="color:var(--red-dark);font-size:12px;font-weight:600;">Dados não carregaram</span>
         <button onclick="location.reload()" style="background:var(--red-solid);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">Recarregar</button>
       </div>
-      <div class="dash-body">
+      <div class="dash-body carregando">
        <div class="dash-col-l">
         <!-- FEAT-01: Simulado de nivelamento (onboarding) -->
         <div id="diag-card" class="diag-card hidden" onclick="abrirIntro('diagnostico')">
@@ -2485,7 +2493,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <div class="tela-h-sub">Domínio, cobertura, evolução e projeção para a prova</div>
         </div>
       </div>
-      <div class="dash-body">
+      <div class="dash-body carregando">
         <!-- F2a — estado vazio: usuário sem NENHUMA resposta ainda (calcProntidao()===null).
              Antes disso a tela mostrava cinco barras cinzas e 0% — lido como "domínio zero",
              não como "sem dado ainda". renderDominio() alterna este bloco com #pg-conteudo. -->
@@ -2906,6 +2914,11 @@ let userStats={correct:0,wrong:0,byArea:{},seenIds:[],history:[],streak:0,lastSt
 // ── S30 BUG-DATA: proteção de persistência ──
 const PROG_DEFAULT={correct:0,wrong:0,byArea:{},seenIds:[],history:[],streak:0,lastStudyDate:'',metaDiaria:10,rev:0,updatedAt:0};
 let dataLoaded=false;        // leitura do Firebase confirmada nesta sessão
+// A1 (b155): dirige o skeleton (.dash-body.carregando) — `dataLoaded` sozinho NÃO serve pra
+// isto, porque no fallback offline self-healed (linha ~4332) ele pode ficar false pra sempre
+// mesmo com a UI já em estado final (zeros + alerta). Vira true quando o 1º ciclo de
+// loadUserData() termina, sucesso OU fallback, e também no teto de segurança do initApp().
+let cargaInicialTentada=false;
 let progressoLocalOk=false;  // userStats veio do espelho local (último estado bom deste aparelho)
 let savePendente=false;      // progresso aguardando sincronização
 let alertaConexao=false;
@@ -3046,6 +3059,25 @@ function _mergeFoco(a,b){ // por tópico: r em união, fc/q máximo, done OR
   }
   return out;
 }
+// A2 (b155): `streak` não é monotônico — `updateStreak()` PRECISA zerar a sequência quando
+// o usuário pula um dia (e recomeçar em 1), mas `Math.max(local,remoto)` desfazia esse zero:
+// o lado com o valor antigo, ainda alto, sempre "ganhava" do lado que acabou de zerar.
+// Resolve por RECÊNCIA, não por valor: quem tem `lastStudyDate` mais novo é quem sabe o
+// estado real da sequência hoje.
+// Achado do code-review: empate de data NÃO pode cair em `Math.max` — `updateStreak()`
+// zera `streak` SEM avançar `lastStudyDate` (de propósito: gravar `lastStudyDate=hoje`
+// no reset quebraria `registrarEstudoDia()`, que já sai cedo se `last===today`, e o
+// streak nunca mais subiria). Isso empata as duas datas no caso de UM SÓ APARELHO —
+// justo o cenário relatado — e o `Math.max` ressuscitava o valor antigo. Desempate por
+// `updatedAt` (já existe no blob, carimbado em `saveProg()` ANTES do merge daquela
+// chamada): quem está escrevendo agora sempre tem o carimbo mais novo, inclusive no
+// reset no mesmo dia.
+function _mergeStreak(local,remoto){
+  const dl=local.lastStudyDate||'',dr=remoto.lastStudyDate||'';
+  if(dl>dr)return local.streak||0;
+  if(dr>dl)return remoto.streak||0;
+  return (local.updatedAt||0)>=(remoto.updatedAt||0)?(local.streak||0):(remoto.streak||0);
+}
 // Mescla `local` (memória, autoridade de settings recém-mexidos) com `remoto` (leitura fresca).
 // Base {...remoto,...local}: escalares/settings seguem o local; progresso é mesclado simétrico.
 function mergeProgresso(local,remoto){
@@ -3066,8 +3098,11 @@ function mergeProgresso(local,remoto){
   const out={...remoto,...local};
   out.correct=Math.max(local.correct||0,remoto.correct||0);
   out.wrong=Math.max(local.wrong||0,remoto.wrong||0);
-  out.streak=Math.max(local.streak||0,remoto.streak||0);
-  out.cardStreak=Math.max(local.cardStreak||0,remoto.cardStreak||0);
+  out.streak=_mergeStreak(local,remoto);
+  // A2 (b155): cardStreak segue a base {...remoto,...local} (local vence) — não precisa de
+  // Math.max nem de carimbo de recência. `local` é a sessão que está avaliando cards agora,
+  // é ela que sabe se a sequência de "Fácil" continua ou zerou; e o campo é display-only
+  // (index.html:5656, só textContent — não entra em BKT/FSRS/agendamento).
   out.byArea=_mergeMapaMax(local.byArea,remoto.byArea,['correct','wrong']);
   out.seenIds=Array.from(new Set([...(local.seenIds||[]),...(remoto.seenIds||[])]));
   out.history=_mergeHistory(local.history,remoto.history);
@@ -4199,9 +4234,29 @@ async function initApp(){
       nav.appendChild(a);
     }
   }
-  await loadUserData();
-  await loadQuestoes();
-  await loadFlashcards();
+  // A1 (b155): teto de segurança do skeleton. Os dois .dash-body já nascem `.carregando`
+  // no HTML (índices 2183/2496) — sem uma saída garantida, um travamento/erro não pego no
+  // load inicial deixaria os dois presos assim pra sempre (CTAs desabilitados, sem número
+  // nenhum). O try/catch abaixo cobre o caminho rápido (erro síncrono/rejeição); este
+  // timeout cobre o caso extremo de travar sem nunca rejeitar. 120s (achado do code-review:
+  // 60s subestimava — cada tentativa de `loadUserData` faz DOIS `get()` sequenciais com o
+  // MESMO timeout, `progresso` e `cards`, não um só; pior caso real das 3 tentativas fica em
+  // ~100,5s, não ~55s). Reaproveita `mostrarAlertaConexao` (mesmo alerta do S30 self-heal).
+  const _skeletonTeto=setTimeout(()=>{
+    if(cargaInicialTentada)return;
+    cargaInicialTentada=true;
+    document.querySelectorAll('.dash-body').forEach(el=>el.classList.remove('carregando'));
+    mostrarAlertaConexao(true);
+  },120000);
+  try{
+    await loadUserData();
+    await loadQuestoes();
+    await loadFlashcards();
+  }catch(e){
+    console.warn('initApp: falha no load inicial, seguindo com o que tiver carregado.',e);
+    cargaInicialTentada=true;
+  }
+  clearTimeout(_skeletonTeto);
   updateStreak();
   renderDashboard();
   renderAreaList();
@@ -4328,6 +4383,7 @@ async function loadUserData(){
     if(espCards)userCards=espCards; // flashcards do espelho local enquanto offline
     mostrarAlertaConexao(true);
   }
+  cargaInicialTentada=true; // A1 (b155): 1º ciclo terminou (sucesso ou fallback) — libera o skeleton
   lerCardsSujos();          // C6: restaura marcas de cards rateados offline em sessão anterior
   flushCardsSujos();        // e tenta subi-los agora (no-op se online já os limpou / se offline)
   // Listener: RECUPERAÇÃO do load inicial +, após dataLoaded, SYNC AO VIVO (C1/item 4).
@@ -4517,7 +4573,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.242';
+const APP_VERSAO='v1.244';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -4902,6 +4958,10 @@ function renderAvisoCobranca(){
 }
 
 function renderDashboard(){
+  // A1 (b155): skeleton nos dois .dash-body (Início e Meu progresso) até o 1º ciclo de
+  // load terminar. NÃO usa `dataLoaded` direto — ver comentário de `cargaInicialTentada`
+  // junto da declaração dela (S30 self-heal offline pode deixar dataLoaded false pra sempre).
+  document.querySelectorAll('.dash-body').forEach(el=>el.classList.toggle('carregando',!cargaInicialTentada));
   // S59: atualiza o retrato da semana ANTES de desenhar, para a variação semanal já
   // sair correta nesta passada. A função se protege sozinha se `dataLoaded` for false.
   registrarRetratoSemanal();
@@ -4971,7 +5031,23 @@ function renderDashboard(){
 
   // FEAT-01: card de nivelamento só enquanto não concluído
   const diagCard=document.getElementById('diag-card');
-  if(diagCard)diagCard.classList.toggle('hidden', !!userStats.diagFeito||podeAdiarDiagCard());
+  const diagOculto=!!userStats.diagFeito||podeAdiarDiagCard();
+  if(diagCard)diagCard.classList.toggle('hidden', diagOculto);
+
+  // A1 Parte 2 (b155): dia 1 (dataLoaded && total===0) com o diag-card visível já é
+  // uma tela completa com CTA claro — as 3 metas zeradas ao lado só competem por
+  // atenção. Se o diag-card estiver adiado/concluído, mantém as metas visíveis,
+  // senão a Home fica vazia.
+  // CUIDADO (achado do code-review): display:none derruba o rect a 0x0 e
+  // _tourAlvos() descarta o passo inteiro da lista (mesma armadilha do b126 com o
+  // #install-banner, ver comentário de _tourSincronizarBanner). #metas-card É alvo
+  // do 1º passo do tour ("Sua meta do dia") — exatamente o publico do dia 1. Por
+  // isso o gate também suprime a ocultação enquanto o tour estiver aberto
+  // (#modal-tutorial sem .hidden), reaproveitando o sinal que o tour já usa pra se
+  // saber ativo, sem flag nova.
+  const metasCard=document.getElementById('metas-card');
+  const tourAberto=!document.getElementById('modal-tutorial')?.classList.contains('hidden');
+  if(metasCard)metasCard.classList.toggle('dia1-oculto', !tourAberto&&dataLoaded&&total===0&&!!diagCard&&!diagOculto);
 
   // (S64) O grid de áreas clicável saiu da home/progresso: a ação "praticar área/tópico"
   // já vive na aba Quiz ("Escolha uma área" + "Praticar por tópico"). Aqui é só leitura.
@@ -8379,6 +8455,13 @@ function iniciarTutorial(){
   // _navToInner(...,true) em vez de navTo: mesma navegacao SINCRONA (§2), sem o
   // stagger de entrada que atrapalharia a medicao do primeiro passo.
   _navToInner('inicio',true);
+  // A1 Parte 2 (b155, achado do code-review): abre o modal e re-renderiza o painel
+  // ANTES do filtro — mesmo motivo do comentário do #install-banner logo abaixo:
+  // #metas-card só fica mensurável (sem .dia1-oculto) depois que renderDashboard()
+  // souber que #modal-tutorial já está sem .hidden. Tudo síncrono, sem repaint no
+  // meio, então não pisca conteúdo vazio.
+  const m=document.getElementById('modal-tutorial');if(m)m.classList.remove('hidden');
+  renderDashboard();
   // b123: o banner precisa EXISTIR e ser mensurável antes do filtro, senão o passo
   // "Instalar e ser avisado" nem entra na lista — avaliarConviteInstalar() já garante
   // display:'' nas plataformas elegíveis. simplify: o class-add manual de tour-ativo/
@@ -8386,10 +8469,9 @@ function iniciarTutorial(){
   // turno síncrono, sem repaint no meio) já sincroniza via _tourSincronizarBanner().
   avaliarConviteInstalar();
   _tourLista=TOUR_PASSOS.filter(_tourAplicavel);
-  if(!_tourLista.length)return;
+  if(!_tourLista.length){if(m)m.classList.add('hidden');renderDashboard();return;}
   _tourIdx=0;
   _tourFocoAnterior=document.activeElement;
-  const m=document.getElementById('modal-tutorial');if(m)m.classList.remove('hidden');
   window.addEventListener('scroll',_tourReposicionar,true);   // capture: pega scroll interno
   window.addEventListener('resize',_tourAoRedimensionar);
   _tourRender();
@@ -8412,6 +8494,11 @@ function fecharTutorial(e){
   if(_tourReMedir){clearTimeout(_tourReMedir);_tourReMedir=0;}
   const m=document.getElementById('modal-tutorial');if(m)m.classList.add('hidden');
   _tourLiberarBanner();                            // b126
+  // A1 Parte 2 (b155, achado do code-review): renderDashboard() suprime o
+  // dia1-oculto do #metas-card enquanto #modal-tutorial está aberto (ver
+  // comentário lá) — sem reavaliar aqui, o card ficaria visível pra sempre depois
+  // do tour em vez de voltar a ocultar no dia 1.
+  renderDashboard();
   try{localStorage.setItem('tutorialVisto','1');}catch(_){}
   if(_tourFocoAnterior&&_tourFocoAnterior.focus){try{_tourFocoAnterior.focus();}catch(_){}}
   _tourFocoAnterior=null;
