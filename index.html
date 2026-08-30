@@ -20,8 +20,9 @@
      de verdade no Android (ícone, splash, tela cheia sem barra do Chrome) e para o
      app abrir em modo standalone depois de instalado. É ganho parcial, não conserto. -->
 <link rel="manifest" href="manifest.webmanifest"/>
-<title>Prontidão: Plataforma de Estudos para concursos internos do CBMRS</title>
-<meta name="description" content="Prontidão, a plataforma de estudos da Bomrillaz: 533 questões autorais conferidas contra a norma vigente, simulado no formato real da prova, flashcards com revisão espaçada e diagnóstico automático das suas áreas fracas."/>
+<link rel="canonical" href="https://bomrillaz.github.io/ctsp-estudos/"/>
+<title>Prontidão: Plataforma de Estudos para o CTSP (CBMRS)</title>
+<meta name="description" content="A Prontidão prepara você para o CTSP: 533 questões autorais, simulado real, flashcards com revisão espaçada e diagnóstico das áreas fracas."/>
 <meta property="og:type" content="website"/>
 <meta property="og:site_name" content="Prontidão · Bomrillaz"/>
 <meta property="og:title" content="Prontidão: sua preparação, medida por área e por tópico"/>
@@ -208,7 +209,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .auth-content{position:relative;z-index:2;width:100%;padding:0 0 env(safe-area-inset-bottom);}
 .auth-hero{text-align:center;padding:32px 24px 24px;}
 .auth-hero img.logo{width:auto;height:118px;border-radius:0;border:none;background:transparent;padding:0;object-fit:contain;margin-bottom:10px;box-shadow:none;}
-.auth-hero h1{color:white;font-family:var(--font-display);font-size:34px;font-weight:700;letter-spacing:.04em;line-height:1.05;text-transform:uppercase;}
+.auth-hero .auth-brand-h1{color:white;font-family:var(--font-display);font-size:34px;font-weight:700;letter-spacing:.04em;line-height:1.05;text-transform:uppercase;}
 .auth-hero p{color:var(--ember);font-family:var(--font-display);font-size:14px;font-weight:600;letter-spacing:.22em;margin-top:6px;text-transform:uppercase;}
 .auth-card{background:var(--surface);border-radius:28px 28px 0 0;padding:28px 22px 32px;width:100%;max-width:480px;margin:0 auto;position:relative;overflow:hidden;}
 .auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--fire-line);}
@@ -396,6 +397,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .doc-corpo b{color:var(--text);}
 .doc-meta{font-size:11px;color:var(--text3);margin-top:18px;padding-top:12px;border-top:1px solid var(--line-soft);}
 .pending-box{text-align:center;padding:16px 0;color:var(--text2);font-size:13px;line-height:1.6;}
+.pending-recap.hidden{display:none;}
+.pending-recap{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--paper-2);color:var(--text);font-size:12.5px;font-weight:700;line-height:1.5;}
 
 /* APP SHELL */
 #app{display:none;flex-direction:column;min-height:100vh;}
@@ -1955,7 +1958,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <h2 class="lp-h2 lp-h2-claro">A prova tem data. Sua memória, não.</h2>
       <p class="lp-p lp-p-claro">Comece hoje com 7 dias grátis. Sem cartão, sem cobrança automática. Se não servir, é só não continuar.</p>
       <div class="lp-hero-cta">
-        <button type="button" class="lp-btn-cta" onclick="verLogin('register')">Criar minha conta</button>
+        <button type="button" class="lp-btn-cta" onclick="verLogin('register')">Começar com 7 dias grátis</button>
         <button type="button" class="lp-btn-linha lp-btn-linha-claro" onclick="verLogin('login')">Entrar</button>
       </div>
     </div>
@@ -2004,7 +2007,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <button type="button" class="lp-voltar" onclick="verLanding()" aria-label="Voltar para a apresentação">← Voltar</button>
     <div class="auth-hero">
       <img class="logo" src="assets/cesar-coin.png" onerror="this.style.display='none'" alt="Prontidão">
-      <h1>Prontidão</h1>
+      <p class="auth-brand-h1">Prontidão</p>
       <p>Plataforma de Estudos · por Bomrillaz</p>
     </div>
     <div class="auth-card">
@@ -2043,6 +2046,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="pending-box">
           <strong style="color:var(--text);font-size:15px;">Este acesso está aguardando liberação manual.</strong><br>
           <span style="display:inline-block;margin-top:10px;">A liberação costuma sair em <strong>até 24h</strong>. Assim que for liberada, é só entrar com o mesmo e-mail e senha, não precisa cadastrar de novo.</span>
+          <div id="pending-recap" class="pending-recap hidden"></div>
           <span style="display:block;margin-top:12px;">
             <button class="pix-copiar" style="font-size:14px;padding:13px;" onclick="abrirPagamento(planoEscolhido())">Pagar com Pix</button>
           </span>
@@ -4143,8 +4147,25 @@ function verLanding(){
 function showAuth(tab='login'){
   document.getElementById('auth-screen').classList.add('active');
   document.getElementById('app').classList.remove('active');
-  if(tab==='pending')verLogin('pending');
+  if(tab==='pending'){verLogin('pending');carregarRecapPending();}
   else verLanding();
+}
+// Recapitula valor acumulado na tela de bloqueio, antes do Pix. Sem isso a tela
+// tratava quem já estudou meses igual a quem acabou de chegar. Nunca mostra nada se
+// não houver progresso real (conta nova/renascida): sem dado, sem frase vazia.
+async function carregarRecapPending(){
+  const box=document.getElementById('pending-recap');
+  if(!box||!currentUser)return;
+  try{
+    const snap=await withTimeout(db.ref('progresso/'+currentUser.uid).get());
+    const p=snap.val()||{};
+    const total=(p.correct||0)+(p.wrong||0);
+    if(total<=0)return;
+    const streakTxt=p.streak>0?` e ${p.streak} dia${p.streak!==1?'s':''} de sequência`:'';
+    const questaoTxt=total===1?'1 questão respondida':`${total} questões respondidas`;
+    box.textContent=`Seu progresso está guardado: ${questaoTxt}${streakTxt}. É só voltar de onde parou.`;
+    box.classList.remove('hidden');
+  }catch(e){console.warn('Recap pending:',e.message);}
 }
 
 // ═══════════════════════════════
@@ -4494,7 +4515,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.238';
+const APP_VERSAO='v1.239';
 
 // ═══════════════════════════════
 // S60 DIA LOCAL (bloco33) — a meta diária não zerava

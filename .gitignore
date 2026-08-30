@@ -7,3 +7,12 @@ materiais/
 .github/agents/
 .github/hooks/
 .github/skills/
+
+graphify-out/
+.graphifyignore
+
+# b146 — cópia-sombra do <script> embutido em index.html, gerada por
+# materiais/entregas/testes/extrair_shadow_js.mjs, só pro Understand-Anything conseguir
+# ler a lógica do app (ele não tem gramática HTML). Nunca é o código real.
+.ua-shadow/
+.ua/
