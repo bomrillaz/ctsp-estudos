@@ -281,6 +281,15 @@ IA no meio.
 3. Copiar o `.md` da sessão para `historico/` do vault, no mesmo formato dos blocos anteriores.
 4. **Não** recriar `materiais/historico/` nem `MEMORIA_INDICE.md` no repo (removidos no b105).
 
+**Em sessão ORQUESTRADA, quem roda o `encerrar` é o ORQUESTRADOR, sozinho e sem esperar o João
+pedir (padrão desde o b156).** Gatilho: a tarefa supervisionada terminou (bloco publicado ou frente
+fechada). **A sessão executora NÃO roda o `encerrar`** — duas sessões escrevendo no `_estado.md`
+do vault é colisão de arquivo, o mesmo modo de falha que o handshake de `SendMessage` existe para
+evitar. O orquestrador avisa a executora que o encerrar já foi feito e que ela não deve rodar nada,
+credita nas notas de `licoes/` os achados que foram dela, e só então o João dá o `/clear`.
+Encerrar feito = handoff em disco = `/clear` seguro nas duas pontas. Ver
+`Documents\Claude\METODOLOGIA_execucao_multisessao.md`.
+
 ---
 
 ## 12. BACKUP
