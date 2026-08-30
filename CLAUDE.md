@@ -205,6 +205,14 @@ sabe o que vai cair ou promete aprovação. Há teste no harness travando isso.
 
 ## 6. MOTOR DE ESTUDO
 
+- **Embasamento científico é critério de projeto, não preferência do autor.** Metodologia de estudo,
+  estrutura de tela, copy e decisão de produto são norteados por pesquisa aplicável sempre que houver;
+  fugir é exceção com justificativa explícita. Não ficar preso a uma metodologia (mix das melhores),
+  evoluir, e **revalidar a evidência** ao voltar numa área já embasada — nunca repetir citação de
+  memória. Proposta de mecanismo de estudo sem base citada é incompleta. Não afrouxa a honestidade:
+  segue proibido prometer aprovação ou fingir prever a prova. Ver
+  `decisoes/embasamento-cientifico-e-criterio-de-projeto` do vault (achados de Dunlosky 2013,
+  Rawson & Dunlosky 2022, Brunmair & Richter 2019 e o que eles implicam para as doses diárias).
 - **FSRS é a fonte única de agendamento da questão** (`questoesFSRS`). SM-2 aposentado; leitura legada só como fallback no `questaoDue`.
 - **BKT por tópico** com decaimento temporal (`bktPLefetivo`): meia-vida = `7d × acertos`, piso 10, teto 90.
 - **Card é recuperação, resumo não.** Flashcard acertado (Médio/Fácil) adia o decaimento; resumo não conta. Só a QUESTÃO cria domínio.
@@ -335,6 +343,16 @@ pedido 2 vezes):**
 - **Subagente é caro.** Só com frentes realmente independentes ou verificação de alto risco — nunca no trivial.
   Subagentes **não** escrevem no mesmo arquivo em paralelo: edição em massa = executor único + revisor.
 - **Modelo:** Sonnet é o padrão. Opus só na fase de **decisão** de mudança estrutural ou de alto risco.
+- **`code-review` é PADRÃO antes de todo commit em sessão orquestrada (decidido no b156).** Sessão
+  orquestrada = Opus supervisiona e Sonnet executa, ou qualquer sessão que toque lógica. Roda o
+  `code-review` **na sessão executora**, sobre o diff, ANTES de parar para o commit — não se pergunta,
+  não se pula. **Por quê:** no b156 ele pegou **dois erros do supervisor** que tinham passado por
+  reportes de execução limpos — uma regressão (esconder o `#metas-card` com `display:none` apagava um
+  passo do tour, que descarta alvo com rect 0x0) e uma **especificação errada** (o desempate do
+  `_mergeStreak` por maior valor não consertava o bug no caso de um aparelho só). Reporte de execução
+  prova o que foi pedido; ele não vê a interação com a feature vizinha nem questiona a premissa de
+  quem pediu. Achado do review **não se aplica sozinho**: o executor reporta, o supervisor decide o
+  que entra no commit e o que vira pendência.
 - **Skills — já usadas no CTSP, ativar sozinho quando o cenário bater (sem perguntar):**
   `code-review` (lógica pesada, antes do commit) · `web-design-guidelines` + `ui-ux-pro-max` (auditoria
   estética/acessibilidade, WCAG — usadas no b72/b76) · `frontend-aesthetics`/`frontend-design` (polimento

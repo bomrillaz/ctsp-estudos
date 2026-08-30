@@ -504,8 +504,20 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .metas-mini-seg{flex:1;height:4px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden;}
 .metas-mini-seg i{display:block;height:100%;border-radius:3px;transition:width .5s var(--ease-out);}
 .metas-body{padding:0 8px;}
-.metas-row{display:flex;align-items:center;gap:10px;max-height:0;opacity:0;overflow:hidden;margin:0;transition:max-height .5s var(--ease-out),opacity .4s,margin .4s;}
-.metas-row.vis{max-height:58px;opacity:1;margin:0 0 12px;}
+/* A3 (b155): recolhida sem visibility:hidden, leitor de tela anunciava "Questões 0 de
+   10, 0%" com a linha inteira ainda fora da vista (max-height:0 esconde visualmente,
+   não da árvore de acessibilidade). Não mexe no mecanismo do acordeão (decisão do
+   vault: motion não toca layout) — visibility muda junto com a classe .vis, igual ao
+   precedente do #install-banner (.tour-oculto acima).
+   Achado do code-review: visibility fora do `transition:` muda no MESMO instante da
+   troca de classe, não junto com max-height/opacity — ao FECHAR, a linha sumia (paint)
+   na hora e só o espaço (já invisível) continuava encolhendo por baixo, quebrando o
+   fade suave que existia antes. Delay de visibility SÓ no sentido de fechar (a regra
+   base, que passa a valer quando .vis sai) — abrir continua instantâneo (a regra
+   .vis, que passa a valer quando .vis entra, não tem delay). Não toca duração/curva
+   de max-height/opacity/margin, só adia quando visibility em si aplica. */
+.metas-row{display:flex;align-items:center;gap:10px;max-height:0;opacity:0;overflow:hidden;margin:0;visibility:hidden;transition:max-height .5s var(--ease-out),opacity .4s,margin .4s,visibility 0s linear .5s;}
+.metas-row.vis{max-height:58px;opacity:1;margin:0 0 12px;visibility:visible;transition:max-height .5s var(--ease-out),opacity .4s,margin .4s,visibility 0s linear 0s;}
 .metas-ic{width:22px;flex-shrink:0;color:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;}
 .metas-ic svg{width:17px;height:17px;}
 .metas-mid{flex:1;min-width:0;}
@@ -676,12 +688,18 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .area-card:active{transform:scale(.97);}
 .area-prog-fill{height:100%;border-radius:3px;transition:width .4s;}
 
-.btn-weak{background:var(--red-solid);color:white;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;flex-shrink:0;box-shadow:0 4px 12px rgba(var(--red-solid-rgb),.25);}
-/* b105: hierarquia real de botão — .btn-weak sozinho tem a MESMA cor do .btn-primary,
-   só muda tamanho; some quando espremido num container flex-column (align-items:stretch
-   estica tudo pra mesma largura). .btn-neutral tira a cor de destaque pra ações
-   secundárias/dispensáveis — token único, substitui o style="background:var(--bg)..." que
-   se repetia solto em vários pontos do arquivo. */
+/* Bloco 2 (b155/A2 do critique): default trocado — .btn-weak nascia vermelho (mesma cor
+   do .btn-primary), violando The One Red Rule sempre que aparecia perto de um primário
+   de verdade (11 ocorrências medidas, checadas uma a uma — nenhuma delas é a AÇÃO
+   primária da tela em que vive, ver decisões no histórico). Nasce NEUTRO agora. Quem
+   precisa de vermelho de verdade é `.btn-primary` — não existe (nem deve existir) uma
+   segunda porta pro vermelho aqui: um `.btn-weak` que precise virar ação primária vira
+   `.btn-primary`, não ganha variante vermelha do secundário (senão a One Red Rule volta
+   a furar na próxima tela). `.btn-forte` foi cogitado e removido: 0 dos 11 usava, YAGNI. */
+.btn-weak{background:var(--bg);color:var(--text2);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;flex-shrink:0;box-shadow:none;}
+/* b105: .btn-neutral fica como alias redundante do default acima (mesmo resultado, sem
+   custo) — não vale tocar os 8 call sites que já usam "btn-weak btn-neutral" só pra
+   remover uma classe que não muda nada visualmente. */
 .btn-weak.btn-neutral{background:var(--bg);color:var(--text2);box-shadow:none;}
 /* S51 MOBILE-FIT (bloco31) — corrige ESTOURO HORIZONTAL do painel no celular.
    Causa: filho flex com `flex:1` mantém `min-width:auto` e não encolhe abaixo da
@@ -769,6 +787,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 #treino-badge.badge-feito{color:#46C07A;}
 /* No escuro, o card navy some no fundo navy: sobe o tom e reforça a sombra */
 html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#151f40);box-shadow:0 6px 22px rgba(0,0,0,.55);}
+/* A3 (b155): The Recalibrated Dark Rule subiu o tom do card (regra acima) e não
+   recalibrou o PAR — ember #F0883C sobre o topo do gradiente (#28396c) mede 4,38:1,
+   abaixo do mínimo AA de 4,5:1 (medido com a fórmula WCAG, não estimado; no tema
+   claro o mesmo par passa em 5,50:1/7,17:1). Variante de tema pro badge, não pro
+   card: escurecer o card de novo reabriria o "some no fundo navy" que a regra
+   acima existe pra evitar. +4% de luminosidade (HSL) em cima do ember original —
+   dá 4,80:1 no topo e 6,98:1 no fundo, com folga sobre o piso. .badge-feito (verde,
+   já em 4,80:1 nesse mesmo par) segue como está, não precisava de ajuste. */
+html[data-theme="dark"] #treino-badge{color:#F1944F;}
+html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
 .diag-card{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,var(--red-dark),var(--red));color:#fff;border-radius:18px;padding:16px 18px;margin-bottom:14px;cursor:pointer;box-shadow:0 10px 28px rgba(165,29,14,.32);transition:transform .2s var(--ease-out);}
 .diag-card.hidden{display:none;}
 .diag-card:active{transform:scale(.98);}
@@ -853,6 +881,14 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
 .quiz-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--fire-line);opacity:.85;}
 .quiz-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .quiz-area-tag{background:rgba(240,136,60,.15);border:1px solid rgba(240,136,60,.35);color:var(--ember);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;}
+/* A4 (b155, achado do code-review): .quiz-header é SEMPRE chrome escuro (navy fixo,
+   não muda com o tema — igual .btn-voltar-quiz acima). Reusar .info-btn puro (pensado
+   pra card claro, `color:var(--text2)`) media 2,22:1 no tema claro contra este fundo —
+   bem abaixo do piso de AA. Override escopado só neste botão, no mesmo padrão claro-
+   sobre-navy do .btn-voltar-quiz — branco sobre navy mede 13,92:1/16,85:1, não toca o
+   .info-btn genérico (que segue certo nos outros ~10 usos, todos em card claro). */
+#intro-reabrir-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:white;}
+#intro-reabrir-btn:active{background:rgba(255,255,255,.22);}
 /* Header do quiz tinha 2 chips (área + placar) competindo na mesma linha; o placar
    vira legenda inline do progresso — só a área continua como chip. */
 .quiz-prog-row{display:flex;align-items:center;gap:10px;}
@@ -2312,6 +2348,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <div class="quiz-meta">
             <button class="btn-voltar-quiz" onclick="voltarMenuQuiz()">← Voltar</button>
             <div class="quiz-area-tag" id="quiz-area-tag">Quiz</div>
+            <span class="info-btn" id="intro-reabrir-btn" onclick="_introReabrir()" aria-label="O que é isto?" style="display:none">?</span>
           </div>
           <div class="quiz-prog-row">
             <div class="quiz-prog"><div class="quiz-prog-fill" id="quiz-prog-fill" style="width:0%"></div></div>
@@ -2684,7 +2721,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="modal-sub" id="intro-sub"></div>
     <div id="intro-body" style="margin:10px 0 4px"></div>
     <button class="btn-primary" id="intro-start" style="width:100%;margin-top:16px" onclick="introComecar()">Começar</button>
-    <button class="btn-weak btn-neutral" onclick="fecharIntro()" style="width:100%;margin-top:8px">Agora não</button>
+    <button class="btn-weak btn-neutral" id="intro-fechar" onclick="fecharIntro()" style="width:100%;margin-top:8px">Agora não</button>
   </div>
 </div>
 
@@ -3645,7 +3682,52 @@ function montarTreinoDoDia(tam=TREINO_TAM){
 
 // ── Tela-intro: apresenta a sessão ANTES de cair na 1ª questão (o que é, quantas,
 // só questões, o que acontece ao errar e ao terminar). Uma vez, um toque para começar.
+// A4 (b155): pedágio permanente em 10 caminhos (Treino, Rápido, Focado, Erro, Quiz por
+// área, Intercalado, Meta, tópico, ids, Diagnóstico) — quem já viu não precisa ver nunca
+// mais. "Já visto" persiste em localStorage, NUNCA em RTDB (mesmo padrão de
+// onboardDismiss/diagCardDismiss, CLAUDE.md §2 — nada de campo novo em usuarios/$uid).
+function _introVistos(){try{return JSON.parse(localStorage.getItem('introVistos')||'{}');}catch(_){return {};}}
 let _introAcao=null;
+let _introUltimo=null;      // {titulo,sub,itens,btn} do último abrirIntro() — pro "?" reabrir sob demanda
+let _introReabertura=false; // true = modal reaberto só pra CONSULTA (não reinicia a sessão ao fechar)
+// Fonte única do HTML da lista de itens — usada tanto no 1º acesso quanto na reabertura,
+// pra não duplicar o template dos dois jeitos.
+function _introRenderizar(titulo,sub,itens,btnTxt){
+  const g=id=>document.getElementById(id);
+  g('intro-title').textContent=titulo;
+  g('intro-sub').textContent=sub;
+  g('intro-body').innerHTML=itens.map(([t,d])=>`<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)"><span style="color:var(--red);font-weight:800;flex-shrink:0">›</span><span><b style="font-size:14px">${sanitize(t)}</b><br><span style="font-size:12.5px;color:var(--text2)">${sanitize(d)}</span></span></div>`).join('');
+  g('intro-start').textContent=btnTxt;
+  g('modal-intro').classList.remove('hidden');
+}
+// Fonte única de quem controla o texto do botão secundário ("Agora não"/"Fechar") —
+// achado do code-review: antes 3 lugares reescreviam o textContent na mão, um jeito
+// fácil de esquecer um e deixar o rótulo errado.
+function _introSetReabertura(v){
+  _introReabertura=v;
+  const fe=document.getElementById('intro-fechar');
+  if(fe)fe.textContent=v?'Fechar':'Agora não';
+}
+// Some com o "?" e esquece o conteúdo salvo — chamado pelos caminhos que abrem
+// #quiz-running-view SEM passar por abrirIntro() (deep link do ebook, "Continuar" da
+// Tela de Foco, nivelamento pelo gate/splash, "Exemplo" do admin, Foco adaptativo).
+// Achado do code-review do bloco 2: meu comentário original dizia "confirmado por
+// grep em #quiz-area-tag" — o grep foi real mas incompleto, faltaram exatamente
+// essas 5 funções. Sem isto, o "?" ficava visível mostrando a intro de uma sessão
+// ANTERIOR (ex.: fez o Treino do dia, depois abriu um link do ebook — o "?" ainda
+// mostraria "Treino do dia", errado pro tópico que abriu agora).
+function _introLimparBotao(){
+  const rb=document.getElementById('intro-reabrir-btn');if(rb)rb.style.display='none';
+  _introUltimo=null;
+}
+// "O que é isto?" no cabeçalho da sessão (.quiz-meta), compartilhado pelos 10 tipos de
+// abrirIntro() E pelos 5 caminhos que a contornam (ver _introLimparBotao). Só exibe,
+// nunca reinicia.
+function _introReabrir(){
+  if(!_introUltimo)return;
+  _introSetReabertura(true);
+  _introRenderizar(_introUltimo.titulo,_introUltimo.sub,_introUltimo.itens,'Entendi');
+}
 function abrirIntro(tipo,arg,arg2){
   const g=id=>document.getElementById(id);
   let titulo,sub,itens,btn,acao;
@@ -3726,19 +3808,26 @@ function abrirIntro(tipo,arg,arg2){
            ['Ao terminar','seu dia fica registrado como concluído']];
     btn='Começar o treino'; acao=irTreinoDoDia;
   }
-  g('intro-title').textContent=titulo;
-  g('intro-sub').textContent=sub;
-  g('intro-body').innerHTML=itens.map(([t,d])=>`<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)"><span style="color:var(--red);font-weight:800;flex-shrink:0">›</span><span><b style="font-size:14px">${sanitize(t)}</b><br><span style="font-size:12.5px;color:var(--text2)">${sanitize(d)}</span></span></div>`).join('');
-  g('intro-start').textContent=btn;
+  _introUltimo={titulo,sub,itens,btn};
   _introAcao=acao;
-  g('modal-intro').classList.remove('hidden');
+  const rb=document.getElementById('intro-reabrir-btn');if(rb)rb.style.display='';
+  const vistos=_introVistos();
+  if(vistos[tipo]){acao();return;} // 2ª vez em diante: pula o modal, vai direto
+  vistos[tipo]=1;
+  try{localStorage.setItem('introVistos',JSON.stringify(vistos));}catch(_){}
+  _introRenderizar(titulo,sub,itens,btn);
 }
 function fecharIntro(e){
   if(e&&e.target!==e.currentTarget)return; // clique dentro do box não fecha
   document.getElementById('modal-intro').classList.add('hidden');
+  _introSetReabertura(false); // os 3 caminhos de fechar (X/backdrop, Esc, "Agora não") passam por aqui
 }
 function introComecar(){
   document.getElementById('modal-intro').classList.add('hidden');
+  if(_introReabertura){ // só consulta ("o que é isto?") — fechar aqui NÃO reinicia a sessão
+    _introSetReabertura(false);
+    return;
+  }
   const a=_introAcao;_introAcao=null;if(typeof a==='function')a();
 }
 
@@ -4305,7 +4394,7 @@ function consumirDeepLink(){
   const acao=m[1],t=m[2];
   if(!Object.prototype.hasOwnProperty.call(TOPICOS,t))return false;
   try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
-  if(acao==='p')praticarTopico(t);else revisarTopico(t);
+  if(acao==='p'){_introLimparBotao();praticarTopico(t);}else revisarTopico(t);
   return true;
 }
 
@@ -4573,7 +4662,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.244';
+const APP_VERSAO='v1.245';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -5287,6 +5376,7 @@ function focoAbrirEtapa(tipo,id){
     focoGravar(t,{fc:true});
     revisarCardsDoTopico(t);
   } else if(tipo==='questoes'){
+    _introLimparBotao();
     praticarTopico(t);   // marcado como feito em registrarRespostaAdaptativa(), só ao responder de verdade
   }
   atualizarBarraFoco();
@@ -7190,6 +7280,7 @@ function togglePadrao(i){
 function mostrarExemplo(qid){
   const q=allQuestoes[qid];
   if(!q){showToast('Questão não encontrada.');return;}
+  _introLimparBotao();
   navTo('quiz');
   quizQueue=[q];quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;quizArea=q.area;
   document.getElementById('quiz-home-view').classList.add('hidden');
@@ -8081,6 +8172,7 @@ function renderObjetivoSemana(){
 
 function iniciarEstudoTopico(t){
   if(!allQuestoes||!Object.keys(allQuestoes).length){showToast('Banco ainda carregando, tente em instantes.');return;}
+  _introLimparBotao();
   let fila=Object.values(allQuestoes).filter(q=>q.topico===t).sort((x,y)=>questaoDue(x.id)-questaoDue(y.id));
   if(!fila.length){showToast('Sem questões para este tópico.');return;}
   fila=shuffle(fila.slice(0,12));
@@ -8118,6 +8210,7 @@ function adiarDiagCard(e){
 }
 function iniciarOnboardDiagnostico(){
   esconderOnboard();   // libera a tela para o quiz do nivelamento
+  _introLimparBotao();
   iniciarDiagnostico();
 }
 // b123: convite do splash — fecha o splash ANTES (senão fica por cima, z-index maior
@@ -8125,6 +8218,7 @@ function iniciarOnboardDiagnostico(){
 function iniciarSplashDiagnostico(){
   const sp=document.getElementById('splash-screen');
   if(sp)sp.classList.remove('active','fade-out');
+  _introLimparBotao();
   iniciarDiagnostico();
 }
 function mostrarSplash(){
