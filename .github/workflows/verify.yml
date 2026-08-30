@@ -1,0 +1,30 @@
+name: Verificacao CTSP
+
+# b149. Roda o verify_gate.sh (wrapper do verify_ctsp.sh) a cada push na main.
+# O verify_ctsp.sh sozinho NAO serve de gate: ele sempre sai com codigo 0, entao
+# um job que so o executasse passaria ate com o index.html quebrado. Quem reprova
+# e o wrapper. Ver o cabecalho do verify_gate.sh.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Menor privilegio, igual aos demais workflows do repo: este job so le.
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Sem `npm ci`: o produto tem zero dependencias (nao existe package.json na
+      # raiz). So .github/scripts tem um, e nada aqui o usa.
+      - name: Gate de verificacao
+        run: bash verify_gate.sh
