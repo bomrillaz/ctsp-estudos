@@ -1156,7 +1156,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .ring-container{position:relative;display:inline-flex;align-items:center;justify-content:center;isolation:isolate;}
 
 /* Toast */
-.toast{position:fixed;bottom:calc(var(--nav-h)+20px);left:50%;transform:translateX(-50%) translateY(24px) scale(.95);background:rgba(13,21,48,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:white;border-radius:14px;padding:11px 22px;font-size:13px;font-weight:600;opacity:0;transition:all .3s var(--ease-out);z-index:9998;white-space:nowrap;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:12px;}
+.toast{position:fixed;bottom:calc(var(--nav-h) + 20px);left:50%;transform:translateX(-50%) translateY(24px) scale(.95);background:rgba(13,21,48,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:white;border-radius:14px;padding:11px 22px;font-size:13px;font-weight:600;opacity:0;transition:all .3s var(--ease-out);z-index:9998;white-space:nowrap;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:12px;}
 .toast-action{background:none;border:none;color:var(--ember);font-weight:800;font-size:12.5px;cursor:pointer;white-space:nowrap;padding:0;flex-shrink:0;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1);}
 
@@ -4004,12 +4004,11 @@ async function doRegister(){
   _registroEmAndamento=true;
   try{
     const cred=await auth.createUserWithEmailAndPassword(e,p);
-    const isAdm=e===ADMIN_EMAIL;
     // Cadastro novo entra direto no teste de 7 dias (sem clique manual do admin) — o
     // banco de questões já é público de qualquer forma, e quem corta acesso continua
     // sendo o `aprovado` revogado manualmente no vencimento do pagamento. Diferente do
     // "renascimento" pós-Remover logo abaixo, que continua trancando de propósito.
-    await db.ref('usuarios/'+cred.user.uid).set({nome,email:e,admin:isAdm,aprovado:true,criadoEm:Date.now()});
+    await db.ref('usuarios/'+cred.user.uid).set({nome,email:e,admin:false,aprovado:true,criadoEm:Date.now()});
   }catch(err){showMsg('reg-msg',mensagemErroAuth(err,'Erro ao criar conta.'));}
   finally{btn.disabled=false;btn.textContent='Criar conta';_registroEmAndamento=false;}
 }
@@ -4063,7 +4062,7 @@ auth.onAuthStateChanged(async user=>{
       // o `$outro` das regras exige admin no .validate — um campo extra derrubaria
       // o set() INTEIRO e o login junto. O painel detecta o renascimento por
       // heurística (nome === e-mail), sem gravar nada.
-      await withTimeout(db.ref('usuarios/'+user.uid).set({nome:emailNorm,email:emailNorm,admin:isAdmEmail,aprovado:isAdmEmail,criadoEm:Date.now()}));
+      await withTimeout(db.ref('usuarios/'+user.uid).set({nome:emailNorm,email:emailNorm,admin:false,aprovado:isAdmEmail,criadoEm:Date.now()}));
     }
     const freshSnap=await withTimeout(db.ref('usuarios/'+user.uid).get());
     userProfile={nome:user.email,email:user.email,admin:isAdmEmail,aprovado:isAdmEmail,...(freshSnap.val()||{})};
@@ -4518,7 +4517,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.241';
+const APP_VERSAO='v1.242';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
