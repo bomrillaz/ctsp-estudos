@@ -3420,17 +3420,30 @@ function sincronizarAgendaPush(){
     db.ref('push/'+currentUser.uid+'/_agenda').set({prox:ag[0]||0,agenda:ag,ts:Date.now()});
   }catch(_){}
 }
-function registrarRespostaAdaptativa(q,acertou){
+function registrarRespostaAdaptativa(q,acertou,reexposicao){
   if(!q)return;
-  bktUpdate(q.topico,acertou);
+  // F2 (b156-bloco3): a 2ª resposta da MESMA questão na MESMA sessão (reaprendizado do
+  // Treino, `quizReexpostas`) não alimenta pL nem nc do BKT — acertar minutos depois de
+  // ver a resposta é recuperação quase imediata, não evidência de retenção (Rawson &
+  // Dunlosky 2022); nc governa a meia-vida (bktMeiaVidaMs), então cada 2ª resposta certa
+  // valia +7 dias de retenção presumida de graça. O FSRS da questão já se protege sozinho
+  // (R≈1 com tempo decorrido ~0 → incremento cai no piso) — não mexido aqui. Histórico já
+  // inflado antes desta correção fica como está: o pL decai sozinho pela meia-vida.
+  if(!reexposicao)bktUpdate(q.topico,acertou);
   if(!userStats.questoesFSRS)userStats.questoesFSRS={};
   userStats.questoesFSRS[q.id]=fsrsUpdate(userStats.questoesFSRS[q.id],acertou);
   // BLOCO 43 — INSTRUMENTAÇÃO: acerto/total por questão (semente da dificuldade de item).
   // Grava no blob do usuário; a dificuldade GLOBAL sai depois, agregando os blobs (o admin
   // já lê todos). Chave do id é a1_25/b3_47 (sem ponto) — válida no RTDB, sem encode.
-  if(!userStats.itemStats)userStats.itemStats={};
-  const is=userStats.itemStats[q.id]||{t:0,c:0};
-  userStats.itemStats[q.id]={t:(is.t||0)+1,c:(is.c||0)+(acertou?1:0)};
+  // F2 (b156-bloco3, achado 1 do code-review): mesmo guard do BKT. A re-exposição não entra
+  // nem em `t` nem em `c` — pular só o acerto faria a questão parecer mais difícil do que é
+  // (uma tentativa a mais sem crédito), viés oposto e igualmente errado. Recuperação quase
+  // imediata não mede dificuldade em nenhuma direção.
+  if(!reexposicao){
+    if(!userStats.itemStats)userStats.itemStats={};
+    const is=userStats.itemStats[q.id]||{t:0,c:0};
+    userStats.itemStats[q.id]={t:(is.t||0)+1,c:(is.c||0)+(acertou?1:0)};
+  }
   // Etapa "questões" da Tela de Foco só conta como feita quando o usuário REALMENTE
   // responde — por qualquer caminho (hub, Treino do dia, Simulado), não só praticarTopico.
   if(focoAtivo&&q.topico===focoAtivo&&!focoEstado(focoAtivo).q){
@@ -3564,11 +3577,21 @@ function interleavePorTopico(arr){
   const grupos={};
   arr.forEach(q=>{const k=q.topico||'?';(grupos[k]=grupos[k]||[]).push(q);});
   const chaves=shuffle(Object.keys(grupos));
-  const out=[];
-  while(out.length<arr.length){
-    for(const k of chaves){const g=grupos[k];if(g.length)out.push(g.shift());}
-  }
-  return out;
+  // F1 (b156-bloco3): round-robin puro drenava os grupos pequenos nas primeiras voltas e
+  // sobrava só o grupo grande — a sessão fechava em bloco maciço bem na hora que a fadiga
+  // mais cobra (Brunmair & Richter 2019, g=0,42 pra intercalação vs. bloco). Fix: cada item
+  // recebe uma posição fracionária proporcional ao seu rank DENTRO do próprio grupo —
+  // (i+0,5)/tamanho — preservando a ordem interna (prioridade de vencida/fraqueza já
+  // calculada por quem monta `arr`) e espalhando o grupo grande ao longo de TODA a fila.
+  // Sort é estável (V8/ES2019+): empates de posição (grupos do mesmo tamanho) resolvem pela
+  // ordem de `chaves`, que já veio embaralhada — sem precisar de desempate aleatório extra.
+  const itens=[];
+  chaves.forEach(k=>{
+    const g=grupos[k];
+    g.forEach((q,i)=>itens.push({q,pos:(i+0.5)/g.length}));
+  });
+  itens.sort((a,b)=>a.pos-b.pos);
+  return itens.map(x=>x.q);
 }
 
 // ── F2.4 Seleção adaptativa por tópico ──
@@ -4662,7 +4685,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.245';
+const APP_VERSAO='v1.246';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -6109,6 +6132,10 @@ async function responderQuiz(idx){
   if(!userStats.seenIds.includes(seenKey))userStats.seenIds.push(seenKey);
   if(acertou){const idx2=userStats.seenIds.indexOf(erroKey);if(idx2>-1)userStats.seenIds.splice(idx2,1);}
 
+  // F2 (b156-bloco3): captura ANTES de quizReexpostas ser mutado abaixo — na 1ª resposta
+  // (mesmo errada) o id ainda não está no Set; só a 2ª exposição (o reaprendizado) chega aqui true.
+  const jaReexposta=quizReexpostas.has(q.id);
+
   // Histórico de erros por questão
   if(!acertou){
     if(!userStats.erroHistorico)userStats.erroHistorico={};
@@ -6128,7 +6155,7 @@ async function responderQuiz(idx){
 
   // Fase 5: o agendamento da questão é só FSRS agora (SM-2 duplicado aposentado).
   // registrarRespostaAdaptativa grava BKT + FSRS + itemStats numa passada só.
-  registrarRespostaAdaptativa(q,acertou);
+  registrarRespostaAdaptativa(q,acertou,jaReexposta);
 
   saveProg();
 
