@@ -3055,6 +3055,8 @@ function _mergeErro(a,b){ // erroHistorico: count máximo, last mais recente
   }
   return out;
 }
+// b159: carimbo monotônico por id — mescla por máximo, mesma família de _mergeErro/_mergePorLast.
+function _mergeMaxTs(a,b){ const out={...(a||{})}; for(const [k,v] of Object.entries(b||{})) out[k]=Math.max(out[k]||0,v||0); return out; }
 function _mergeHistory(a,b){ // por data, máximo de cada campo numérico
   const map={};
   [...(a||[]),...(b||[])].forEach(e=>{
@@ -3149,6 +3151,11 @@ function mergeProgresso(local,remoto){
   out.questoesFSRS=_mergePorLast(local.questoesFSRS,remoto.questoesFSRS);
   out.questoesSM2=_mergePorReps(local.questoesSM2,remoto.questoesSM2);
   out.erroHistorico=_mergeErro(local.erroHistorico,remoto.erroHistorico);
+  // b159: carimbo derivado do Caderno de Erros — máximo (união já sabe fazer). erroMig
+  // com Math.max explícito: a base {...remoto,...local} deixaria o local vencer, e um
+  // aparelho defasado (sem a migração ainda rodada) desfaria a marca de quem já rodou.
+  out.erroCorrigidoEm=_mergeMaxTs(local.erroCorrigidoEm,remoto.erroCorrigidoEm);
+  out.erroMig=Math.max(local.erroMig||0,remoto.erroMig||0);
   out.foco=_mergeFoco(local.foco,remoto.foco);
   out.fmt=_mergeMapaMax(local.fmt,remoto.fmt,['c','w']);
   for(const k of Object.keys(out)) if(k.indexOf('resumo_')===0) out[k]=_umPorLast(local[k],remoto[k]);
@@ -4496,6 +4503,7 @@ async function loadUserData(){
     mostrarAlertaConexao(true);
   }
   cargaInicialTentada=true; // A1 (b155): 1º ciclo terminou (sucesso ou fallback) — libera o skeleton
+  migrarCadernoDeErros();   // b159: reconstrói erroCorrigidoEm 1x a partir do dado plantado
   lerCardsSujos();          // C6: restaura marcas de cards rateados offline em sessão anterior
   flushCardsSujos();        // e tenta subi-los agora (no-op se online já os limpou / se offline)
   // Listener: RECUPERAÇÃO do load inicial +, após dataLoaded, SYNC AO VIVO (C1/item 4).
@@ -4685,7 +4693,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.247';
+const APP_VERSAO='v1.248';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -4748,6 +4756,31 @@ function diaLocal(d){
   const x=d||new Date();
   const p=n=>String(n).padStart(2,'0');
   return x.getFullYear()+'-'+p(x.getMonth()+1)+'-'+p(x.getDate());
+}
+
+// b159: o merge por união destruiu, no banco, a informação de que a questão saiu do Caderno.
+// Sobraram dois carimbos: o último erro (erroHistorico.last) e a última resposta de qualquer
+// tipo (questoesFSRS.last). Resposta em dia local POSTERIOR ao último erro só existe se ela
+// foi um acerto espaçado. Reconstrói o carimbo daí, uma vez, só onde os dois registros existem.
+function migrarCadernoDeErros(){
+  if(!dataLoaded){console.log('[b159] migração Caderno: adiada, sem leitura confirmada');return 0;}
+  if(userStats.erroMig){console.log('[b159] migração Caderno: já rodou antes, nada a fazer');return 0;}
+  const seen=new Set(userStats.seenIds||[]),eh=userStats.erroHistorico||{},fs=userStats.questoesFSRS||{};
+  if(!userStats.erroCorrigidoEm)userStats.erroCorrigidoEm={};
+  let n=0;
+  for(const id in eh){
+    if(!seen.has(id+'_E')||userStats.erroCorrigidoEm[id])continue;
+    const ultErro=(eh[id]&&eh[id].last)||0, ultResp=(fs[id]&&fs[id].last)||0;
+    if(!ultErro||!ultResp)continue;                      // registro incompleto: não infere
+    // Folga real (>60s) além do dia local: erroHistorico.last é carimbado ANTES do FSRS em
+    // responderQuiz, então um erro bem na virada da meia-noite pode gravar dia N no erro e
+    // dia N+1 no FSRS a poucos ms de distância — sem a folga isso pareceria acerto espaçado.
+    if(ultResp>ultErro+60000 && diaLocal(new Date(ultResp))>diaLocal(new Date(ultErro))){userStats.erroCorrigidoEm[id]=ultResp;n++;}
+  }
+  userStats.erroMig=1;
+  console.log('[b159] migração Caderno:',n,'questões liberadas');
+  if(n)saveProg();
+  return n;
 }
 
 // F2c: sequência visível — 7 quadradinhos dos últimos 7 dias no lugar do número solto
@@ -5288,7 +5321,7 @@ function renderFilaFoco(){
   // (linha "Revisar hoje", +1 dia). Refazer na hora não é revisão. Base: espaçamento.
   const _t0Hoje=new Date();_t0Hoje.setHours(0,0,0,0);const t0Hoje=_t0Hoje.getTime();
   const erros=Object.values(allQuestoes).filter(q=>{
-    if(!userStats.seenIds?.includes(q.id+'_E'))return false;
+    if(!questaoNoCaderno(q.id))return false;
     const h=userStats.erroHistorico&&userStats.erroHistorico[q.id];
     return !h||!h.last||h.last<t0Hoje; // erro de hoje fica de fora até amadurecer
   }).length;
@@ -5900,9 +5933,16 @@ function iniciarMetaQuiz(){
 }
 
 // ── S47 CLASSIFICAÇÃO DE MATERIAL: novo / errado / revisar / dominado ──
+// Estado DERIVADO, nunca gravado: o merge é aditivo (união/máximo), então "saiu do Caderno"
+// não pode ser um delete — some na própria gravação que deveria persistir (b158/b159).
+function questaoNoCaderno(id){
+  if(!(userStats.seenIds||[]).includes(id+'_E'))return false;
+  const h=(userStats.erroHistorico||{})[id];
+  return ((userStats.erroCorrigidoEm||{})[id]||0)<=((h&&h.last)||0);
+}
 function classeQuestao(q){
   const seen=userStats.seenIds||[];
-  if(seen.includes(q.id+'_E'))return 'errado';                 // marcada errada e ainda não corrigida
+  if(questaoNoCaderno(q.id))return 'errado';                   // marcada errada e ainda não corrigida
   const due=questaoDue(q.id);                                  // FSRS -> SM-2 legado -> 0 (fonte única)
   const visto=due>0||seen.includes(q.id+'_C');
   if(!visto)return 'novo';                                     // nunca respondida
@@ -5948,7 +5988,7 @@ function iniciarEstudoRapido(){
 }
 
 function iniciarModoErro(){
-  const erradas=Object.values(allQuestoes).filter(q=>(userStats.seenIds||[]).includes(q.id+'_E'));
+  const erradas=Object.values(allQuestoes).filter(q=>questaoNoCaderno(q.id));
   if(!erradas.length){showToast('Sem erros para revisar!');return;}
   // S35: prioriza as mais erradas (count desc), depois mais recentes; intercala tópicos
   const hist=userStats.erroHistorico||{};
@@ -6130,12 +6170,12 @@ async function responderQuiz(idx){
   // (Rawson & Dunlosky 2022), então nem tira a questão do Caderno de Erros nem alimenta BKT/itemStats.
   const jaReexposta=quizReexpostas.has(q.id);
 
-  // Marcar visto
+  // Marcar visto — o `_E` PERMANECE gravado para sempre que a questão erra: é fato
+  // ("errou em algum momento"), não estado. Quem sai do Caderno é carimbo, não remoção
+  // (b159 — a remoção não sobrevivia ao merge por união, ver questaoNoCaderno acima).
   const seenKey=q.id+(acertou?'_C':'_E');
-  const erroKey=q.id+'_E';
   if(!userStats.seenIds)userStats.seenIds=[];
   if(!userStats.seenIds.includes(seenKey))userStats.seenIds.push(seenKey);
-  if(acertou&&!jaReexposta){const idx2=userStats.seenIds.indexOf(erroKey);if(idx2>-1)userStats.seenIds.splice(idx2,1);}
 
   // Histórico de erros por questão
   if(!acertou){
@@ -6146,10 +6186,11 @@ async function responderQuiz(idx){
     // (re-exposição enquanto está fresca), antes de o FSRS espaçá-la para +1 dia.
     if(quizArea==='TREINO'&&!quizReexpostas.has(q.id)){quizReexpostas.add(q.id);quizQueue.push(q);}
   } else if(!jaReexposta){
-    // Acertou (fora de re-exposição intra-sessão): zerar histórico de erro dessa questão
-    if(userStats.erroHistorico&&userStats.erroHistorico[q.id]){
-      delete userStats.erroHistorico[q.id];
-    }
+    // Acertou fora de re-exposição intra-sessão: carimba a saída do Caderno de Erros.
+    // Acerto EM re-exposição intra-sessão não prova retenção espaçada (Rawson & Dunlosky
+    // 2022, decisão do b157) — não carimba.
+    if(!userStats.erroCorrigidoEm)userStats.erroCorrigidoEm={};
+    userStats.erroCorrigidoEm[q.id]=Date.now();
   }
 
   registrarAtividade(acertou);
@@ -7060,15 +7101,18 @@ async function encerrarSimulado(){
     // BLOCO 35: fica DEPOIS do `if(!respondeu)return` acima — questão em branco não
     // entra na medição de formato, mesma regra do S61 que vale para o BKT.
     registrarFormato(q,ac);
-    const sk=q.id+(ac?'_C':'_E'),ek=q.id+'_E';
+    const sk=q.id+(ac?'_C':'_E');
     if(!userStats.seenIds)userStats.seenIds=[];
     if(!userStats.seenIds.includes(sk))userStats.seenIds.push(sk);
-    if(ac){const ix=userStats.seenIds.indexOf(ek);if(ix>-1)userStats.seenIds.splice(ix,1);}
     if(!ac){
       if(!userStats.erroHistorico)userStats.erroHistorico={};
       const eh=userStats.erroHistorico[q.id]||{count:0,last:0};
       userStats.erroHistorico[q.id]={count:eh.count+1,last:Date.now()};
-    }else if(userStats.erroHistorico&&userStats.erroHistorico[q.id]){delete userStats.erroHistorico[q.id];}
+    }else{
+      // Simulado não tem re-exposição (cada questão aparece 1x): o acerto sempre carimba.
+      if(!userStats.erroCorrigidoEm)userStats.erroCorrigidoEm={};
+      userStats.erroCorrigidoEm[q.id]=Date.now();
+    }
     registrarAtividade(ac);
   });
   const pct=Math.round(correct/simQuestoes.length*100);
@@ -7151,7 +7195,7 @@ function gerarDiagnostico(pct,byArea){
   html+=`<div style="margin-top:12px;padding:11px 13px;background:var(--blue-light);border-radius:10px;font-size:13px;color:var(--text);line-height:1.5">${sanitize(plano)}</div>`;
   html+=`<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
     <button class="btn-weak" onclick="abrirIntro('treino')">Ver meu Treino do dia →</button>`;
-  const nErr=Object.values(allQuestoes).filter(q=>userStats.seenIds?.includes(q.id+'_E')).length;
+  const nErr=Object.values(allQuestoes).filter(q=>questaoNoCaderno(q.id)).length;
   if(nErr)html+=`<button class="btn-weak" style="background:var(--paper-2);color:var(--text2)" onclick="abrirIntro('erro')">Refazer os ${nErr} erro${nErr!==1?'s':''} agora · opcional</button>`;
   html+=`</div>`;
   el.innerHTML=html;
