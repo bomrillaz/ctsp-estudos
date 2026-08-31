@@ -4685,7 +4685,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.246';
+const APP_VERSAO='v1.247';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -6125,16 +6125,17 @@ async function responderQuiz(idx){
   else userStats.byArea[area].wrong++;
   registrarFormato(q,acertou); // BLOCO 35: diagnóstico por formato de enunciado
 
+  // F2 (b156-bloco3) + b157: captura ANTES de "Marcar visto" e antes de quizReexpostas ser mutado
+  // abaixo — a re-exposição intra-sessão (o reaprendizado do Treino) não prova retenção espaçada
+  // (Rawson & Dunlosky 2022), então nem tira a questão do Caderno de Erros nem alimenta BKT/itemStats.
+  const jaReexposta=quizReexpostas.has(q.id);
+
   // Marcar visto
   const seenKey=q.id+(acertou?'_C':'_E');
   const erroKey=q.id+'_E';
   if(!userStats.seenIds)userStats.seenIds=[];
   if(!userStats.seenIds.includes(seenKey))userStats.seenIds.push(seenKey);
-  if(acertou){const idx2=userStats.seenIds.indexOf(erroKey);if(idx2>-1)userStats.seenIds.splice(idx2,1);}
-
-  // F2 (b156-bloco3): captura ANTES de quizReexpostas ser mutado abaixo — na 1ª resposta
-  // (mesmo errada) o id ainda não está no Set; só a 2ª exposição (o reaprendizado) chega aqui true.
-  const jaReexposta=quizReexpostas.has(q.id);
+  if(acertou&&!jaReexposta){const idx2=userStats.seenIds.indexOf(erroKey);if(idx2>-1)userStats.seenIds.splice(idx2,1);}
 
   // Histórico de erros por questão
   if(!acertou){
@@ -6144,8 +6145,8 @@ async function responderQuiz(idx){
     // Reaprendizado NA sessão: no treino, a questão errada volta UMA vez perto do fim
     // (re-exposição enquanto está fresca), antes de o FSRS espaçá-la para +1 dia.
     if(quizArea==='TREINO'&&!quizReexpostas.has(q.id)){quizReexpostas.add(q.id);quizQueue.push(q);}
-  } else {
-    // Acertou: zerar histórico de erro dessa questão
+  } else if(!jaReexposta){
+    // Acertou (fora de re-exposição intra-sessão): zerar histórico de erro dessa questão
     if(userStats.erroHistorico&&userStats.erroHistorico[q.id]){
       delete userStats.erroHistorico[q.id];
     }
