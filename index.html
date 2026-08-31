@@ -701,6 +701,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
    custo) — não vale tocar os 8 call sites que já usam "btn-weak btn-neutral" só pra
    remover uma classe que não muda nada visualmente. */
 .btn-weak.btn-neutral{background:var(--bg);color:var(--text2);box-shadow:none;}
+/* Bloco 7 — a escala neutra (paper/paper-2/bg/surface/border/line-soft) tem contraste
+   baixo de propósito entre si; quando o botão neutro cai no MESMO tom do container ao
+   redor (ex: dentro de um alerta ou de um card --surface), o preenchimento some. Borda
+   de verdade em --text2 (não só cor) porque button{border:none} global zera largura. */
+.btn-weak.btn-contorno{background:transparent;border:1.5px solid var(--text2);color:var(--text2);}
+/* Bloco 7 — pílula de largura total com alvo de toque de verdade. Nomeia o teto: os
+   5 call sites que hoje fazem .btn-weak com style="width:100%" na mão (2542, 5942,
+   6396, 6812, 6880) poderiam migrar pra cá, mas isso é escopo de outro bloco. */
+.btn-weak.btn-bloco{display:block;width:100%;min-height:44px;padding:12px;border-radius:10px;font-size:13px;}
 /* S51 MOBILE-FIT (bloco31) — corrige ESTOURO HORIZONTAL do painel no celular.
    Causa: filho flex com `flex:1` mantém `min-width:auto` e não encolhe abaixo da
    largura intrínseca do texto — o card é empurrado além da viewport e cria scroll
@@ -1000,6 +1009,7 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
 .sim-timer-sub{font-size:11px;opacity:.75;}
 .sim-end-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;border-radius:10px;padding:8px 16px;font-size:12px;font-weight:700;}
 .sim-q-wrap{padding:14px;}
+.sim-next-btn{flex:1;padding:12px;background:var(--red-solid);color:white;border-radius:12px;font-size:14px;font-weight:700;}
 .sim-result{padding:20px 16px;text-align:center;}
 .sim-result-ring{margin:0 auto 20px;}
 .sim-result-score{font-family:var(--font-display);font-size:46px;font-weight:700;color:var(--red);}
@@ -1078,7 +1088,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 /* Bloco B — ações por assunto de alta incidência */
 .incidencia-acoes{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
 .inc-btn{font-size:11.5px;font-weight:700;padding:6px 11px;border-radius:9px;border:1px solid var(--line-soft);background:var(--paper-2);color:var(--text2);}
-.inc-btn.praticar{background:var(--red);border-color:var(--red);color:#fff;}
+.inc-btn.praticar{background:var(--red-light);border-color:var(--red);color:var(--red-dark);}
 .inc-btn.revisar{background:var(--surface);}
 .incidencia-assunto{font-size:13px;color:var(--text);}
 .incidencia-prob{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;}
@@ -1087,6 +1097,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .admin-screen{padding:16px;background:transparent;}
 .admin-screen h2{font-family:var(--font-display);font-size:26px;font-weight:700;margin-bottom:2px;color:var(--text);letter-spacing:.02em;}
 .admin-screen>p{font-size:13px;color:var(--text2);margin-bottom:16px;}
+#admin-users-list .btn-contorno,#admin-reportes-list .btn-contorno{margin-top:8px;}
 /* "Sincronizar banco" é manutenção rara (só depois de editar QI/FCI), mas ficava com o mesmo
    .btn-primary vermelho sólido das ações do dia a dia — e some acima das 4 abas, então
    qualquer aba (inclusive Avisos, que TEM seu próprio primário "Enviar aos usuários") mostrava
@@ -1326,6 +1337,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .obj-card-area{font-size:15px;font-weight:800;color:var(--text);}
 .obj-card-motivo{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.4;}
 .obj-card-pct{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;margin-top:6px;display:inline-block;}
+.obj-card .btn-bloco{margin-top:10px;}
 
 /* Botão voltar quiz */
 .btn-ghost-dark{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:white;}
@@ -2214,7 +2226,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <!-- Alerta dados não carregados -->
       <div id="dash-reload-alert" style="display:none;background:var(--red-light);border:1px solid var(--border);border-radius:12px;margin:12px 14px 0;padding:10px 14px;align-items:center;gap:10px;justify-content:space-between;">
         <span style="color:var(--red-dark);font-size:12px;font-weight:600;">Dados não carregaram</span>
-        <button onclick="location.reload()" style="background:var(--red-solid);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">Recarregar</button>
+        <button class="btn-weak btn-contorno" onclick="location.reload()">Recarregar</button>
       </div>
       <div class="dash-body carregando">
        <div class="dash-col-l">
@@ -2420,7 +2432,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <div class="quiz-opts" id="sim-opts"></div>
           <div style="display:flex;gap:8px;margin-top:14px;">
             <button onclick="simPrev()" style="flex:1;padding:12px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:700;color:var(--text2);">← Anterior</button>
-            <button onclick="simNext()" style="flex:1;padding:12px;background:var(--red-solid);color:white;border-radius:12px;font-size:14px;font-weight:700;">Próxima →</button>
+            <button class="sim-next-btn" onclick="simNext()">Próxima →</button>
           </div>
         </div>
       </div>
@@ -2436,7 +2448,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <div class="sim-result-label" id="sim-result-label"></div>
           <div class="sim-result-areas" id="sim-result-areas"></div>
           <div class="sim-ai-diag" id="sim-ai-diag"></div>
-          <button onclick="voltarSimHome()" style="width:100%;padding:14px;background:var(--red-solid);color:white;border-radius:12px;font-size:15px;font-weight:700;">Voltar ao início</button>
+          <button class="btn-primary" onclick="voltarSimHome()">Voltar ao início</button>
         </div>
       </div>
     </div>
@@ -4716,7 +4728,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.249';
+const APP_VERSAO='v1.250';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -7012,7 +7024,7 @@ function ouvirResumo(id){
 function renderSimHome(){
   const hist=(userStats.simHistorico||[]).slice(-5).reverse();
   const el=document.getElementById('sim-hist');
-  if(!hist.length){el.innerHTML='<div style="text-align:center;padding:18px 12px;"><p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Você ainda não fez nenhum simulado.<br>Faça o primeiro para medir seu desempenho.</p><button onclick="iniciarSimulado(\'completo\')" style="padding:11px 20px;background:var(--red-solid);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(var(--red-solid-rgb),.22);">Começar Simulado Real</button></div>';return;}
+  if(!hist.length){el.innerHTML='<div style="text-align:center;padding:18px 12px;"><p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Você ainda não fez nenhum simulado.<br>Faça o primeiro para medir seu desempenho.</p><button class="btn-weak btn-bloco" onclick="iniciarSimulado(\'completo\')">Começar Simulado Real</button></div>';return;}
   el.innerHTML=hist.map(h=>`<div class="sim-hist-item">
     <div>
       <div class="sim-hist-date">${new Date(h.data).toLocaleDateString('pt-BR')} · ${h.modo||'Completo'}</div>
@@ -7521,7 +7533,7 @@ async function loadAdminUsers(){
   }catch(err){
     console.error('loadAdminUsers erro:',err);
     const msg=err.message==='timeout'?'Tempo limite: toque para tentar novamente':'Erro: '+err.message;
-    el.innerHTML=`<p style="color:var(--red);font-size:13px">${msg}</p><button onclick="loadAdminUsers()" style="margin-top:8px;padding:10px 16px;background:var(--red-solid);color:white;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;">Tentar novamente</button>`;
+    el.innerHTML=`<p style="color:var(--red);font-size:13px">${msg}</p><button class="btn-weak btn-contorno" onclick="loadAdminUsers()">Tentar novamente</button>`;
   }
 }
 
@@ -8265,7 +8277,7 @@ function renderObjetivoSemana(){
     <div class="obj-card-area">${a.icon||''} ${sanitize(p.nome)}</div>
     <div class="obj-card-motivo">${motivo} <span style="opacity:.7">(${p.t} · ${p.area})</span></div>
     <span class="obj-card-pct" style="background:${bg};color:${cor}">${pct}% de domínio</span>
-    <button onclick="iniciarEstudoTopico('${p.t}')" style="display:block;width:100%;margin-top:10px;padding:10px;background:var(--red-solid);color:white;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;">Estudar este tópico agora →</button>
+    <button class="btn-weak btn-bloco" onclick="iniciarEstudoTopico('${p.t}')">Estudar este tópico agora →</button>
   </div>`;
 }
 
@@ -9499,7 +9511,7 @@ async function loadReportes(){
     });
     el.innerHTML=html;
   }catch(err){
-    el.innerHTML='<p style="color:var(--red);font-size:13px">Erro: '+sanitize(err.message)+'</p><button onclick="loadReportes()" style="margin-top:8px;padding:10px 16px;background:var(--red-solid);color:#fff;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;">Tentar novamente</button>';
+    el.innerHTML='<p style="color:var(--red);font-size:13px">Erro: '+sanitize(err.message)+'</p><button class="btn-weak btn-contorno" onclick="loadReportes()">Tentar novamente</button>';
   }
 }
 async function resolverReporte(key){
