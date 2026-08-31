@@ -2945,8 +2945,10 @@ function checkRateLimit(){const now=Date.now();if(now-loginAttempts.lastReset>60
 // STATE
 // ═══════════════════════════════
 let currentUser=null,userProfile=null;
+let _houveSessao=false; // b160: diferencia boot já deslogado (não recarrega) de sessão perdida
 // b121: trava a corrida entre doRegister() e onAuthStateChanged (ver comentário em doRegister).
 let _registroEmAndamento=false;
+let _exclusaoEmAndamento=false; // b160: preserva o aviso LGPD de excluirMinhaConta() — ela já recarrega sozinha
 let userStats={correct:0,wrong:0,byArea:{},seenIds:[],history:[],streak:0,lastStudyDate:'',metaDiaria:10,rev:0,updatedAt:0};
 // ── S30 BUG-DATA: proteção de persistência ──
 const PROG_DEFAULT={correct:0,wrong:0,byArea:{},seenIds:[],history:[],streak:0,lastStudyDate:'',metaDiaria:10,rev:0,updatedAt:0};
@@ -4194,9 +4196,30 @@ const loadingGuard=setTimeout(()=>{
 auth.onAuthStateChanged(async user=>{
   clearTimeout(loadingGuard);
   if(!user){
+    const uidSaindo=(currentUser&&currentUser.uid)||''; // b160: capturado ANTES de zerar, escopa o throttle abaixo
     document.getElementById('loading').style.display='none';
-    currentUser=null;userProfile=null;showAuth();return;
+    currentUser=null;userProfile=null;
+    // b160: perder a sessão depois de já ter tido uma (logout OU token revogado/expirado)
+    // deixa userStats/userCards/dataLoaded/cargaInicialTentada/progressoLocalOk/savePendente/
+    // _meuUltimoRev vivos em memória e 3 listeners do RTDB pendurados no uid antigo
+    // (progresso/.info-connected/cards) — reload garante estado zerado. doLogout() vira
+    // fallback visual. Exceção: excluirMinhaConta() já recarrega sozinha (currentUser.delete()
+    // dispara este listener antes dos alerts da própria função; recarregar aqui apagaria o aviso LGPD).
+    if(_houveSessao&&!_exclusaoEmAndamento){
+      // Throttle: token revogado/conta apagada faz o SDK abrir com o usuário do CACHE e
+      // deslogar logo em seguida — sem isto cada reload repetiria o ciclo (loop de recarga).
+      // Escopado por uid: o cache do token revogado é sempre o MESMO uid (continua suprimido),
+      // mas uma troca real de conta (uid diferente) não bate o carimbo e recarrega normalmente.
+      // Grava e lê no mesmo try: se o storage não funciona, não recarrega — degrada para o
+      // comportamento antigo em vez de arriscar o loop.
+      const chave='_reloadSaida_'+uidSaindo;
+      let ok=false,ult=0;
+      try{ult=+sessionStorage.getItem(chave)||0;sessionStorage.setItem(chave,String(Date.now()));ok=true;}catch(e){}
+      if(ok&&Date.now()-ult>15000){location.reload();return;}
+    }
+    showAuth();return;
   }
+  _houveSessao=true; // b160: marca antes de qualquer coisa que possa lançar no resto do ramo
   currentUser=user;
   // B58: mesmo tratamento do cadastro — o e-mail vai normalizado para o banco.
   const emailNorm=String(user.email||'').trim().toLowerCase();
@@ -4693,7 +4716,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.248';
+const APP_VERSAO='v1.249';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -6181,7 +6204,11 @@ async function responderQuiz(idx){
   if(!acertou){
     if(!userStats.erroHistorico)userStats.erroHistorico={};
     const h=userStats.erroHistorico[q.id]||{count:0,last:0};
-    userStats.erroHistorico[q.id]={count:h.count+1,last:Date.now()};
+    // b160: jaReexposta = mesmo evento de erro voltando na re-exposição intra-sessão do
+    // Treino — não conta 2x, senão infla iniciarModoErro (ordena por count desc) e o
+    // "Nª vez que erra" do feedback mostra errado. `last` continua atualizando sempre — é
+    // carimbo de recência real, e errar de novo é erro de fato.
+    userStats.erroHistorico[q.id]={count:h.count+(jaReexposta?0:1),last:Date.now()};
     // Reaprendizado NA sessão: no treino, a questão errada volta UMA vez perto do fim
     // (re-exposição enquanto está fresca), antes de o FSRS espaçá-la para +1 dia.
     if(quizArea==='TREINO'&&!quizReexpostas.has(q.id)){quizReexpostas.add(q.id);quizQueue.push(q);}
@@ -8856,6 +8883,9 @@ async function excluirMinhaConta(){
   try{localStorage.removeItem(chaveEspelhoCards());}catch(e){}
   try{localStorage.removeItem(chaveCardsSujos());}catch(e){}
   let loginApagado=true;
+  // b160: delete() derruba o auth e dispara onAuthStateChanged(null) sozinho, ANTES dos
+  // alerts logo abaixo — a flag impede o listener de recarregar por cima do aviso LGPD.
+  _exclusaoEmAndamento=true;
   try{await currentUser.delete();}
   catch(e){loginApagado=false;console.error('exclusao auth:',e.message);}
   if(registroApagado&&loginApagado&&!falhou.length){
