@@ -123,7 +123,9 @@ function corpoContagem(n) {
     resp.responses.forEach((r, i) => {
       if (r.success) return;
       const code = (r.error && r.error.code) || 'desconhecido';
-      console.log('Falhou uid=' + u.uid + ' code=' + code);
+      // b166: log do Actions em repo PUBLICO -- uid truncado. 6 chars bastam para
+      // correlacionar entre execucoes e casar com o banco, sem publicar o id inteiro.
+      console.log('Falhou uid=' + String(u.uid).slice(0, 6) + '... code=' + code);
       if (code === 'messaging/registration-token-not-registered' ||
           code === 'messaging/invalid-argument' ||
           code === 'messaging/invalid-registration-token') {
