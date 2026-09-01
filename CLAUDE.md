@@ -179,6 +179,16 @@ contagem de `..` antes de rodar.
 **Arquivo temporário:** SEMPRE dentro de `materiais/entregas/_tmp/` (nunca solto em outra subpasta) e
 **apagar ao terminar de usar**. Produto/código usa `.tmp/` na raiz do repo (já existente) — mesma regra.
 
+**Artefato que NÃO deve ser público vai para `materiais/`, nunca fica untracked na raiz (b165).**
+O repo é PÚBLICO. Sempre que um arquivo tiver valor interno mas não fizer parte do produto —
+auditoria de fraquezas, análise de concorrente, rascunho comercial, saída de ferramenta de design,
+cache de tooling — o destino é a subpasta certa de `materiais/` (gitignorada) **no momento em que
+ele é criado**. Deixar na raiz "pra decidir depois" transfere a decisão para o próximo `git add -A`.
+Se o arquivo já nasceu na raiz porque uma ferramenta o pôs lá, as duas saídas legítimas são mover
+para `materiais/` ou **gitignorar explicitamente** — untracked não é decisão, é adiamento.
+Caso de origem: `.impeccable/critique/*.md` (auditoria interna de fraquezas de design de um produto
+VENDIDO) ficou untracked por 3 blocos e quase subiu junto num commit de tracking.
+
 **Arquivo novo:** ao criar, colocar direto na subpasta a que pertence pelo assunto (`planos/`,
 `comercial/`, `produtos/ebook/` etc.) — não deixar solto na raiz de `entregas/` ou `materiais/` pra
 organizar depois.
