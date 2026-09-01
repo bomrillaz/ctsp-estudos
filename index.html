@@ -4275,10 +4275,10 @@ auth.onAuthStateChanged(async user=>{
       await withTimeout(db.ref('usuarios/'+user.uid).set({nome:emailNorm,email:emailNorm,admin:false,aprovado:isAdmEmail,criadoEm:Date.now()}));
     }
     const freshSnap=await withTimeout(db.ref('usuarios/'+user.uid).get());
-    userProfile={nome:user.email,email:user.email,admin:isAdmEmail,aprovado:isAdmEmail,...(freshSnap.val()||{})};
+    userProfile={nome:user.email,email:user.email,admin:false,aprovado:isAdmEmail,...(freshSnap.val()||{})};
   }catch(e){
     console.warn('Auth profile fallback:',e.message);
-    userProfile={nome:user.email,email:user.email,admin:isAdmEmail,aprovado:isAdmEmail};
+    userProfile={nome:user.email,email:user.email,admin:false,aprovado:isAdmEmail,_perfilIncerto:true};
   }
   if(!userProfile.aprovado&&!isAdmEmail){
     document.getElementById('loading').style.display='none';
@@ -4388,15 +4388,26 @@ async function initApp(){
   document.getElementById('app').classList.add('active');
   const nomeDisplay=userProfile.nome&&userProfile.nome!==currentUser.email?userProfile.nome.split(' ')[0]:(currentUser.email||'').split('@')[0];
   const hnEl=document.getElementById('hdr-nome');if(hnEl)hnEl.textContent=nomeDisplay||'Bombeiro';
-  if(userProfile.admin||currentUser.email===ADMIN_EMAIL){
+  // b165: o portão do painel é SÓ o banco (userProfile.admin), que é o que a regra do RTDB
+  // checa. O e-mail ainda abre a porta, mas bloqueada e com o motivo na tela — antes o painel
+  // abria confiando no e-mail e toda escrita morria em silêncio.
+  const admOk=isAdmin();
+  if(admOk||(currentUser&&currentUser.email===ADMIN_EMAIL)){
     const admIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
+    const admSub=admOk?'Painel de gestão':'Bloqueado: o banco não confirma';
+    const motivoIncerto=!!userProfile._perfilIncerto;
+    const admMsg=motivoIncerto
+      ?'Não consegui ler seu perfil no banco. Recarregue; se persistir, confira o Console.'
+      :'O banco não marca admin:true nesta conta. Promova pelo Console do Firebase e recarregue.';
+    const admAbrir=admOk?()=>navMais('admin'):()=>showToast(admMsg);
+    if(!admOk)console.warn('Admin: e-mail confere mas o banco não marca admin:true.',motivoIncerto?'(leitura do perfil falhou)':'(perfil lido, admin ausente ou false)');
     // Mobile: entrada no bottom sheet "Mais"
     const panel=document.getElementById('mais-panel');
     if(panel&&!document.getElementById('sheet-admin')){
       const btn=document.createElement('button');
       btn.className='sheet-item';btn.id='sheet-admin';
-      btn.innerHTML=admIcon+'<div><div class="sheet-item-t">Admin</div><div class="sheet-item-sub">Painel de gestão</div></div>';
-      btn.onclick=()=>navMais('admin');
+      btn.innerHTML=admIcon+'<div><div class="sheet-item-t">Admin</div><div class="sheet-item-sub">'+admSub+'</div></div>';
+      btn.onclick=admAbrir;
       panel.appendChild(btn);
     }
     // Desktop: o rail esconde o "Mais"; sem isto o admin fica sem porta no PC.
@@ -4405,7 +4416,7 @@ async function initApp(){
       const a=document.createElement('div');
       a.className='nav-item nav-desk';a.id='nav-desk-admin';
       a.innerHTML=admIcon+'Admin';
-      a.onclick=()=>navMais('admin');
+      a.onclick=admAbrir;
       nav.appendChild(a);
     }
   }
@@ -4439,7 +4450,7 @@ async function initApp(){
   renderSimHome();
   renderResumos();
   renderPadroes();
-  if(userProfile.admin||currentUser.email===ADMIN_EMAIL)loadAdminUsers();
+  if(isAdmin())loadAdminUsers();
   iniciarListenerNotif();
   // b116/etapa2 (S6): 'vencido' ainda ENTRA e LÊ o histórico normalmente — só a escrita
   // é que a regra do RTDB já corta (etapa 1). Sem isto, a pessoa via o app inteiro normal
@@ -4749,7 +4760,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.253';
+const APP_VERSAO='v1.254';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -7429,7 +7440,7 @@ function mostrarExemplo(qid){
 // ═══════════════════════════════
 // ADMIN
 // ═══════════════════════════════
-function isAdmin(){return currentUser&&(currentUser.email===ADMIN_EMAIL||(userProfile&&userProfile.admin===true));}
+function isAdmin(){return currentUser&&userProfile&&userProfile.admin===true;}
 
 function setAdminTab(t,btn){
   document.querySelectorAll('.admin-tab').forEach(b=>marcarTab(b,false));
