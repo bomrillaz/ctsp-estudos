@@ -23,4 +23,5 @@ graphify-out/
 # - .claude/: 14 MB de estado de sessao local, nao faz parte do produto
 assets/cesar-coin-gray.png
 .impeccable/hook.cache.json
+.impeccable/critique/
 .claude/
