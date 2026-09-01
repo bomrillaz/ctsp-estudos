@@ -3259,6 +3259,14 @@ const FSRS_MAX_DIAS=240; // teto defensivo: sem isso o intervalo cresce sem limi
 // O TETO limita o salto de um acerto muito atrasado (G=0,20: 1 em 5 acertos é chute).
 // Ajustar a calibração AQUI, não dentro das fórmulas.
 const FSRS_INC_K=0.30, FSRS_INC_PISO=1.05, FSRS_INC_TETO=2.5;
+// Matemática compartilhada por fsrsUpdate (questões) e fsrsCardUpdate (cards/resumos).
+// As diferenças entre os dois (nota, iniciais, delta de D, regressão, multiplicador de lapso,
+// bônus de fácil, herança do SM-2) ficam de propósito em cada função, não aqui.
+function fsrsR(now,last,S){return Math.pow(1+(now-last)/86400000/(9*S),-1);}
+function fsrsAjustaD(D,dD,reg){D=Math.min(10,Math.max(1,D+dD));return D+reg*(5-D);}
+function fsrsCrescimentoS(S,D,R,boost){const inc=Math.min(FSRS_INC_TETO,Math.max(FSRS_INC_PISO,1+(11-D)*FSRS_INC_K*(1-R)*boost));return Math.min(FSRS_MAX_DIAS,Math.max(S*inc,S+0.5));}
+function fsrsLapsoS(S,D,mult){return Math.max(0.5,S*mult*(1-(D-1)/22));}
+function fsrsSaida(S,D,reps,now){const interval=Math.max(1,Math.round(S));return{S:+S.toFixed(3),D:+D.toFixed(2),reps:(reps||0)+1,last:now,next:now+interval*86400000,interval};}
 function fsrsCardUpdate(card,dif){
   const now=Date.now();card=card||{};
   const grau=dif==='dif'?1:dif==='fac'?3:2; // 1=lapso, 2=ok, 3=fácil
@@ -3268,14 +3276,12 @@ function fsrsCardUpdate(card,dif){
     S=grau===1?0.8:grau===2?2.2:4;
     D=grau===1?7:grau===2?5.5:4.5;
   }else{
-    const R=Math.pow(1+(now-last)/86400000/(9*S),-1);
-    D=Math.min(10,Math.max(1,D-0.7*(grau-2)));
-    D=D+0.06*(5-D);
-    if(grau===1){ S=Math.max(0.5,S*0.5*(1-(D-1)/22)); }
-    else{ const inc=Math.min(FSRS_INC_TETO,Math.max(FSRS_INC_PISO,1+(11-D)*FSRS_INC_K*(1-R)*(grau===3?1.35:1))); S=Math.min(FSRS_MAX_DIAS,Math.max(S*inc,S+0.5)); }
+    const R=fsrsR(now,last,S);
+    D=fsrsAjustaD(D,-0.7*(grau-2),0.06);
+    if(grau===1){ S=fsrsLapsoS(S,D,0.5); }
+    else{ S=fsrsCrescimentoS(S,D,R,grau===3?1.35:1); }
   }
-  const interval=Math.max(1,Math.round(S));
-  return{S:+S.toFixed(3),D:+D.toFixed(2),reps:reps+1,last:now,next:now+interval*86400000,interval};
+  return fsrsSaida(S,D,reps,now);
 }
 function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
 // Diferença em dias entre duas datas 'YYYY-MM-DD' (UTC). Infinity se faltar uma.
@@ -3399,18 +3405,15 @@ function fsrsUpdate(card,acertou){
   if(!reps||S<=0){
     S=acertou?3:0.6; D=acertou?5:6.5;
   }else{
-    const R=Math.pow(1+(now-last)/86400000/(9*S),-1); // curva de esquecimento
-    D=Math.min(10,Math.max(1,D-0.6*((acertou?3:1)-3)));
-    D=D+0.05*(5-D); // regressão suave à média
+    const R=fsrsR(now,last,S); // curva de esquecimento
+    D=fsrsAjustaD(D,-0.6*((acertou?3:1)-3),0.05); // regressão suave à média
     if(acertou){
-      const inc=Math.min(FSRS_INC_TETO,Math.max(FSRS_INC_PISO,1+(11-D)*FSRS_INC_K*(1-R)));
-      S=Math.min(FSRS_MAX_DIAS,Math.max(S*inc,S+0.5));
+      S=fsrsCrescimentoS(S,D,R,1);
     }else{
-      S=Math.max(0.5,S*0.4*(1-(D-1)/22));
+      S=fsrsLapsoS(S,D,0.4);
     }
   }
-  const interval=Math.max(1,Math.round(S)); // R≈0,9 em ~S dias
-  return{S:+S.toFixed(3),D:+D.toFixed(2),reps:(reps||0)+1,last:now,next:now+interval*86400000,interval};
+  return fsrsSaida(S,D,reps,now); // R≈0,9 em ~S dias
 }
 
 // ── Data de revisão unificada: FSRS → SM-2 legado → vencida ──
@@ -4728,7 +4731,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.250';
+const APP_VERSAO='v1.251';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
