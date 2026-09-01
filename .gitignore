@@ -16,3 +16,11 @@ graphify-out/
 # ler a lógica do app (ele não tem gramática HTML). Nunca é o código real.
 .ua-shadow/
 .ua/
+
+# b165 — nunca versionar:
+# - cesar-coin-gray.png: asset orfao, proibido pelo CLAUDE.md §8
+# - hook.cache.json: cache do impeccable, com UUID de sessao e caminho absoluto local
+# - .claude/: 14 MB de estado de sessao local, nao faz parte do produto
+assets/cesar-coin-gray.png
+.impeccable/hook.cache.json
+.claude/
