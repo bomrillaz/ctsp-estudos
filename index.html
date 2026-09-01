@@ -3266,7 +3266,14 @@ function fsrsR(now,last,S){return Math.pow(1+(now-last)/86400000/(9*S),-1);}
 function fsrsAjustaD(D,dD,reg){D=Math.min(10,Math.max(1,D+dD));return D+reg*(5-D);}
 function fsrsCrescimentoS(S,D,R,boost){const inc=Math.min(FSRS_INC_TETO,Math.max(FSRS_INC_PISO,1+(11-D)*FSRS_INC_K*(1-R)*boost));return Math.min(FSRS_MAX_DIAS,Math.max(S*inc,S+0.5));}
 function fsrsLapsoS(S,D,mult){return Math.max(0.5,S*mult*(1-(D-1)/22));}
-function fsrsSaida(S,D,reps,now){const interval=Math.max(1,Math.round(S));return{S:+S.toFixed(3),D:+D.toFixed(2),reps:(reps||0)+1,last:now,next:now+interval*86400000,interval};}
+// Teto de agenda: intervalo nunca passa da data da prova (userStats.dataProva, opcional)
+function diasAteProva(agora){
+  const d=userStats&&userStats.dataProva;
+  if(!d||!/^\d{4}-\d{2}-\d{2}$/.test(d))return Infinity;
+  const n=Math.ceil((new Date(d+'T23:59:59')-agora)/86400000);
+  return n>0?n:Infinity;
+}
+function fsrsSaida(S,D,reps,now){const interval=Math.max(1,Math.min(Math.round(S),diasAteProva(now)));return{S:+S.toFixed(3),D:+D.toFixed(2),reps:(reps||0)+1,last:now,next:now+interval*86400000,interval};}
 function fsrsCardUpdate(card,dif){
   const now=Date.now();card=card||{};
   const grau=dif==='dif'?1:dif==='fac'?3:2; // 1=lapso, 2=ok, 3=fácil
@@ -4742,7 +4749,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.252';
+const APP_VERSAO='v1.253';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
