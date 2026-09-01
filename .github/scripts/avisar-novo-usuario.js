@@ -124,7 +124,8 @@ const LIMIAR_CADASTRO_MASSA = 3; // b117: gatilho do bot-protection, ver coment�
     const titulo = massa ? '🚨 Prontidão · possível cadastro em massa' : 'Prontidão · novo cadastro';
     if (massa) console.log('ALERTA cadastro em massa:', novos.length, 'cadastros numa só execução (limiar', LIMIAR_CADASTRO_MASSA + ').');
     if (!tokens.length) {
-      console.log('Sem token de push do admin cadastrado — nada a enviar. Cadastros novos:', corpo);
+      // b166: log do Actions em repo PUBLICO -- imprimir contagem, nunca nome/e-mail de assinante.
+      console.log('Sem token de push do admin cadastrado — nada a enviar. Cadastros novos:', novos.length);
     } else {
       const resp = await msg.sendEachForMulticast({
         tokens,
@@ -140,7 +141,8 @@ const LIMIAR_CADASTRO_MASSA = 3; // b117: gatilho do bot-protection, ver coment�
       ? nomesVenc[0] + ' vence em até 3 dias.'
       : vencendo.length + ' vencendo em até 3 dias: ' + nomesVenc.join(', ') + (vencendo.length > 5 ? '…' : '') + '.';
     if (!tokens.length) {
-      console.log('Sem token de push do admin cadastrado — nada a enviar. Vencendo:', corpoVenc);
+      // b166: idem -- contagem, nunca nome/e-mail (ver comentario acima).
+      console.log('Sem token de push do admin cadastrado — nada a enviar. Vencendo:', vencendo.length);
     } else {
       const resp = await msg.sendEachForMulticast({
         tokens,
