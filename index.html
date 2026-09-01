@@ -3649,10 +3649,13 @@ function questoesDueHoje(){
     .filter(q=>f[q.id]&&f[q.id].next&&f[q.id].next<=agora)
     .sort((a,b)=>f[a.id].next-f[b.id].next); // mais atrasadas primeiro
 }
+// Lote de uma sessão de revisão avulsa (CTA REVISAR da Fila de Foco). Fonte única:
+// o contador da Fila de Foco anuncia ESTE número, não o tamanho do backlog.
+const REVISAO_LOTE=12;
 function iniciarRevisaoDue(){
   const due=questoesDueHoje();
   if(!due.length){showToast('Nenhuma revisão vencida. Tudo em dia!');return;}
-  quizQueue=interleavePorTopico(due.slice(0,12));
+  quizQueue=interleavePorTopico(due.slice(0,REVISAO_LOTE));
   quizArea='REVISAO';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;
   document.getElementById('quiz-home-view').classList.add('hidden');
   document.getElementById('quiz-running-view').classList.remove('hidden');
@@ -3671,6 +3674,13 @@ function iniciarRevisaoDue(){
 const TREINO_TAM=12;      // questões por treino
 const TREINO_TETO_DUE=6;  // revisão não ocupa mais que metade
 const TREINO_MIN_NOVO=3;  // reserva de cobertura quando há material intocado
+// F4-alívio (b163): com backlog grande o teto fixo de 6 não drena. Quem estuda dia sim/dia
+// não encontra todo erro já vencido (o piso de erro é +1 dia), e 6/treino nunca alcança a
+// fila. Acima do limiar o teto sobe para TREINO_TAM-TREINO_MIN_NOVO: o máximo que cabe SEM
+// comer a reserva de cobertura do edital, que é justamente o que não pode parar.
+// A raiz (o piso +1 dia ignorar a cadência real) fica para o Track B — isto é vazão, não cura.
+const TREINO_BACKLOG_ALTO=12;                              // 2 treinos cheios de revisão
+const TREINO_TETO_DUE_ALTO=TREINO_TAM-TREINO_MIN_NOVO;     // derivado: nunca comer a reserva
 
 function questaoEhNova(q){
   const f=userStats.questoesFSRS||{};
@@ -3718,7 +3728,8 @@ function montarTreinoDoDia(tam=TREINO_TAM){
       seen.add(q.id);out.push(q);n++;
     }
   };
-  add(questoesDueHoje(),TREINO_TETO_DUE);                 // (1) revisão vencida, com teto
+  const due=questoesDueHoje();
+  add(due,due.length>TREINO_BACKLOG_ALTO?TREINO_TETO_DUE_ALTO:TREINO_TETO_DUE); // (1) vencida, teto adaptativo
   const reservaNovo=Math.min(TREINO_MIN_NOVO,tam-out.length);
   add(selecionarAdaptativo(tam),tam-out.length-reservaNovo); // (2) fraco, deixando a reserva
   add(novasPorCobertura(tam-out.length));                 // (3) cobertura por edital
@@ -4731,7 +4742,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.251';
+const APP_VERSAO='v1.252';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -5350,7 +5361,12 @@ function renderFilaFoco(){
   const due=questoesDueHoje();
   if(due.length){
     notas.push({cor:'var(--ember)',titulo:'Revisar hoje',
-      sub:due.length+(due.length===1?' questão vencida':' questões vencidas')+' · repetição espaçada',
+      // F4-alívio (b163): backlog grande era anunciado como dívida ("60 questões vencidas").
+      // O número não muda de valor, muda de papel: anuncia o LOTE que a ação entrega agora e
+      // deixa o resto como fila, não como atraso acumulado. A palavra "vencida" sai daqui por
+      // inteiro: quem decide a urgência é a cor do item, não um adjetivo repetido a cada dia.
+      sub:(due.length>REVISAO_LOTE?REVISAO_LOTE+' agora, de '+due.length+' na fila'
+           :due.length+(due.length===1?' questão para revisar':' questões para revisar'))+' · repetição espaçada',
       cta:'REVISAR',acao:'iniciarRevisaoDue()'});
   }
 
