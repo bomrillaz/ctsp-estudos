@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-30T00:00:00Z",
+  "title": "Design System: Prontidão CTSP",
+  "extensions": {
+    "colorMeta": {
+      "red": {
+        "role": "primary",
+        "displayName": "Vermelho de Alerta Operacional",
+        "canonical": "#D32412",
+        "tonalRamp": ["#460c06", "#7f160b", "#b71f10", "#eb2c19", "#f06051", "#f5948a", "#fac7c2", "#fdeae8"],
+        "note": "Recalibrado no tema escuro para #F05B43, não é o mesmo hex com opacidade — medir sempre no par real que renderiza."
+      },
+      "ember": {
+        "role": "primary",
+        "displayName": "Ember de Ação",
+        "canonical": "#F0883C",
+        "tonalRamp": ["#472105", "#803c0a", "#b9560e", "#ed7117", "#f29450", "#f6b789", "#fad9c1", "#fdf1e7"]
+      },
+      "navy": {
+        "role": "secondary",
+        "displayName": "Navy Institucional",
+        "canonical": "#101B3D",
+        "tonalRamp": ["#101b3d", "#1d306d", "#29469e", "#395dcb", "#6a84d8", "#9aace5", "#cad4f1", "#ebeefa"]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Papel Cru",
+        "canonical": "#F7F3EC",
+        "tonalRamp": ["#362a17", "#614c29", "#8c6e3b", "#b5904f", "#c7ab7a", "#d9c6a5", "#ebe2d0", "#f7f4ed"]
+      },
+      "green": {
+        "role": "semantic-success",
+        "displayName": "Verde de Confirmação",
+        "canonical": "#16713C",
+        "tonalRamp": ["#0c4022", "#16733d", "#20a658", "#2ed674", "#61e096", "#94eab8", "#c8f4da", "#eafbf1"]
+      },
+      "amber": {
+        "role": "semantic-warning",
+        "displayName": "Âmbar de Atenção",
+        "canonical": "#8A5410",
+        "tonalRamp": ["#452a08", "#7b4b0e", "#b26c15", "#e58d1f", "#eba956", "#f2c58d", "#f8e1c4", "#fcf3e8"]
+      },
+      "blue": {
+        "role": "semantic-info",
+        "displayName": "Azul Informativo",
+        "canonical": "#1F5C8B",
+        "tonalRamp": ["#0e293f", "#194b71", "#246ca3", "#338cd1", "#65a8dd", "#97c5e8", "#c9e1f3", "#eaf3fa"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Barlow Condensed Display", "purpose": "Hero de landing, sempre caixa alta." },
+      "headline": { "displayName": "Barlow Condensed Headline", "purpose": "Título de seção." },
+      "title": { "displayName": "Barlow Condensed Title", "purpose": "Título de card/bloco." },
+      "body": { "displayName": "Sistema (SF/Helvetica)", "purpose": "Texto corrido, legibilidade em sessão longa." },
+      "label": { "displayName": "Barlow Condensed Label", "purpose": "Rótulo curto, eyebrow, botão, tag — assinatura tipográfica do sistema." }
+    },
+    "shadows": [
+      { "name": "ambient-low", "value": "0 1px 2px rgba(16,27,61,.05), 0 4px 14px rgba(16,27,61,.06)", "purpose": "Estado de repouso de card." },
+      { "name": "ambient-mid", "value": "0 2px 4px rgba(16,27,61,.06), 0 10px 28px rgba(16,27,61,.10)", "purpose": "Hover/elevação intermediária." },
+      { "name": "ambient-high", "value": "0 8px 32px rgba(16,27,61,.18)", "purpose": "Overlay/modal." }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(0.16,1,0.3,1)", "purpose": "Transição padrão da maioria dos componentes." },
+      { "name": "ease-spring", "value": "cubic-bezier(0.34,1.56,0.64,1)", "purpose": "Feedback de ação (toast, confete sóbrio)." }
+    ],
+    "breakpoints": [
+      { "name": "desktop", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Única ação forte de uma tela — decisão principal.",
+      "html": "<button class=\"ds-btn-primary\">CONTINUAR</button>",
+      "css": ".ds-btn-primary { background: #D32412; color: #fff; font-family: 'Barlow Condensed', -apple-system, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.02em; padding: 14px 24px; border-radius: 12px; box-shadow: 0 6px 20px rgba(211,36,18,.28); transition: all .2s cubic-bezier(0.16,1,0.3,1); } .ds-btn-primary:hover { filter: brightness(1.05); } .ds-btn-primary:focus-visible { outline: 3px solid #F0883C; outline-offset: -3px; }"
+    },
+    {
+      "name": "Neutral Button",
+      "kind": "button",
+      "refersTo": "button-neutral",
+      "description": "Ação secundária no mesmo contexto de uma primária — nunca compete em peso visual.",
+      "html": "<button class=\"ds-btn-neutral\">CANCELAR</button>",
+      "css": ".ds-btn-neutral { background: #EFE9DD; color: #5A6072; font-family: 'Barlow Condensed', -apple-system, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 700; padding: 14px 24px; border-radius: 12px; box-shadow: none; transition: background .2s; } .ds-btn-neutral:hover { background: #E6DFD2; } .ds-btn-neutral:focus-visible { outline: 3px solid #101B3D; outline-offset: -3px; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Superfície elevada padrão — sombra ambiente, nunca estrutural.",
+      "html": "<div class=\"ds-card\"><h3>Título do card</h3><p>Conteúdo.</p></div>",
+      "css": ".ds-card { background: #FFFFFF; color: #1C2233; border: 1px solid #EDE7DB; border-radius: 16px; padding: 18px 17px; box-shadow: 0 1px 2px rgba(16,27,61,.05), 0 4px 14px rgba(16,27,61,.06); transition: transform .2s ease, box-shadow .2s ease; } .ds-card:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(16,27,61,.06), 0 10px 28px rgba(16,27,61,.10); } .ds-card h3 { font-family: 'Barlow Condensed', -apple-system, 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 19px; margin: 0 0 7px; }"
+    },
+    {
+      "name": "Badge",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Rótulo de status pequeno — par fundo-claro/texto-escuro por semântica.",
+      "html": "<span class=\"ds-badge ds-badge-ok\">APROVADO</span>",
+      "css": ".ds-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; } .ds-badge-ok { background: #E9F4EC; color: #16713C; } .ds-badge-pend { background: #FBEDE6; color: #D32412; } .ds-badge-rev { background: #FAF1E3; color: #8A5410; }"
+    },
+    {
+      "name": "Field Label",
+      "kind": "custom",
+      "refersTo": "label",
+      "description": "Assinatura tipográfica do sistema — usada em campo de formulário, eyebrow e tag de categoria.",
+      "html": "<label class=\"ds-label\">Nome de usuário</label>",
+      "css": ".ds-label { font-family: 'Barlow Condensed', -apple-system, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #5A6072; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "O Manual de Campo Operacional",
+    "overview": "O sistema visual se comporta como um manual de campo militar: vermelho de alerta operacional para a única ação que importa na tela, navy institucional pra estrutura e autoridade, papel/creme pra leitura prolongada sem fadiga. O tom é disciplinado e institucional, evitando ativamente o vocabulário de app de consumo/entretenimento.",
+    "keyCharacteristics": [
+      "Vermelho de ação reservado a UMA decisão por tela — nunca decorativo.",
+      "Navy institucional carrega estrutura, não cor de destaque.",
+      "Papel/creme como base de leitura — nunca branco puro no tema claro.",
+      "Tema escuro recalibra a cor em vez de aplicar opacidade."
+    ],
+    "rules": [
+      { "name": "The One Red Rule", "body": "O vermelho primário aparece em no máximo uma ação por tela; ações secundárias usam .btn-neutral.", "section": "colors" },
+      { "name": "The Recalibrated Dark Rule", "body": "Cores não migram de tema por opacidade — cada cor semântica tem par claro/escuro calibrado separadamente para contraste AA.", "section": "colors" },
+      { "name": "The Field-Label Rule", "body": "Qualquer rótulo curto usa Barlow Condensed em caixa alta com letter-spacing positivo, nunca a fonte de corpo.", "section": "typography" },
+      { "name": "The Flat-at-Rest Rule", "body": "Superfícies são planas em repouso; sombra aparece só como resposta a hover/elevação.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do manter só uma ação vermelha de peso forte por tela.",
+      "Do usar Barlow Condensed em caixa alta com letter-spacing positivo em rótulos curtos.",
+      "Do manter sombra ambiente e difusa.",
+      "Do recalibrar cor por tema em vez de usar opacidade."
+    ],
+    "donts": [
+      "Don't introduzir gradiente vibrante decorativo ou card-bolha excessivamente arredondado.",
+      "Don't colocar o mascote César em primeiro plano dentro de UI funcional.",
+      "Don't usar branco puro como fundo base no tema claro.",
+      "Don't aplicar startViewTransition/View Transitions API — navTo é síncrono por decisão de arquitetura."
+    ]
+  }
+}
