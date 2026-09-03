@@ -3725,10 +3725,34 @@ function novasPorCobertura(limite){
   });
   const somaCotas=areas.reduce((s,a)=>s+cotaDe(a),0)||1;
   const out=[];
+  // b13: 3 vagas não cobrem 5 áreas — Math.round zerava AT2/AT5 TODO dia (achado do bloco).
+  // Piso inteiro de cada área + as vagas restantes sorteadas por amostragem sistemática com
+  // deslocamento aleatório: cada área tem chance de ganhar a vaga extra EXATAMENTE
+  // igual à sua parte fracionária, então a proporção do edital fecha ao longo dos dias, não
+  // dentro de um dia só.
+  const piso={},restoArea={};
   areas.forEach(a=>{
-    const alvo=Math.max(0,Math.round(limite*cotaDe(a)/somaCotas));
-    out.push(...porArea[a].splice(0,alvo));
+    const exato=limite*cotaDe(a)/somaCotas;
+    piso[a]=Math.floor(exato);
+    restoArea[a]=exato-piso[a];
+    out.push(...porArea[a].splice(0,piso[a]));
   });
+  let restantes=limite-out.length;
+  if(restantes>0){
+    let acc=Math.random();
+    for(const a of shuffle(areas)){
+      if(restantes<=0)break;
+      acc+=restoArea[a];
+      if(acc>=1){
+        const pego=porArea[a].splice(0,1);
+        if(pego.length){ // área sorteada sem estoque: NÃO decrementa acc, a vaga passa pra próxima
+          acc-=1;
+          out.push(...pego);
+          restantes--;
+        }
+      }
+    }
+  }
   if(out.length<limite){ // áreas esgotadas: completa com o que sobrou, ainda por incidência
     const resto=shuffle(areas.flatMap(a=>porArea[a]))
       .sort((x,y)=>(inc.has(y.topico)?1:0)-(inc.has(x.topico)?1:0));
@@ -4770,7 +4794,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.256';
+const APP_VERSAO='v1.257';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
