@@ -3266,12 +3266,14 @@ function fsrsR(now,last,S){return Math.pow(1+(now-last)/86400000/(9*S),-1);}
 function fsrsAjustaD(D,dD,reg){D=Math.min(10,Math.max(1,D+dD));return D+reg*(5-D);}
 function fsrsCrescimentoS(S,D,R,boost){const inc=Math.min(FSRS_INC_TETO,Math.max(FSRS_INC_PISO,1+(11-D)*FSRS_INC_K*(1-R)*boost));return Math.min(FSRS_MAX_DIAS,Math.max(S*inc,S+0.5));}
 function fsrsLapsoS(S,D,mult){return Math.max(0.5,S*mult*(1-(D-1)/22));}
-// Teto de agenda: intervalo nunca passa da data da prova (userStats.dataProva, opcional)
+// Teto de agenda: intervalo nunca passa da data da prova (userStats.dataProva, opcional).
+// Alvo (b167): a ÚLTIMA revisão PODE cair no próprio dia da prova — n=0 é válido; só prova
+// já PASSADA (n<0) volta a Infinity (b164, não mexer).
 function diasAteProva(agora){
   const d=userStats&&userStats.dataProva;
   if(!d||!/^\d{4}-\d{2}-\d{2}$/.test(d))return Infinity;
-  const n=Math.ceil((new Date(d+'T23:59:59')-agora)/86400000);
-  return n>0?n:Infinity;
+  const n=Math.floor((new Date(d+'T23:59:59.999')-agora)/86400000);
+  return n>=0?n:Infinity;
 }
 function fsrsSaida(S,D,reps,now){const interval=Math.max(1,Math.min(Math.round(S),diasAteProva(now)));return{S:+S.toFixed(3),D:+D.toFixed(2),reps:(reps||0)+1,last:now,next:now+interval*86400000,interval};}
 function fsrsCardUpdate(card,dif){
@@ -3457,8 +3459,13 @@ function registrarRespostaAdaptativa(q,acertou,reexposicao){
   // Treino, `quizReexpostas`) não alimenta pL nem nc do BKT — acertar minutos depois de
   // ver a resposta é recuperação quase imediata, não evidência de retenção (Rawson &
   // Dunlosky 2022); nc governa a meia-vida (bktMeiaVidaMs), então cada 2ª resposta certa
-  // valia +7 dias de retenção presumida de graça. O FSRS da questão já se protege sozinho
-  // (R≈1 com tempo decorrido ~0 → incremento cai no piso) — não mexido aqui. Histórico já
+  // valia +7 dias de retenção presumida de graça. O FSRS da questão já se protege sozinho —
+  // não pelo piso multiplicativo (R≈1 → incremento cai no piso), e sim pelo piso ADITIVO
+  // `S+0.5` do Math.max em fsrsCrescimentoS, que ignora R e domina pra todo S<10 (todo S
+  // pós-lapso). O teto do "de graça" é esse +0,5 de S: medido (b167) contra o contrafactual
+  // de NÃO chamar fsrsUpdate na re-exposição, dá 0 ou 1 dia conforme o arredondamento de
+  // Math.round(S) — nunca mais que 1, em qualquer maturidade, e não decai com os ciclos:
+  // é limitado por construção, não autolimitado no tempo. Não mexido aqui. Histórico já
   // inflado antes desta correção fica como está: o pL decai sozinho pela meia-vida.
   if(!reexposicao)bktUpdate(q.topico,acertou);
   if(!userStats.questoesFSRS)userStats.questoesFSRS={};
@@ -3683,8 +3690,10 @@ const TREINO_TETO_DUE=6;  // revisão não ocupa mais que metade
 const TREINO_MIN_NOVO=3;  // reserva de cobertura quando há material intocado
 // F4-alívio (b163): com backlog grande o teto fixo de 6 não drena. Quem estuda dia sim/dia
 // não encontra todo erro já vencido (o piso de erro é +1 dia), e 6/treino nunca alcança a
-// fila. Acima do limiar o teto sobe para TREINO_TAM-TREINO_MIN_NOVO: o máximo que cabe SEM
-// comer a reserva de cobertura do edital, que é justamente o que não pode parar.
+// fila. Acima do limiar o teto sobe para TREINO_TAM-TREINO_MIN_NOVO — o máximo que o passo (1)
+// tira sem comer a reserva do passo (3), e só faz sentido enquanto há material novo pra
+// reservar. Esgotado o banco, o passo (4) passa a preencher com vencida por tópico fraco —
+// deliberado, não bug: medido melhor que as alternativas (b167).
 // A raiz (o piso +1 dia ignorar a cadência real) fica para o Track B — isto é vazão, não cura.
 const TREINO_BACKLOG_ALTO=12;                              // 2 treinos cheios de revisão
 const TREINO_TETO_DUE_ALTO=TREINO_TAM-TREINO_MIN_NOVO;     // derivado: nunca comer a reserva
@@ -3979,10 +3988,8 @@ function renderProntidao(){
   if(avisoEl)avisoEl.style.display=(r.nResp<MIN_RESP_PRONT)?'block':'none';
   const dEl=document.getElementById('pront-dias');
   if(dEl){
-    if(userStats.dataProva&&/^\d{4}-\d{2}-\d{2}$/.test(userStats.dataProva)){
-      const dias=Math.ceil((new Date(userStats.dataProva+'T23:59:59')-Date.now())/86400000);
-      dEl.textContent=dias>1?'Faltam '+dias+' dias':dias===1?'Falta 1 dia':dias===0?'É hoje!':'';
-    }else dEl.textContent='';
+    const dias=diasAteProva(Date.now()); // fonte única (b167) — matava a fórmula duplicada do b164
+    dEl.textContent=!isFinite(dias)?'':dias===0?'É hoje!':dias===1?'Falta 1 dia':'Faltam '+dias+' dias';
   }
 }
 
@@ -4760,7 +4767,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.254';
+const APP_VERSAO='v1.255';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -6076,7 +6083,7 @@ function iniciarModoErro(){
 }
 
 function iniciarSimuladoInteligente(){
-  // b174: fila por ponto fraco (BKT), igual ao Treino do dia — antes usava montarFilaEstudo,
+  // v1.175: fila por ponto fraco (BKT), igual ao Treino do dia — antes usava montarFilaEstudo,
   // que ignora tópico fraco e deixava "Treino Focado" com a mesma lógica do Estudo Rápido.
   quizQueue=selecionarAdaptativo(15);
   quizArea='INTELIGENTE';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};
