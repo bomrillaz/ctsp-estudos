@@ -2804,13 +2804,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
     <div class="config-row">
       <div>
-        <div class="config-label">Data da prova</div>
-        <div class="config-sub">Ativa a contagem regressiva</div>
-      </div>
-      <input type="date" class="config-input" id="config-prova-input">
-    </div>
-    <div class="config-row">
-      <div>
         <div class="config-label">Notificações de revisão</div>
         <div class="config-sub" id="config-notif-sub">Lembrete diário das revisões vencidas</div>
       </div>
@@ -3266,11 +3259,21 @@ function fsrsR(now,last,S){return Math.pow(1+(now-last)/86400000/(9*S),-1);}
 function fsrsAjustaD(D,dD,reg){D=Math.min(10,Math.max(1,D+dD));return D+reg*(5-D);}
 function fsrsCrescimentoS(S,D,R,boost){const inc=Math.min(FSRS_INC_TETO,Math.max(FSRS_INC_PISO,1+(11-D)*FSRS_INC_K*(1-R)*boost));return Math.min(FSRS_MAX_DIAS,Math.max(S*inc,S+0.5));}
 function fsrsLapsoS(S,D,mult){return Math.max(0.5,S*mult*(1-(D-1)/22));}
-// Teto de agenda: intervalo nunca passa da data da prova (userStats.dataProva, opcional).
+// ═══ DATA DA PROVA — EDITAR AQUI, é a única fonte (b167) ═══
+// Vale para TODOS os usuários. Antes cada um digitava a sua nas Configurações; virou
+// constante do app porque a data é do concurso, não da pessoa, e quem a conhece é o autor.
+// `null` = sem data: `diasAteProva` devolve Infinity, o teto de agenda não morde e a
+// contagem regressiva não aparece — exatamente o comportamento de hoje. Quando o edital
+// sair, trocar por 'AAAA-MM-DD' e publicar. String em formato errado cai no mesmo Infinity
+// (falha segura: sem contagem, nunca com contagem errada).
+// Sobra em `progresso/$uid/dataProva` de quem já tinha preenchido: fica órfã e é ignorada.
+// Não apagada de propósito — é dado de conta real e é inofensivo onde está.
+const DATA_PROVA=null;
+// Teto de agenda: intervalo nunca passa da data da prova.
 // Alvo (b167): a ÚLTIMA revisão PODE cair no próprio dia da prova — n=0 é válido; só prova
 // já PASSADA (n<0) volta a Infinity (b164, não mexer).
 function diasAteProva(agora){
-  const d=userStats&&userStats.dataProva;
+  const d=DATA_PROVA;
   if(!d||!/^\d{4}-\d{2}-\d{2}$/.test(d))return Infinity;
   const n=Math.floor((new Date(d+'T23:59:59.999')-agora)/86400000);
   return n>=0?n:Infinity;
@@ -4767,7 +4770,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.255';
+const APP_VERSAO='v1.256';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -8792,8 +8795,6 @@ function abrirModalConfig(){
   if(dcInp)dcInp.value=dose('cards');
   const drInp=document.getElementById('config-dose-resumos');
   if(drInp)drInp.value=dose('resumos');
-  const provaInp=document.getElementById('config-prova-input');
-  if(provaInp)provaInp.value=userStats.dataProva||'';
   atualizarBotaoNotif();
   document.getElementById('modal-config').classList.remove('hidden');
   setTimeout(()=>{document.querySelector('#modal-config .modal-fechar')?.focus();},60);
@@ -8826,11 +8827,6 @@ async function salvarConfig(){
   const drVal=drInp?parseInt(drInp.value)||0:0;
   if(drVal>=1&&drVal<=70)userStats.dose.resumos=drVal;
   doseExtra={cards:0,resumos:0};
-  // S35: data da prova (contagem regressiva)
-  const provaInp=document.getElementById('config-prova-input');
-  const provaVal=provaInp?provaInp.value.trim():'';
-  if(/^\d{4}-\d{2}-\d{2}$/.test(provaVal))userStats.dataProva=provaVal;
-  else if(!provaVal&&userStats.dataProva)delete userStats.dataProva;
   await saveProg();
   renderDashboard();
   document.getElementById('modal-config').classList.add('hidden');
