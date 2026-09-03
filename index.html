@@ -4794,7 +4794,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.257';
+const APP_VERSAO='v1.258';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -7789,7 +7789,7 @@ async function definirPlano(uid,plano){
   const rotulo=plano==='anual'?`Anual no cartão · acesso até ${fmtData(prox)}`:`Mensal no Pix · vence ${fmtData(prox)}`;
   // b115: confirmação com a data calculada ANTES de gravar. Sem isto, "Anual cartão"
   // seguido de "Pago" (achando que um confirma o outro) empilha dois ciclos de 13 meses
-  // sem avisar — foi o que aconteceu com a conta da Daiane em 22/08/2026.
+  // sem avisar — foi o que aconteceu com uma conta real em 22/08/2026.
   if(!confirm(`Definir plano ${plano==='anual'?'Anual':'Mensal'}?\n${rotulo}\n\nIsto marca como pago agora mesmo. Se o pagamento já foi feito em outra data, use o Firebase Console para corrigir depois.`))return;
   if(await _cobSet(uid,{plano,meio,prox,pago:Date.now()}))showToast(rotulo);
   loadAdminUsers();

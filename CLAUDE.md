@@ -26,8 +26,9 @@ Dois arquivos no núcleo, mais a camada PWA:
   de Auth e o banco de progresso, sem ganho visível. Não mexer nesses dois sem pedido explícito.
 - Site: https://bomrillaz.github.io/ctsp-estudos
 - Repo: github.com/bomrillaz/ctsp-estudos
-- Firebase: projeto `ctsp-estudos` · conta dona `jvictor.projetos.ti@gmail.com` (**não sugerir migração**)
-- RTDB: https://ctsp-estudos-default-rtdb.firebaseio.com · UID admin `DyNxtutn1aaemZk8cbMtGOnM0iG3`
+- Firebase: projeto `ctsp-estudos` (**não sugerir migração**) · conta e UID admin: ver vault
+  (`licoes/bootstrap-do-admin-e-manual.md`) — não versionar aqui, repo é público.
+- RTDB: https://ctsp-estudos-default-rtdb.firebaseio.com
 - Stack: HTML/CSS/JS puro + Firebase Auth + Realtime Database + GitHub Pages + Service Worker
 - reCAPTCHA v3: `6Lf1nw0tAAAAABuGxbqJzesfcIuZbXOLbMZf3_GY` — chave **provisionada, não integrada** ao fluxo
   de auth (só aparece na CSP; sem `grecaptcha.execute`/`render` no código). Falta backend — ver
@@ -238,7 +239,8 @@ sabe o que vai cair ou promete aprovação. Há teste no harness travando isso.
 ## 7. COMERCIAL
 
 - **Mensal R$ 59,90** (Pix) · **Anual R$ 478,80** = 12x de R$ 39,90 sem juros, dando **13 meses** de acesso · **teste grátis de 7 dias**.
-- A escada existe para induzir ao anual (recebimento integral e imediato). Ponto de equilíbrio ~6,7 meses.
+- Racional da escada de preços (por que induz ao anual, ponto de equilíbrio): ver vault,
+  `decisoes/precos-mensal-anual-teste-gratis.md` — não versionar aqui, repo é público.
 - **Obrigatório no site junto do preço:** o plano vale a partir da assinatura, independente da data do edital; e o direito de arrependimento de 7 dias (CDC).
 - Cobrança manual no painel do admin: `usuarios/$uid/cob = {plano, meio, prox, pago}`. 1º acesso vem do `criadoEm`.
   **Estado é derivado, nunca gravado.** A faixa da Home só avisa; **quem corta acesso é o `aprovado`**.

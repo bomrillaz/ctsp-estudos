@@ -25,3 +25,10 @@ assets/cesar-coin-gray.png
 .impeccable/hook.cache.json
 .impeccable/critique/
 .claude/
+
+# b168 — PRODUCT.md/DESIGN.md/.impeccable/design.json continuam na raiz (a skill impeccable
+# le esse caminho fixo) mas nunca publicos: posicionamento competitivo e detalhe de design
+# system nao tem por que estar no repo publico. Mesmo padrao das linhas acima.
+PRODUCT.md
+DESIGN.md
+.impeccable/design.json
