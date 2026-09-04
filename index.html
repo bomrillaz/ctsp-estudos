@@ -974,11 +974,12 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
 .card-btn.dif{background:var(--red-light);color:var(--red-dark);}
 .card-btn.med{background:var(--amber-light);color:var(--amber);}
 .card-btn.fac{background:var(--green-light);color:var(--green);}
-.cards-done{text-align:center;padding:40px 20px;}
-.cards-done-icon{font-size:48px;margin-bottom:12px;color:var(--green);display:flex;justify-content:center;}
-.cards-done-icon svg{width:52px;height:52px;}
-.cards-done-title{font-family:var(--font-display);font-size:24px;font-weight:700;margin-bottom:8px;}
-.cards-done-sub{font-size:14px;color:var(--text2);}
+/* b174: renomeado de .cards-done — agora fonte única também de Resumos (fimInlineHTML). */
+.fim-inline{text-align:center;padding:40px 20px;}
+.fim-inline-icon{font-size:48px;margin-bottom:12px;color:var(--green);display:flex;justify-content:center;}
+.fim-inline-icon svg{width:52px;height:52px;}
+.fim-inline-title{font-family:var(--font-display);font-size:24px;font-weight:700;margin-bottom:8px;}
+.fim-inline-sub{font-size:14px;color:var(--text2);}
 
 /* ═══ SIMULADO ═══ */
 .sim-home{padding:16px;background:transparent;}
@@ -1402,9 +1403,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 /* Cards: ações terciárias da tela de conclusão (limpar filtro / voltar ao hub) viravam
    uma pilha de até 3 btn-weak cheios competindo com o CTA primário. Vira link de texto
    lado a lado, só "Fazer mais N" continua como botão (é a única ação secundária real). */
-.cards-done-links{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:16px;margin-top:12px;}
-.cards-done-link{background:none;border:none;color:var(--text3);font-size:12.5px;font-weight:700;cursor:pointer;padding:4px 2px;text-decoration:underline;text-underline-offset:2px;}
-.cards-done-link:hover,.cards-done-link:focus-visible{color:var(--text2);}
+.fim-inline-links{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:16px;margin-top:12px;}
+.fim-inline-link{background:none;border:none;color:var(--text3);font-size:12.5px;font-weight:700;cursor:pointer;padding:4px 2px;text-decoration:underline;text-underline-offset:2px;}
+.fim-inline-link:hover,.fim-inline-link:focus-visible{color:var(--text2);}
 .rep-overlay{position:fixed;inset:0;background:rgba(11,20,48,.55);display:flex;align-items:flex-end;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s;}
 .rep-overlay.show{opacity:1;pointer-events:auto;}
 .rep-sheet{background:var(--surface);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -8px 32px rgba(16,27,61,.22);transform:translateY(20px);transition:transform .25s var(--ease-out);max-height:86vh;overflow-y:auto;}
@@ -2754,6 +2755,18 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   </div>
 </div>
 
+<!-- b174: modal de confirmação genérico, no lugar do confirm() nativo (não estilizável,
+     sem os 3 caminhos de fechar padrão). API por callback (confirmarAcao), síncrona pra
+     quem chama — nunca devolve Promise (navTo/o fluxo do quiz é síncrono). -->
+<div class="modal-overlay hidden" id="modal-confirm" role="dialog" aria-modal="true" aria-labelledby="confirm-title" onclick="fecharConfirm(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-fechar-bar"><button class="modal-fechar" type="button" aria-label="Fechar" onclick="fecharConfirm()">✕</button></div>
+    <div class="modal-title" id="confirm-title"></div>
+    <div class="modal-sub" id="confirm-sub"></div>
+    <div id="confirm-acoes" style="display:flex;flex-direction:column;gap:8px;margin-top:16px"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- Modal Configurações -->
@@ -3219,6 +3232,16 @@ let _reforcoResumosAvaliados=new Set();
 // Ids já re-expostos NESTA sessão de treino (reaprendizado dentro da sessão) —
 // garante que a questão errada volte só UMA vez, sem loop. Zera a cada nova sessão.
 let quizReexpostas=new Set();
+// b174: ids já contabilizados nesta sessão — guarda o invariante "uma resposta por questão
+// por sessão" na FONTE (responderQuiz), não num fluxo de re-render específico (retomar,
+// reexibir etc.) — assim vale pra qualquer caminho que leve de volta à mesma questão, não só
+// pro botão "Retomar sessão". Único lugar que limpa: encerrarSessaoQuiz() (teardown único).
+let quizRespondidasSessao=new Set();
+// b174: mostrarExemplo() usa quizQueue/quizIdx pra exibir 1 questão avulsa, fora de fluxo de
+// sessão — sem isto, sessaoQuizViva() não distingue "exemplo" de sessão real. Ligada só por
+// mostrarExemplo, desligada por padrão em abrirRunnerQuiz() (toda sessão REAL passa por ali)
+// e em encerrarSessaoQuiz() — exemplo avulso nunca é retomável, sempre fecha com descarte.
+let quizExemploAtivo=false;
 
 // S53 TEMPO POR QUESTÃO (bloco31) — a prova dá 3 min por questão (60Q em 3h).
 // Mede o ritmo real para o militar saber se cabe no orçamento de tempo da prova.
@@ -3585,8 +3608,7 @@ function praticarTopico(t){
   quizArea=(TOPICOS[t]&&TOPICOS[t].a)||'TODAS';quizModoErro=false;
   quizQueue=montarFilaEstudo(qs,Math.min(dose('questoes'),qs.length));
   quizIdx=0;quizSessao={c:0,t:0};
-  document.getElementById('quiz-home-view').classList.add('hidden');
-  document.getElementById('quiz-running-view').classList.remove('hidden');
+  abrirRunnerQuiz();
   document.getElementById('quiz-area-tag').textContent=nomeTopico(t);
   navTo('quiz');renderQuizQ();
 }
@@ -3597,8 +3619,7 @@ function praticarIds(ids,rotulo){
   if(!qs.length){showToast('Questões deste assunto ainda não carregaram.');return;}
   quizArea=qs[0].area||'TODAS';quizModoErro=false;
   quizQueue=shuffle(qs);quizIdx=0;quizSessao={c:0,t:0};
-  document.getElementById('quiz-home-view').classList.add('hidden');
-  document.getElementById('quiz-running-view').classList.remove('hidden');
+  abrirRunnerQuiz();
   document.getElementById('quiz-area-tag').textContent=rotulo||'Alta incidência';
   navTo('quiz');renderQuizQ();
 }
@@ -3684,8 +3705,7 @@ function iniciarRevisaoDue(){
   if(!due.length){showToast('Nenhuma revisão vencida. Tudo em dia!');return;}
   quizQueue=interleavePorTopico(due.slice(0,REVISAO_LOTE));
   quizArea='REVISAO';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;
-  document.getElementById('quiz-home-view').classList.add('hidden');
-  document.getElementById('quiz-running-view').classList.remove('hidden');
+  abrirRunnerQuiz();
   document.getElementById('quiz-area-tag').textContent='Revisão do dia · FSRS';
   navTo('quiz');renderQuizQ();
 }
@@ -3704,8 +3724,7 @@ function iniciarCoberturaNova(){
   if(!fila.length){showToast('Assunto novo em dia — sem cobertura pendente agora.');return;}
   quizQueue=interleavePorTopico(fila);
   quizArea='COBERTURA';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;
-  document.getElementById('quiz-home-view').classList.add('hidden');
-  document.getElementById('quiz-running-view').classList.remove('hidden');
+  abrirRunnerQuiz();
   document.getElementById('quiz-area-tag').textContent='Assunto novo';
   navTo('quiz');renderQuizQ();
 }
@@ -4003,8 +4022,7 @@ function irTreinoDoDia(){
   const fila=montarTreinoDoDia(TREINO_TAM);
   if(!fila.length){showToast('Sem questões disponíveis agora.');return;}
   quizQueue=fila;quizArea='TREINO';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;
-  document.getElementById('quiz-home-view').classList.add('hidden');
-  document.getElementById('quiz-running-view').classList.remove('hidden');
+  abrirRunnerQuiz();
   document.getElementById('quiz-area-tag').textContent='Treino do dia';
   navTo('quiz');renderQuizQ();
 }
@@ -4016,8 +4034,7 @@ function iniciarSessaoDoDia(){
   const fila=montarSessaoDoDia();
   if(!fila.length){showToast('Sem questões disponíveis agora.');return;}
   quizQueue=fila;quizArea='SESSAO';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;
-  document.getElementById('quiz-home-view').classList.add('hidden');
-  document.getElementById('quiz-running-view').classList.remove('hidden');
+  abrirRunnerQuiz();
   document.getElementById('quiz-area-tag').textContent='Sessão do dia';
   navTo('quiz');renderQuizQ();
 }
@@ -4868,7 +4885,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.262';
+const APP_VERSAO='v1.263';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -5080,9 +5097,16 @@ function _navToInner(s,skipStagger){
   // b171/D4 (achado do code-review): sair do Quiz pela nav inferior com um CARD na tela não
   // passa por voltarMenuQuiz/finishQuiz — sem limpar aqui, o id fixo (card-flip-el/card-btns)
   // fica preso em #quiz-body-card e colide com o mesmo id que renderCard() cria em #cards-body.
-  // Fonte compartilhada: qualquer navegação, não mais um call site a mais. Não mexe em
-  // quizQueue/quizArea — sair pela nav é pausa/retomada, comportamento já existente.
-  if(s!=='quiz'){const qc=document.getElementById('quiz-body-card');if(qc)qc.innerHTML='';}
+  // b174 (A2): a limpeza sozinha não bastava — o runner continuava VISÍVEL (só o miolo
+  // ficava vazio) porque nada devolvia a visibilidade pro hub. _ocultarRunnerQuiz() já
+  // fazia essa limpeza E agora também esconde o runner/mostra o hub — sem renderQuizHub()
+  // aqui (custaria caro em toda navegação); quem re-renderiza é o retorno à aba Quiz,
+  // logo abaixo. Não mexe em quizQueue/quizArea — sair pela nav é pausa/retomada, EXCETO
+  // pro exemplo avulso (quizExemploAtivo): esse nunca é retomável, sempre descarta ao sair.
+  if(s!=='quiz'){
+    if(quizExemploAtivo)encerrarSessaoQuiz();
+    _ocultarRunnerQuiz();
+  }
   document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   const sc=document.getElementById('screen-'+s);
@@ -5765,8 +5789,7 @@ function reforcoAbrirCards(t){
 function voltarAoQuizDoReforco(){
   origemReforco=null;
   _ativarTelaLocal('screen-quiz');
-  document.getElementById('quiz-home-view').classList.add('hidden');
-  document.getElementById('quiz-running-view').classList.remove('hidden');
+  abrirRunnerQuiz();
   atualizarBarraFoco();
 }
 
@@ -6027,18 +6050,106 @@ function updateBadges(){
 function encerrarSessaoQuiz(){
   const qc=document.getElementById('quiz-body-card');if(qc)qc.innerHTML='';
   quizQueue=[];quizIdx=0;quizSessao={c:0,t:0};quizArea='TODAS';
+  quizRespondidasSessao=new Set(); // b174: teardown único também do guard anti-double-score
+  quizExemploAtivo=false;          // b174: teardown único também da flag de exemplo avulso
 }
-function voltarMenuQuiz(){
-  if(!confirm('Sair da sessão atual?'))return;
+// b174: fonte única do runner do Quiz — antes eram 16 pares copy-paste pra abrir e só 2
+// caminhos de volta. sessaoQuizViva() é o predicado único de "existe sessão retomável";
+// ninguém mais deduz isso por conta própria (fila com item ainda não consumido).
+function sessaoQuizViva(){return !quizExemploAtivo&&quizQueue.length>0&&quizIdx<quizQueue.length;}
+function abrirRunnerQuiz(){
+  quizExemploAtivo=false; // toda sessão REAL passa por aqui — só mostrarExemplo liga de novo, na sequência
+  document.getElementById('quiz-home-view').classList.add('hidden');
+  document.getElementById('quiz-running-view').classList.remove('hidden');
+}
+// Só a parte de DOM do pausar/fechar (mostra o hub, esconde o runner) — sem os renders
+// pesados do hub, que quem chama decide se precisa (evita renderizar Quiz caro ao sair
+// pra outra aba, que vai renderizar o PRÓPRIO destino de qualquer forma).
+function _ocultarRunnerQuiz(){
   document.getElementById('quiz-running-view').classList.add('hidden');
   document.getElementById('quiz-home-view').classList.remove('hidden');
+  // b171/D4: mesmo cuidado de sempre — ids fixos do card (card-flip-el/card-btns)
+  // colidiriam com os mesmos ids que renderCard() cria em #cards-body.
+  const qc=document.getElementById('quiz-body-card');if(qc){qc.classList.add('hidden');qc.innerHTML='';}
+}
+// Fecha de vez: esconde o runner e, se descartar, encerra a sessão (quizQueue etc.) antes
+// de re-renderizar o hub. descartar=false só pausa — a fila continua viva em memória.
+function fecharRunnerQuiz(descartar){
+  _ocultarRunnerQuiz();
+  if(descartar)encerrarSessaoQuiz();
+  renderAreaList();renderQuizHub();
+}
+function voltarMenuQuiz(){
+  // b174: exemplo avulso nunca é retomável — fecha direto, sem perguntar "continuar depois"
+  // (a pergunta faria sentido só se houvesse algo pra retomar).
+  if(quizExemploAtivo){_voltarMenuQuizFn(true);return;}
+  // BLOCO 34 + b174: sessão nascida de um tópico em Foco preserva o comportamento ANTERIOR
+  // ao b174 — sempre descarta ao sair (era o único caminho do confirm() nativo, binário).
+  // Session retomável a partir do Foco é mudança de produto que ninguém pediu aqui.
+  if(focoAtivo){
+    confirmarAcao({
+      titulo:'Sair da sessão atual?',
+      texto:'',
+      acoes:[
+        {rotulo:'Sair',primaria:true,fn:()=>_voltarMenuQuizFn(true)},
+        {rotulo:'Cancelar',fn:()=>{}}
+      ]
+    });
+    return;
+  }
+  confirmarAcao({
+    titulo:'Sair da sessão atual?',
+    texto:sessaoQuizViva()?'Dá pra continuar de onde parou depois, pelo hub do Quiz.':'',
+    acoes:[
+      {rotulo:'Continuar depois',primaria:true,fn:()=>_voltarMenuQuizFn(false)},
+      {rotulo:'Descartar sessão',fn:()=>_voltarMenuQuizFn(true)},
+      {rotulo:'Cancelar',fn:()=>{}}
+    ]
+  });
+}
+function _voltarMenuQuizFn(descartar){
   document.querySelector('.btn-revelar')?.remove();
-  encerrarSessaoQuiz();
+  if(focoAtivo)descartar=true; // preserva o comportamento anterior — Foco sempre descarta
+  fecharRunnerQuiz(descartar); // b174: fonte única (antes duplicava a lógica dela aqui)
   // BLOCO 34: se a sessão nasceu de um tópico em foco, "voltar" tem de devolver
   // à Tela de Foco. Cair no menu do quiz é justamente o desvio que este bloco corta.
   if(focoAtivo){navTo('foco');return;}
-  renderAreaList();renderQuizHub();
 }
+// Reabre a sessão pausada exatamente onde parou — questão ou card, renderQuizQ() já
+// despacha os dois (fonte única, ver b171/D4). b174: se o item no topo da fila já foi
+// respondido (parou de propósito sem clicar "Próxima"), a tela NÃO PODE reabri-lo clicável
+// de novo — seria o mesmo defeito do A2 (tela viva sem ação de verdade por trás) por outra
+// porta. O guard de quizRespondidasSessao (responderQuiz) continua sendo a blindagem de
+// raiz pra qualquer OUTRO caminho de re-render; aqui o que se conserta é a tela: avança até
+// achar um item de fato pendente. Se a fila esgotar (o item respondido era o último), a
+// sessão terminou de verdade — finishQuiz() fecha do jeito certo (tela de fim, treinoDia).
+function retomarSessaoQuiz(){
+  while(quizIdx<quizQueue.length&&quizRespondidasSessao.has(quizQueue[quizIdx].id)){
+    quizIdx++;
+  }
+  if(quizIdx>=quizQueue.length){finishQuiz();return;}
+  abrirRunnerQuiz();
+  renderQuizQ();
+}
+
+// b174: modal de confirmação genérico — substitui confirm() nativo onde o app precisa de
+// mais de 2 saídas (ou de estilo). acoes:[{rotulo,primaria,fn}]. Entra no mapa FECHAR_MODAL
+// (Esc/clique fora chamam fecharConfirm = equivalem a Cancelar, nunca a uma ação destrutiva).
+function confirmarAcao({titulo,texto,acoes}){
+  document.getElementById('confirm-title').textContent=titulo||'';
+  document.getElementById('confirm-sub').textContent=texto||'';
+  window._confirmFns=(acoes||[]).map(a=>a.fn);
+  document.getElementById('confirm-acoes').innerHTML=(acoes||[]).map((a,i)=>
+    `<button class="${a.primaria?'btn-primary':'btn-weak btn-neutral'}" onclick="_confirmExec(${i})">${a.rotulo}</button>`
+  ).join('');
+  document.getElementById('modal-confirm').classList.remove('hidden');
+}
+function _confirmExec(i){
+  document.getElementById('modal-confirm').classList.add('hidden');
+  const fn=window._confirmFns&&window._confirmFns[i];
+  if(typeof fn==='function')fn();
+}
+function fecharConfirm(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('modal-confirm').classList.add('hidden');}
 
 // A2 (bloco 53): acordeão único por área — funde "Escolha uma área" + "Praticar por tópico".
 // Clique na linha da área só abre/fecha (toggleAreaTopicos, reaproveitado de Meu Progresso);
@@ -6093,18 +6204,49 @@ function renderAreaList(){
 // não uma 4ª fila própria (montarFilaEstudo) — senão este hub vira 2ª fonte de verdade do
 // dia (achado do b171/DECISAO). "Responder mais assim mesmo" (dia já cumprido) é prática
 // extra opcional e continua no fluxo próprio do hub.
+// CTA da Sessão do dia — extraída pra ser reaproveitada como PRINCIPAL (sem sessão pausada)
+// ou SECUNDÁRIA (sessão pausada, ver renderQuizHub). Mesma lógica (concluída ou não) nos
+// dois casos; só a classe do botão principal muda de peso.
+// b174 (pendência #2, parcial): só o lançador DO HUB (a CTA secundária logo abaixo de
+// "Retomar sessão" — a colisão óbvia) confirma antes de descartar uma sessão pausada.
+// Os demais lançadores (área/tópico, Estudo Rápido, deep link) ficam de fora nesta rodada —
+// refatorar os 16 call sites de novo no mesmo commit é como se introduz defeito novo.
+function trocarSessaoAtiva(fn){
+  if(!sessaoQuizViva()){fn();return;}
+  confirmarAcao({
+    titulo:'Descartar sessão pausada?',
+    texto:'Você tem uma sessão em andamento. Começar outra descarta o que ficou pra trás.',
+    acoes:[
+      {rotulo:'Descartar e continuar',primaria:true,fn:()=>{encerrarSessaoQuiz();fn();}},
+      {rotulo:'Cancelar',fn:()=>{}}
+    ]
+  });
+}
+function _ctaSessaoDoDia(classeBtn,confirmarSeVivo){
+  // code-review (b172): a Sessão do dia sempre monta uma rodada de tamanho ~metaDiaria
+  // (montarTreinoDoDiaCru(tam), não tam=resta) — um hint "N questões ainda hoje" aqui
+  // prometeria um número que o clique não entrega. Sem contagem, mesma copy do modal.
+  const irSessao=confirmarSeVivo?`trocarSessaoAtiva(()=>abrirIntro('sessao'))`:`abrirIntro('sessao')`;
+  const maisMeta=confirmarSeVivo?`trocarSessaoAtiva(()=>abrirIntro('meta',1))`:`abrirIntro('meta',1)`;
+  return !treinoFeitoHoje()
+    ? `<button class="${classeBtn}" style="width:100%" onclick="${irSessao}">Ir para a Sessão do dia</button>
+       <div class="hub-hint">Questões e flashcards intercalados, na medida do seu dia. Abaixo ficam os outros modos e o índice por área.</div>`
+    : `<div class="hub-ok">✓ Sessão do dia concluída</div><button class="btn-weak" style="width:100%" onclick="${maisMeta}">Responder mais assim mesmo</button>`;
+}
 function renderQuizHub(){
   sincronizarDiagCard();   // FEAT-01 · b173: card de nivelamento, agora morador desta tela
   const cta=document.getElementById('quiz-meta-cta');
-  if(cta){
-    // code-review (b172): a Sessão do dia sempre monta uma rodada de tamanho ~metaDiaria
-    // (montarTreinoDoDiaCru(tam), não tam=resta) — um hint "N questões ainda hoje" aqui
-    // prometeria um número que o clique não entrega. Sem contagem, mesma copy do modal.
-    cta.innerHTML = !treinoFeitoHoje()
-      ? `<button class="btn-primary" style="width:100%" onclick="abrirIntro('sessao')">Ir para a Sessão do dia</button>
-         <div class="hub-hint">Questões e flashcards intercalados, na medida do seu dia. Abaixo ficam os outros modos e o índice por área.</div>`
-      : `<div class="hub-ok">✓ Sessão do dia concluída</div><button class="btn-weak" style="width:100%" onclick="abrirIntro('meta',1)">Responder mais assim mesmo</button>`;
+  if(!cta)return;
+  // b174: sessão pausada (saiu pela nav no meio) tem prioridade sobre a CTA do dia — retomar
+  // vem primeiro, a CTA da Sessão do dia desce pra secundária (mesma lógica, peso menor).
+  if(sessaoQuizViva()){
+    const restam=quizQueue.length-quizIdx;
+    cta.innerHTML = `<button class="btn-primary" style="width:100%" onclick="retomarSessaoQuiz()">Retomar sessão</button>
+       <div class="hub-hint">${restam} ${restam===1?'item restante':'itens restantes'}.</div>
+       <div style="margin-top:10px">${_ctaSessaoDoDia('btn-weak',true)}</div>`;
+    return;
   }
+  cta.innerHTML = _ctaSessaoDoDia('btn-primary');
 }
 function iniciarMetaQuiz(){
   const meta=userStats.metaDiaria||10;
@@ -6114,8 +6256,7 @@ function iniciarMetaQuiz(){
   quizArea='META';quizModoErro=false;
   quizQueue=montarFilaEstudo(Object.values(allQuestoes),n);
   quizIdx=0;quizSessao={c:0,t:0};
-  document.getElementById('quiz-home-view').classList.add('hidden');
-  document.getElementById('quiz-running-view').classList.remove('hidden');
+  abrirRunnerQuiz();
   document.getElementById('quiz-area-tag').textContent='Meta do dia';
   navTo('quiz');renderQuizQ();
 }
@@ -6158,8 +6299,7 @@ function iniciarQuiz(area){
   const qs=Object.values(allQuestoes).filter(q=>area==='TODAS'||q.area===area);
   quizQueue=montarFilaEstudo(qs,20);   // S47: fila inteligente (novas + revisão), sem repetição
   quizIdx=0;quizSessao={c:0,t:0};
-  document.getElementById('quiz-home-view').classList.add('hidden');
-  document.getElementById('quiz-running-view').classList.remove('hidden');
+  abrirRunnerQuiz();
   document.getElementById('quiz-area-tag').textContent=area==='TODAS'?'Quiz Geral':AI[area]?.nome||area;
   navTo('quiz');
   renderQuizQ();
@@ -6169,8 +6309,7 @@ function iniciarEstudoRapido(){
   // S47: fila inteligente sobre todo o banco (novas + revisão; erros e vencidas priorizados).
   quizQueue=montarFilaEstudo(Object.values(allQuestoes),10);
   quizArea='RAPIDO';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};
-  document.getElementById('quiz-home-view').classList.add('hidden');
-  document.getElementById('quiz-running-view').classList.remove('hidden');
+  abrirRunnerQuiz();
   document.getElementById('quiz-area-tag').textContent='Estudo Rápido';
   navTo('quiz');renderQuizQ();
 }
@@ -6185,8 +6324,7 @@ function iniciarModoErro(){
     return ((hb.count||0)-(ha.count||0))||((hb.last||0)-(ha.last||0));
   });
   quizQueue=interleavePorTopico(erradas);quizArea='ERRO';quizModoErro=true;quizIdx=0;quizSessao={c:0,t:0};
-  document.getElementById('quiz-home-view').classList.add('hidden');
-  document.getElementById('quiz-running-view').classList.remove('hidden');
+  abrirRunnerQuiz();
   document.getElementById('quiz-area-tag').textContent='Modo Erro';
   navTo('quiz');renderQuizQ();
 }
@@ -6196,8 +6334,7 @@ function iniciarSimuladoInteligente(){
   // que ignora tópico fraco e deixava "Treino Focado" com a mesma lógica do Estudo Rápido.
   quizQueue=selecionarAdaptativo(15);
   quizArea='INTELIGENTE';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};
-  document.getElementById('quiz-home-view').classList.add('hidden');
-  document.getElementById('quiz-running-view').classList.remove('hidden');
+  abrirRunnerQuiz();
   document.getElementById('quiz-area-tag').textContent='Treino Focado';
   navTo('quiz');renderQuizQ();
 }
@@ -6217,8 +6354,7 @@ function iniciarDiagnostico(){
   }
   if(!fila.length){showToast('Banco de questões ainda não carregou. Tente recarregar.');return;}
   quizQueue=fila;quizArea='DIAGNOSTICO';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;
-  document.getElementById('quiz-home-view').classList.add('hidden');
-  document.getElementById('quiz-running-view').classList.remove('hidden');
+  abrirRunnerQuiz();
   document.getElementById('quiz-area-tag').textContent='Nivelamento';
   navTo('quiz');renderQuizQ();
 }
@@ -6245,8 +6381,7 @@ function iniciarInterleaving(){
   const seen=new Set();
   quizQueue=final.filter(q=>{if(seen.has(q.id))return false;seen.add(q.id);return true;}).slice(0,20);
   quizArea='INTERLEAVING';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};
-  document.getElementById('quiz-home-view').classList.add('hidden');
-  document.getElementById('quiz-running-view').classList.remove('hidden');
+  abrirRunnerQuiz();
   document.getElementById('quiz-area-tag').textContent='Intercalado';
   navTo('quiz');renderQuizQ();
 }
@@ -6361,6 +6496,11 @@ function renderQuizQ(){
 
 async function responderQuiz(idx){
   if(quizAnswered)return;
+  const q=quizQueue[quizIdx];
+  // b174: guarda por ID — impede contar a MESMA questão 2x na sessão (ex.: respondeu, saiu
+  // sem clicar "Próxima", retomou depois: renderQuizQ() reabre quizAnswered=false, mas o id
+  // já foi contabilizado aqui). Ver quizRespondidasSessao acima.
+  if(q&&quizRespondidasSessao.has(q.id))return;
   quizAnswered=true;
   // b123: nivelamento obrigatório deixou de ser gate no load — vira interceptação AQUI,
   // no único ponto por onde as 13 rotas de quiz gravam resposta. quizArea!=='DIAGNOSTICO'
@@ -6371,7 +6511,7 @@ async function responderQuiz(idx){
     return;
   }
   registrarTempoQuestao(); // S53: fecha o cronômetro antes de qualquer await
-  const q=quizQueue[quizIdx];
+  quizRespondidasSessao.add(q.id); // a partir daqui a função só chega ao fim (sem outro return)
   const correta=q._shuffledG!==undefined?q._shuffledG:q.g;
   const acertou=idx===correta;
   const opts=document.querySelectorAll('.quiz-opt');
@@ -6570,8 +6710,7 @@ function mostrarFimSessao(){
 }
 
 function finishQuiz(){
-  document.getElementById('quiz-running-view').classList.add('hidden');
-  document.getElementById('quiz-home-view').classList.remove('hidden');
+  _ocultarRunnerQuiz(); // b174: fonte única (antes duplicava o toggle de 2 linhas aqui)
   // b173: reexibir o hub sem renderQuizHub() deixava o topo dele congelado no estado
   // de ANTES da sessão — a CTA continuava "Ir para a Sessão do dia" depois de a
   // sessão ter acabado de fechar o dia. voltarMenuQuiz() já chamava os dois; este
@@ -6652,6 +6791,20 @@ function doseCardsDoDia(){
   return priorizarPorMalha(cardsPendentes().todos,fc=>cardVencido(fc,now)).slice(0,limite);
 }
 // Modo estudo imersivo: um card por vez, sem o índice competindo pela atenção.
+// b174: fonte única do markup da tela de "fim" IN-PAGE (Cards e Resumos — o Quiz é overlay
+// com score próprio, mostrarFimSessao, e continua separado: unificar os três mudaria o
+// produto, não é refactor). icone é opcional (Resumos não usa). Vocabulário de botão igual
+// ao Quiz: primariaHTML leva btn-primary, o resto btn-weak btn-neutral.
+function fimInlineHTML({icone,titulo,sub,primariaHTML,extrasHTML,linksHTML}){
+  return `<div class="fim-inline">
+    ${icone?`<div class="fim-inline-icon">${icone}</div>`:''}
+    <div class="fim-inline-title">${titulo}</div>
+    <div class="fim-inline-sub">${sub}</div>
+    ${primariaHTML||''}
+    ${extrasHTML||''}
+    ${linksHTML?`<div class="fim-inline-links">${linksHTML}</div>`:''}
+  </div>`;
+}
 function _estudoCards(){
   document.getElementById('cards-body').classList.add('cards-estudo'); // b117: liga a centralização desktop
   const pend=cardsPendentes();
@@ -6670,18 +6823,16 @@ function _estudoCards(){
   if(!cardQueue.length){
     const restam=acervo;
     const filtro=cardsFiltroTopico;
-    body.innerHTML=`<div class="cards-done">
-      <div class="cards-done-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.5 13l1.5 8-5-3-5 3 1.5-8"/></svg></div>
-      <div class="cards-done-title">${restam>0?'✓ Meta de flashcards concluída':'Revisão concluída!'}</div>
-      <div class="cards-done-sub">${restam>0?`Memória ativada. Agora fixe respondendo: recuperar em prova consolida ainda mais.`:(filtro?'Todos os cards deste tópico foram revisados.':'Todos os cards revisados. Fixe com questões na Sessão do dia.')}</div>
-      ${origemReforco==='quiz'?`<button class="btn-weak" style="margin-top:12px" onclick="voltarAoQuizDoReforco()">← Voltar à questão</button>`:''}
-      ${origemReforco!=='quiz'?`<button class="btn-primary" style="margin-top:12px;width:100%" onclick="abrirIntro('sessao')">Fixar na Sessão do dia →</button>`:''}
-      ${restam>0&&origemReforco!=='quiz'?`<button class="btn-weak" style="margin-top:8px" onclick="maisCards()">Fazer mais ${Math.min(dose('cards'),restam)}</button>`:''}
-      ${origemReforco!=='quiz'?`<div class="cards-done-links">
-        ${filtro?`<button class="cards-done-link" onclick="limparFiltroCards()">Ver todos os tópicos</button>`:''}
-        <button class="cards-done-link" onclick="voltarHubCards()">← Voltar aos flashcards</button>
-      </div>`:''}
-    </div>`;
+    body.innerHTML=fimInlineHTML({
+      icone:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.5 13l1.5 8-5-3-5 3 1.5-8"/></svg>`,
+      titulo: restam>0?'✓ Meta de flashcards concluída':'Revisão concluída!',
+      sub: restam>0?`Memória ativada. Agora fixe respondendo: recuperar em prova consolida ainda mais.`:(filtro?'Todos os cards deste tópico foram revisados.':'Todos os cards revisados. Fixe com questões na Sessão do dia.'),
+      primariaHTML: origemReforco==='quiz'
+        ?`<button class="btn-weak btn-neutral" style="margin-top:12px" onclick="voltarAoQuizDoReforco()">← Voltar à questão</button>`
+        :`<button class="btn-primary" style="margin-top:12px;width:100%" onclick="abrirIntro('sessao')">Fixar na Sessão do dia →</button>`,
+      extrasHTML: (restam>0&&origemReforco!=='quiz')?`<button class="btn-weak btn-neutral" style="margin-top:8px" onclick="maisCards()">Fazer mais ${Math.min(dose('cards'),restam)}</button>`:'',
+      linksHTML: origemReforco!=='quiz'?`${filtro?`<button class="fim-inline-link" onclick="limparFiltroCards()">Ver todos os tópicos</button>`:''}<button class="fim-inline-link" onclick="voltarHubCards()">← Voltar aos flashcards</button>`:''
+    });
     return;
   }
   cardIdx=0;
@@ -7094,19 +7245,20 @@ function _estudoResumos(){
   const rf=document.getElementById('resumos-fila');if(rf)rf.textContent=fila.length;
   const content=document.getElementById('resumos-content');
   if(!fila.length){
-    content.innerHTML=(acervo>0
-      ? `<div style="text-align:center;padding:22px 12px 8px;">
-           <div style="font-size:15px;font-weight:800;color:var(--green);margin-bottom:4px">✓ Meta de resumos concluída</div>
-           <div style="font-size:12.5px;color:var(--text2)">Terreno preparado. Agora <b>teste o que leu</b>: recuperar fixa muito mais que reler.</div>
-         </div>
-         <div style="text-align:center;margin-bottom:10px"><button class="btn-primary" style="width:100%" onclick="abrirIntro('sessao')">Testar na Sessão do dia →</button></div>
-         <div style="text-align:center;margin-bottom:10px"><button class="btn-weak" onclick="maisResumos()">Ler mais ${Math.min(dose('resumos'),acervo)} resumo${Math.min(dose('resumos'),acervo)!==1?'s':''}</button></div>`
-      : `<div style="text-align:center;padding:22px 12px 8px;">
-           <div style="font-size:15px;font-weight:800;color:var(--green);margin-bottom:4px">✓ Resumos em dia</div>
-           <div style="font-size:12.5px;color:var(--text2)">Próximas revisões já agendadas. Que tal fixar com questões?</div>
-         </div>
-         <div style="text-align:center;margin-bottom:10px"><button class="btn-primary" style="width:100%" onclick="abrirIntro('sessao')">Ir para a Sessão do dia →</button></div>`)
-    +`<div style="text-align:center"><button class="btn-weak" onclick="voltarHubResumos()">← Voltar aos resumos</button></div>`;
+    content.innerHTML = acervo>0
+      ? fimInlineHTML({
+          titulo:'✓ Meta de resumos concluída',
+          sub:'Terreno preparado. Agora <b>teste o que leu</b>: recuperar fixa muito mais que reler.',
+          primariaHTML:`<button class="btn-primary" style="width:100%" onclick="abrirIntro('sessao')">Testar na Sessão do dia →</button>`,
+          extrasHTML:`<button class="btn-weak btn-neutral" onclick="maisResumos()">Ler mais ${Math.min(dose('resumos'),acervo)} resumo${Math.min(dose('resumos'),acervo)!==1?'s':''}</button>`,
+          linksHTML:`<button class="fim-inline-link" onclick="voltarHubResumos()">← Voltar aos resumos</button>`
+        })
+      : fimInlineHTML({
+          titulo:'✓ Resumos em dia',
+          sub:'Próximas revisões já agendadas. Que tal fixar com questões?',
+          primariaHTML:`<button class="btn-primary" style="width:100%" onclick="abrirIntro('sessao')">Ir para a Sessão do dia →</button>`,
+          linksHTML:`<button class="fim-inline-link" onclick="voltarHubResumos()">← Voltar aos resumos</button>`
+        });
     return;
   }
   const r=fila[0];
@@ -7655,8 +7807,8 @@ function mostrarExemplo(qid){
   _introLimparBotao();
   navTo('quiz');
   quizQueue=[q];quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;quizArea=q.area;
-  document.getElementById('quiz-home-view').classList.add('hidden');
-  document.getElementById('quiz-running-view').classList.remove('hidden');
+  abrirRunnerQuiz();
+  quizExemploAtivo=true; // b174: fora de fluxo de sessão — nunca retomável, sempre descarta ao fechar
   document.getElementById('quiz-area-tag').textContent='Exemplo: '+q.area;
   renderQuizQ();
 }
@@ -8549,8 +8701,7 @@ function iniciarEstudoTopico(t){
   if(!fila.length){showToast('Sem questões para este tópico.');return;}
   fila=shuffle(fila.slice(0,12));
   quizQueue=fila;quizArea='ADAPTATIVO';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;
-  document.getElementById('quiz-home-view').classList.add('hidden');
-  document.getElementById('quiz-running-view').classList.remove('hidden');
+  abrirRunnerQuiz();
   document.getElementById('quiz-area-tag').textContent='Foco '+t;
   navTo('quiz');renderQuizQ();
 }
@@ -9975,7 +10126,7 @@ document.addEventListener('keydown',e=>{
   if(!overlay)return;
   const cfg=OVERLAYS_ATIVOS.find(o=>o.id===overlay.id);
   if(cfg){cfg.fechar(overlay);return;}
-  const FECHAR_MODAL={'modal-busca':fecharBuscaGlobal,'modal-intro':fecharIntro,'modal-fim':fecharFim,'modal-config':fecharModalConfig,'modal-notif':fecharModalNotif,'modal-tutorial':fecharTutorial};
+  const FECHAR_MODAL={'modal-busca':fecharBuscaGlobal,'modal-intro':fecharIntro,'modal-fim':fecharFim,'modal-config':fecharModalConfig,'modal-notif':fecharModalNotif,'modal-tutorial':fecharTutorial,'modal-confirm':fecharConfirm};
   if(FECHAR_MODAL[overlay.id])FECHAR_MODAL[overlay.id]({target:overlay,currentTarget:overlay});
 });
 
