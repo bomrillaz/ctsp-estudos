@@ -476,9 +476,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .dash-stat-div{width:1px;background:rgba(255,255,255,.13);margin:5px 0;flex-shrink:0;}
 /* Meta do dia — recolhível (padrão fechado; cada meta batida "brota" sozinha) */
 .metas-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:4px 6px;position:relative;z-index:1;}
-/* A1 Parte 2 (b155): dia 1 com o diag-card visível — override visual só, não grava
-   preferência (renderDashboard toggla via JS, nunca localStorage). */
-.metas-card.dia1-oculto{display:none;}
 .metas-head{width:100%;background:none;border:none;color:inherit;display:flex;align-items:center;gap:10px;padding:9px 8px;cursor:pointer;text-align:left;border-radius:12px;}
 .metas-head:focus-visible{outline:2px solid var(--ember);outline-offset:-2px;}
 .metas-head-ic{width:22px;height:22px;flex-shrink:0;color:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;}
@@ -561,10 +558,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .dash-body{padding:16px 14px;background:transparent;}
 /* A1 (b155): skeleton enquanto dataLoaded===false — sem isto o veterano via o próprio
    progresso zerado por um instante a cada load. Toggle em renderDashboard(). */
-.dash-body.carregando .diag-card,.dash-body.carregando .adapt-btn,.dash-body.carregando .quick-btn,.dash-body.carregando .ver-progresso{pointer-events:none;opacity:.6;}
+.dash-body.carregando .adapt-btn,.dash-body.carregando .ver-progresso{pointer-events:none;opacity:.6;}
 .dash-body.carregando .pg-kpi-v,.dash-body.carregando .pg-subline b,.dash-body.carregando .dominio-geral-pct,.dash-body.carregando .pg-hero-faixa{color:transparent;background:linear-gradient(90deg,var(--border) 25%,var(--paper-2) 37%,var(--border) 63%);background-size:400% 100%;animation:dashSkeleton 1.4s ease infinite;border-radius:6px;display:inline-block;min-width:2.4em;}
 @keyframes dashSkeleton{0%{background-position:100% 0}100%{background-position:0 0}}
 .sec-title{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:.13em;margin:4px 0 10px;display:flex;align-items:center;justify-content:space-between;}
+.sec-title-hub{margin-top:14px;}
 .sec-title a{font-size:11px;color:var(--red);font-weight:700;text-transform:none;letter-spacing:0;}
 /* ── Acordeão "Meu progresso" (consolidação dos 5 painéis de análise) ── */
 .mp-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:9px;overflow:hidden;}
@@ -1641,10 +1639,8 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 #screen-inicio .dash-body{display:flex;flex-direction:column;}
 #screen-inicio .dash-body>.dash-col-l,
 #screen-inicio .dash-body>.dash-col-r{display:contents;}
-#screen-inicio .dash-body .dash-col-l>.diag-card{order:1;}
 #screen-inicio .dash-body .dash-col-l>.sec-title{order:2;}
 #screen-inicio .dash-body .dash-col-l>.adapt-btn.rec{order:3;}
-#screen-inicio .dash-body .dash-col-r>.quick-grid{order:4;}
 #screen-inicio .dash-body .dash-col-l>#foco-bloco{order:5;}
 #screen-inicio .dash-body .dash-col-l>#dash-objetivo{order:6;}
 #screen-inicio .dash-body .dash-col-r>.ver-progresso{order:7;}
@@ -1654,7 +1650,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   #screen-inicio .dash-body>.dash-col-r{display:flex;flex-direction:column;}
   #screen-inicio .dash-body>.dash-col-l{flex:1.6;}
   #screen-inicio .dash-body>.dash-col-r{flex:1;}
-  #screen-inicio .dash-body .dash-col-r>.quick-grid{grid-template-columns:1fr;}
   /* na coluna estreita do desktop, empilha texto/seta em vez de espremer numa linha só */
   #screen-inicio .dash-body .dash-col-r>.ver-progresso{flex-direction:column;align-items:flex-start;gap:8px;}
   #screen-inicio .dash-body .dash-col-r>.ver-progresso .ver-progresso-arw{align-self:flex-end;margin-top:-22px;}
@@ -2239,17 +2234,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       </div>
       <div class="dash-body carregando">
        <div class="dash-col-l">
-        <!-- FEAT-01: Simulado de nivelamento (onboarding) -->
-        <div id="diag-card" class="diag-card hidden" onclick="abrirIntro('diagnostico')">
-          <button class="diag-card-fechar" type="button" aria-label="Fechar" onclick="adiarDiagCard(event)">✕</button>
-          <div class="diag-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.2 7.8 14.3 14.3 7.8 16.2 9.7 9.7 16.2 7.8"/></svg></div>
-          <div class="diag-card-info">
-            <div class="diag-card-tag">Comece por aqui</div>
-            <div class="diag-card-title">Simulado de nivelamento</div>
-            <div class="diag-card-sub">15 questões pelas 5 áreas para medir seu domínio. A plataforma aprende seu nível e passa a adaptar os estudos a partir daí.</div>
-          </div>
-          <div class="adapt-btn-arrow">→</div>
-        </div>
         <!-- ═══ BLOCO 34 — FILA DE FOCO ═══
              Substitui os 4 cards gordos (ponto fraco, "estude isto", revisões vencidas,
              caderno de erros) por notificações de UMA linha. O que é de TÓPICO abre a
@@ -2259,10 +2243,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <!-- S65: "Seu foco" + "Foco da semana" movidos para DEPOIS de "Estudar agora".
              A home abre pela AÇÃO (Treino do dia); o foco/contexto vem logo abaixo. -->
 
-        <!-- BLOCO 43: caminho de ouro. "Treino do dia" é a porta principal (revisão
-             vencida + ponto fraco + cobertura por peso do edital); substitui o antigo
-             "Treino Adaptativo", agora embutido nele. Estudo Rápido/Focado viram atalhos
-             secundários; o Simulado completo já é a aba própria na barra inferior. -->
+        <!-- BLOCO 43 (revisto no b173): caminho de ouro. A "Sessão do dia" é a porta
+             principal e agora a ÚNICA porta de estudo do painel — Estudo Rápido, Treino
+             Focado e o nivelamento migraram para a aba Quiz, junto do Intercalado e do
+             índice por área. Painel = ficha da sessão; Quiz = onde se escolhe outra coisa. -->
         <div class="sec-title">Estudar agora</div>
         <div class="adapt-btn rec" onclick="abrirIntro('sessao')">
           <div class="adapt-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></div>
@@ -2284,19 +2268,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div id="dash-objetivo" style="margin-bottom:12px"></div>
        </div>
        <div class="dash-col-r">
-        <div class="quick-grid">
-          <div class="quick-btn" onclick="abrirIntro('rapido')">
-            <div class="quick-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
-            <div class="quick-btn-title">Estudo Rápido</div>
-            <div class="quick-btn-sub" id="quick-sub">10 questões soltas</div>
-          </div>
-
-          <div class="quick-btn" onclick="abrirIntro('focado')">
-            <div class="quick-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></div>
-            <div class="quick-btn-title">Treino Focado</div>
-            <div class="quick-btn-sub">15 questões · pontos fracos</div>
-          </div>
-        </div>
         <!-- Painéis de análise migraram para a aba "Meu progresso" (bottom sheet "Mais"). -->
         <button class="ver-progresso" onclick="navTo('progresso')">
           <span class="ver-progresso-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span>
@@ -2344,7 +2315,37 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <h2 class="tela-h-title">Quiz</h2>
             <div class="tela-h-sub">Escolha uma área ou modo especial</div>
           </div>
+          <!-- FEAT-01 · b173: o card de nivelamento migrou do painel para cá. Continua
+               obrigatório (interceptado em responderQuiz) e continua convidado no splash
+               de todo login enquanto diagFeito for falso — aqui ele é o atalho visível,
+               no topo da tela onde se responde questao. Visibilidade: renderQuizHub(). -->
+          <div id="diag-card" class="diag-card hidden" onclick="abrirIntro('diagnostico')">
+            <button class="diag-card-fechar" type="button" aria-label="Fechar" onclick="adiarDiagCard(event)">✕</button>
+            <div class="diag-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.2 7.8 14.3 14.3 7.8 16.2 9.7 9.7 16.2 7.8"/></svg></div>
+            <div class="diag-card-info">
+              <div class="diag-card-tag">Comece por aqui</div>
+              <div class="diag-card-title">Simulado de nivelamento</div>
+              <div class="diag-card-sub">15 questões pelas 5 áreas para medir seu domínio. A plataforma aprende seu nível e passa a adaptar os estudos a partir daí.</div>
+            </div>
+            <div class="adapt-btn-arrow">→</div>
+          </div>
           <div class="hub-inicio" id="quiz-meta-cta"></div>
+          <!-- b173: Estudo Rápido e Treino Focado migraram do painel. Ficam DEPOIS da
+               Sessão do dia de propósito: são alternativas a ela, não concorrentes. -->
+          <div class="sec-title sec-title-hub">Outros modos</div>
+          <div class="quick-grid">
+            <div class="quick-btn" onclick="abrirIntro('rapido')">
+              <div class="quick-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+              <div class="quick-btn-title">Estudo Rápido</div>
+              <div class="quick-btn-sub" id="quick-sub">10 questões soltas</div>
+            </div>
+
+            <div class="quick-btn" onclick="abrirIntro('focado')">
+              <div class="quick-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></div>
+              <div class="quick-btn-title">Treino Focado</div>
+              <div class="quick-btn-sub">15 questões · pontos fracos</div>
+            </div>
+          </div>
           <button class="btn-intercalado" onclick="abrirIntro('interleaving')"><svg style="width:17px;height:17px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Intercalado: alternar entre áreas</button>
           <!-- BLOCO 34 (item 3): caminho SEM leitor de QR.
                O ebook mandava "Quiz → <nome do tópico>", mas a aba Quiz só lista ÁREAS
@@ -4872,7 +4873,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.260';
+const APP_VERSAO='v1.261';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -5361,25 +5362,11 @@ function renderDashboard(){
   // S35 PRONT: projeção para a prova (agora dentro do acordeão)
   renderProntidao();
 
-  // FEAT-01: card de nivelamento só enquanto não concluído
-  const diagCard=document.getElementById('diag-card');
-  const diagOculto=!!userStats.diagFeito||podeAdiarDiagCard();
-  if(diagCard)diagCard.classList.toggle('hidden', diagOculto);
-
-  // A1 Parte 2 (b155): dia 1 (dataLoaded && total===0) com o diag-card visível já é
-  // uma tela completa com CTA claro — as 3 metas zeradas ao lado só competem por
-  // atenção. Se o diag-card estiver adiado/concluído, mantém as metas visíveis,
-  // senão a Home fica vazia.
-  // CUIDADO (achado do code-review): display:none derruba o rect a 0x0 e
-  // _tourAlvos() descarta o passo inteiro da lista (mesma armadilha do b126 com o
-  // #install-banner, ver comentário de _tourSincronizarBanner). #metas-card É alvo
-  // do 1º passo do tour ("Sua meta do dia") — exatamente o publico do dia 1. Por
-  // isso o gate também suprime a ocultação enquanto o tour estiver aberto
-  // (#modal-tutorial sem .hidden), reaproveitando o sinal que o tour já usa pra se
-  // saber ativo, sem flag nova.
-  const metasCard=document.getElementById('metas-card');
-  const tourAberto=!document.getElementById('modal-tutorial')?.classList.contains('hidden');
-  if(metasCard)metasCard.classList.toggle('dia1-oculto', !tourAberto&&dataLoaded&&total===0&&!!diagCard&&!diagOculto);
+  // FEAT-01 · b173: o card de nivelamento migrou para a aba Quiz, mas a visibilidade
+  // continua sendo reavaliada AQUI — este é o ponto que roda quando o progresso do
+  // RTDB chega. O gate "dia1-oculto" do #metas-card saiu junto: ele existia porque o
+  // diag-card ocupava o painel no dia 1; sem ele o painel ficaria com um botão só.
+  sincronizarDiagCard();
 
   // (S64) O grid de áreas clicável saiu da home/progresso: a ação "praticar área/tópico"
   // já vive na aba Quiz ("Escolha uma área" + "Praticar por tópico"). Aqui é só leitura.
@@ -6109,6 +6096,7 @@ function renderAreaList(){
 // dia (achado do b171/DECISAO). "Responder mais assim mesmo" (dia já cumprido) é prática
 // extra opcional e continua no fluxo próprio do hub.
 function renderQuizHub(){
+  sincronizarDiagCard();   // FEAT-01 · b173: card de nivelamento, agora morador desta tela
   const cta=document.getElementById('quiz-meta-cta');
   if(cta){
     // code-review (b172): a Sessão do dia sempre monta uma rodada de tamanho ~metaDiaria
@@ -6116,7 +6104,7 @@ function renderQuizHub(){
     // prometeria um número que o clique não entrega. Sem contagem, mesma copy do modal.
     cta.innerHTML = !treinoFeitoHoje()
       ? `<button class="btn-primary" style="width:100%" onclick="abrirIntro('sessao')">Ir para a Sessão do dia</button>
-         <div class="hub-hint">Questões e flashcards intercalados, na medida do seu dia. Ou escolha uma área ou tópico abaixo.</div>`
+         <div class="hub-hint">Questões e flashcards intercalados, na medida do seu dia. Abaixo ficam os outros modos e o índice por área.</div>`
       : `<div class="hub-ok">✓ Sessão do dia concluída</div><button class="btn-weak" style="width:100%" onclick="abrirIntro('meta',1)">Responder mais assim mesmo</button>`;
   }
 }
@@ -6586,7 +6574,11 @@ function mostrarFimSessao(){
 function finishQuiz(){
   document.getElementById('quiz-running-view').classList.add('hidden');
   document.getElementById('quiz-home-view').classList.remove('hidden');
-  renderAreaList();
+  // b173: reexibir o hub sem renderQuizHub() deixava o topo dele congelado no estado
+  // de ANTES da sessão — a CTA continuava "Ir para a Sessão do dia" depois de a
+  // sessão ter acabado de fechar o dia. voltarMenuQuiz() já chamava os dois; este
+  // call site só chamava renderAreaList().
+  renderAreaList();renderQuizHub();
   if(quizArea==='DIAGNOSTICO'&&!userStats.diagFeito){
     userStats.diagFeito=true;
     userStats.diagData=Date.now();
@@ -8582,6 +8574,16 @@ function fecharOnboard(){
   esconderOnboard();
 }
 // F1-02: X do card de nivelamento na home adia por 7 dias (localStorage).
+// FEAT-01 · b173: fonte ÚNICA de "o card de nivelamento se aplica agora". Trocou de
+// tela (painel → aba Quiz) e por isso passou a ter DOIS gatilhos, não um: o dado chegar
+// (renderDashboard, no load e a cada resposta) e a aba abrir (renderQuizHub). Sem o
+// primeiro, quem abrisse o Quiz antes do RTDB responder ficava com o card preso na tela
+// depois de o `diagFeito:true` chegar. O tour lê a MESMA função no filtro (`quando`).
+function diagCardAtivo(){return !userStats.diagFeito&&!podeAdiarDiagCard();}
+function sincronizarDiagCard(){
+  const el=document.getElementById('diag-card');
+  if(el)el.classList.toggle('hidden',!diagCardAtivo());
+}
 function podeAdiarDiagCard(){
   try{const t=localStorage.getItem('diagCardDismiss');return !!t&&(Date.now()-Number(t))<604800000;}catch(_){return false;}
 }
@@ -8728,8 +8730,6 @@ const TOUR_PASSOS=[
    texto:'Recados e novidades da plataforma chegam aqui. Quando tiver algo novo, aparece um número no sino.'},
   {tela:'inicio',sel:'.adapt-btn.rec',titulo:'Sessão do dia',
    texto:'O caminho recomendado. O app monta a fila sozinho, intercalando questões e flashcards: primeiro o que está vencido para revisar, depois seus pontos fracos e, por fim, assunto novo na proporção do edital. Na dúvida do que estudar, é por aqui.'},
-  {tela:'inicio',sel:'.quick-grid',titulo:'Estudo Rápido e Treino Focado',
-   texto:'Dois atalhos para quando o tempo é curto. Estudo Rápido são 10 questões soltas, de qualquer assunto. Treino Focado são 15 questões concentradas nos tópicos em que você vai pior.'},
   // Dois blocos SEPARADOS de proposito: cada um nasce vazio por conta propria
   // ("Seu foco" nasce .hidden, "Foco da semana" nasce sem HTML) e um titulo que
   // anunciasse os dois mentiria quando so um aparecesse.
@@ -8742,6 +8742,13 @@ const TOUR_PASSOS=[
   // ── Quiz: 3 passos porque e a tela com mais caminho de entrada ──
   {tela:'quiz',casco:true,sel:'#nav-quiz',titulo:'Quiz',
    texto:'Abri a aba para você, é esta tela aqui atrás. É onde você treina questões: o app escolhe o que cobrar pelo que você já acertou e há quanto tempo, não é sorteio.'},
+  // b173: estes dois passos vinham do painel. Continuam sem `casco` — só medem quando a
+  // tela do Quiz está ativa, e o #diag-card segue sendo descartado sozinho por quem já
+  // fez (ou adiou) o nivelamento, pelo mesmo filtro de visibilidade de sempre.
+  {tela:'quiz',sel:'#diag-card',quando:diagCardAtivo,titulo:'Comece por aqui',
+   texto:'Antes de tudo, faça o simulado de nivelamento: 15 questões pelas 5 áreas. É com ele que o app descobre seu nível e passa a montar as filas de estudo em cima do que VOCÊ erra, não de um plano genérico. Leva poucos minutos e só se faz uma vez.'},
+  {tela:'quiz',sel:'.quick-grid',titulo:'Estudo Rápido e Treino Focado',
+   texto:'Dois atalhos para quando o tempo é curto. Estudo Rápido são 10 questões soltas, de qualquer assunto. Treino Focado são 15 questões concentradas nos tópicos em que você vai pior.'},
   {tela:'quiz',sel:'.btn-intercalado',titulo:'Intercalado',
    texto:'Mistura áreas diferentes na mesma sessão. É desconfortável de propósito: trocar de assunto obriga você a reconhecer o tipo de questão antes de responder, que é exatamente o que a prova cobra.'},
   {tela:'quiz',sel:'#area-list .area-row',titulo:'Escolher área e tópico',
@@ -8761,16 +8768,15 @@ const TOUR_PASSOS=[
    texto:'Simulado completo na proporção do edital, glossário e normas na Consulta, estatística das provas em Padrões, e seu domínio por área em Meu progresso.'},
   {tela:'inicio',casco:true,sel:'.btn-header-menu',titulo:'Menu',
    texto:'Tema claro/escuro, configurações e sua conta. É por aqui também que você abre este tutorial de novo e instala o app na tela de início, quando quiser.'},
-  // b123: dois passos novos, no fim. #install-banner e #diag-card só existem/aparecem em
-  // parte dos casos (instalado, dispensado, já nivelado) — o filtro de visibilidade de alvo
-  // já existente descarta cada um sozinho quando não se aplica, sem `if` novo aqui.
+  // b123: passo novo, no fim. #install-banner só existe/aparece em parte dos casos
+  // (instalado, dispensado) — o filtro de visibilidade de alvo já existente o descarta
+  // sozinho quando não se aplica, sem `if` novo aqui. b173: o passo do #diag-card era o
+  // par dele aqui e subiu pro bloco do Quiz, junto com o card.
   {tela:'inicio',casco:true,sel:'#install-banner',
    titulo:'Instalar e ser avisado',
    texto:()=>ehIOS()
      ? 'A faixa aqui embaixo ensina a colocar o app na tela de início do iPhone: Compartilhar, depois Adicionar à Tela de Início. Vale a pena: o lembrete de revisão do dia só chega depois que o app está instalado. Se quiser deixar para depois, o convite volta no menu ☰, em "Instalar app".'
-     : 'A faixa aqui embaixo instala o app na tela inicial. Ele passa a abrir em tela cheia, funciona sem internet e libera o lembrete diário das revisões vencidas. Se quiser deixar para depois, o convite volta no menu ☰, em "Instalar app".'},
-  {tela:'inicio',sel:'#diag-card',titulo:'Comece por aqui',
-   texto:'Antes de tudo, faça o simulado de nivelamento: 15 questões pelas 5 áreas. É com ele que o app descobre seu nível e passa a montar as filas de estudo em cima do que VOCÊ erra, não de um plano genérico. Leva poucos minutos e só se faz uma vez.'}
+     : 'A faixa aqui embaixo instala o app na tela inicial. Ele passa a abrir em tela cheia, funciona sem internet e libera o lembrete diário das revisões vencidas. Se quiser deixar para depois, o convite volta no menu ☰, em "Instalar app".'}
 ];
 
 let _tourIdx=0,_tourLista=[],_tourRAF=0,_tourFocoAnterior=null,_tourReMedir=0;
@@ -8801,6 +8807,10 @@ function _tourTelaAtiva(){
 // conhecido (ou true, se ainda nao foi avaliado -- o passo entra e, se o alvo nao
 // existir mesmo, _tourRender o descarta ao chegar nele).
 function _tourAplicavel(p){
+  // b173: condicao de DADO (nao de geometria), avaliavel em qualquer tela. Existe porque
+  // o passo do #diag-card mudou pra tela do Quiz: sem ela o filtro so descobre que o card
+  // esta oculto quando o tour JA chegou la, e o denominador cai no meio ("9 de 16" -> 15).
+  if(p.quando&&!p.quando())return false;
   if(p.casco||(p.tela||'inicio')===_tourTelaAtiva()){
     const v=_tourAlvos(p).length>0;
     _tourVeredito.set(p,v);
@@ -8931,13 +8941,10 @@ function iniciarTutorial(){
   // _navToInner(...,true) em vez de navTo: mesma navegacao SINCRONA (§2), sem o
   // stagger de entrada que atrapalharia a medicao do primeiro passo.
   _navToInner('inicio',true);
-  // A1 Parte 2 (b155, achado do code-review): abre o modal e re-renderiza o painel
-  // ANTES do filtro — mesmo motivo do comentário do #install-banner logo abaixo:
-  // #metas-card só fica mensurável (sem .dia1-oculto) depois que renderDashboard()
-  // souber que #modal-tutorial já está sem .hidden. Tudo síncrono, sem repaint no
-  // meio, então não pisca conteúdo vazio.
+  // b173: o renderDashboard() que rodava aqui existia só pelo .dia1-oculto do
+  // #metas-card (A1 Parte 2 do b155), que morreu junto com a saída do #diag-card do
+  // painel. _navToInner('inicio') logo acima já renderiza o painel.
   const m=document.getElementById('modal-tutorial');if(m)m.classList.remove('hidden');
-  renderDashboard();
   // b123: o banner precisa EXISTIR e ser mensurável antes do filtro, senão o passo
   // "Instalar e ser avisado" nem entra na lista — avaliarConviteInstalar() já garante
   // display:'' nas plataformas elegíveis. simplify: o class-add manual de tour-ativo/
@@ -8945,7 +8952,7 @@ function iniciarTutorial(){
   // turno síncrono, sem repaint no meio) já sincroniza via _tourSincronizarBanner().
   avaliarConviteInstalar();
   _tourLista=TOUR_PASSOS.filter(_tourAplicavel);
-  if(!_tourLista.length){if(m)m.classList.add('hidden');renderDashboard();return;}
+  if(!_tourLista.length){if(m)m.classList.add('hidden');return;}
   _tourIdx=0;
   _tourFocoAnterior=document.activeElement;
   window.addEventListener('scroll',_tourReposicionar,true);   // capture: pega scroll interno
@@ -8970,11 +8977,6 @@ function fecharTutorial(e){
   if(_tourReMedir){clearTimeout(_tourReMedir);_tourReMedir=0;}
   const m=document.getElementById('modal-tutorial');if(m)m.classList.add('hidden');
   _tourLiberarBanner();                            // b126
-  // A1 Parte 2 (b155, achado do code-review): renderDashboard() suprime o
-  // dia1-oculto do #metas-card enquanto #modal-tutorial está aberto (ver
-  // comentário lá) — sem reavaliar aqui, o card ficaria visível pra sempre depois
-  // do tour em vez de voltar a ocultar no dia 1.
-  renderDashboard();
   try{localStorage.setItem('tutorialVisto','1');}catch(_){}
   if(_tourFocoAnterior&&_tourFocoAnterior.focus){try{_tourFocoAnterior.focus();}catch(_){}}
   _tourFocoAnterior=null;
