@@ -1519,6 +1519,15 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
      JS, cobre tanto a fila de cards quanto a tela de "revisão concluída". */
   #quiz-running-view{display:flex;flex-direction:column;min-height:60vh;}
   #quiz-running-view .quiz-body{margin-block:auto;}
+  /* b172: achado ao ligar a Sessão do dia (1º render real de card DENTRO do Quiz — b171/D4
+     nunca tinha caller, então nunca rodou no navegador). margin-inline:auto (linha acima,
+     FASE 3) desativa o stretch do flex column pra este item (regra do spec: cross-axis com
+     margem auto não estica) e ele cai pra shrink-to-fit. .quiz-body-card só contém o card
+     (.card-face é position:absolute, sem largura intrínseca em fluxo), então o shrink-to-fit
+     zera pra só o padding (28px). A questão normal não quebra porque o texto em fluxo dá
+     largura mínima ao shrink-to-fit; o card não tem esse texto em fluxo. width:100% explícito
+     (não é mais "auto") sai do caminho do shrink-to-fit e volta a caber no max-width:720px. */
+  #quiz-body-card{width:100%;}
   #cards-body.cards-estudo{display:flex;flex-direction:column;justify-content:center;min-height:60vh;}
   .quiz-q-text,.resumo-texto{max-width:64ch;}
   /* Consulta nunca ganhou a largura de leitura da FASE 3 acima: glossário/normas usam o
@@ -2255,12 +2264,12 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
              "Treino Adaptativo", agora embutido nele. Estudo Rápido/Focado viram atalhos
              secundários; o Simulado completo já é a aba própria na barra inferior. -->
         <div class="sec-title">Estudar agora</div>
-        <div class="adapt-btn rec" onclick="abrirIntro('treino')">
+        <div class="adapt-btn rec" onclick="abrirIntro('sessao')">
           <div class="adapt-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></div>
           <div class="adapt-btn-info">
             <div id="treino-badge">Recomendado agora</div>
-            <div class="adapt-btn-title">Treino do dia</div>
-            <div id="treino-sub" class="adapt-btn-sub">Revisão vencida + ponto fraco + assunto novo</div>
+            <div class="adapt-btn-title">Sessão do dia</div>
+            <div id="treino-sub" class="adapt-btn-sub">Revisão vencida + ponto fraco + assunto novo, intercalado com flashcards</div>
           </div>
           <div class="adapt-btn-arrow">→</div>
         </div>
@@ -2551,7 +2560,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <div class="pg-vazio-title">Ainda não há o que medir</div>
           <div class="pg-vazio-txt">Domínio, cobertura e projeção só aparecem depois das primeiras respostas.<br><span id="pg-vazio-qtd"></span></div>
           <button class="btn-primary" type="button" onclick="abrirIntro('diagnostico')" style="width:100%;margin-top:12px;">Fazer o nivelamento →</button>
-          <button class="btn-weak" type="button" onclick="abrirIntro('treino')" style="width:100%;margin-top:8px;">Treino do dia →</button>
+          <button class="btn-weak" type="button" onclick="abrirIntro('sessao')" style="width:100%;margin-top:8px;">Sessão do dia →</button>
         </div>
 
         <div id="pg-conteudo">
@@ -3684,6 +3693,26 @@ function iniciarRevisaoDue(){
   document.getElementById('quiz-area-tag').textContent='Revisão do dia · FSRS';
   navTo('quiz');renderQuizQ();
 }
+// b172/ponto2: "mais uma rodada" pós-sessão, decisão do João — nunca foi pra repetir as MESMAS
+// questões (a intenção sempre foi manter o estudante no app); o que estava errado era só o
+// rótulo, e escondia que a 2ª rodada, sem direção, caía no shuffle do fim de
+// montarTreinoDoDiaCru (vencido e cobertura já drenados). Aponta pra cobertura nova de
+// propósito: mesma retenção, sem repetir o mesmo material. novasPorCobertura (3706) só era
+// chamada de dentro do motor; esta é a 1ª exposição direta ao usuário.
+// Tamanho por metaDiaria (não TREINO_TAM/REVISAO_LOTE): é "mais uma rodada NO MESMO DIA",
+// mesma referência que a Sessão do dia usa (D3) — não o lote de backlog da Fila de Foco
+// (REVISAO_LOTE=12 existe pra drenar revisão vencida, outro problema).
+function coberturaNovaTam(){return userStats.metaDiaria||DOSE_PADRAO.questoes;}
+function iniciarCoberturaNova(){
+  const fila=novasPorCobertura(coberturaNovaTam());
+  if(!fila.length){showToast('Assunto novo em dia — sem cobertura pendente agora.');return;}
+  quizQueue=interleavePorTopico(fila);
+  quizArea='COBERTURA';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;
+  document.getElementById('quiz-home-view').classList.add('hidden');
+  document.getElementById('quiz-running-view').classList.remove('hidden');
+  document.getElementById('quiz-area-tag').textContent='Assunto novo';
+  navTo('quiz');renderQuizQ();
+}
 
 // ── BLOCO 43: TREINO DO DIA (caminho de ouro + camada de cobertura) ──
 // Uma fila diária única que decide, nesta prioridade:
@@ -3921,13 +3950,28 @@ function abrirIntro(tipo,arg,arg2){
            ['Só questões','resumo e flashcard aparecem quando você erra'],
            ['Sem meta fixa','pode sair quando quiser, sem compromisso']];
     btn='Começar'; acao=()=>praticarIds(arg,arg2);
-  } else {
-    titulo='Treino do dia';
-    sub='Sua sessão de hoje, montada para você.';
-    itens=[['Até '+TREINO_TAM+' questões','revisão vencida + seus pontos fracos + cobertura do edital'],
-           ['Só questões','resumo e flashcard aparecem quando você erra'],
+  } else if(tipo==='sessao'){
+    titulo='Sessão do dia';
+    sub='Questões e flashcards intercalados, na medida do seu dia.';
+    itens=[['Questões e cards juntos','revisão vencida + ponto fraco + assunto novo, intercalado com seus flashcards'],
+           ['Resumo só se você errar','ninguém precisa ler para começar'],
            ['Errou?','o reforço vem na hora e a questão volta uma vez perto do fim'],
            ['Ao terminar','seu dia fica registrado como concluído']];
+    btn='Começar a sessão'; acao=iniciarSessaoDoDia;
+  } else {
+    // b172/ponto1: único caminho até aqui agora é o fallback de _extraCoberturaOuTreino()
+    // (cobertura nova esgotada — senão o botão seria "Estudar assunto novo", não "Refazer o
+    // treino"). Por isso o item de baixo não promete "cobertura do edital": nesse momento
+    // específico ela está zerada, e prometer mentiria. Mesmo motivo pro sub e pro último item:
+    // quem chega aqui já fechou o dia (é o mesmo defeito do rótulo do META, achado do
+    // supervisor) — "sessão de hoje" e "seu dia fica registrado" prometeriam de novo algo
+    // que já aconteceu.
+    titulo='Treino do dia';
+    sub='Mais uma rodada, pra quem já fechou o dia e quer continuar.';
+    itens=[['Até '+TREINO_TAM+' questões','revisão vencida + seus pontos fracos'],
+           ['Só questões','resumo e flashcard aparecem quando você erra'],
+           ['Errou?','o reforço vem na hora e a questão volta uma vez perto do fim'],
+           ['Sem meta fixa','pode sair quando quiser, sem compromisso']];
     btn='Começar o treino'; acao=irTreinoDoDia;
   }
   _introUltimo={titulo,sub,itens,btn};
@@ -3966,6 +4010,19 @@ function irTreinoDoDia(){
   document.getElementById('quiz-home-view').classList.add('hidden');
   document.getElementById('quiz-running-view').classList.remove('hidden');
   document.getElementById('quiz-area-tag').textContent='Treino do dia';
+  navTo('quiz');renderQuizQ();
+}
+// b172: porta principal do painel — substitui irTreinoDoDia como caminho de ouro. Mesmo
+// padrão (fila pronta, quizArea, telas), fila vem de montarSessaoDoDia (b171/D1: questões +
+// dose de cards intercalados). Treino do dia continua existindo como caminho secundário.
+function iniciarSessaoDoDia(){
+  if(!allQuestoes||!Object.keys(allQuestoes).length){showToast('Banco ainda carregando, tente em instantes.');return;}
+  const fila=montarSessaoDoDia();
+  if(!fila.length){showToast('Sem questões disponíveis agora.');return;}
+  quizQueue=fila;quizArea='SESSAO';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;
+  document.getElementById('quiz-home-view').classList.add('hidden');
+  document.getElementById('quiz-running-view').classList.remove('hidden');
+  document.getElementById('quiz-area-tag').textContent='Sessão do dia';
   navTo('quiz');renderQuizQ();
 }
 
@@ -4815,7 +4872,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.259';
+const APP_VERSAO='v1.260';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -4963,15 +5020,17 @@ function entradaHoje(){
   return e;
 }
 
-// ── Fechamento do dia: as TRÊS metas (questões, flashcards, resumos) batidas = uma
-// celebração única no dia. Base comportamental: efeito Zeigarnik (fechar loops alivia) +
-// gradiente de meta (fechar o ciclo motiva e vira hábito). Só dispara uma vez por dia.
+// ── Fechamento do dia: as DUAS metas (questões, flashcards) batidas = uma celebração
+// única no dia. Base comportamental: efeito Zeigarnik (fechar loops alivia) + gradiente de
+// meta (fechar o ciclo motiva e vira hábito). Só dispara uma vez por dia.
+// b172/D6: resumo saiu da cota (Dunlosky 2013 — resumir/reler tem utilidade baixa). Continua
+// acessível pela aba como consulta; vira consequência do erro, não objetivo diário.
 function diaCompleto(){
   const today=diaLocal();
   const meta=userStats.metaDiaria||10;
   const hj=(userStats.history||[]).find(h=>h.date===today)||{};
   const d=userStats.dose||{};
-  return (hj.n||0)>=meta && (hj.fc||0)>=(d.cards||DOSE_PADRAO.cards) && (hj.rs||0)>=(d.resumos||DOSE_PADRAO.resumos);
+  return (hj.n||0)>=meta && (hj.fc||0)>=(d.cards||DOSE_PADRAO.cards);
 }
 function checarDiaCompleto(){
   if(!dataLoaded)return;
@@ -6045,17 +6104,20 @@ function renderAreaList(){
     :'<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Sem questões cadastradas ainda.</div>';
 }
 // ── Hub do Quiz (S64): meta do dia + índice por Área→Tópico, como Cards/Resumos ──
+// b172: a CTA principal passa a lançar a MESMA Sessão do dia do painel (treinoFeitoHoje),
+// não uma 4ª fila própria (montarFilaEstudo) — senão este hub vira 2ª fonte de verdade do
+// dia (achado do b171/DECISAO). "Responder mais assim mesmo" (dia já cumprido) é prática
+// extra opcional e continua no fluxo próprio do hub.
 function renderQuizHub(){
   const cta=document.getElementById('quiz-meta-cta');
   if(cta){
-    const meta=userStats.metaDiaria||10;
-    const today=diaLocal();
-    const todayN=(userStats.history||[]).find(h=>h.date===today)?.n||0;
-    const resta=Math.max(0,meta-todayN);
-    cta.innerHTML = resta>0
-      ? `<button class="btn-primary" style="width:100%" onclick="abrirIntro('meta',${resta})">Iniciar meta de hoje · ${resta} quest${resta!==1?'ões':'ão'}</button>
-         <div class="hub-hint">Questões novas e revisões, na medida do dia. Ou escolha uma área ou tópico abaixo.</div>`
-      : `<div class="hub-ok">✓ Meta de questões concluída hoje</div><button class="btn-weak" style="width:100%" onclick="abrirIntro('meta',1)">Responder mais assim mesmo</button>`;
+    // code-review (b172): a Sessão do dia sempre monta uma rodada de tamanho ~metaDiaria
+    // (montarTreinoDoDiaCru(tam), não tam=resta) — um hint "N questões ainda hoje" aqui
+    // prometeria um número que o clique não entrega. Sem contagem, mesma copy do modal.
+    cta.innerHTML = !treinoFeitoHoje()
+      ? `<button class="btn-primary" style="width:100%" onclick="abrirIntro('sessao')">Ir para a Sessão do dia</button>
+         <div class="hub-hint">Questões e flashcards intercalados, na medida do seu dia. Ou escolha uma área ou tópico abaixo.</div>`
+      : `<div class="hub-ok">✓ Sessão do dia concluída</div><button class="btn-weak" style="width:100%" onclick="abrirIntro('meta',1)">Responder mais assim mesmo</button>`;
   }
 }
 function iniciarMetaQuiz(){
@@ -6229,6 +6291,10 @@ function reexpoeErro(area){return area!=='DIAGNOSTICO';}
 // b105: ERRO, INTERLEAVING e META tinham a mesma cara de "sem meta fixa" (texto do
 // abrirIntro já dizia isso) mas ficaram de fora da lista original — sweep aplicado.
 // Decisão de PRODUTO, não estrutural — mantida à mão de propósito, não deriva de nada.
+// b172: COBERTURA (a rodada de "assunto novo" do fim de sessão) segue o precedente do
+// SESSAO acima, não o do TREINO — novasPorCobertura(n) devolve no máximo n itens por
+// desenho (mesmo risco de esgotar que o comentário do SESSAO já nomeia), então tem
+// meta fechada de verdade. Fora da lista de propósito.
 const QUIZ_AREAS_LIVRES=['RAPIDO','INTELIGENTE','TREINO','ERRO','INTERLEAVING','META'];
 // b171: o denominador usa quizTotalSessao (congelado no início da sessão), não
 // quizQueue.length — a re-exposição empurra item na fila, então quizQueue.length cresce
@@ -6434,33 +6500,46 @@ function treinoFeitoHoje(){return userStats.treinoDia===diaKeyHoje();}
 function atualizarCardTreino(){
   const tb=document.getElementById('treino-badge'),tsub=document.getElementById('treino-sub');
   if(!tb||!tsub)return;
-  if(treinoFeitoHoje()){tb.textContent='✓ Concluído hoje';tb.classList.add('badge-feito');tsub.textContent='Objetivo do dia cumprido. Refaça se quiser.';}
-  else{tb.textContent='Recomendado agora';tb.classList.remove('badge-feito');tsub.textContent='Revisão vencida + ponto fraco + assunto novo';}
+  if(treinoFeitoHoje()){tb.textContent='✓ Concluído hoje';tb.classList.add('badge-feito');tsub.textContent='Sessão do dia cumprida. Refaça se quiser.';}
+  else{tb.textContent='Recomendado agora';tb.classList.remove('badge-feito');tsub.textContent='Revisão vencida + ponto fraco + assunto novo, intercalado com flashcards';}
 }
 function fecharFim(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('modal-fim').classList.add('hidden');}
 function fimIr(fn){document.getElementById('modal-fim').classList.add('hidden');if(typeof fn==='function')fn();}
 // b105: cada quizArea tem seu próximo passo natural — o card generaliza mostrarFimTreino
 // (que só existia pro Treino do dia) pra todos os fluxos que antes só levavam um toast solto.
+// b172/ponto2: "Estudar assunto novo"/"Refazer o treino" é o mesmo botão trocando de rótulo
+// e destino conforme há ou não cobertura nova pendente agora (edge case do João: sem isso o
+// botão abriria fila vazia quando o banco novo já tivesse acabado). Checar aqui, não dentro
+// de iniciarCoberturaNova — a tela de fim precisa saber ANTES de desenhar o botão.
+function _extraCoberturaOuTreino(){
+  return novasPorCobertura(coberturaNovaTam()).length>0
+    ? {b:'Estudar assunto novo',fn:iniciarCoberturaNova}
+    : {b:'Refazer o treino',fn:()=>abrirIntro('treino')};
+}
 function configFimSessao(area){
   switch(area){
     case 'TREINO': return {titulo:'Treino do dia concluído!',diario:true,extras:[
       {b:'Continuar com Estudo rápido',primaria:true,fn:iniciarEstudoRapido},
       {b:'Treino focado no ponto fraco',fn:estudarFraco},
-      {b:'Refazer o treino',fn:irTreinoDoDia}]};
+      _extraCoberturaOuTreino()]};
     case 'RAPIDO': return {titulo:'Estudo Rápido concluído!',extras:[
       {b:'Treino focado no ponto fraco',primaria:true,fn:estudarFraco},
       {b:'Fazer mais um Estudo Rápido',fn:iniciarEstudoRapido}]};
     case 'INTELIGENTE': return {titulo:'Treino Focado concluído!',extras:[
-      {b:'Ver meu Treino do dia',primaria:true,fn:()=>abrirIntro('treino')},
+      {b:'Ver minha Sessão do dia',primaria:true,fn:()=>abrirIntro('sessao')},
       {b:'Fazer mais um Treino Focado',fn:()=>abrirIntro('focado')}]};
     case 'ERRO': return {titulo:'Modo Erro concluído!',extras:[
-      {b:'Ver meu Treino do dia',primaria:true,fn:()=>abrirIntro('treino')},
+      {b:'Ver minha Sessão do dia',primaria:true,fn:()=>abrirIntro('sessao')},
       {b:'Revisar mais erros',fn:()=>abrirIntro('erro')}]};
     case 'INTERLEAVING': return {titulo:'Intercalado concluído!',extras:[
-      {b:'Ver meu Treino do dia',primaria:true,fn:()=>abrirIntro('treino')},
+      {b:'Ver minha Sessão do dia',primaria:true,fn:()=>abrirIntro('sessao')},
       {b:'Fazer mais um Intercalado',fn:()=>abrirIntro('interleaving')}]};
+    // b172/ponto2 (achado do supervisor): META só é alcançável por quem JÁ concluiu a Sessão
+    // do dia hoje (o hub do Quiz só oferece 'meta' quando treinoFeitoHoje()). "Ver minha
+    // Sessão do dia" aqui sugeriria tarefa pendente que não existe — rótulo precisa dizer
+    // bônus, não pendência.
     case 'META': return {titulo:'Meta do dia concluída!',diario:true,extras:[
-      {b:'Ver meu Treino do dia',primaria:true,fn:()=>abrirIntro('treino')},
+      {b:'Repetir a Sessão do dia',primaria:true,fn:()=>abrirIntro('sessao')},
       {b:'Responder mais',fn:()=>abrirIntro('meta',1)}]};
     // b171/D4 (achado do code-review): sem este case, SESSAO caía no default, que trata
     // `area` como código de área de prova — abrirIntro('quiz','SESSAO') filtraria questões
@@ -6468,9 +6547,16 @@ function configFimSessao(area){
     // já marca treinoDia pra SESSAO, igual TREINO.
     case 'SESSAO': return {titulo:'Sessão do dia concluída!',diario:true,extras:[
       {b:'Treino focado no ponto fraco',primaria:true,fn:estudarFraco},
-      {b:'Refazer o treino',fn:irTreinoDoDia}]};
+      _extraCoberturaOuTreino()]};
+    // b172/ponto2: case próprio, senão cai no default (que trata `area` como código de área de
+    // prova) — o mesmo defeito que o code-review do b171 pegou pra SESSAO. Sem diario:true: é
+    // "mais uma rodada" opcional, não fecha o objetivo do dia (finishQuiz só marca treinoDia
+    // para TREINO/SESSAO, de propósito — ver comentário lá).
+    case 'COBERTURA': return {titulo:'Assunto novo concluído!',extras:[
+      {b:'Treino focado no ponto fraco',primaria:true,fn:estudarFraco},
+      _extraCoberturaOuTreino()]};
     default: return {titulo:(AI[area]?.nome||'Sessão')+' concluída!',extras:[
-      {b:'Ver meu Treino do dia',primaria:true,fn:()=>abrirIntro('treino')},
+      {b:'Ver minha Sessão do dia',primaria:true,fn:()=>abrirIntro('sessao')},
       {b:'Praticar esta área de novo',fn:()=>abrirIntro('quiz',area)}]};
   }
 }
@@ -6557,10 +6643,12 @@ function _hubCards(){
   const resta=Math.min(acervo,Math.max(0,dose('cards')-(hj.fc||0)));
   const body=document.getElementById('cards-body');
   body.classList.remove('cards-estudo'); // b117: sai do modo estudo (centralização desktop só se aplica lá)
-  const cta = resta>0
-    ? `<button class="btn-primary" style="width:100%" onclick="iniciarMetaCards()">Iniciar meta de hoje · ${resta} card${resta!==1?'s':''}</button>
-       <div class="hub-hint">Cards intercalados e espaçados. Ou toque um card abaixo para estudar avulso.</div>`
-    : `<div class="hub-ok">✓ Meta de flashcards concluída hoje</div>${acervo>0?`<button class="btn-weak" style="width:100%" onclick="iniciarMetaCards()">Revisar mais assim mesmo</button>`:`<div class="hub-hint">Tudo revisado. Fixe com questões no Treino.</div>`}`;
+  // b172: mesma regra do hub do Quiz — enquanto a Sessão do dia não fechar, a CTA principal
+  // lança ela (questão+card intercalados), não uma fila de cards isolada (2ª fonte de verdade).
+  const cta = !treinoFeitoHoje()
+    ? `<button class="btn-primary" style="width:100%" onclick="abrirIntro('sessao')">Ir para a Sessão do dia</button>
+       <div class="hub-hint">${resta>0?resta+' card'+(resta!==1?'s':'')+' ainda hoje. Ou toque':'Toque'} um card abaixo para estudar avulso.</div>`
+    : `<div class="hub-ok">✓ Sessão do dia concluída</div>${acervo>0?`<button class="btn-weak" style="width:100%" onclick="iniciarMetaCards()">Revisar mais assim mesmo</button>`:`<div class="hub-hint">Tudo revisado. Fixe com questões na Sessão do dia.</div>`}`;
   body.innerHTML=`<div class="hub-inicio">${cta}</div>`+renderCardLista();
 }
 function iniciarMetaCards(){cardsModo='estudo';cardsUnico=false;cardsFiltroTopico=null;_estudoCards();window.scrollTo(0,0);}
@@ -6595,9 +6683,9 @@ function _estudoCards(){
     body.innerHTML=`<div class="cards-done">
       <div class="cards-done-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.5 13l1.5 8-5-3-5 3 1.5-8"/></svg></div>
       <div class="cards-done-title">${restam>0?'✓ Meta de flashcards concluída':'Revisão concluída!'}</div>
-      <div class="cards-done-sub">${restam>0?`Memória ativada. Agora fixe respondendo: recuperar em prova consolida ainda mais.`:(filtro?'Todos os cards deste tópico foram revisados.':'Todos os cards revisados. Fixe com questões no Treino.')}</div>
+      <div class="cards-done-sub">${restam>0?`Memória ativada. Agora fixe respondendo: recuperar em prova consolida ainda mais.`:(filtro?'Todos os cards deste tópico foram revisados.':'Todos os cards revisados. Fixe com questões na Sessão do dia.')}</div>
       ${origemReforco==='quiz'?`<button class="btn-weak" style="margin-top:12px" onclick="voltarAoQuizDoReforco()">← Voltar à questão</button>`:''}
-      ${origemReforco!=='quiz'?`<button class="btn-primary" style="margin-top:12px;width:100%" onclick="abrirIntro('treino')">Fixar no Treino do dia →</button>`:''}
+      ${origemReforco!=='quiz'?`<button class="btn-primary" style="margin-top:12px;width:100%" onclick="abrirIntro('sessao')">Fixar na Sessão do dia →</button>`:''}
       ${restam>0&&origemReforco!=='quiz'?`<button class="btn-weak" style="margin-top:8px" onclick="maisCards()">Fazer mais ${Math.min(dose('cards'),restam)}</button>`:''}
       ${origemReforco!=='quiz'?`<div class="cards-done-links">
         ${filtro?`<button class="cards-done-link" onclick="limparFiltroCards()">Ver todos os tópicos</button>`:''}
@@ -6989,7 +7077,10 @@ function renderResumos(){
   if(resumosModo==='estudo'){_estudoResumos();return;}
   _hubResumos();
 }
-// Hub: meta do dia + índice por área/tópico. Não abre já lendo.
+// Hub: índice por área/tópico. Não abre já lendo.
+// b172/D6/C2: resumo saiu da cota diária — não é mais "meta de hoje" (Dunlosky 2013:
+// resumir/reler tem utilidade baixa). Continua acessível como consulta; a CTA daqui vira
+// prática secundária ("ler pendentes"), nunca o botão primário de estilo meta/quota.
 function _hubResumos(){
   updateBadges();
   const acervo=resumosPendentes().length;
@@ -6997,11 +7088,11 @@ function _hubResumos(){
   const rf=document.getElementById('resumos-fila');if(rf)rf.textContent=fila.length;
   const content=document.getElementById('resumos-content');
   const cta = fila.length>0
-    ? `<button class="btn-primary" style="width:100%" onclick="iniciarMetaResumos()">Iniciar meta de hoje · ${fila.length} resumo${fila.length!==1?'s':''}</button>
-       <div class="hub-hint">Leitura é preparo, o teste fica no Treino. Ou toque um resumo abaixo para ler avulso.</div>`
+    ? `<button class="btn-weak" style="width:100%" onclick="iniciarMetaResumos()">Ler ${fila.length} resumo${fila.length!==1?'s':''} pendente${fila.length!==1?'s':''}</button>
+       <div class="hub-hint">Leitura é preparo, o teste fica na Sessão do dia. Ou toque um resumo abaixo para ler avulso.</div>`
     : (acervo>0
-        ? `<div class="hub-ok">✓ Meta de resumos concluída hoje</div><button class="btn-weak" style="width:100%" onclick="iniciarMetaResumos()">Ler mais assim mesmo</button>`
-        : `<div class="hub-ok">✓ Resumos em dia</div><div class="hub-hint">Próximas revisões já agendadas. Fixe com questões no Treino.</div>`);
+        ? `<div class="hub-ok">✓ Resumos em dia</div><button class="btn-weak" style="width:100%" onclick="iniciarMetaResumos()">Ler mais assim mesmo</button>`
+        : `<div class="hub-ok">✓ Resumos em dia</div><div class="hub-hint">Próximas revisões já agendadas. Fixe com questões na Sessão do dia.</div>`);
   content.innerHTML=`<div class="hub-inicio">${cta}</div>`+renderResumoLista();
 }
 function iniciarMetaResumos(){resumosModo='estudo';resumosUnico=false;_estudoResumos();window.scrollTo(0,0);}
@@ -7018,13 +7109,13 @@ function _estudoResumos(){
            <div style="font-size:15px;font-weight:800;color:var(--green);margin-bottom:4px">✓ Meta de resumos concluída</div>
            <div style="font-size:12.5px;color:var(--text2)">Terreno preparado. Agora <b>teste o que leu</b>: recuperar fixa muito mais que reler.</div>
          </div>
-         <div style="text-align:center;margin-bottom:10px"><button class="btn-primary" style="width:100%" onclick="abrirIntro('treino')">Testar no Treino do dia →</button></div>
+         <div style="text-align:center;margin-bottom:10px"><button class="btn-primary" style="width:100%" onclick="abrirIntro('sessao')">Testar na Sessão do dia →</button></div>
          <div style="text-align:center;margin-bottom:10px"><button class="btn-weak" onclick="maisResumos()">Ler mais ${Math.min(dose('resumos'),acervo)} resumo${Math.min(dose('resumos'),acervo)!==1?'s':''}</button></div>`
       : `<div style="text-align:center;padding:22px 12px 8px;">
            <div style="font-size:15px;font-weight:800;color:var(--green);margin-bottom:4px">✓ Resumos em dia</div>
            <div style="font-size:12.5px;color:var(--text2)">Próximas revisões já agendadas. Que tal fixar com questões?</div>
          </div>
-         <div style="text-align:center;margin-bottom:10px"><button class="btn-primary" style="width:100%" onclick="abrirIntro('treino')">Ir para o Treino do dia →</button></div>`)
+         <div style="text-align:center;margin-bottom:10px"><button class="btn-primary" style="width:100%" onclick="abrirIntro('sessao')">Ir para a Sessão do dia →</button></div>`)
     +`<div style="text-align:center"><button class="btn-weak" onclick="voltarHubResumos()">← Voltar aos resumos</button></div>`;
     return;
   }
@@ -7409,11 +7500,11 @@ function gerarDiagnostico(pct,byArea){
   const nomesFoco=focos.map(l=>l.nome);
   let html=`<div>${sanitize(prosa)}</div>`;
   const plano=nomesFoco.length
-    ? `Seu Treino do dia já vai priorizar ${nomesFoco.join(' e ')} nos próximos dias. Revisar espaçado fixa mais do que reestudar tudo agora.`
-    : `Sem área com perda relevante hoje. Seu Treino do dia mantém a revisão espaçada em dia.`;
+    ? `Sua Sessão do dia já vai priorizar ${nomesFoco.join(' e ')} nos próximos dias. Revisar espaçado fixa mais do que reestudar tudo agora.`
+    : `Sem área com perda relevante hoje. Sua Sessão do dia mantém a revisão espaçada em dia.`;
   html+=`<div style="margin-top:12px;padding:11px 13px;background:var(--blue-light);border-radius:10px;font-size:13px;color:var(--text);line-height:1.5">${sanitize(plano)}</div>`;
   html+=`<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
-    <button class="btn-weak" onclick="abrirIntro('treino')">Ver meu Treino do dia →</button>`;
+    <button class="btn-weak" onclick="abrirIntro('sessao')">Ver minha Sessão do dia →</button>`;
   const nErr=Object.values(allQuestoes).filter(q=>questaoNoCaderno(q.id)).length;
   if(nErr)html+=`<button class="btn-weak" style="background:var(--paper-2);color:var(--text2)" onclick="abrirIntro('erro')">Refazer os ${nErr} erro${nErr!==1?'s':''} agora · opcional</button>`;
   html+=`</div>`;
@@ -8628,15 +8719,15 @@ function fecharSplash(){
 const TOUR_PASSOS=[
   // ── Painel (tela inicial): casco do topo + os cartoes de acao ──
   {tela:'inicio',sel:'#metas-card',titulo:'Sua meta do dia',
-   texto:'Todo dia o app monta três metas para você: questões, flashcards e resumos. Bater as três é o objetivo mínimo do dia; o resto é bônus.'},
+   texto:'Todo dia o app monta duas metas para você: questões e flashcards. Bater as duas é o objetivo mínimo do dia; o resto é bônus. Resumo continua disponível pra consulta, sem meta fixa.'},
   {tela:'inicio',casco:true,sel:'#hdr-streak',titulo:'Sequência de dias',
    texto:'Os quadradinhos mostram os últimos 7 dias. Estudar todo dia, mesmo pouco, rende mais que maratona de fim de semana.'},
   {tela:'inicio',casco:true,sel:'.header-right button[title="Buscar"]',titulo:'Busca',
    texto:'Procure por assunto, questão ou norma em todo o material. Se não lembra onde está o conteúdo, comece por aqui.'},
   {tela:'inicio',casco:true,sel:'.btn-notif',titulo:'Avisos',
    texto:'Recados e novidades da plataforma chegam aqui. Quando tiver algo novo, aparece um número no sino.'},
-  {tela:'inicio',sel:'.adapt-btn.rec',titulo:'Treino do dia',
-   texto:'O caminho recomendado. O app monta a fila sozinho: primeiro o que está vencido para revisar, depois seus pontos fracos e, por fim, assunto novo na proporção do edital. Na dúvida do que estudar, é por aqui.'},
+  {tela:'inicio',sel:'.adapt-btn.rec',titulo:'Sessão do dia',
+   texto:'O caminho recomendado. O app monta a fila sozinho, intercalando questões e flashcards: primeiro o que está vencido para revisar, depois seus pontos fracos e, por fim, assunto novo na proporção do edital. Na dúvida do que estudar, é por aqui.'},
   {tela:'inicio',sel:'.quick-grid',titulo:'Estudo Rápido e Treino Focado',
    texto:'Dois atalhos para quando o tempo é curto. Estudo Rápido são 10 questões soltas, de qualquer assunto. Treino Focado são 15 questões concentradas nos tópicos em que você vai pior.'},
   // Dois blocos SEPARADOS de proposito: cada um nasce vazio por conta propria
