@@ -2418,7 +2418,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             </div>
             <div class="sim-card" onclick="iniciarSimulado('inteligente')">
               <div class="sim-card-icon" style="background:var(--amber-light);color:var(--ember-text);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></div>
-              <div class="sim-card-info"><h3>Mini Simulado</h3><p>15 questões cronometradas · foco nos seus pontos fracos</p></div>
+              <div class="sim-card-info"><h3>Mini Simulado</h3><p>15 questões cronometradas · proporção do edital, puxando para suas áreas fracas</p></div>
             </div>
           </div>
           <div class="sim-hist-title">Histórico</div>
@@ -4885,7 +4885,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.263';
+const APP_VERSAO='v1.264';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -7447,27 +7447,50 @@ function renderSimHome(){
   </div>`).join('');
 }
 
+// Cotas do Edital 004/ABM-DENS/2025 (60 questões). Fonte única do Simulado Real e da âncora
+// do Mini Simulado — o literal não se duplica.
+const SIM_COTA_EDITAL={AT1:14,AT2:8,AT3:14,AT4:12,AT5:12};
+
+// Reparte `total` vagas entre `pesos` com soma EXATA (maior resto) e piso de 1 por área.
+// b175: o código antigo fazia Math.max(1,Math.round(...)) por área, somava 16-17 e deixava
+// o shuffle+slice(0,total) descartar o excedente AO ACASO, desfazendo a distribuição.
+function repartirVagas(pesos,total){
+  const soma=pesos.reduce((s,p)=>s+p.peso,0)||1;
+  const alvo=pesos.map(p=>({area:p.area,v:(p.peso/soma)*total}));
+  const out={};
+  alvo.forEach(a=>{out[a.area]=Math.floor(a.v);});
+  let usado=alvo.reduce((s,a)=>s+out[a.area],0);
+  alvo.slice().sort((a,b)=>(b.v%1)-(a.v%1)).forEach(a=>{if(usado<total){out[a.area]++;usado++;}});
+  alvo.slice().sort((a,b)=>a.v-b.v).forEach(a=>{           // piso: nenhuma área some do simulado
+    if(out[a.area]>0)return;
+    const doador=Object.keys(out).sort((x,y)=>out[y]-out[x])[0];
+    if(out[doador]>1){out[doador]--;out[a.area]++;}
+  });
+  return out;
+}
+
 function iniciarSimulado(modo){
   if(!userStats.diagFeito){mostrarOnboard();return;}   // b123
   simModo=modo;simRespostas={};simOrdem={};simIdx=0;
   const qs=Object.values(allQuestoes);
   if(modo==='inteligente'){
-    // Peso real por ponto fraco: áreas com menor acerto recebem mais questões
-    const byArea=userStats.byArea||{};
-    const areas=['AT1','AT2','AT3','AT4','AT5'];
-    const pesos=areas.map(a=>{
-      const s=byArea[a]||{c:0,t:0};
-      const acerto=s.t>0?s.c/s.t:0.5; // sem histórico = 50%
-      return{area:a,peso:1-acerto}; // quanto menor acerto, maior peso
+    // Peso por ponto fraco ANCORADO na cota do edital: a área com menor acerto ganha mais
+    // questões, mas a forma da prova continua reconhecível (neutro = 4/2/3/3/3 em 15).
+    // b175: a leitura antiga era `byArea[a]||{c:0,t:0}` e `byArea` guarda {correct,wrong} —
+    // `s.t` saía undefined, os cinco pesos empatavam e a saída era 3/3/3/3/3 FIXO em todo
+    // perfil. Piso MIN_RESP_CONF igual ao resto do arquivo: área sem evidência entra neutra,
+    // não como "fraca" — 2 respostas erradas não comandam mais o simulado inteiro.
+    const ba=userStats.byArea||{};
+    const pesos=Object.keys(SIM_COTA_EDITAL).map(a=>{
+      const c=(ba[a]?.correct||0),w=(ba[a]?.wrong||0),t=c+w;
+      const acerto=t>=MIN_RESP_CONF?c/t:0.5;
+      return{area:a,peso:(SIM_COTA_EDITAL[a]/60)*(0.5+(1-acerto))};
     });
-    const totalPeso=pesos.reduce((s,p)=>s+p.peso,0)||1;
+    const vagas=repartirVagas(pesos,15);
     let pool=[];
-    pesos.forEach(({area,peso})=>{
-      const n=Math.max(1,Math.round((peso/totalPeso)*15));
-      const qs2=shuffle(Object.values(allQuestoes).filter(q=>q.area===area));
-      pool.push(...qs2.slice(0,n));
+    Object.entries(vagas).forEach(([area,n])=>{
+      pool.push(...shuffle(qs.filter(q=>q.area===area)).slice(0,n));
     });
-    // Garantir exatamente 15 questões
     pool=shuffle(pool);
     if(pool.length<15){
       const extras=shuffle(qs).filter(q=>!pool.find(p=>p.id===q.id));
@@ -7477,7 +7500,7 @@ function iniciarSimulado(modo){
   } else {
     // S34 SIM-REAL: proporção oficial do Edital 004/ABM-DENS/2025 — AT1:14 AT2:8 AT3:14 AT4:12 AT5:12.
     // Blocos na ordem da prova oficial (AT1→AT5); embaralhamento só dentro de cada área. Sem feedback até o fim.
-    const dist={AT1:14,AT2:8,AT3:14,AT4:12,AT5:12};
+    const dist=SIM_COTA_EDITAL;
     let pool=[];
     Object.entries(dist).forEach(([area,n])=>{
       pool.push(...shuffle(qs.filter(q=>q.area===area)).slice(0,n));
