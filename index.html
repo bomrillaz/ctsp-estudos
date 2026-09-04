@@ -491,10 +491,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .metas-chev{color:rgba(255,255,255,.5);display:flex;flex-shrink:0;transition:transform .25s ease;}
 .metas-chev svg{width:18px;height:18px;}
 .metas-card.expanded .metas-chev{transform:rotate(180deg);}
-/* Tira compacta com o progresso parcial das 3 metas, sempre visível quando o card
+/* Tira compacta com o progresso parcial das metas, sempre visível quando o card
    está fechado (S63 só "brotava" a meta JÁ batida — fechado e zerado não mostrava
    nada; o usuário tinha de abrir pra ver o quanto já tinha feito). Some quando
-   aberto (as barras completas já aparecem) ou quando as 3 estão batidas (vira a
+   aberto (as barras completas já aparecem) ou quando as duas estão batidas (vira a
    faixa fina "todas concluídas"). */
 .metas-mini{display:none;gap:4px;padding:0 12px 10px;}
 .metas-card:not(.expanded):not(.todas) .metas-mini{display:flex;}
@@ -525,7 +525,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .metas-fill{height:100%;width:0;border-radius:5px;transition:width .7s var(--ease-out);}
 .metas-fill.mq{background:linear-gradient(90deg,var(--red),var(--ember));}
 .metas-fill.mc{background:#5EA5DA;}
-.metas-fill.mr{background:#46C07A;}
 .metas-fill.done{background:#46C07A;}
 .metas-pct{font-size:12.5px;font-weight:800;color:#fff;min-width:30px;text-align:right;font-variant-numeric:tabular-nums;}
 .metas-row.batido .metas-pct{color:#46C07A;}
@@ -2172,16 +2171,21 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <div class="dash-name" id="dash-nome">Bombeiro</div>
           </div>
         </div>
-        <!-- S62: as três metas do dia lado a lado. Antes só existia o anel de questões,
-             encostado na saudação; três anéis ali espremeriam o nome no celular, então
-             ganharam uma linha própria, que também deixa as três metas com o mesmo peso. -->
-        <!-- Meta do dia: faixa compacta com 3 mini-progressos (substituiu os 3 anéis grandes) -->
+        <!-- S62: as metas do dia lado a lado. Antes só existia o anel de questões,
+             encostado na saudação; anéis ali espremeriam o nome no celular, então
+             ganharam uma linha própria, que também deixa as metas com o mesmo peso.
+             b173: viraram DUAS — questões e cards. A linha de Resumos saiu daqui porque
+             o resumo deixou de ser cota diária no b172 (decisão `resumo-sai-da-cota-
+             diaria-e-vira-consequencia-do-erro`, que já previa "três anéis viram dois");
+             só o `diaCompleto()` tinha sido ajustado lá, a tela ficou dizendo "de 3".
+             O resumo continua no produto, na aba e no fluxo do erro — sem obrigação. -->
+        <!-- Meta do dia: faixa compacta com 2 mini-progressos (substituiu os anéis grandes) -->
         <div class="metas-card" id="metas-card">
           <button class="metas-head" id="metas-head" aria-expanded="false" aria-controls="metas-body" onclick="toggleMetas()">
             <span class="metas-head-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg></span>
             <span class="metas-head-txt">
               <span class="metas-head-title">Meta do dia</span>
-              <span class="metas-head-sub" id="metas-sub">0 de 3 concluídas</span>
+              <span class="metas-head-sub" id="metas-sub">0 de 2 concluídas</span>
             </span>
             <span class="metas-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
           </button>
@@ -2204,15 +2208,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
               </div>
               <span class="metas-pct" id="ring-fc-pct">0%</span>
               <button class="metas-hide" type="button" aria-label="Esconder a meta de cards" onclick="esconderMeta(event,'fc')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
-            </div>
-            <div class="metas-row" id="meta-rs">
-              <span class="metas-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
-              <div class="metas-mid">
-                <div class="metas-top"><span class="metas-nome">Resumos</span><span class="metas-num" id="ring-rs-lbl">0/3</span></div>
-                <div class="metas-track"><div class="metas-fill mr" id="ring-rs"></div></div>
-              </div>
-              <span class="metas-pct" id="ring-rs-pct">0%</span>
-              <button class="metas-hide" type="button" aria-label="Esconder a meta de resumos" onclick="esconderMeta(event,'rs')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
             </div>
           </div>
         </div>
@@ -2808,8 +2803,8 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
     <div class="config-row">
       <div>
-        <div class="config-label">Resumos por dia</div>
-        <div class="config-sub">Dose da sessão (~12 min)</div>
+        <div class="config-label">Resumos por vez</div>
+        <div class="config-sub">Quantos a aba de Resumos oferece · não é meta do dia</div>
       </div>
       <input type="number" class="config-input" id="config-dose-resumos" min="1" max="70" placeholder="3">
     </div>
@@ -4873,7 +4868,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.261';
+const APP_VERSAO='v1.262';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -5205,9 +5200,9 @@ function renderHoje(){
 }
 // ── Meta do dia recolhível (S63) ──────────────────────────────────────────
 // Recolhida por padrão. Cada meta batida "brota" sozinha mesmo fechada; o usuário
-// pode escondê-la (x) individualmente. Ao bater as 3 vira faixa fina de concluído.
+// pode escondê-la (x) individualmente. Ao bater as duas vira faixa fina de concluído.
 // Estado de expandir e de ocultas persistem em localStorage (ocultas resetam por dia).
-let _metasDone={q:false,fc:false,rs:false};
+let _metasDone={q:false,fc:false};
 function _metasExpandida(){try{return localStorage.getItem('metasExpandida')==='1';}catch(_){return false;}}
 function _metasOcultas(){try{return JSON.parse(localStorage.getItem('metasOcultas_'+diaLocal())||'[]');}catch(_){return [];}}
 function toggleMetas(){
@@ -5227,19 +5222,21 @@ function _aplicarMetas(){
   const exp=_metasExpandida();
   const ocult=_metasOcultas();
   const d=_metasDone;
-  const nDone=(d.q?1:0)+(d.fc?1:0)+(d.rs?1:0);
-  const todas=nDone===3;
+  // b173: DUAS metas. O mesmo par que o `diaCompleto()` exige desde o b172 — este
+  // contador é a leitura do MESMO contrato, não uma segunda regra ao lado dele.
+  const nDone=(d.q?1:0)+(d.fc?1:0);
+  const todas=nDone===2;
   card.classList.toggle('expanded',exp);
   card.classList.toggle('todas',todas);
   const head=document.getElementById('metas-head');if(head)head.setAttribute('aria-expanded',exp);
   const sub=document.getElementById('metas-sub');
-  if(sub)sub.textContent=todas?'Tudo concluído hoje':(nDone+' de 3 concluídas');
-  const rows={q:'meta-q',fc:'meta-fc',rs:'meta-rs'};
+  if(sub)sub.textContent=todas?'Tudo concluído hoje':(nDone+' de 2 concluídas');
+  const rows={q:'meta-q',fc:'meta-fc'};
   Object.keys(rows).forEach(k=>{
     const row=document.getElementById(rows[k]);if(!row)return;
     let vis;
     if(exp)vis=true;               // aberto: mostra tudo
-    else if(todas)vis=false;       // 3/3 fechado: faixa fina de concluído
+    else if(todas)vis=false;       // 2/2 fechado: faixa fina de concluído
     else vis=d[k]&&!ocult.includes(k); // fechado: só a meta batida e não escondida
     row.classList.toggle('vis',vis);
   });
@@ -5247,11 +5244,11 @@ function _aplicarMetas(){
   // única, sem recalcular feito/alvo aqui) — só espelha em versão mini.
   const mini=document.getElementById('metas-mini');
   if(mini&&!exp&&!todas){
-    const fills={q:'dash-ring',fc:'ring-fc',rs:'ring-rs'};
+    const fills={q:'dash-ring',fc:'ring-fc'};
     mini.innerHTML=Object.entries(fills).map(([k,id])=>{
       const fill=document.getElementById(id);
       const w=fill?(fill.style.width||'0%'):'0%';
-      return '<span class="metas-mini-seg"><i class="metas-fill '+(k==='q'?'mq':k==='fc'?'mc':'mr')+'" style="width:'+w+'"></i></span>';
+      return '<span class="metas-mini-seg"><i class="metas-fill '+(k==='q'?'mq':'mc')+'" style="width:'+w+'"></i></span>';
     }).join('');
   }
 }
@@ -5325,7 +5322,7 @@ function renderDashboard(){
   {const el=document.getElementById('kpi-streak');if(el)el.textContent=(userStats.streak||0);}
   // (o rótulo "n/meta" passou a ser escrito por desenharMeta, no S62)
 
-  // S62: as três metas do dia (questões, cards, resumos) desenhadas pela mesma função.
+  // S62: as metas do dia desenhadas pela mesma função (b173: duas, sem resumos).
   // S60: bater 76 de uma meta de 30 mostrava um "100%" seco, igual a quem fez 30 em
   // ponto — o esforço extra sumia. Ao superar a meta o anel fica cheio e o número dá
   // lugar a um "✓", com o quanto passou logo abaixo.
@@ -5351,9 +5348,10 @@ function renderDashboard(){
   const dose=userStats.dose||{};
   const dQ=desenharMeta('dash-ring','dash-ring-pct','dash-ring-label',todayN,meta,'questões');
   const dFc=desenharMeta('ring-fc','ring-fc-pct','ring-fc-lbl',hj.fc||0,dose.cards||DOSE_PADRAO.cards,'flashcards');
-  const dRs=desenharMeta('ring-rs','ring-rs-pct','ring-rs-lbl',hj.rs||0,dose.resumos||DOSE_PADRAO.resumos,'resumos');
   // Meta do dia recolhível: fecha por padrão; cada meta batida aparece sozinha (S63).
-  sincronizarMetas({q:dQ,fc:dFc,rs:dRs});
+  // b173: `hj.rs` e `userStats.dose.resumos` continuam sendo escritos e lidos (a aba de
+  // Resumos ainda dimensiona a fila por eles) — só deixaram de virar meta na tela.
+  sincronizarMetas({q:dQ,fc:dFc});
 
   // BLOCO 34: uma só chamada substitui renderPontoFraco + card de vencidas +
   // card de erros. Tudo virou fila de notificações compactas.
