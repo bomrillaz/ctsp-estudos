@@ -2381,6 +2381,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           </div>
           <button class="quiz-next-btn" id="quiz-next-btn" onclick="nextQuiz()">Próxima →</button>
         </div>
+        <div class="quiz-body hidden" id="quiz-body-card"></div>
       </div>
     </div>
 
@@ -3199,6 +3200,10 @@ function mostrarAlertaConexao(on){
 let userCards={};
 let allQuestoes={},allFlashcards={};
 let quizQueue=[],quizIdx=0,quizArea='TODAS',quizSessao={c:0,t:0},quizAnswered=false,quizModoErro=false;
+// b171: total da sessão CONGELADO no início (quizIdx===0) — a re-exposição empurra item no
+// fim de quizQueue, então quizQueue.length cresce durante a sessão. "X de Y"/placar/barra
+// usam este valor pra não mentir conforme a fila cresce.
+let quizTotalSessao=0;
 // 'quiz' enquanto um resumo/flashcard está aberto como REFORÇO de uma questão errada,
 // para devolver o usuário à questão (e não ao carrossel de resumos/cards) ao concluir.
 let origemReforco=null;
@@ -3688,18 +3693,7 @@ function iniciarRevisaoDue(){
 //  (3) assunto NOVO por peso do edital + incidência — a CAMADA DE COBERTURA. É o furo
 //      que o João intuiu: um tópico com 0 respostas fica invisível nas telas que exigem
 //      amostra mínima; aqui ele é empurrado proporcional à cota da prova.
-const TREINO_TAM=12;      // questões por treino
-const TREINO_TETO_DUE=6;  // revisão não ocupa mais que metade
-const TREINO_MIN_NOVO=3;  // reserva de cobertura quando há material intocado
-// F4-alívio (b163): com backlog grande o teto fixo de 6 não drena. Quem estuda dia sim/dia
-// não encontra todo erro já vencido (o piso de erro é +1 dia), e 6/treino nunca alcança a
-// fila. Acima do limiar o teto sobe para TREINO_TAM-TREINO_MIN_NOVO — o máximo que o passo (1)
-// tira sem comer a reserva do passo (3), e só faz sentido enquanto há material novo pra
-// reservar. Esgotado o banco, o passo (4) passa a preencher com vencida por tópico fraco —
-// deliberado, não bug: medido melhor que as alternativas (b167).
-// A raiz (o piso +1 dia ignorar a cadência real) fica para o Track B — isto é vazão, não cura.
-const TREINO_BACKLOG_ALTO=12;                              // 2 treinos cheios de revisão
-const TREINO_TETO_DUE_ALTO=TREINO_TAM-TREINO_MIN_NOVO;     // derivado: nunca comer a reserva
+const TREINO_TAM=12;      // questões por treino: default do parâmetro (quem governa a sessão do dia é o b171)
 
 function questaoEhNova(q){
   const f=userStats.questoesFSRS||{};
@@ -3761,7 +3755,12 @@ function novasPorCobertura(limite){
   return out.slice(0,limite);
 }
 
-function montarTreinoDoDia(tam=TREINO_TAM){
+// Núcleo CRU (sem intercalar) — b171/D1: montarSessaoDoDia compõe a partir daqui, não de
+// montarTreinoDoDia, porque interleavePorTopico usa a ORDEM INTERNA de cada grupo de tópico
+// pra preservar a prioridade (vencida→fraco→novo) que os passos abaixo acabaram de calcular;
+// intercalar aqui E DEPOIS intercalar de novo com os cards embaralha essa ordem antes do
+// segundo passe, perdendo parte da prioridade. montarTreinoDoDia (abaixo) vira wrapper fino.
+function montarTreinoDoDiaCru(tam){
   const out=[],seen=new Set();
   const add=(arr,cap)=>{
     let n=0;
@@ -3771,14 +3770,36 @@ function montarTreinoDoDia(tam=TREINO_TAM){
       seen.add(q.id);out.push(q);n++;
     }
   };
+  // F4-alívio (b163): com backlog grande o teto fixo não drena. Quem estuda dia sim/dia
+  // não encontra todo erro já vencido (o piso de erro é +1 dia), e metade do treino nunca
+  // alcança a fila. Acima do limiar o teto sobe para tam-minNovo — o máximo que o passo (1)
+  // tira sem comer a reserva do passo (3), e só faz sentido enquanto há material novo pra
+  // reservar. Esgotado o banco, o passo (4) passa a preencher com vencida por tópico fraco —
+  // deliberado, não bug: medido melhor que as alternativas (b167).
+  // A raiz (o piso +1 dia ignorar a cadência real) fica para o Track B — isto é vazão, não cura.
+  // tam=1: minNovo zera (round(1/4)=0) — prioriza vencida sobre cobertura nova, de propósito (b171/D3)
+  const tetoDue=Math.round(tam/2),minNovo=Math.round(tam/4);
+  const tetoDueAlto=tam-minNovo,backlogAlto=tam;
   const due=questoesDueHoje();
-  add(due,due.length>TREINO_BACKLOG_ALTO?TREINO_TETO_DUE_ALTO:TREINO_TETO_DUE); // (1) vencida, teto adaptativo
-  const reservaNovo=Math.min(TREINO_MIN_NOVO,tam-out.length);
+  add(due,due.length>backlogAlto?tetoDueAlto:tetoDue); // (1) vencida, teto adaptativo
+  const reservaNovo=Math.min(minNovo,tam-out.length);
   add(selecionarAdaptativo(tam),tam-out.length-reservaNovo); // (2) fraco, deixando a reserva
   add(novasPorCobertura(tam-out.length));                 // (3) cobertura por edital
   if(out.length<tam)add(selecionarAdaptativo(tam));       // completa se novo/fraco acabaram
   if(out.length<tam)add(shuffle(Object.values(allQuestoes)));
-  return interleavePorTopico(out);
+  return out;
+}
+function montarTreinoDoDia(tam=TREINO_TAM){return interleavePorTopico(montarTreinoDoDiaCru(tam));}
+
+// b171/D1: fila de APRESENTAÇÃO única — questões (montarTreinoDoDiaCru) e cards (doseCardsDoDia)
+// compostos e intercalados por tópico UMA VEZ SÓ (ver comentário do Cru acima). Os SELETORES
+// continuam separados de propósito: fundi-los faria card disputar vaga com questão, e card não
+// pode diluir a cobertura do edital (medido: harness_b171_priming_sessao_do_dia.js). tam segue
+// a metaDiaria (b171/D3), não mais TREINO_TAM. Fonte é metaDiaria direto, NÃO dose('questoes'):
+// dose.questoes só espelha metaDiaria quando o usuário salva as configurações (8846) — quem
+// nunca abriu essa tela tem as duas divergindo.
+function montarSessaoDoDia(tam=userStats.metaDiaria||DOSE_PADRAO.questoes){
+  return interleavePorTopico([...montarTreinoDoDiaCru(tam),...doseCardsDoDia()]);
 }
 
 // ── Tela-intro: apresenta a sessão ANTES de cair na 1ª questão (o que é, quantas,
@@ -4794,7 +4815,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.258';
+const APP_VERSAO='v1.259';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -5001,6 +5022,12 @@ function _navToInner(s,skipStagger){
   // Qualquer navegação por MENU encerra o vínculo com a questão do reforço. O reforço e
   // o retorno usam _ativarTelaLocal (não navTo), então este clear não os atrapalha.
   origemReforco=null;
+  // b171/D4 (achado do code-review): sair do Quiz pela nav inferior com um CARD na tela não
+  // passa por voltarMenuQuiz/finishQuiz — sem limpar aqui, o id fixo (card-flip-el/card-btns)
+  // fica preso em #quiz-body-card e colide com o mesmo id que renderCard() cria em #cards-body.
+  // Fonte compartilhada: qualquer navegação, não mais um call site a mais. Não mexe em
+  // quizQueue/quizArea — sair pela nav é pausa/retomada, comportamento já existente.
+  if(s!=='quiz'){const qc=document.getElementById('quiz-body-card');if(qc)qc.innerHTML='';}
   document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   const sc=document.getElementById('screen-'+s);
@@ -5950,12 +5977,19 @@ function updateBadges(){
 // ═══════════════════════════════
 // QUIZ
 // ═══════════════════════════════
+// b171: teardown único do Quiz — fonte compartilhada, não um call site a mais (achado do
+// code-review: voltarMenuQuiz e finishQuiz tinham resets diferentes, convite pro terceiro
+// ponto de saída copiar o pedaço errado). Limpa o card preso, a fila e o modo.
+function encerrarSessaoQuiz(){
+  const qc=document.getElementById('quiz-body-card');if(qc)qc.innerHTML='';
+  quizQueue=[];quizIdx=0;quizSessao={c:0,t:0};quizArea='TODAS';
+}
 function voltarMenuQuiz(){
   if(!confirm('Sair da sessão atual?'))return;
   document.getElementById('quiz-running-view').classList.add('hidden');
   document.getElementById('quiz-home-view').classList.remove('hidden');
   document.querySelector('.btn-revelar')?.remove();
-  quizQueue=[];quizIdx=0;quizSessao={c:0,t:0};
+  encerrarSessaoQuiz();
   // BLOCO 34: se a sessão nasceu de um tópico em foco, "voltar" tem de devolver
   // à Tela de Foco. Cair no menu do quiz é justamente o desvio que este bloco corta.
   if(focoAtivo){navTo('foco');return;}
@@ -6184,28 +6218,62 @@ function renderQuizBadge(q){
   b.textContent=txt;b.className='q-badge '+cls;b.style.display='inline-block';
 }
 
+// b171: "reexpõe erro?" e "tem meta fechada?" são DUAS perguntas, não uma — SESSAO reexpõe
+// (como TREINO) E tem meta fechada por design (tam=metaDiaria), combinação que uma função só
+// não representa. Achado do code-review (ângulo altitude), corrigindo uma fusão errada de uma
+// rodada anterior deste bloco. reexpoeErro governa só a re-exposição em responderQuiz.
+function reexpoeErro(area){return area!=='DIAGNOSTICO';}
 // "Respondidas" some sem denominador nas sessões livres (pode ser interrompida sem
-// culpa); mantém X/Y só onde há meta fechada de verdade (Simulado, Nivelamento).
+// culpa); mantém X/Y só onde há meta fechada de verdade (Simulado, Nivelamento, e
+// agora SESSAO — a Sessão do dia tem tamanho por design, não é livre).
 // b105: ERRO, INTERLEAVING e META tinham a mesma cara de "sem meta fixa" (texto do
 // abrirIntro já dizia isso) mas ficaram de fora da lista original — sweep aplicado.
+// Decisão de PRODUTO, não estrutural — mantida à mão de propósito, não deriva de nada.
 const QUIZ_AREAS_LIVRES=['RAPIDO','INTELIGENTE','TREINO','ERRO','INTERLEAVING','META'];
+// b171: o denominador usa quizTotalSessao (congelado no início da sessão), não
+// quizQueue.length — a re-exposição empurra item na fila, então quizQueue.length cresce
+// no meio da sessão. Sem congelar, "X/Y" mentia (Y subindo a cada erro) mesmo antes deste
+// bloco existir, em qualquer modo que já reexpunha (TREINO, em produção).
 function atualizarScoreV(){
   document.getElementById('quiz-score-v').textContent=
-    QUIZ_AREAS_LIVRES.includes(quizArea)?String(quizSessao.t):quizSessao.t+'/'+quizQueue.length;
+    QUIZ_AREAS_LIVRES.includes(quizArea)?String(quizSessao.t):quizSessao.t+'/'+quizTotalSessao;
 }
+// b171/D4: distingue card de questão dentro da fila mista da Sessão do dia. Duas condições
+// (tem .f/.v E não tem .ops) — um campo só é frágil; checagem completa num lugar só, chamada
+// por todos os pontos que precisarem (hoje: renderQuizQ).
+function ehCardDeSessao(item){return !!(item&&item.f!==undefined&&item.v!==undefined&&item.ops===undefined);}
 function renderQuizQ(){
   if(quizIdx>=quizQueue.length){finishQuiz();return;}
   const q=quizQueue[quizIdx];
   quizAnswered=false;
-  if(quizIdx===0)quizReexpostas=new Set(); // início de sessão: zera as re-exposições
+  if(quizIdx===0){quizReexpostas=new Set();quizTotalSessao=quizQueue.length;} // início: zera re-exposições e CONGELA o total
   _reforcoResumosAvaliados.clear(); // nova questão = nova ocorrência de reforço
-  const tot=quizQueue.length;
-  document.getElementById('quiz-q-num').textContent=`Questão ${quizIdx+1} de ${tot}`;
+  const tot=quizTotalSessao||quizQueue.length; // fallback defensivo se chamado fora do fluxo normal (idx>0 sem ter passado por idx=0)
+  document.getElementById('quiz-prog-fill').style.width=Math.min(100,quizIdx/tot*100)+'%';
+  atualizarScoreV();
+  // b171/D4: despacho único no topo — a Sessão do dia intercala card na mesma fila do Quiz.
+  // Card reusa o miolo de renderCard; os ~12 pontos abaixo continuam tratando só questão.
+  if(ehCardDeSessao(q)){
+    document.getElementById('quiz-q-num').textContent=`Item ${quizIdx+1} de ${tot}`;
+    document.querySelector('#quiz-running-view .quiz-body').classList.add('hidden');
+    const qc=document.getElementById('quiz-body-card');
+    qc.classList.remove('hidden');
+    qc.innerHTML=cardMioloHTML(q);
+    return;
+  }
+  document.querySelector('#quiz-running-view .quiz-body').classList.remove('hidden');
+  // b171/D4: limpa o container ao trocar de tela — cardMioloHTML usa ids fixos
+  // (card-flip-el, card-btns); deixar o innerHTML antigo aí colidiria com os mesmos ids
+  // que renderCard() cria em #cards-body na aba Flashcards, e getElementById pegaria o
+  // elemento errado (o primeiro em ordem de documento) nos dois lugares.
+  {const qc=document.getElementById('quiz-body-card');qc.classList.add('hidden');qc.innerHTML='';}
+  // Reaprendizado NA sessão (a questão errada voltando perto do fim, ver responderQuiz): o
+  // índice já passou do total congelado, então "Questão N de M" mentiria. Rótulo à parte.
+  const ehReexposicao=quizReexpostas.has(q.id);
+  document.getElementById('quiz-q-num').textContent=ehReexposicao?'Reaprendizado':`Questão ${quizIdx+1} de ${tot}`;
   renderQuizBadge(q);  // S47: selo de status
   document.getElementById('quiz-q-text').textContent=q.e;
   document.getElementById('quiz-q-doc').textContent=q.doc||'';questaoAtualId=q.id;
-  document.getElementById('quiz-prog-fill').style.width=(quizIdx/tot*100)+'%';
-  atualizarScoreV();
   quizQT0=Date.now(); // S53: começa a cronometrar esta questão
   const opts=document.getElementById('quiz-opts');
   const letras=['A','B','C','D','E'];
@@ -6292,9 +6360,11 @@ async function responderQuiz(idx){
     // "Nª vez que erra" do feedback mostra errado. `last` continua atualizando sempre — é
     // carimbo de recência real, e errar de novo é erro de fato.
     userStats.erroHistorico[q.id]={count:h.count+(jaReexposta?0:1),last:Date.now()};
-    // Reaprendizado NA sessão: no treino, a questão errada volta UMA vez perto do fim
-    // (re-exposição enquanto está fresca), antes de o FSRS espaçá-la para +1 dia.
-    if(quizArea==='TREINO'&&!quizReexpostas.has(q.id)){quizReexpostas.add(q.id);quizQueue.push(q);}
+    // Reaprendizado NA sessão: a questão errada volta UMA vez perto do fim (re-exposição
+    // enquanto está fresca), antes de o FSRS espaçá-la para +1 dia. b171/C1: estendido de
+    // TREINO pra todo modo que reexpõe (reexpoeErro) — só o DIAGNOSTICO fica de fora, porque
+    // re-expor enviesaria a medição de domínio que ele existe pra fazer.
+    if(reexpoeErro(quizArea)&&!quizReexpostas.has(q.id)){quizReexpostas.add(q.id);quizQueue.push(q);}
   } else if(!jaReexposta){
     // Acertou fora de re-exposição intra-sessão: carimba a saída do Caderno de Erros.
     // Acerto EM re-exposição intra-sessão não prova retenção espaçada (Rawson & Dunlosky
@@ -6392,6 +6462,13 @@ function configFimSessao(area){
     case 'META': return {titulo:'Meta do dia concluída!',diario:true,extras:[
       {b:'Ver meu Treino do dia',primaria:true,fn:()=>abrirIntro('treino')},
       {b:'Responder mais',fn:()=>abrirIntro('meta',1)}]};
+    // b171/D4 (achado do code-review): sem este case, SESSAO caía no default, que trata
+    // `area` como código de área de prova — abrirIntro('quiz','SESSAO') filtraria questões
+    // por uma área que não existe em AI/TOPICOS, fila vazia. diario:true porque finishQuiz
+    // já marca treinoDia pra SESSAO, igual TREINO.
+    case 'SESSAO': return {titulo:'Sessão do dia concluída!',diario:true,extras:[
+      {b:'Treino focado no ponto fraco',primaria:true,fn:estudarFraco},
+      {b:'Refazer o treino',fn:irTreinoDoDia}]};
     default: return {titulo:(AI[area]?.nome||'Sessão')+' concluída!',extras:[
       {b:'Ver meu Treino do dia',primaria:true,fn:()=>abrirIntro('treino')},
       {b:'Praticar esta área de novo',fn:()=>abrirIntro('quiz',area)}]};
@@ -6433,27 +6510,35 @@ function finishQuiz(){
     navTo('inicio');
     showToast(`✅ Nivelamento concluído: ${quizSessao.c}/${quizSessao.t}. Seu perfil de domínio está pronto!`);
     talvezIniciarTutorial(1500);   // 1,5s deixa o toast sair da frente antes do tour
+    encerrarSessaoQuiz();   // b171/D4: reset pós-leitura — nenhum modo fica preso além da sessão
     return;
   }
-  if(quizArea==='TREINO'){
+  if(quizArea==='TREINO'||quizArea==='SESSAO'){
     userStats.treinoDia=diaKeyHoje();   // marca o objetivo do dia como cumprido
     saveProg();
     atualizarCardTreino();
   }
   renderDashboard();
-  mostrarFimSessao();   // tela de conclusão + próximos passos, para qualquer fluxo de questões
+  mostrarFimSessao();   // tela de conclusão + próximos passos — lê quizArea, roda ANTES do reset
+  // b171/D4: reset pós-leitura. Sem isso, quizArea='SESSAO' preso faz avaliarCard (naSessao)
+  // ler quizQueue depois que a sessão já fechou — fila errada ou avaliação descartada.
+  encerrarSessaoQuiz();
 }
 
 // ═══════════════════════════════
 // FLASHCARDS
 // ═══════════════════════════════
 let cardQueue=[],cardIdx=0;
+// b171/D4/#8: predicado único de "vencido" — era copiado em cardsPendentes, doseCardsDoDia
+// e no branch filtrado de _estudoCards; fatorado pra não divergir entre os três se a
+// semântica de "vencido" mudar (campo FSRS, tolerância de horário etc.).
+function cardVencido(fc,now){const uc=userCards[fc.id];return !!(uc&&uc.reps>0&&uc.next&&uc.next<=now);}
 // Fila completa de cards pendentes (vencidos + novos), sem corte de dose.
 function cardsPendentes(filtro){
   const now=Date.now();
   const f=(filtro===undefined)?cardsFiltroTopico:filtro;
   const todos=Object.values(allFlashcards).filter(fc=>!f||itemDoTopico(fc,f));
-  const vencidos=todos.filter(fc=>{const uc=userCards[fc.id];return !!(uc&&uc.reps>0&&uc.next&&uc.next<=now);});
+  const vencidos=todos.filter(fc=>cardVencido(fc,now));
   const novos=todos.filter(fc=>{const uc=userCards[fc.id];return !uc||!uc.reps;});
   return{vencidos,novos,todos:[...vencidos,...novos]};
 }
@@ -6480,19 +6565,29 @@ function _hubCards(){
 }
 function iniciarMetaCards(){cardsModo='estudo';cardsUnico=false;cardsFiltroTopico=null;_estudoCards();window.scrollTo(0,0);}
 function voltarHubCards(){cardsModo='hub';cardsUnico=false;renderCards();window.scrollTo(0,0);}
+// Dose de cards do dia (meta): mesma seleção que o Hub oferece — priorizarPorMalha por
+// vencido/fraqueza, cortada no que falta pra bater a meta. Reusada pela Sessão do dia
+// (b171/D1), que compõe esta fila com montarTreinoDoDia em vez de fundir os seletores.
+function doseCardsDoDia(){
+  const now=Date.now();
+  const limite=Math.max(0,dose('cards')-(entradaHoje().fc||0))+doseExtra.cards;
+  return priorizarPorMalha(cardsPendentes().todos,fc=>cardVencido(fc,now)).slice(0,limite);
+}
 // Modo estudo imersivo: um card por vez, sem o índice competindo pela atenção.
 function _estudoCards(){
   document.getElementById('cards-body').classList.add('cards-estudo'); // b117: liga a centralização desktop
-  const now=Date.now();
-  const ehVencido=fc=>{const uc=userCards[fc.id];return !!(uc&&uc.reps>0&&uc.next&&uc.next<=now);};
   const pend=cardsPendentes();
   const acervo=pend.todos.length;
   // Sem filtro/reforço = fluxo de meta do dia: FECHA ao bater a dose (desconta hj.fc),
   // senão o carrossel drenava o acervo inteiro. Com filtro de tópico ou reforço, a dose
   // vale cheia (você escolheu praticar aquele tópico / revisar o erro).
   const semFiltro=!cardsFiltroTopico&&origemReforco!=='quiz';
-  const limite=(semFiltro?Math.max(0,dose('cards')-(entradaHoje().fc||0)):dose('cards'))+doseExtra.cards;
-  cardQueue=priorizarPorMalha(pend.todos,ehVencido).slice(0,limite);
+  if(semFiltro){
+    cardQueue=doseCardsDoDia();
+  }else{
+    const now=Date.now();
+    cardQueue=priorizarPorMalha(pend.todos,fc=>cardVencido(fc,now)).slice(0,dose('cards')+doseExtra.cards);
+  }
   const body=document.getElementById('cards-body');
   if(!cardQueue.length){
     const restam=acervo;
@@ -6519,25 +6614,12 @@ function _estudoCards(){
 function maisCards(){doseExtra.cards+=dose('cards');renderCards();}
 function limparFiltroCards(){cardsFiltroTopico=null;doseExtra.cards=0;renderCards();}
 
-function renderCard(){
-  if(cardIdx>=cardQueue.length){if(cardsUnico){cardsUnico=false;voltarHubCards();}else{renderCards();}return;}
-  const fc=cardQueue[cardIdx];
+// Miolo do card: flip (frente/verso) + os 3 botões de avaliação. Fonte única — b171/D4 reusa
+// isto no runner da Sessão do dia dentro do Quiz. Nunca duplicar este markup em outro lugar.
+function cardMioloHTML(fc){
   const area=fc.a||fc.area||'';
   const aInfo=AI[area]||{};
-  const ucAtual=userCards[fc.id];
-  const ehNovo=!ucAtual||!ucAtual.reps; // S47: rótulo Novo/Revisão
-  const body=document.getElementById('cards-body');
-  const remaining=cardQueue.length-cardIdx;
-  const acervo=cardsPendentes().todos.length;
-  const tFc=topicoDe(fc);
-  body.innerHTML=`
-    ${origemReforco==='quiz'?`<button onclick="voltarAoQuizDoReforco()" style="width:100%;margin-bottom:10px;padding:9px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:700;color:var(--text2)">← Voltar à questão</button>`:`<button onclick="voltarHubCards()" style="width:100%;margin-bottom:10px;padding:9px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:700;color:var(--text2)">← Flashcards</button>`}
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <span style="font-size:13px;color:var(--text2)">${remaining} card${remaining!==1?'s':''} restante${remaining!==1?'s':''} <span class="q-badge ${ehNovo?'badge-nova':'badge-rev'}">${ehNovo?'NOVO':'REVISÃO'}</span></span>
-      <span style="font-size:11px;font-weight:700;color:var(--text3)">Toque para virar</span>
-    </div>
-    ${acervo>cardQueue.length?`<div style="font-size:11px;color:var(--text3);margin:-6px 0 10px">Dose de hoje · ${cardQueue.length} de ${acervo} pendentes</div>`:''}
-    ${tFc?`<div style="font-size:11px;color:var(--text3);margin:-6px 0 10px">${sanitize(nomeTopico(tFc))}</div>`:''}
+  return `
     <div class="card-flip-wrap">
       <div class="card-flip" id="card-flip-el" onclick="flipCard()">
         <div class="card-face card-front">
@@ -6560,7 +6642,26 @@ function renderCard(){
       <button class="card-btn dif" onclick="avaliarCard('dif')">Difícil</button>
       <button class="card-btn med" onclick="avaliarCard('med')">Médio</button>
       <button class="card-btn fac" onclick="avaliarCard('fac')">Fácil</button>
+    </div>`;
+}
+function renderCard(){
+  if(cardIdx>=cardQueue.length){if(cardsUnico){cardsUnico=false;voltarHubCards();}else{renderCards();}return;}
+  const fc=cardQueue[cardIdx];
+  const ucAtual=userCards[fc.id];
+  const ehNovo=!ucAtual||!ucAtual.reps; // S47: rótulo Novo/Revisão
+  const body=document.getElementById('cards-body');
+  const remaining=cardQueue.length-cardIdx;
+  const acervo=cardsPendentes().todos.length;
+  const tFc=topicoDe(fc);
+  body.innerHTML=`
+    ${origemReforco==='quiz'?`<button onclick="voltarAoQuizDoReforco()" style="width:100%;margin-bottom:10px;padding:9px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:700;color:var(--text2)">← Voltar à questão</button>`:`<button onclick="voltarHubCards()" style="width:100%;margin-bottom:10px;padding:9px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:700;color:var(--text2)">← Flashcards</button>`}
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <span style="font-size:13px;color:var(--text2)">${remaining} card${remaining!==1?'s':''} restante${remaining!==1?'s':''} <span class="q-badge ${ehNovo?'badge-nova':'badge-rev'}">${ehNovo?'NOVO':'REVISÃO'}</span></span>
+      <span style="font-size:11px;font-weight:700;color:var(--text3)">Toque para virar</span>
     </div>
+    ${acervo>cardQueue.length?`<div style="font-size:11px;color:var(--text3);margin:-6px 0 10px">Dose de hoje · ${cardQueue.length} de ${acervo} pendentes</div>`:''}
+    ${tFc?`<div style="font-size:11px;color:var(--text3);margin:-6px 0 10px">${sanitize(nomeTopico(tFc))}</div>`:''}
+    ${cardMioloHTML(fc)}
     <div style="text-align:center"><button class="rep-link" onclick="abrirReporte('flashcard','${fc.id}')">⚐ Reportar erro neste card</button></div>`;
 }
 
@@ -6624,7 +6725,11 @@ function flipCard(){
 }
 
 async function avaliarCard(dif){
-  const fc=cardQueue[cardIdx];
+  // b171/D4: dentro da Sessão do dia o card em avaliação é quizQueue[quizIdx], não
+  // cardQueue[cardIdx] — despacho por quizArea (padrão que o código já usa pra distinguir
+  // modo), não por identidade de objeto (quebraria se o mesmo card estivesse nas duas filas).
+  const naSessao=quizArea==='SESSAO';
+  const fc=naSessao?quizQueue[quizIdx]:cardQueue[cardIdx];
   if(!fc)return;                       // fila já esgotada — nada a avaliar
   const existing=userCards[fc.id]||{};
   const updated=fsrsCardUpdate(existing,dif);
@@ -6637,8 +6742,12 @@ async function avaliarCard(dif){
   if(dif==='med'||dif==='fac')bktTocarRecuperacao(topicoDe(fc),BKT_RECUP_CARD);
   saveProg();
   updateBadges();           // BLOCO 43: baixa o badge ao vivo conforme a dose do dia é cumprida
-  cardIdx++;
-  renderCard();
+  // b171/D4/#7: quizSessao é o placar da Sessão (quiz-score-v, mostrarFimSessao) — sem contar
+  // o card aqui, o denominador (quizTotalSessao, questão+card) nunca bate com o numerador
+  // (só questão), mesmo numa sessão 100% completa. med/fac = recuperação bem-sucedida, mesmo
+  // critério já usado acima pra bktTocarRecuperacao.
+  if(naSessao){quizSessao.t++;if(dif!=='dif')quizSessao.c++;quizIdx++;renderQuizQ();}
+  else{cardIdx++;renderCard();}
 }
 
 // ═══════════════════════════════
@@ -9729,7 +9838,11 @@ document.addEventListener('keydown',e=>{
   if(/^[1-5]$/.test(e.key)&&!quizAnswered){
     const qv=document.getElementById('quiz-running-view');
     const optsBox=document.getElementById('quiz-opts');
-    if(qv&&!qv.classList.contains('hidden')&&optsBox&&optsBox.style.display!=='none'){
+    // b171/D4: #quiz-running-view fica visível também quando o item atual é um CARD (só
+    // .quiz-body-card troca) — sem checar .quiz-body aqui, o atalho responde sobre o card
+    // com o DOM de opções obsoleto da questão anterior. Guard único, no handler.
+    const qBody=document.querySelector('#quiz-running-view .quiz-body');
+    if(qv&&!qv.classList.contains('hidden')&&qBody&&!qBody.classList.contains('hidden')&&optsBox&&optsBox.style.display!=='none'){
       const ops=document.querySelectorAll('#quiz-opts .quiz-opt');
       if(ops.length>=+e.key)responderQuiz(+e.key-1);
     }
