@@ -288,6 +288,14 @@ IA no meio.
 1. Atualizar `_estado.md` do vault: o que foi feito, o que ficou aberto, decisões, erros, IDs livres,
    estado do banco e contagens. Registrar commits não publicados. Autossuficiente — quem só lê o
    `_estado.md` tem de entender o estado sem abrir mais nada.
+   **1a. MANUTENÇÃO DA SEÇÃO "Pendências abertas" — obrigatória, decidida no b176.** A seção só contém
+   o que está ABERTO. **Nunca escrever ✅ nela**: item que fecha SAI dela no mesmo bloco em que fecha e
+   desce para "Fechado — registro histórico", com o carimbo do bloco. **Pendência nova entra nos DOIS
+   lugares** — no bullet do bloco (registro do que aconteceu) E na seção (lista viva); anotar só no
+   bullet é como o b170..b175 acumularam 16 itens invisíveis para quem lia a seção. Todo item da seção
+   carrega o ponto exato (`arquivo:linha`) e o que reconfere. **Por quê:** no b176 a seção tinha 55
+   bullets, 42 deles (76%) já fechados — três chegaram a envelhecer em 🔴/🟡 depois de resolvidos e
+   induziram o b165 e o b168 ao erro. Ver [[licoes/lista-de-pendencias-sem-poda-vira-registro-e-para-de-ser-lista]].
 2. Criar/atualizar nota(s) atômica(s) em `licoes/` (o que muda conduta futura) ou `decisoes/` (o que foi
    fechado e por quê), linkadas ao bloco da sessão.
 3. Copiar o `.md` da sessão para `historico/` do vault, no mesmo formato dos blocos anteriores.
