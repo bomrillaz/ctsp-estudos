@@ -94,7 +94,7 @@ html[data-theme="dark"] .quiz-opt.selected{background:#1D2A4D;border-color:var(-
 html[data-theme="dark"] .quiz-opt.selected .quiz-opt-letter{background:var(--ember);color:#1C1206;}
 html[data-theme="dark"] .admin-tab.active{background:var(--ember);border-color:var(--ember);color:#1C1206;}
 html[data-theme="dark"] .field input:focus,html[data-theme="dark"] .field select:focus,html[data-theme="dark"] .config-input:focus{border-color:var(--ember);box-shadow:0 0 0 3px rgba(240,136,60,.12);}
-html[data-theme="dark"] .diag-card{background:linear-gradient(135deg,#7E180B,#C2412C);}
+html[data-theme="dark"] .diag-card{background:linear-gradient(140deg,#28396c,#151f40);box-shadow:0 6px 22px rgba(0,0,0,.55);}
 html[data-theme="dark"] .quick-btn.destaque{border-color:#4A2B1A;background:linear-gradient(180deg,#241A14,var(--surface));}
 html[data-theme="dark"] .quiz-fb-erro .fb-correta{color:var(--green);}
 html[data-theme="dark"] .padrao-dica{color:var(--amber);}
@@ -750,7 +750,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   border-radius:12px;padding:11px 12px;margin-bottom:7px;cursor:pointer;max-width:100%;}
 .foco-item.feito{opacity:.55;}
 .foco-item.feito .foco-item-txt{text-decoration:line-through;}
-.foco-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;
+.foco-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;
   display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;}
 .foco-item.feito .foco-check{background:var(--green);border-color:var(--green);}
 .foco-item-txt{flex:1;min-width:0;font-size:13.5px;color:var(--text);overflow-wrap:anywhere;line-height:1.35;}
@@ -767,7 +767,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .cod-wrap{border-top:1px solid var(--line-soft);padding:12px 2px 0;margin-bottom:14px;max-width:100%;}
 .cod-label{display:block;font-size:11.5px;font-weight:600;color:var(--text3);margin-bottom:7px;overflow-wrap:anywhere;}
 .cod-row{display:flex;gap:8px;}
-.cod-input{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;
+.cod-input{flex:1;min-width:0;border:1.5px solid var(--border);border-radius:10px;padding:9px 11px;
   font-size:15px;font-weight:700;color:var(--text);background:var(--paper);text-transform:uppercase;}
 .cod-input:focus{outline:2px solid var(--ember);outline-offset:1px;border-color:var(--ember);}
 .cod-btn{flex-shrink:0;background:var(--navy);color:#fff;border-radius:10px;padding:9px 18px;font-size:13px;font-weight:800;}
@@ -801,12 +801,12 @@ html[data-theme="dark"] .adapt-btn{background:linear-gradient(140deg,#28396c,#15
    já em 4,80:1 nesse mesmo par) segue como está, não precisava de ajuste. */
 html[data-theme="dark"] #treino-badge{color:#F1944F;}
 html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
-.diag-card{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,var(--red-dark),var(--red));color:#fff;border-radius:18px;padding:16px 18px;margin-bottom:14px;cursor:pointer;box-shadow:0 10px 28px rgba(165,29,14,.32);transition:transform .2s var(--ease-out);}
+.diag-card{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;background:linear-gradient(140deg,var(--navy-2),var(--navy-deep));color:#fff;border-radius:18px;padding:16px 18px;margin-bottom:14px;cursor:pointer;box-shadow:var(--shadow-md);border:2px solid var(--ember);transition:transform .2s var(--ease-out);}
 .diag-card.hidden{display:none;}
 .diag-card:active{transform:scale(.98);}
 .diag-card-fechar{position:absolute;top:8px;right:8px;width:26px;height:26px;border:none;background:rgba(255,255,255,.18);border-radius:50%;color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .diag-card-fechar::before{content:'';position:absolute;inset:-9px;}
-.diag-card-icon{font-size:30px;flex-shrink:0;width:48px;height:48px;border-radius:13px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;}
+.diag-card-icon{font-size:30px;flex-shrink:0;width:48px;height:48px;border-radius:13px;background:rgba(240,136,60,.14);border:1px solid rgba(240,136,60,.3);color:var(--ember);display:flex;align-items:center;justify-content:center;}
 .diag-card-icon svg{width:24px;height:24px;}
 .diag-card-info{flex:1;}
 .diag-card-tag{font-family:var(--font-display);font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;opacity:.85;}
@@ -2197,7 +2197,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
                 <div class="metas-track"><div class="metas-fill mq" id="dash-ring"></div></div>
               </div>
               <span class="metas-pct" id="dash-ring-pct">0%</span>
-              <button class="metas-hide" type="button" aria-label="Esconder a meta de questões" onclick="esconderMeta(event,'q')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+              <button class="metas-hide" type="button" aria-label="Ocultar meta concluída de questões" onclick="esconderMeta(event,'q')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
             </div>
             <div class="metas-row" id="meta-fc">
               <span class="metas-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>
@@ -2206,7 +2206,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
                 <div class="metas-track"><div class="metas-fill mc" id="ring-fc"></div></div>
               </div>
               <span class="metas-pct" id="ring-fc-pct">0%</span>
-              <button class="metas-hide" type="button" aria-label="Esconder a meta de cards" onclick="esconderMeta(event,'fc')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+              <button class="metas-hide" type="button" aria-label="Ocultar meta concluída de cards" onclick="esconderMeta(event,'fc')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
             </div>
           </div>
         </div>
@@ -4893,7 +4893,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.267';
+const APP_VERSAO='v1.268';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
