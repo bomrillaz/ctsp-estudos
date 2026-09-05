@@ -2462,6 +2462,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           </div>
           <div class="sim-result-label" id="sim-result-label"></div>
           <div class="sim-result-areas" id="sim-result-areas"></div>
+          <div id="sim-revisao-wrap" style="margin-bottom:16px;text-align:left"></div>
           <div class="sim-ai-diag" id="sim-ai-diag"></div>
           <button class="btn-primary" onclick="voltarSimHome()">Voltar ao início</button>
         </div>
@@ -3290,6 +3291,7 @@ function fmtRitmo(seg){
   return m>0?`${m}min${String(s).padStart(2,'0')}s`:`${s}s`;
 }
 let simQuestoes=[],simRespostas={},simOrdem={},simIdx=0,simTimer=null,simTempo=10800,simModo='completo';
+let simRevisao=[]; // itens não acertados do último simulado encerrado — só em memória, nunca em userStats
 let resumosQueue=[],resumoAtualIdx=0;
 
 // ═══════════════════════════════
@@ -4913,7 +4915,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.271';
+const APP_VERSAO='v1.272';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -7569,7 +7571,7 @@ function repartirVagas(pesos,total){
 
 function iniciarSimulado(modo){
   if(!userStats.diagFeito){mostrarOnboard();return;}   // b123
-  simModo=modo;simRespostas={};simOrdem={};simIdx=0;
+  simModo=modo;simRespostas={};simOrdem={};simIdx=0;simRevisao=[];
   const qs=Object.values(allQuestoes);
   if(modo==='inteligente'){
     // Peso por ponto fraco ANCORADO na cota do edital: a área com menor acerto ganha mais
@@ -7662,6 +7664,7 @@ async function encerrarSimulado(){
     const respondeu=simRespostas[i]!==undefined&&simRespostas[i]!==null;
     const ac=respondeu&&simRespostas[i]===q.g;
     if(ac){correct++;byArea[area].c++;}
+    else simRevisao.push({i,q,marcada:simRespostas[i],branco:!respondeu});
     // A NOTA da prova continua sobre o TOTAL: em branco vale zero, como na prova real.
     // Mas o MODELO DE APRENDIZADO abaixo só pode aprender com resposta de verdade.
     if(!respondeu)return;
@@ -7715,6 +7718,8 @@ async function encerrarSimulado(){
     </div>`;
   });
 
+  renderSimRevisaoToggle();
+
   // Salvar histórico
   if(!userStats.simHistorico)userStats.simHistorico=[];
   userStats.simHistorico.push({data:Date.now(),pct,total:simQuestoes.length,modo:simModo});
@@ -7722,6 +7727,70 @@ async function encerrarSimulado(){
   saveProg();
 
   gerarDiagnostico(pct,byArea);
+}
+
+// b182: revisão pós-simulado — só leitura, não altera FSRS/BKT/userStats. Deixa a
+// pessoa VER o que errou (o simulado em si nunca revela gabarito por questão).
+// "errei" mente quando há item em branco (não é erro, é ausência de resposta) —
+// mesma regra do S61 (não responder não é errar). Singular também muda de forma
+// ("a que errei", sem número) — "as 1 que errei" não se diz. Usado nos 3 pontos
+// que consomem o rótulo (aqui, o fechar do toggleSimRevisao e o Refazer do
+// gerarDiagnostico) para não duplicar o literal.
+function simRevisaoTrecho(){
+  const n=simRevisao.length;
+  const verbo=simRevisao.some(it=>it.branco)?'não acertei':'errei';
+  return n===1?`a que ${verbo}`:`as ${n} que ${verbo}`;
+}
+function renderSimRevisaoToggle(){
+  const wrap=document.getElementById('sim-revisao-wrap');
+  if(!wrap)return;
+  if(!simRevisao.length){wrap.innerHTML='';return;}
+  wrap.innerHTML=`<button class="btn-weak" id="sim-revisao-btn" aria-expanded="false" aria-controls="sim-revisao-lista" onclick="toggleSimRevisao()">Ver ${simRevisaoTrecho()}</button>
+    <div id="sim-revisao-lista" class="hidden" style="margin-top:10px"></div>`;
+}
+function toggleSimRevisao(){
+  const btn=document.getElementById('sim-revisao-btn');
+  const lista=document.getElementById('sim-revisao-lista');
+  if(!btn||!lista)return;
+  const letras=['A','B','C','D','E'];
+  if(lista.classList.contains('hidden')){
+    lista.innerHTML=simRevisao.map(it=>{
+      // Questão nunca aberta (branco por timeout/Encerrar antecipado) não tem simOrdem —
+      // cai na ordem natural só para achar a letra, já que ninguém viu embaralhado mesmo.
+      const ordem=simOrdem[it.i]||[0,1,2,3,4];
+      const letraDe=k=>letras[ordem.indexOf(k)];
+      const marcadaHtml=it.branco
+        ? `<div class="fb-linha fb-marcada"><span class="fb-rotulo">Você marcou</span>Em branco</div>`
+        : `<div class="fb-linha fb-marcada"><span class="fb-rotulo">Você marcou</span>${letraDe(it.marcada)}) ${sanitize(it.q.ops[it.marcada])}</div>`;
+      const corretaHtml=`<div class="fb-linha fb-correta"><span class="fb-rotulo">Resposta correta</span>${letraDe(it.q.g)}) ${sanitize(it.q.ops[it.q.g])}</div>`;
+      return `<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line-soft)">
+        <div class="quiz-q-num">Questão ${it.i+1}</div>
+        <div class="quiz-q-text" style="font-size:14px;margin-bottom:10px">${sanitize(it.q.e)}</div>
+        <div class="quiz-fb-erro" style="display:flex">${marcadaHtml}${corretaHtml}</div>
+        <div class="quiz-feedback-text" style="margin-top:8px">${sanitize(it.q.exp||'')}</div>
+      </div>`;
+    }).join('');
+    lista.classList.remove('hidden');
+    btn.setAttribute('aria-expanded','true');
+    btn.textContent='Ocultar a revisão';
+  } else {
+    lista.classList.add('hidden');
+    btn.setAttribute('aria-expanded','false');
+    btn.textContent=`Ver ${simRevisaoTrecho()}`;
+  }
+}
+
+// b182: "Refazer" do fim do simulado tem de refazer ESTE simulado, não o Caderno de
+// Erros global (iniciarModoErro) — os dois convivem, veja os outros 2 pontos de
+// entrada do Modo Erro (nudge da Home e "Revisar mais erros" do Quiz), que continuam
+// abrindo o caderno global de propósito.
+function refazerErrosDoSimulado(){
+  if(!simRevisao.length){showToast('Sem erros para revisar!');return;}
+  const erradas=simRevisao.map(it=>it.q);
+  quizQueue=interleavePorTopico(erradas);quizArea='ERRO';quizModoErro=true;quizIdx=0;quizSessao={c:0,t:0};
+  abrirRunnerQuiz();
+  document.getElementById('quiz-area-tag').textContent='Erros do simulado';
+  navTo('quiz');renderQuizQ();
 }
 
 // S49: diagnóstico local, sem rede e sem custo. Prioriza por PONTOS EM JOGO
@@ -7755,11 +7824,13 @@ function gerarDiagnostico(pct,byArea){
 
   const prosa=`Diagnóstico: ${pct}% de acerto. ${leitura} ${alvo}${mantem}`;
 
-  // BLOCO 43: o fim do simulado NÃO empurra mais material para consumir na hora — isso
-  // contraria o efeito de espaçamento (reestudar tudo logo após dá fluência ilusória).
-  // O feedback por questão (imediato) já aconteceu durante o simulado; a REVISÃO do
-  // assunto rende mais nos próximos dias. Então a tela vira: diagnóstico + o que o
-  // Treino do dia vai priorizar + um atalho OPCIONAL de refazer os erros (retrieval).
+  // BLOCO 43 (corrigido no b182): o fim do simulado NÃO empurra mais material para
+  // consumir na hora — isso contraria o efeito de espaçamento (reestudar tudo logo
+  // após dá fluência ilusória). O simulado É PROVA e não revela gabarito por questão
+  // (correto — ver renderSimQ); a revisão do que errou existe, mas é OPCIONAL e fica
+  // atrás do toggle "Ver as N que errei" (renderSimRevisaoToggle), não automática
+  // aqui. A tela vira: diagnóstico + o que o Treino do dia vai priorizar + um atalho
+  // OPCIONAL de refazer os erros DESTE simulado (retrieval).
   const nomesFoco=focos.map(l=>l.nome);
   let html=`<div>${sanitize(prosa)}</div>`;
   const plano=nomesFoco.length
@@ -7768,8 +7839,8 @@ function gerarDiagnostico(pct,byArea){
   html+=`<div style="margin-top:12px;padding:11px 13px;background:var(--blue-light);border-radius:10px;font-size:13px;color:var(--text);line-height:1.5">${sanitize(plano)}</div>`;
   html+=`<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
     <button class="btn-weak" onclick="abrirIntro('sessao')">Ver minha Sessão do dia →</button>`;
-  const nErr=Object.values(allQuestoes).filter(q=>questaoNoCaderno(q.id)).length;
-  if(nErr)html+=`<button class="btn-weak" style="background:var(--paper-2);color:var(--text2)" onclick="abrirIntro('erro')">Refazer os ${nErr} erro${nErr!==1?'s':''} agora · opcional</button>`;
+  const nErr=simRevisao.length;
+  if(nErr)html+=`<button class="btn-weak" style="background:var(--paper-2);color:var(--text2)" onclick="refazerErrosDoSimulado()">Refazer ${simRevisaoTrecho()} neste simulado · opcional</button>`;
   html+=`</div>`;
   el.innerHTML=html;
 }
