@@ -181,8 +181,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @keyframes fadeInDown{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
 @keyframes screenIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 @keyframes scaleIn{from{opacity:0;transform:scale(.92);}to{opacity:1;transform:scale(1);}}
-@keyframes slideInRight{from{opacity:0;transform:translateX(24px);}to{opacity:1;transform:translateX(0);}}
-@keyframes barGrow{from{width:0!important;}to{}}
 /* Frente 4 — feedback de toque nos cards tocáveis */
 .adapt-btn,.quick-btn,.foco-nota,.ver-progresso,.metas-head,.sim-card,.card-btn{transition:transform .12s var(--ease-out),box-shadow .2s;}
 .adapt-btn:active,.quick-btn:active,.foco-nota:active,.ver-progresso:active,.metas-head:active,.sim-card:active,.card-btn:active{transform:scale(.98);}
@@ -4915,7 +4913,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.270';
+const APP_VERSAO='v1.271';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -6168,6 +6166,7 @@ function retomarSessaoQuiz(){
   if(quizIdx>=quizQueue.length){finishQuiz();return;}
   abrirRunnerQuiz();
   renderQuizQ();
+  irAoTopoDoConteudo();
 }
 
 // b174: modal de confirmação genérico — substitui confirm() nativo onde o app precisa de
