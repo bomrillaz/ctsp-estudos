@@ -183,7 +183,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @keyframes scaleIn{from{opacity:0;transform:scale(.92);}to{opacity:1;transform:scale(1);}}
 @keyframes slideInRight{from{opacity:0;transform:translateX(24px);}to{opacity:1;transform:translateX(0);}}
 @keyframes barGrow{from{width:0!important;}to{}}
-@keyframes ringGrow{from{stroke-dashoffset:var(--ring-full,170)!important;}to{}}
 /* Frente 4 — feedback de toque nos cards tocáveis */
 .adapt-btn,.quick-btn,.foco-nota,.ver-progresso,.metas-head,.sim-card,.card-btn{transition:transform .12s var(--ease-out),box-shadow .2s;}
 .adapt-btn:active,.quick-btn:active,.foco-nota:active,.ver-progresso:active,.metas-head:active,.sim-card:active,.card-btn:active{transform:scale(.98);}
@@ -679,10 +678,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .ring-pct{font-family:var(--font-display);font-size:15px;font-weight:700;color:white;line-height:1;}
 
-/* Cards de progresso por área */
-.area-card{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:14px;padding-left:16px;box-shadow:var(--shadow);transition:transform .2s var(--ease-out),box-shadow .2s;}
-.area-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--ac,var(--red));}
-.area-card:active{transform:scale(.97);}
+/* Barra de progresso por área */
 .area-prog-fill{height:100%;border-radius:3px;transition:width .4s;}
 
 /* Bloco 2 (b155/A2 do critique): default trocado — .btn-weak nascia vermelho (mesma cor
@@ -1657,7 +1653,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 
 /* ── FASE 5 — POLIMENTO: hover só em ponteiro fino (toque não dispara) ── */
 @media (hover:hover) and (pointer:fine){
-  .area-card:hover,.quick-btn:hover,.sim-card:hover,.area-row:hover,
+  .quick-btn:hover,.sim-card:hover,.area-row:hover,
   .resumo-list-item:hover,.padrao-card:hover,.foco-nota:hover,.foco-item:hover,
   .ver-progresso:hover{
     transform:translateY(-2px);box-shadow:var(--shadow-md);}
@@ -2974,6 +2970,15 @@ const ADMIN_EMAIL="jvictor.projetos.ti@gmail.com";
 
 // ── Sanitize XSS ──
 function sanitize(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+
+// O <body> é quem rola neste layout (html,body{height:100%} + overflow-x:hidden),
+// então window.scrollTo(0,0) é inerte aqui — medido no b180. Zera os três porque
+// qual deles rola muda com a largura e com o motor do navegador.
+function irAoTopoDoConteudo(){
+  try{document.body.scrollTop=0;}catch(_){}
+  try{document.documentElement.scrollTop=0;}catch(_){}
+  try{const c=document.querySelector('.app-content'); if(c)c.scrollTop=0;}catch(_){}
+}
 
 // ── Rate limit login ──
 const loginAttempts={count:0,lastReset:Date.now()};
@@ -4352,7 +4357,8 @@ async function doRegister(){
 }
 
 function doLogout(){
-  try{if(speechUtter&&speechSynthesis)speechSynthesis.cancel();}catch(e){}
+  try{if('speechSynthesis' in window)speechSynthesis.cancel();}catch(e){}
+  _ttsTocando=false;
   try{db.ref('notificacoes').off();}catch(e){}
   notifCache=[];
   auth.signOut().then(()=>{
@@ -4482,7 +4488,7 @@ function verLogin(tab,plano){
   if(l)l.classList.add('hidden');
   if(v)v.classList.remove('hidden');
   showAuthTab(tab||'login');
-  window.scrollTo(0,0);
+  irAoTopoDoConteudo();
 }
 function planoEscolhido(){
   let p=null;
@@ -4500,7 +4506,7 @@ function verLanding(){
   if(v)v.classList.add('hidden');
   if(l)l.classList.remove('hidden');
   montarInstalarLanding();                         // b126: variante certa ao voltar do login
-  window.scrollTo(0,0);
+  irAoTopoDoConteudo();
 }
 // Quem chega deslogado cai na APRESENTAÇÃO, não no formulário. A única exceção é
 // o 'pending': ali a pessoa acabou de se cadastrar e precisa ver o aviso de
@@ -4909,7 +4915,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.269';
+const APP_VERSAO='v1.270';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -5136,7 +5142,7 @@ function _navToInner(s,skipStagger){
   const sc=document.getElementById('screen-'+s);
   if(sc)sc.classList.add('active');
   _marcarNav(s);
-  window.scrollTo(0,0);
+  irAoTopoDoConteudo();
   // Voltar ao painel encerra o ciclo de foco — senão a barra flutuante ficaria
   // pendurada para sempre, já que só `sairDoFoco()` a limparia.
   if(s==='inicio')focoAtivo=null;
@@ -5191,7 +5197,7 @@ function animateScreenEntrance(sc){
   // pega esses itens ocultos também, e o índice do stagger (i*55ms) infla até a
   // 2ª/3ª área começar a aparecer só segundos depois — different por área conforme
   // o acervo, sem padrão. Só o cabeçalho da área (visível) deve entrar na conta.
-  const items=[...sc.querySelectorAll('.area-card,.area-row,.quick-btn,.sim-card,.resumo-list-item,.padrao-card,.user-head,.obj-card,.adapt-btn,.diag-card:not(.hidden),.metas-card,#foco-bloco,.ver-progresso,.btn-intercalado,.sim-hist-item')]
+  const items=[...sc.querySelectorAll('.area-row,.quick-btn,.sim-card,.resumo-list-item,.padrao-card,.user-head,.obj-card,.adapt-btn,.diag-card:not(.hidden),.metas-card,#foco-bloco,.ver-progresso,.btn-intercalado,.sim-hist-item')]
     .filter(el=>!el.closest('.pg-area-topicos'));
   items.forEach((el,i)=>{
     el.style.opacity='0';
@@ -5798,7 +5804,7 @@ function _ativarTelaLocal(screenId){
   document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   const sc=document.getElementById(screenId);if(sc)sc.classList.add('active');
-  window.scrollTo(0,0);
+  irAoTopoDoConteudo();
 }
 // Reforço a partir de uma questão errada: marca a ORIGEM para devolver à questão
 // (não ao carrossel) quando o usuário concluir a leitura/revisão.
@@ -6673,7 +6679,7 @@ async function responderQuiz(idx){
 function nextQuiz(){
   quizIdx++;
   if(quizIdx>=quizQueue.length)finishQuiz();
-  else renderQuizQ();
+  else{renderQuizQ();irAoTopoDoConteudo();}
 }
 
 // Chave de dia em horário LOCAL (não UTC) — evita "virar o dia" à meia-noite errada.
@@ -6837,8 +6843,8 @@ function _hubCards(){
     : `<div class="hub-ok">✓ Sessão do dia concluída</div>${acervo>0?`<button class="btn-weak" style="width:100%" onclick="iniciarMetaCards()">Revisar mais assim mesmo</button>`:`<div class="hub-hint">Tudo revisado. Fixe com questões na Sessão do dia.</div>`}`;
   body.innerHTML=`<div class="hub-inicio">${cta}</div>`+renderCardLista();
 }
-function iniciarMetaCards(){cardsModo='estudo';cardsUnico=false;cardsFiltroTopico=null;_estudoCards();window.scrollTo(0,0);}
-function voltarHubCards(){cardsModo='hub';cardsUnico=false;renderCards();window.scrollTo(0,0);}
+function iniciarMetaCards(){cardsModo='estudo';cardsUnico=false;cardsFiltroTopico=null;_estudoCards();irAoTopoDoConteudo();}
+function voltarHubCards(){cardsModo='hub';cardsUnico=false;renderCards();irAoTopoDoConteudo();}
 // Dose de cards do dia (meta): mesma seleção que o Hub oferece — priorizarPorMalha por
 // vencido/fraqueza, cortada no que falta pra bater a meta. Reusada pela Sessão do dia
 // (b171/D1), que compõe esta fila com montarTreinoDoDia em vez de fundir os seletores.
@@ -7002,7 +7008,7 @@ function estudarCardUnico(id){
   cardsModo='estudo';cardsUnico=true;cardsFiltroTopico=null;
   document.getElementById('cards-body').classList.add('cards-estudo'); // b117: mesmo gatilho de _estudoCards()
   cardQueue=[fc];cardIdx=0;renderCard();
-  window.scrollTo(0,0);
+  irAoTopoDoConteudo();
 }
 function flipCard(){
   const el=document.getElementById('card-flip-el');
@@ -7039,7 +7045,7 @@ async function avaliarCard(dif){
   // o card aqui, o denominador (quizTotalSessao, questão+card) nunca bate com o numerador
   // (só questão), mesmo numa sessão 100% completa. med/fac = recuperação bem-sucedida, mesmo
   // critério já usado acima pra bktTocarRecuperacao.
-  if(naSessao){quizSessao.t++;if(dif!=='dif')quizSessao.c++;quizIdx++;renderQuizQ();}
+  if(naSessao){quizSessao.t++;if(dif!=='dif')quizSessao.c++;quizIdx++;renderQuizQ();irAoTopoDoConteudo();}
   else{cardIdx++;renderCard();}
 }
 
@@ -7300,8 +7306,8 @@ function _hubResumos(){
         : `<div class="hub-ok">✓ Resumos em dia</div><div class="hub-hint">Próximas revisões já agendadas. Fixe com questões na Sessão do dia.</div>`);
   content.innerHTML=`<div class="hub-inicio">${cta}</div>`+renderResumoLista();
 }
-function iniciarMetaResumos(){resumosModo='estudo';resumosUnico=false;_estudoResumos();window.scrollTo(0,0);}
-function voltarHubResumos(){resumosModo='hub';resumosUnico=false;renderResumos();window.scrollTo(0,0);}
+function iniciarMetaResumos(){resumosModo='estudo';resumosUnico=false;_estudoResumos();irAoTopoDoConteudo();}
+function voltarHubResumos(){resumosModo='hub';resumosUnico=false;renderResumos();irAoTopoDoConteudo();}
 // Modo estudo imersivo: um resumo por vez, sem o índice competindo.
 function _estudoResumos(){
   const acervo=resumosPendentes().length;
@@ -7474,25 +7480,54 @@ async function avaliarResumo(dif){
   renderResumos();
 }
 
+// Flag própria — speechSynthesis.speaking já foi visto preso em true sem onend/onerror
+// (b180), e a função antiga saía sem nunca tocar de novo até recarregar a página.
+// _ttsGeracao invalida um falar() pendente (esperando vozes) quando o usuário clica
+// de novo antes dele rodar — sem isso, um clique duplo enfileirava a leitura 2x.
+let _ttsTocando=false,_ttsGeracao=0;
 function ouvirResumo(id){
   const r=RESUMOS_BANCO.find(x=>x.id===id);
   if(!r)return;
   registrarVisualizacaoResumo(id);
-  if(speechSynthesis.speaking){speechSynthesis.cancel();
-    const btn=document.getElementById('resumo-audio-btn');
+  const btn=document.getElementById('resumo-audio-btn');
+  if(!('speechSynthesis' in window)){
+    showToast('Este navegador não lê em voz alta. Abra no Chrome ou Safari em vez do navegador interno do app de mensagem.');
+    return;
+  }
+  if(_ttsTocando){
+    _ttsGeracao++; // invalida qualquer falar() ainda esperando vozes
+    speechSynthesis.cancel();
+    _ttsTocando=false;
     if(btn){btn.textContent='▶ Ouvir este resumo';btn.classList.remove('playing');}
     return;
   }
-  const u=new SpeechSynthesisUtterance(r.texto.replace(/[•→×≤≥]/g,' '));
-  u.lang='pt-BR';u.rate=0.95;
-  // Tentar usar voz Luciana (iOS) ou primeira voz PT disponível
-  const vozesPT=speechSynthesis.getVoices().filter(v=>v.lang.startsWith('pt'));
-  const luciana=vozesPT.find(v=>v.name.toLowerCase().includes('luciana'));
-  if(luciana)u.voice=luciana;else if(vozesPT.length)u.voice=vozesPT[0];
-  const btn=document.getElementById('resumo-audio-btn');
+  speechSynthesis.cancel(); // limpa qualquer lixo preso do motor antes de tocar
+  const g=++_ttsGeracao;
+  _ttsTocando=true;
   if(btn){btn.textContent='⏹ Parar';btn.classList.add('playing');}
-  u.onend=()=>{if(btn){btn.textContent='▶ Ouvir este resumo';btn.classList.remove('playing');}};
-  speechSynthesis.speak(u);
+  const falar=()=>{
+    if(g!==_ttsGeracao)return; // usuário já parou/reiniciou durante a espera de vozes
+    const u=new SpeechSynthesisUtterance(r.texto.replace(/[•→×≤≥]/g,' '));
+    u.lang='pt-BR';u.rate=0.95;
+    // Tentar usar voz Luciana (iOS) ou primeira voz PT disponível
+    const vozesPT=speechSynthesis.getVoices().filter(v=>v.lang.startsWith('pt'));
+    const luciana=vozesPT.find(v=>v.name.toLowerCase().includes('luciana'));
+    if(luciana)u.voice=luciana;else if(vozesPT.length)u.voice=vozesPT[0];
+    u.onend=()=>{_ttsTocando=false;if(btn){btn.textContent='▶ Ouvir este resumo';btn.classList.remove('playing');}};
+    u.onerror=()=>{
+      _ttsTocando=false;
+      if(btn){btn.textContent='▶ Ouvir este resumo';btn.classList.remove('playing');}
+      showToast('Não consegui ler em voz alta. Verifique o volume de mídia e a conversão de texto em voz do aparelho.');
+    };
+    speechSynthesis.speak(u);
+  };
+  // getVoices() costuma vir vazio no 1º clique depois do load — espera o motor
+  // carregar a lista uma vez, com teto curto pra não travar o clique.
+  if(speechSynthesis.getVoices().length){falar();return;}
+  let feito=false;
+  const aoCarregarVozes=()=>{if(feito)return;feito=true;falar();};
+  speechSynthesis.addEventListener('voiceschanged',aoCarregarVozes,{once:true});
+  setTimeout(()=>{if(feito)return;feito=true;speechSynthesis.removeEventListener('voiceschanged',aoCarregarVozes);falar();},1000);
 }
 
 // ═══════════════════════════════
@@ -7609,8 +7644,8 @@ function marcarSim(i){
   simRespostas[simIdx]=i;
   renderSimQ();
 }
-function simNext(){if(simIdx<simQuestoes.length-1){simIdx++;renderSimQ();}}
-function simPrev(){if(simIdx>0){simIdx--;renderSimQ();}}
+function simNext(){if(simIdx<simQuestoes.length-1){simIdx++;renderSimQ();irAoTopoDoConteudo();}}
+function simPrev(){if(simIdx>0){simIdx--;renderSimQ();irAoTopoDoConteudo();}}
 
 async function encerrarSimulado(){
   if(simTimer)clearInterval(simTimer);
