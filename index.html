@@ -559,7 +559,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .dash-body.carregando .pg-kpi-v,.dash-body.carregando .pg-subline b,.dash-body.carregando .dominio-geral-pct,.dash-body.carregando .pg-hero-faixa{color:transparent;background:linear-gradient(90deg,var(--border) 25%,var(--paper-2) 37%,var(--border) 63%);background-size:400% 100%;animation:dashSkeleton 1.4s ease infinite;border-radius:6px;display:inline-block;min-width:2.4em;}
 @keyframes dashSkeleton{0%{background-position:100% 0}100%{background-position:0 0}}
 .sec-title{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:.13em;margin:4px 0 10px;display:flex;align-items:center;justify-content:space-between;}
-.sec-title-hub{margin-top:14px;}
 .sec-title a{font-size:11px;color:var(--red);font-weight:700;text-transform:none;letter-spacing:0;}
 /* ── Acordeão "Meu progresso" (consolidação dos 5 painéis de análise) ── */
 .mp-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:9px;overflow:hidden;}
@@ -614,13 +613,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pg-area-topicos{display:none;margin-top:2px;padding-left:2px;}
 .pg-area-row.open .pg-area-topicos{display:block;animation:fadeInDown .18s var(--ease-out);}
 /* A2 (bloco 53) — acordeão do Quiz: reaproveita .pg-area-row/.pg-area-topicos/toggleAreaTopicos, layout em coluna */
-.pg-area-row.quiz-area-row{display:block;padding:0;border-top:none;}
+.pg-area-row.quiz-area-row,.pg-area-row.hub-modos{display:block;padding:0;border-top:none;}
 .pg-area-row.quiz-area-row .area-row{margin-bottom:0;}
-.pg-area-row.quiz-area-row.open .area-row{border-radius:16px 16px 0 0;box-shadow:none;}
-.pg-area-row.quiz-area-row .area-row .pg-area-chev{margin-left:auto;color:var(--text3);flex-shrink:0;}
-.pg-area-row.quiz-area-row .pg-area-topicos{background:var(--surface);border:1px solid var(--line-soft);border-top:none;border-radius:0 0 16px 16px;padding:8px 10px 10px;margin-top:-1px;}
+.pg-area-row.quiz-area-row.open .area-row,.pg-area-row.hub-modos.open .area-row{border-radius:16px 16px 0 0;box-shadow:none;}
+.pg-area-row.quiz-area-row .area-row .pg-area-chev,.pg-area-row.hub-modos .area-row .pg-area-chev{margin-left:auto;color:var(--text3);flex-shrink:0;}
+.pg-area-row.quiz-area-row .pg-area-topicos,.pg-area-row.hub-modos .pg-area-topicos{background:var(--surface);border:1px solid var(--line-soft);border-top:none;border-radius:0 0 16px 16px;padding:8px 10px 10px;margin-top:-1px;}
 .pg-area-row.quiz-area-row .pg-area-topicos .resumo-list-item{margin-bottom:8px;}
 .pg-area-row.quiz-area-row .pg-area-topicos .resumo-list-item:last-child{margin-bottom:0;}
+/* b179 (P12): acordeão "Outros modos de treino", fora do .area-list — reaproveita as regras
+   acima (block/sem borda superior/caixa do corpo aberto) via seletor combinado, sem duplicar. */
+.pg-area-row.hub-modos{margin:14px 0 16px;}
 /* B57 — 2º nível do acordeão (Cards/Resumos): abrir a área mostra só os tópicos
    fechados; o tópico é que abre os itens. Um tópico aberto por vez. */
 .hub-topico{border-top:1px solid var(--line-soft);}
@@ -2325,36 +2327,50 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           </div>
           <div class="hub-inicio" id="quiz-meta-cta"></div>
           <!-- b173: Estudo Rápido e Treino Focado migraram do painel. Ficam DEPOIS da
-               Sessão do dia de propósito: são alternativas a ela, não concorrentes. -->
-          <div class="sec-title sec-title-hub">Outros modos</div>
-          <div class="quick-grid">
-            <div class="quick-btn" onclick="abrirIntro('rapido')">
-              <div class="quick-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
-              <div class="quick-btn-title">Estudo Rápido</div>
-              <div class="quick-btn-sub" id="quick-sub">10 questões soltas</div>
+               Sessão do dia de propósito: são alternativas a ela, não concorrentes.
+               b179 (P12): os 4 blocos viraram 1 acordeão, reaproveitando
+               .pg-area-row/.pg-area-topicos/toggleAreaTopicos que o índice de áreas abaixo
+               já usa. Estado inicial (aberto/fechado) é decidido em renderQuizHub(). -->
+          <div class="pg-area-row hub-modos" id="hub-modos">
+            <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false">
+              <div class="area-row-icon" style="background:var(--paper-2);color:var(--text2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></div>
+              <div class="area-row-info">
+                <div class="area-row-name">Outros modos de treino</div>
+                <div class="area-row-meta">Estudo Rápido, Treino Focado e Intercalado</div>
+              </div>
+              <svg class="pg-area-chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
             </div>
+            <div class="pg-area-topicos">
+              <div class="quick-grid">
+                <div class="quick-btn" onclick="abrirIntro('rapido')">
+                  <div class="quick-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+                  <div class="quick-btn-title">Estudo Rápido</div>
+                  <div class="quick-btn-sub" id="quick-sub">10 questões soltas</div>
+                </div>
 
-            <div class="quick-btn" onclick="abrirIntro('focado')">
-              <div class="quick-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></div>
-              <div class="quick-btn-title">Treino Focado</div>
-              <div class="quick-btn-sub">15 questões · pontos fracos</div>
+                <div class="quick-btn" onclick="abrirIntro('focado')">
+                  <div class="quick-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></div>
+                  <div class="quick-btn-title">Treino Focado</div>
+                  <div class="quick-btn-sub">15 questões · pontos fracos</div>
+                </div>
+              </div>
+              <button class="btn-intercalado" onclick="abrirIntro('interleaving')"><svg style="width:17px;height:17px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Intercalado: alternar entre áreas</button>
+              <!-- BLOCO 34 (item 3): caminho SEM leitor de QR.
+                   O ebook mandava "Quiz → <nome do tópico>", mas a aba Quiz só lista ÁREAS
+                   e clicar numa área já dispara o quiz — esse caminho nunca existiu.
+                   Agora o ebook imprime o CÓDIGO do tópico ao lado do QR e ele é digitado aqui. -->
+              <div class="cod-wrap">
+                <label class="cod-label" for="cod-topico">Veio do ebook? Digite o código do tópico</label>
+                <div class="cod-row">
+                  <input id="cod-topico" class="cod-input" type="text" inputmode="text" autocapitalize="characters"
+                         autocomplete="off" spellcheck="false" maxlength="5" placeholder="ex.: T3.4"
+                         aria-label="Código do tópico impresso no ebook"
+                         onkeydown="if(event.key==='Enter'){event.preventDefault();abrirPorCodigo();}">
+                  <button class="cod-btn" onclick="abrirPorCodigo()">Ir</button>
+                </div>
+                <div class="cod-erro hidden" id="cod-erro" role="alert"></div>
+              </div>
             </div>
-          </div>
-          <button class="btn-intercalado" onclick="abrirIntro('interleaving')"><svg style="width:17px;height:17px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Intercalado: alternar entre áreas</button>
-          <!-- BLOCO 34 (item 3): caminho SEM leitor de QR.
-               O ebook mandava "Quiz → <nome do tópico>", mas a aba Quiz só lista ÁREAS
-               e clicar numa área já dispara o quiz — esse caminho nunca existiu.
-               Agora o ebook imprime o CÓDIGO do tópico ao lado do QR e ele é digitado aqui. -->
-          <div class="cod-wrap">
-            <label class="cod-label" for="cod-topico">Veio do ebook? Digite o código do tópico</label>
-            <div class="cod-row">
-              <input id="cod-topico" class="cod-input" type="text" inputmode="text" autocapitalize="characters"
-                     autocomplete="off" spellcheck="false" maxlength="5" placeholder="ex.: T3.4"
-                     aria-label="Código do tópico impresso no ebook"
-                     onkeydown="if(event.key==='Enter'){event.preventDefault();abrirPorCodigo();}">
-              <button class="cod-btn" onclick="abrirPorCodigo()">Ir</button>
-            </div>
-            <div class="cod-erro hidden" id="cod-erro" role="alert"></div>
           </div>
           <div class="area-list" id="area-list"></div>
         </div>
@@ -4893,7 +4909,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.268';
+const APP_VERSAO='v1.269';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -6246,7 +6262,7 @@ function _ctaSessaoDoDia(classeBtn,confirmarSeVivo){
   const maisMeta=confirmarSeVivo?`trocarSessaoAtiva(()=>abrirIntro('meta',1))`:`abrirIntro('meta',1)`;
   return !treinoFeitoHoje()
     ? `<button class="${classeBtn}" style="width:100%" onclick="${irSessao}">Ir para a Sessão do dia</button>
-       <div class="hub-hint">Questões e flashcards intercalados, na medida do seu dia. Abaixo ficam os outros modos e o índice por área.</div>`
+       <div class="hub-hint">Questões e flashcards intercalados, na medida do seu dia.</div>`
     : `<div class="hub-ok">✓ Sessão do dia concluída</div><button class="btn-weak" style="width:100%" onclick="${maisMeta}">Responder mais assim mesmo</button>`;
 }
 function renderQuizHub(){
@@ -6260,9 +6276,22 @@ function renderQuizHub(){
     cta.innerHTML = `<button class="btn-primary" style="width:100%" onclick="retomarSessaoQuiz()">Retomar sessão</button>
        <div class="hub-hint">${restam} ${restam===1?'item restante':'itens restantes'}.</div>
        <div style="margin-top:10px">${_ctaSessaoDoDia('btn-weak',true)}</div>`;
+    _setHubModosAberto(false);
     return;
   }
   cta.innerHTML = _ctaSessaoDoDia('btn-primary');
+  // b179 (P12): fechado enquanto o motor tem o que mandar (sessão viva ou dia pendente);
+  // aberto só quando o dia já fechou e "mais prática" é o que sobra. Recalculado a cada
+  // render, de propósito — sem persistir escolha manual (upgrade, se pedido: flag em
+  // memória, nunca em RTDB, §2 do CLAUDE.md).
+  _setHubModosAberto(treinoFeitoHoje());
+}
+function _setHubModosAberto(aberto){
+  const row=document.getElementById('hub-modos');
+  if(!row)return;
+  row.classList.toggle('open',aberto);
+  const h=row.querySelector('.area-row');
+  if(h)h.setAttribute('aria-expanded',aberto?'true':'false');
 }
 function iniciarMetaQuiz(){
   const meta=userStats.metaDiaria||10;
@@ -8954,10 +8983,12 @@ const TOUR_PASSOS=[
   // fez (ou adiou) o nivelamento, pelo mesmo filtro de visibilidade de sempre.
   {tela:'quiz',sel:'#diag-card',quando:diagCardAtivo,titulo:'Comece por aqui',
    texto:'Antes de tudo, faça o simulado de nivelamento: 15 questões pelas 5 áreas. É com ele que o app descobre seu nível e passa a montar as filas de estudo em cima do que VOCÊ erra, não de um plano genérico. Leva poucos minutos e só se faz uma vez.'},
-  {tela:'quiz',sel:'.quick-grid',titulo:'Estudo Rápido e Treino Focado',
-   texto:'Dois atalhos para quando o tempo é curto. Estudo Rápido são 10 questões soltas, de qualquer assunto. Treino Focado são 15 questões concentradas nos tópicos em que você vai pior.'},
-  {tela:'quiz',sel:'.btn-intercalado',titulo:'Intercalado',
-   texto:'Mistura áreas diferentes na mesma sessão. É desconfortável de propósito: trocar de assunto obriga você a reconhecer o tipo de questão antes de responder, que é exatamente o que a prova cobra.'},
+  // b179 (P12): os dois passos abaixo apontavam para dentro do acordeão "Outros modos de
+  // treino" (.quick-grid e .btn-intercalado), que agora nasce FECHADO na maior parte dos
+  // casos — alvo com rect 0x0 é descartado em silêncio (_tourAlvos). Fundidos num só,
+  // apontando pro cabeçalho do acordeão, que está sempre visível.
+  {tela:'quiz',sel:'#hub-modos .area-row',titulo:'Outros modos de treino',
+   texto:'Três atalhos para quando o tempo é curto ou você quer variar. Estudo Rápido são 10 questões soltas; Treino Focado são 15 concentradas nos seus piores tópicos; e o Intercalado mistura áreas diferentes na mesma sessão, desconfortável de propósito, porque trocar de assunto obriga você a reconhecer o tipo de questão antes de responder, que é o que a prova cobra. Aqui dentro também fica o campo do código impresso no ebook.'},
   {tela:'quiz',sel:'#area-list .area-row',titulo:'Escolher área e tópico',
    texto:'Toque uma área para abrir os tópicos dela. Dentro dá para praticar a área inteira ou só um tópico específico, útil quando você quer bater num assunto que sabe que cai.'},
   // ── Flashcards e Resumos: 1 passo cada, com a tela ja aberta atras ──
