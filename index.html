@@ -4889,7 +4889,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.265';
+const APP_VERSAO='v1.266';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -6977,7 +6977,14 @@ async function avaliarCard(dif){
   // b171/D4: dentro da Sessão do dia o card em avaliação é quizQueue[quizIdx], não
   // cardQueue[cardIdx] — despacho por quizArea (padrão que o código já usa pra distinguir
   // modo), não por identidade de objeto (quebraria se o mesmo card estivesse nas duas filas).
-  const naSessao=quizArea==='SESSAO';
+  // b176: `quizArea==='SESSAO'` SOZINHO não distingue contexto — quizArea continua 'SESSAO'
+  // enquanto o militar está no reforço pós-erro, que roda na aba Cards sobre cardQueue. Sem os
+  // dois testes abaixo, avaliar um flashcard do REFORÇO avaliava quizQueue[quizIdx] (a QUESTÃO
+  // recém-errada): gravava estado de card no id dela, somava no placar e dava quizIdx++, que é
+  // o "voltar me joga na próxima questão" relatado. origemReforco!=='quiz' resolve o caso do
+  // relato; ehCardDeSessao() é o cinto de segurança pra qualquer outra rota que abra a aba
+  // Cards com uma Sessão viva parada numa questão.
+  const naSessao=quizArea==='SESSAO'&&origemReforco!=='quiz'&&ehCardDeSessao(quizQueue[quizIdx]);
   const fc=naSessao?quizQueue[quizIdx]:cardQueue[cardIdx];
   if(!fc)return;                       // fila já esgotada — nada a avaliar
   const existing=userCards[fc.id]||{};
