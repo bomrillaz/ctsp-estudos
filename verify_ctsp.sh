@@ -56,6 +56,22 @@ cat data.js main.js > _combined.js
 node --check _combined.js && echo "combinado=OK" || echo "combinado=FALHOU"
 fi
 
+echo "=== TOKENS CSS (esperado: tokens_fantasma=0) ==="
+cat > _tokens.js <<'EOF'
+const fs = require('fs');
+const html = fs.readFileSync('index.html', 'utf-8');
+const declared = new Set();
+const declRe = /--([a-zA-Z][a-zA-Z0-9-]*)\s*:/g;
+let m;
+while ((m = declRe.exec(html))) declared.add(m[1]);
+const used = new Set();
+const useRe = /var\(\s*--([a-zA-Z][a-zA-Z0-9-]*)\s*(?:,|\))/g;
+while ((m = useRe.exec(html))) used.add(m[1]);
+const fantasma = [...used].filter(t => !declared.has(t)).sort();
+console.log('tokens_fantasma=' + fantasma.length + (fantasma.length ? ' (' + fantasma.map(t => '--' + t).join(',') + ')' : ''));
+EOF
+node _tokens.js
+
 echo "=== CONTEUDO ==="
 if [ -n "$DATA" ]; then SRC=data.js; else SRC=main.js; fi
 cat > _count.js <<EOF
