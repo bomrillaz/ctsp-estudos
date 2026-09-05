@@ -470,8 +470,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .dash-greeting{font-family:var(--font-display);font-size:13px;color:var(--ember);font-weight:600;letter-spacing:.18em;text-transform:uppercase;margin-bottom:2px;}
 .dash-name{font-family:var(--font-display);font-size:30px;font-weight:700;letter-spacing:.02em;line-height:1;}
 .dash-ring-label{font-size:10px;opacity:.7;font-weight:600;font-variant-numeric:tabular-nums;}
-.ring-fg.ring-fc{stroke:var(--at3);}
-.ring-fg.ring-rs{stroke:var(--at4);}
 /* S30: hero com anel de meta */
 .dash-stat-div{width:1px;background:rgba(255,255,255,.13);margin:5px 0;flex-shrink:0;}
 /* Meta do dia — recolhível (padrão fechado; cada meta batida "brota" sozinha) */
@@ -1789,7 +1787,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <p>Flashcards e resumos voltam sozinhos no dia em que sua memória está prestes a soltar. Não antes, não depois.</p>
         </div>
         <div class="lp-card">
-          <h3>Treino do dia pronto</h3>
+          <h3>Sessão do dia pronta</h3>
           <p>Você abre e já tem a sessão montada. A decisão de o que estudar sai das suas costas.</p>
         </div>
       </div>
@@ -1851,7 +1849,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <article class="lp-card lp-card-ciencia">
           <div class="lp-tag">Modelo adaptativo</div>
           <h3>BKT para medir, FSRS para agendar</h3>
-          <p>O <b>BKT</b> estima a probabilidade de você dominar cada tópico, descontando o acerto por sorte e o erro por desatenção. Por isso ele não é a sua taxa de acerto. O <b>FSRS</b> calcula quando cada item precisa voltar, item por item. Juntos, montam o treino do dia sem que você precise decidir nada.</p>
+          <p>O <b>BKT</b> estima a probabilidade de você dominar cada tópico, descontando o acerto por sorte e o erro por desatenção. Por isso ele não é a sua taxa de acerto. O <b>FSRS</b> calcula quando cada item precisa voltar, item por item. Juntos, montam a Sessão do dia sem que você precise decidir nada.</p>
         </article>
       </div>
       <div class="lp-nota-honesta">
@@ -1886,7 +1884,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <h3 class="lp-h3">Calibradas pela incidência real</h3>
           <p class="lp-p">Escrever do zero não significa escrever no escuro. As provas de 2017 a 2025 foram analisadas questão a questão para mapear o que a banca cobra, com que frequência e de que jeito. E é esse padrão que orienta o que se escreve e como se escreve.</p>
           <h3 class="lp-h3">Distribuídas pelas cotas reais do edital</h3>
-          <p class="lp-p">A prova tem 60 questões com cota fixa por área temática. O banco e o treino do dia respeitam essa proporção. Estudar demais uma área de cota pequena não aumenta o teto dela.</p>
+          <p class="lp-p">A prova tem 60 questões com cota fixa por área temática. O banco e a Sessão do dia respeitam essa proporção. Estudar demais uma área de cota pequena não aumenta o teto dela.</p>
           <div class="lp-cotas">
             <div><span>AT1</span><b>14</b></div>
             <div><span>AT2</span><b>8</b></div>
@@ -1979,7 +1977,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="lp-card"><h3>E se o edital atrasar?</h3><p>O plano vale pelo período contratado a partir da assinatura, independente da data do edital. Por isso o anual, com 13 meses, costuma ser o mais seguro.</p></div>
         <div class="lp-card"><h3>Posso desistir depois de pagar?</h3><p>Pode. São 7 dias de arrependimento a contar do pagamento, com devolução integral, conforme o CDC.</p></div>
         <div class="lp-card"><h3>Perco o progresso se trocar de celular?</h3><p>Não. Ele fica na sua conta, e ainda dá para exportar um backup próprio em Configurações.</p></div>
-        <div class="lp-card"><h3>Dá para dividir a conta com um colega?</h3><p>Tecnicamente até dá, mas quebra o que faz a plataforma funcionar: o sistema aprende com cada resposta para calcular o seu Domínio e montar o Treino do dia. Duas pessoas numa conta só embaralham as duas estimativas. Nenhum dos dois fica com um treino que reflita o que ele mesmo sabe. Por isso o acesso é individual.</p></div>
+        <div class="lp-card"><h3>Dá para dividir a conta com um colega?</h3><p>Tecnicamente até dá, mas quebra o que faz a plataforma funcionar: o sistema aprende com cada resposta para calcular o seu Domínio e montar a Sessão do dia. Duas pessoas numa conta só embaralham as duas estimativas. Nenhum dos dois fica com uma sessão que reflita o que ele mesmo sabe. Por isso o acesso é individual.</p></div>
       </div>
       <button type="button" class="lp-btn-linha" onclick="abrirDoc('faq')">Ver todas as perguntas</button>
     </div>
@@ -3315,7 +3313,9 @@ function diasAteProva(agora){
   const n=Math.floor((new Date(d+'T23:59:59.999')-agora)/86400000);
   return n>=0?n:Infinity;
 }
-function fsrsSaida(S,D,reps,now){const interval=Math.max(1,Math.min(Math.round(S),diasAteProva(now)));return{S:+S.toFixed(3),D:+D.toFixed(2),reps:(reps||0)+1,last:now,next:now+interval*86400000,interval};}
+// b177 · P8: piso na estabilidade, teto na agenda. Invertido, o Math.max(1,..) anulava o
+// teto e agendava pra DEPOIS da prova quando diasAteProva=0 (n=0 e valido de proposito, b167).
+function fsrsSaida(S,D,reps,now){const interval=Math.min(Math.max(1,Math.round(S)),diasAteProva(now));return{S:+S.toFixed(3),D:+D.toFixed(2),reps:(reps||0)+1,last:now,next:now+interval*86400000,interval};}
 function fsrsCardUpdate(card,dif){
   const now=Date.now();card=card||{};
   const grau=dif==='dif'?1:dif==='fac'?3:2; // 1=lapso, 2=ok, 3=fácil
@@ -3687,6 +3687,10 @@ function selecionarAdaptativo(limite=12){
     pool.push(...qs.slice(0,cota));
   });
   pool=pool.map(q=>({q,pL:(q.topico in pLajDe)?pLajDe[q.topico]:BKT_P.L0,due:questaoDue(q.id)}));
+  // b177 · P7: topico nunca visto empata em pL(=L0) e due(=0). Sem terceiro criterio o sort
+  // estavel caia na ordem de insercao de TOPICOS, e AT4/AT5 (fim do objeto) nunca entravam no
+  // corte. Embaralhar antes mantem o comparador consistente e deixa o empate ser sorteado.
+  pool=shuffle(pool);
   pool.sort((a,b)=>(a.pL-b.pL)||(a.due-b.due));
   const seen=new Set();const out=[];
   for(const it of pool){if(seen.has(it.q.id))continue;seen.add(it.q.id);out.push(it.q);if(out.length>=limite)break;}
@@ -4889,7 +4893,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.266';
+const APP_VERSAO='v1.267';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -5612,7 +5616,7 @@ function renderFoco(){
   const rod=document.getElementById('foco-rodape');
   if(rod){
     rod.textContent=prox
-      ? 'Cada etapa volta para cá quando terminar. Você não precisa passar pelo painel.'
+      ? 'Termine a etapa e toque na barra que fica na tela para voltar aqui.'
       : 'Este tópico sai da sua fila de foco. Se o domínio cair de novo, ele volta sozinho.';
   }
   // Conclusão do tópico: grava com o domínio DO MOMENTO, para saber depois se caiu.
@@ -6058,10 +6062,14 @@ function encerrarSessaoQuiz(){
   quizFilaRenderizada=null;        // b176: solta a fila morta e força reinício limpo no próximo render
   quizExemploAtivo=false;          // b174: teardown único também da flag de exemplo avulso
 }
+// b177 · P5/P7: fonte unica de "quantos faltam". Identidade e a POSICAO (b176), entao a
+// varredura desconta as posicoes ja respondidas em vez de confiar so no quizIdx, que fica
+// parado na questao atual de quem respondeu e saiu sem clicar "Proxima".
+function pendentesQuiz(){let n=0;for(let i=quizIdx;i<quizQueue.length;i++)if(!quizRespondidasSessao.has(i))n++;return n;}
 // b174: fonte única do runner do Quiz — antes eram 16 pares copy-paste pra abrir e só 2
 // caminhos de volta. sessaoQuizViva() é o predicado único de "existe sessão retomável";
 // ninguém mais deduz isso por conta própria (fila com item ainda não consumido).
-function sessaoQuizViva(){return !quizExemploAtivo&&quizQueue.length>0&&quizIdx<quizQueue.length;}
+function sessaoQuizViva(){return !quizExemploAtivo&&quizQueue.length>0&&pendentesQuiz()>0;}
 function abrirRunnerQuiz(){
   quizExemploAtivo=false; // toda sessão REAL passa por aqui — só mostrarExemplo liga de novo, na sequência
   document.getElementById('quiz-home-view').classList.add('hidden');
@@ -6248,7 +6256,7 @@ function renderQuizHub(){
   // b174: sessão pausada (saiu pela nav no meio) tem prioridade sobre a CTA do dia — retomar
   // vem primeiro, a CTA da Sessão do dia desce pra secundária (mesma lógica, peso menor).
   if(sessaoQuizViva()){
-    const restam=quizQueue.length-quizIdx;
+    const restam=pendentesQuiz();
     cta.innerHTML = `<button class="btn-primary" style="width:100%" onclick="retomarSessaoQuiz()">Retomar sessão</button>
        <div class="hub-hint">${restam} ${restam===1?'item restante':'itens restantes'}.</div>
        <div style="margin-top:10px">${_ctaSessaoDoDia('btn-weak',true)}</div>`;
@@ -9454,7 +9462,7 @@ const DOCS={
     <h3>A regra que vale quando as fontes brigam</h3>
     <p>Se o gabarito antigo de uma prova conflita com a norma que está em vigor hoje, <b>vale a norma</b>. A explicação diz isso abertamente em vez de repetir um gabarito vencido.</p>
     <h3>Como a plataforma decide o que te dar</h3>
-    <p>Cada resposta sua ajusta uma estimativa de quanto você domina aquele tópico. O treino do dia monta a sessão nesta ordem: primeiro o que está vencido de revisão, depois os tópicos mais fracos, depois assunto novo, priorizando as áreas que valem mais pontos na prova. Você não precisa decidir o que estudar; a tela decide e explica por quê.</p>
+    <p>Cada resposta sua ajusta uma estimativa de quanto você domina aquele tópico. A Sessão do dia monta sua rodada nesta ordem: primeiro o que está vencido de revisão, depois os tópicos mais fracos, depois assunto novo, priorizando as áreas que valem mais pontos na prova. Você não precisa decidir o que estudar; a tela decide e explica por quê.</p>
     <h3>O que ela não faz</h3>
     <p>Não promete aprovação, não substitui a leitura da norma e não adivinha o que vai cair. O que ela faz é impedir que você estude só o que já sabe.</p>
     <h3>Erros</h3>
@@ -9475,7 +9483,7 @@ const DOCS={
     <h3>Posso desistir depois de pagar?</h3>
     <p>Pode. Por ser compra online, você tem <b>7 dias de arrependimento</b> a contar do pagamento, conforme o Código de Defesa do Consumidor, com devolução integral. Depois desse prazo, o plano segue até o fim do período contratado.</p>
     <h3>Posso dividir a conta com um colega?</h3>
-    <p>Não. O sistema aprende com cada resposta para calcular o seu Domínio e montar o Treino do dia: se duas pessoas respondem pela mesma conta, as estimativas dos dois ficam erradas, e nenhum dos dois recebe um treino que reflita o que sabe de verdade. Por isso o acesso é individual e a conta compartilhada é bloqueada.</p>
+    <p>Não. O sistema aprende com cada resposta para calcular o seu Domínio e montar a Sessão do dia: se duas pessoas respondem pela mesma conta, as estimativas dos dois ficam erradas, e nenhum dos dois recebe uma sessão que reflita o que sabe de verdade. Por isso o acesso é individual e a conta compartilhada é bloqueada.</p>
     <h3>Perco meu progresso se trocar de celular?</h3>
     <p>Não. Ele fica na sua conta. Em Configurações ainda dá para exportar um arquivo de backup e restaurar depois, se quiser uma cópia própria.</p>
     <h3>Achei um erro numa questão. E agora?</h3>
@@ -9566,7 +9574,7 @@ const DOCS={
     <h3>3. Para que servem</h3>
     <ul>
       <li>Manter sua conta e liberar o acesso que você contratou, base legal: <b>execução do contrato</b>.</li>
-      <li>Medir seu desempenho e montar o treino do dia: é a função central do serviço, também execução do contrato.</li>
+      <li>Medir seu desempenho e montar sua Sessão do dia: é a função central do serviço, também execução do contrato.</li>
       <li>Enviar lembretes de revisão, base legal: <b>seu consentimento</b>, revogável a qualquer momento.</li>
       <li>Proteger a plataforma contra fraude e uso indevido, base legal: <b>legítimo interesse</b>.</li>
     </ul>
@@ -9671,15 +9679,14 @@ function showInfo(tipo){
       +'ATENÇÃO: este número CAI sozinho com o tempo, sem você errar nada. É de propósito: conhecimento sem revisão '
       +'esfria, e o app prefere te avisar antes da prova a te deixar confiante com um dado velho. '
       +'Quanto mais vezes você acerta um tópico, mais devagar ele esfria. Revisar o tópico levanta o número de novo. '
-      +'O treino do dia usa exatamente isso para escolher o que te dar.',
+      +'A Sessão do dia usa exatamente isso para escolher o que te dar.',
     prontidao:'Quantos pontos dos 60 da prova você faria se ela fosse hoje. '
       +'Cada área entra pela cota do edital (AT1 14 · AT2 8 · AT3 14 · AT4 12 · AT5 12) multiplicada pelo seu domínio nela; '
       +'por isso ir bem numa área de cota pequena move pouco o total. '
       +'Não é nota garantida nem previsão do resultado: é a melhor estimativa possível com o que você respondeu até agora, '
       +'e ela erra mais no começo. Abaixo de '+MIN_RESP_PRONT+' respostas a tela marca como preliminar. '
       +'Se o número estiver abaixo do corte, abra "Por área" e veja onde está a maior distância entre a cota e o que você faz: '
-      +'é ali que cada hora de estudo rende mais ponto. '
-      +'Defina a data da prova em Configurações para ver a contagem regressiva.',
+      +'é ali que cada hora de estudo rende mais ponto.',
     acuracia:'Sua taxa de acerto somando todas as áreas: acertos ÷ questões respondidas, todas as tentativas incluídas. '
       +'É o mesmo tipo de número do histórico por área, só que geral: olha para trás, não para o seu nível de agora. '
       +'O símbolo ao lado compara com a semana anterior, e só aparece quando já existe base para comparar. '
