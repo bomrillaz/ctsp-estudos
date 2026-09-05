@@ -3232,11 +3232,15 @@ let _reforcoResumosAvaliados=new Set();
 // Ids já re-expostos NESTA sessão de treino (reaprendizado dentro da sessão) —
 // garante que a questão errada volte só UMA vez, sem loop. Zera a cada nova sessão.
 let quizReexpostas=new Set();
-// b174: ids já contabilizados nesta sessão — guarda o invariante "uma resposta por questão
-// por sessão" na FONTE (responderQuiz), não num fluxo de re-render específico (retomar,
-// reexibir etc.) — assim vale pra qualquer caminho que leve de volta à mesma questão, não só
-// pro botão "Retomar sessão". Único lugar que limpa: encerrarSessaoQuiz() (teardown único).
+// b174: POSIÇÕES da fila já contabilizadas nesta sessão — guarda o invariante "uma resposta
+// por OCORRÊNCIA" na FONTE (responderQuiz), não num fluxo de re-render específico (retomar,
+// reexibir etc.) — assim vale pra qualquer caminho que leve de volta ao mesmo item.
+// b176: guardava `id`, e por id o reaprendizado (mesma questão reexposta no fim da fila)
+// caía no guard e o clique morria. A unidade certa é a ocorrência, não a questão.
+// Dois lugares limpam: encerrarSessaoQuiz() (teardown) e renderQuizQ() ao detectar fila nova.
 let quizRespondidasSessao=new Set();
+// b176: última fila que renderQuizQ() inicializou. Identidade do array = "é a mesma sessão?".
+let quizFilaRenderizada=null;
 // b174: mostrarExemplo() usa quizQueue/quizIdx pra exibir 1 questão avulsa, fora de fluxo de
 // sessão — sem isto, sessaoQuizViva() não distingue "exemplo" de sessão real. Ligada só por
 // mostrarExemplo, desligada por padrão em abrirRunnerQuiz() (toda sessão REAL passa por ali)
@@ -4885,7 +4889,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.264';
+const APP_VERSAO='v1.265';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -6051,6 +6055,7 @@ function encerrarSessaoQuiz(){
   const qc=document.getElementById('quiz-body-card');if(qc)qc.innerHTML='';
   quizQueue=[];quizIdx=0;quizSessao={c:0,t:0};quizArea='TODAS';
   quizRespondidasSessao=new Set(); // b174: teardown único também do guard anti-double-score
+  quizFilaRenderizada=null;        // b176: solta a fila morta e força reinício limpo no próximo render
   quizExemploAtivo=false;          // b174: teardown único também da flag de exemplo avulso
 }
 // b174: fonte única do runner do Quiz — antes eram 16 pares copy-paste pra abrir e só 2
@@ -6123,8 +6128,11 @@ function _voltarMenuQuizFn(descartar){
 // raiz pra qualquer OUTRO caminho de re-render; aqui o que se conserta é a tela: avança até
 // achar um item de fato pendente. Se a fila esgotar (o item respondido era o último), a
 // sessão terminou de verdade — finishQuiz() fecha do jeito certo (tela de fim, treinoDia).
+// b176: o pulo é por POSIÇÃO. Por id ele descartava a questão reexposta pelo reaprendizado
+// (mesmo id, ocorrência nova no fim da fila) e, como ela é a última, varria até o fim e
+// ENCERRAVA a sessão sozinho na retomada — era o "perdi o treino" que o militar relatou.
 function retomarSessaoQuiz(){
-  while(quizIdx<quizQueue.length&&quizRespondidasSessao.has(quizQueue[quizIdx].id)){
+  while(quizIdx<quizQueue.length&&quizRespondidasSessao.has(quizIdx)){
     quizIdx++;
   }
   if(quizIdx>=quizQueue.length){finishQuiz();return;}
@@ -6433,7 +6441,17 @@ function renderQuizQ(){
   if(quizIdx>=quizQueue.length){finishQuiz();return;}
   const q=quizQueue[quizIdx];
   quizAnswered=false;
-  if(quizIdx===0){quizReexpostas=new Set();quizTotalSessao=quizQueue.length;} // início: zera re-exposições e CONGELA o total
+  // b176: "sessão nova" é FILA NOVA (identidade do array), não quizIdx===0. Pelo índice, um
+  // re-render da posição 0 já respondida (retomar, voltar de tela) zerava o guard e reabria a
+  // dupla contagem que o b174 fechou. Por identidade, o push da re-exposição não dispara
+  // (mesmo array) e uma fila montada por lançador que não passou pelo teardown dispara —
+  // que é o vazamento que sobra enquanto o P6 (lançadores fora do hub) não fecha.
+  if(quizQueue!==quizFilaRenderizada){
+    quizFilaRenderizada=quizQueue;
+    quizReexpostas=new Set();
+    quizRespondidasSessao=new Set();
+    quizTotalSessao=quizQueue.length; // CONGELA o total
+  }
   _reforcoResumosAvaliados.clear(); // nova questão = nova ocorrência de reforço
   const tot=quizTotalSessao||quizQueue.length; // fallback defensivo se chamado fora do fluxo normal (idx>0 sem ter passado por idx=0)
   document.getElementById('quiz-prog-fill').style.width=Math.min(100,quizIdx/tot*100)+'%';
@@ -6497,10 +6515,12 @@ function renderQuizQ(){
 async function responderQuiz(idx){
   if(quizAnswered)return;
   const q=quizQueue[quizIdx];
-  // b174: guarda por ID — impede contar a MESMA questão 2x na sessão (ex.: respondeu, saiu
-  // sem clicar "Próxima", retomou depois: renderQuizQ() reabre quizAnswered=false, mas o id
-  // já foi contabilizado aqui). Ver quizRespondidasSessao acima.
-  if(q&&quizRespondidasSessao.has(q.id))return;
+  // b174: impede contar a MESMA ocorrência 2x na sessão (ex.: respondeu, saiu sem clicar
+  // "Próxima", retomou depois: renderQuizQ() reabre quizAnswered=false, mas ela já foi
+  // contabilizada aqui). b176: a chave é a POSIÇÃO na fila, não o id. Por id, o guard
+  // matava o clique da questão reexposta pelo reaprendizado (mesmo id, outra ocorrência,
+  // ver quizQueue.push mais abaixo) e o militar ficava preso sem conseguir responder.
+  if(!q||quizRespondidasSessao.has(quizIdx))return; // !q: o `q&&` do b174 protegia índice fora da fila
   quizAnswered=true;
   // b123: nivelamento obrigatório deixou de ser gate no load — vira interceptação AQUI,
   // no único ponto por onde as 13 rotas de quiz gravam resposta. quizArea!=='DIAGNOSTICO'
@@ -6511,7 +6531,7 @@ async function responderQuiz(idx){
     return;
   }
   registrarTempoQuestao(); // S53: fecha o cronômetro antes de qualquer await
-  quizRespondidasSessao.add(q.id); // a partir daqui a função só chega ao fim (sem outro return)
+  quizRespondidasSessao.add(quizIdx); // a partir daqui a função só chega ao fim (sem outro return)
   const correta=q._shuffledG!==undefined?q._shuffledG:q.g;
   const acertou=idx===correta;
   const opts=document.querySelectorAll('.quiz-opt');
