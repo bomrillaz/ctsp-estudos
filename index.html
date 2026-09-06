@@ -4924,7 +4924,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.277';
+const APP_VERSAO='v1.278';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -5133,6 +5133,9 @@ function _navToInner(s,skipStagger){
   // Qualquer navegação por MENU encerra o vínculo com a questão do reforço. O reforço e
   // o retorno usam _ativarTelaLocal (não navTo), então este clear não os atrapalha.
   origemReforco=null;
+  // Mesma lógica para o Foco (P1b): o próprio despacho de uma etapa seta origemFoco DEPOIS
+  // deste navTo interno, então este clear não atrapalha — só limpa navegação por MENU real.
+  origemFoco=false;
   // b171/D4 (achado do code-review): sair do Quiz pela nav inferior com um CARD na tela não
   // passa por voltarMenuQuiz/finishQuiz — sem limpar aqui, o id fixo (card-flip-el/card-btns)
   // fica preso em #quiz-body-card e colide com o mesmo id que renderCard() cria em #cards-body.
@@ -5588,6 +5591,12 @@ function renderFilaFoco(){
 
 // ── Tela de Foco ──────────────────────────────────────────────
 let focoAtivo=null;   // tópico em foco; controla a barra flutuante de retorno
+// P1b: marca que a etapa ABERTA AGORA nasceu do Foco (distinto de focoAtivo, que fica
+// setado mesmo quando o usuário sai e abre outro resumo/card por outra rota — sem este
+// flag à parte, aquele outro conteúdo herdaria o retorno automático que não pediu).
+// Setado DEPOIS do navTo interno de cada despacho (senão _navToInner zera na hora) e
+// consumido (lido + zerado) uma única vez, no ponto de conclusão de cada etapa.
+let origemFoco=false;
 
 function abrirFoco(t){
   if(!Object.prototype.hasOwnProperty.call(TOPICOS,t)){showToast('Tópico não encontrado.');return;}
@@ -5667,13 +5676,15 @@ function focoAbrirEtapa(tipo,id){
     const f=focoEstado(t);
     const lidos=Array.isArray(f.r)?f.r.slice():[];
     if(!lidos.includes(id)){lidos.push(id);focoGravar(t,{r:lidos});}
-    navTo('resumos');mostrarResumoDirecto(id);
+    navTo('resumos');origemFoco=true;mostrarResumoDirecto(id);
   } else if(tipo==='cards'){
     focoGravar(t,{fc:true});
-    revisarCardsDoTopico(t);
+    revisarCardsDoTopico(t);origemFoco=true;
   } else if(tipo==='questoes'){
     _introLimparBotao();
-    trocarSessaoAtiva(()=>praticarTopico(t));   // marcado como feito em registrarRespostaAdaptativa(), só ao responder de verdade
+    // origemFoco só depois de praticarTopico() — ele navega pro quiz por dentro, e esse
+    // navTo interno zeraria o flag se setado antes (mesmo caso do resumo/cards acima).
+    trocarSessaoAtiva(()=>{praticarTopico(t);origemFoco=true;});   // marcado como feito em registrarRespostaAdaptativa(), só ao responder de verdade
   }
   atualizarBarraFoco();
 }
@@ -6767,9 +6778,16 @@ function configFimSessao(area){
 // Tela de conclusão da sessão: fecha o objetivo (quando há), revela o aproveitamento (só
 // aqui, não durante) e conduz ao próximo passo em vez de largar o usuário num menu.
 function mostrarFimSessao(){
+  // P1b: consome o flag uma vez só, aqui — é o único ponto de conclusão do quiz.
+  const veioDoFoco=origemFoco; if(veioDoFoco)origemFoco=false;
   const c=quizSessao.c,t=quizSessao.t,pct=t?Math.round(c/t*100):0;
   const g=id=>document.getElementById(id);
-  const cfg=configFimSessao(quizArea);
+  let cfg=configFimSessao(quizArea);
+  if(veioDoFoco){
+    // Mostra o placar normal, mas oferece o retorno ao Foco como CTA — não navega sozinho
+    // (decisão do João: terminar o quiz não deve sequestrar o usuário sem aviso).
+    cfg={...cfg,extras:[{b:'← Voltar ao Foco',primaria:true,fn:()=>navTo('foco')},...cfg.extras.map(x=>({...x,primaria:false}))]};
+  }
   const subBase=pct>=70?(cfg.diario?'Mandou bem. Objetivo do dia cumprido.':'Mandou bem.'):pct>=50?'Bom trabalho, o reforço fixa o resto.':'O que vale é a constância; o que você errou volta espaçado.';
   const md=tempoMedioQuestao();
   const ritmo=md?` Ritmo ${fmtRitmo(md)}/questão${md>TEMPO_PROVA_POR_Q?' (acima dos 3min da prova)':''}.`:'';
@@ -6899,15 +6917,21 @@ function _estudoCards(){
   }
   const body=document.getElementById('cards-body');
   if(!cardQueue.length){
+    // P1b: só consome o flag quando NÃO é reforço de erro — o reforço pode acontecer NO
+    // MEIO de um quiz vindo do Foco (origemFoco fica true a sessão inteira); consumir aqui
+    // "roubaria" o retorno ao Foco que pertence ao FIM do quiz, lá na frente.
+    const veioDoFoco=origemReforco!=='quiz'&&origemFoco; if(veioDoFoco)origemFoco=false;
     const restam=acervo;
     const filtro=cardsFiltroTopico;
     body.innerHTML=fimInlineHTML({
       icone:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.5 13l1.5 8-5-3-5 3 1.5-8"/></svg>`,
       titulo: restam>0?'✓ Meta de flashcards concluída':'Revisão concluída!',
       sub: restam>0?`Memória ativada. Agora fixe respondendo: recuperar em prova consolida ainda mais.`:(filtro?'Todos os cards deste tópico foram revisados.':'Todos os cards revisados. Fixe com questões na Sessão do dia.'),
-      primariaHTML: origemReforco==='quiz'
-        ?`<button class="btn-weak btn-neutral" style="margin-top:12px" onclick="voltarAoQuizDoReforco()">← Voltar à questão</button>`
-        :`<button class="btn-primary" style="margin-top:12px;width:100%" onclick="abrirIntro('sessao')">Fixar na Sessão do dia →</button>`,
+      primariaHTML: veioDoFoco
+        ?`<button class="btn-primary" style="margin-top:12px;width:100%" onclick="navTo('foco')">← Voltar ao Foco</button>`
+        : origemReforco==='quiz'
+          ?`<button class="btn-weak btn-neutral" style="margin-top:12px" onclick="voltarAoQuizDoReforco()">← Voltar à questão</button>`
+          :`<button class="btn-primary" style="margin-top:12px;width:100%" onclick="abrirIntro('sessao')">Fixar na Sessão do dia →</button>`,
       extrasHTML: (restam>0&&origemReforco!=='quiz')?`<button class="btn-weak btn-neutral" style="margin-top:8px" onclick="maisCards()">Fazer mais ${Math.min(dose('cards'),restam)}</button>`:'',
       linksHTML: origemReforco!=='quiz'?`${filtro?`<button class="fim-inline-link" onclick="limparFiltroCards()">Ver todos os tópicos</button>`:''}<button class="fim-inline-link" onclick="voltarHubCards()">← Voltar aos flashcards</button>`:''
     });
@@ -7487,6 +7511,20 @@ async function avaliarResumo(dif){
   updateBadges();
   showToast('Revisão em '+updated.interval+(updated.interval===1?' dia':' dias'));
   if(origemReforco==='quiz'){_reforcoResumosAvaliados.add(resumoAtualId);voltarAoQuizDoReforco();return;} // reforço de erro: volta à questão, não ao carrossel
+  // P1b: só consome o flag AQUI — depois do desvio de reforço acima. Um erro reforçado
+  // por resumo pode acontecer NO MEIO de um quiz que veio do Foco (origemFoco fica true
+  // a sessão inteira); se consumisse antes do desvio, esse resumo do reforço "roubaria"
+  // o retorno ao Foco que pertence ao FIM do quiz, lá na frente.
+  const veioDoFoco=origemFoco; if(veioDoFoco)origemFoco=false;
+  if(veioDoFoco){
+    // Mostra a conclusão e oferece o retorno como CTA — não navega sozinho, mesma regra do Quiz.
+    document.getElementById('resumos-content').innerHTML=fimInlineHTML({
+      titulo:'✓ Resumo concluído',
+      sub:'Continue o tópico de onde parou no Foco.',
+      primariaHTML:`<button class="btn-primary" style="width:100%" onclick="navTo('foco')">← Voltar ao Foco</button>`
+    });
+    return;
+  }
   if(resumosUnico){voltarHubResumos();return;} // resumo avulso do índice: volta ao hub
   renderResumos();
 }
