@@ -4924,7 +4924,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.274';
+const APP_VERSAO='v1.275';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -6206,9 +6206,10 @@ function fecharConfirm(e){if(e&&e.target!==e.currentTarget)return;document.getEl
 // subTom:'pend' destaca item que pede ação HOJE (vencido/nunca estudado — não histórico de já
 // ter sido revisado); Cards/Resumos calculam com pendente()/vencido() já existentes na função-mãe.
 // Os 2 call sites do Quiz carregam contagem, não estado, e ficam neutros.
+// PD1 (auditoria b184/b185): o ícone de 32px era igual ao da área-mãe, repetido em cada item sem
+// carregar informação própria. Removido; icBox/icon seguem chegando dos 4 call sites, ignorados.
 function itemFolhaHTML({icBox,icon,titulo,sub,subTom,onclick,extraClass,seta,minw0}){
   return `<div class="resumo-list-item${extraClass?' '+extraClass:''}" role="button" tabindex="0" onclick="${onclick}">
-        <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${icon}</div>
         <div style="flex:1${minw0?';min-width:0':''}"><div style="font-size:13px;font-weight:700">${titulo}</div><div class="resumo-list-vence${subTom?' resumo-list-vence--'+subTom:''}">${sub}</div></div>
         ${seta?'<div style="color:var(--text3);font-size:18px">→</div>':''}
       </div>`;
@@ -7349,13 +7350,14 @@ function _estudoResumos(){
   registrarVisualizacaoResumo(r.id);
   const aInfo=AI[r.area]||{};
   const probLabel=r.prob==='alta'?'Alta probabilidade':r.prob==='media'?'Média':'Baixa';
+  const probCor=r.prob==='alta'?'background:var(--red-light);color:var(--red-dark)':r.prob==='baixa'?'background:var(--green-light);color:var(--green)':'background:var(--amber-light);color:var(--amber)';
   content.innerHTML=`
     <button onclick="voltarHubResumos()" style="width:100%;margin-bottom:10px;padding:9px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:700;color:var(--text2)">← Resumos</button>
     <div class="resumo-card">
       <div class="resumo-card-top">
         <span class="resumo-area-tag" style="background:${aInfo.bg};color:${aInfo.color}">${aInfo.icon} ${r.area}</span>
         <span class="q-badge ${ehNovoR?'badge-nova':'badge-rev'}">${ehNovoR?'NOVO':'REVISÃO'}</span>
-        <span class="resumo-dif-tag" style="background:var(--amber-light);color:var(--amber)">${probLabel}</span>
+        <span class="resumo-dif-tag" style="${probCor}">${probLabel}</span>
       </div>
       <div class="resumo-titulo">${sanitize(r.titulo)}</div>
       <div class="resumo-texto">${sanitize(r.texto).replace(/\n/g,'<br>')}</div>
@@ -7441,12 +7443,13 @@ function mostrarResumoDirecto(id){
   const aInfo=AI[r.area]||{};
   // Rótulos suportados: alta | media | baixa (o Bloco A usa só os dois primeiros).
   const probLabel=r.prob==='alta'?'Alta':r.prob==='baixa'?'Baixa':'Média';
+  const probCor=r.prob==='alta'?'background:var(--red-light);color:var(--red-dark)':r.prob==='baixa'?'background:var(--green-light);color:var(--green)':'background:var(--amber-light);color:var(--amber)';
   resumoAtualId=id;
   document.getElementById('resumos-content').innerHTML=`
     <div class="resumo-card">
       <div class="resumo-card-top">
         <span class="resumo-area-tag" style="background:${aInfo.bg};color:${aInfo.color}">${aInfo.icon} ${r.area}</span>
-        <span class="resumo-dif-tag" style="background:var(--amber-light);color:var(--amber)">${probLabel}</span>
+        <span class="resumo-dif-tag" style="${probCor}">${probLabel}</span>
       </div>
       <div class="resumo-titulo">${sanitize(r.titulo)}</div>
       <div class="resumo-texto">${sanitize(r.texto).replace(/\n/g,'<br>')}</div>
