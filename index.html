@@ -429,7 +429,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 /* BOTTOM NAV — pílula flutuante */
 .bottom-nav{position:fixed;bottom:calc(10px + env(safe-area-inset-bottom));left:12px;right:12px;height:64px;background:rgba(13,21,48,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08);border-radius:22px;display:flex;z-index:100;box-shadow:0 12px 36px rgba(11,20,48,.35);padding:0 4px;}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:rgba(255,255,255,.55);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;transition:color .25s;padding:8px 2px;position:relative;}
+/* P13a (b183): 12px/.02em é o TETO aqui — acima disso "Resumos" (rótulo mais longo)
+   pede mais largura que a célula flex:1 e desalinha o grid da barra em telas estreitas
+   (medido em 375px/320px). Não subir às cegas sem reconferir o alinhamento das 5 células. */
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:rgba(255,255,255,.55);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;cursor:pointer;transition:color .25s;padding:8px 2px;position:relative;}
 .nav-item.active{color:var(--ember);}
 .nav-item.active svg{animation:navPop .3s var(--ease-spring) both;}
 .nav-item svg{width:22px;height:22px;transition:transform .2s;}
@@ -466,7 +469,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .dash-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;position:relative;z-index:1;}
 .dash-greeting{font-family:var(--font-display);font-size:13px;color:var(--ember);font-weight:600;letter-spacing:.18em;text-transform:uppercase;margin-bottom:2px;}
 .dash-name{font-family:var(--font-display);font-size:30px;font-weight:700;letter-spacing:.02em;line-height:1;}
-.dash-ring-label{font-size:10px;opacity:.7;font-weight:600;font-variant-numeric:tabular-nums;}
 /* S30: hero com anel de meta */
 .dash-stat-div{width:1px;background:rgba(255,255,255,.13);margin:5px 0;flex-shrink:0;}
 /* Meta do dia — recolhível (padrão fechado; cada meta batida "brota" sozinha) */
@@ -515,7 +517,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .metas-mid{flex:1;min-width:0;}
 .metas-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
 .metas-nome{font-size:12.5px;font-weight:700;color:#fff;}
-.metas-num{font-size:11px;font-weight:700;color:rgba(255,255,255,.6);font-variant-numeric:tabular-nums;}
+.metas-num{font-size:12.5px;font-weight:700;color:rgba(255,255,255,.6);font-variant-numeric:tabular-nums;}
 .metas-track{height:7px;background:rgba(255,255,255,.14);border-radius:5px;overflow:hidden;}
 .metas-fill{height:100%;width:0;border-radius:5px;transition:width .7s var(--ease-out);}
 .metas-fill.mq{background:linear-gradient(90deg,var(--red),var(--ember));}
@@ -937,7 +939,7 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
 .area-row-icon{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
 .area-row-info{flex:1;}
 .area-row-name{font-size:14px;font-weight:700;color:var(--text);}
-.area-row-meta{font-size:11px;color:var(--text2);margin-top:2px;}
+.area-row-meta{font-size:12.5px;color:var(--text2);margin-top:2px;}
 
 
 /* ── Cabeçalho de tela unificado (todas as abas) ── */
@@ -2319,7 +2321,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             </div>
             <div class="adapt-btn-arrow">→</div>
           </div>
-          <div class="hub-inicio" id="quiz-meta-cta"></div>
+          <div class="hub-inicio" id="quiz-meta-cta" role="status"></div>
           <!-- b173: Estudo Rápido e Treino Focado migraram do painel. Ficam DEPOIS da
                Sessão do dia de propósito: são alternativas a ela, não concorrentes.
                b179 (P12): os 4 blocos viraram 1 acordeão, reaproveitando
@@ -2327,7 +2329,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
                já usa. Estado inicial (aberto/fechado) é decidido em renderQuizHub(). -->
           <div class="pg-area-row hub-modos" id="hub-modos">
             <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false">
-              <div class="area-row-icon" style="background:var(--paper-2);color:var(--text2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></div>
+              <div class="area-row-icon" style="background:var(--paper-2);color:var(--text2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 12 12 17 22 12"/><polyline points="2 17 12 22 22 17"/></svg></div>
               <div class="area-row-info">
                 <div class="area-row-name">Outros modos de treino</div>
                 <div class="area-row-meta">Estudo Rápido, Treino Focado e Intercalado</div>
@@ -3732,11 +3734,13 @@ const REVISAO_LOTE=12;
 function iniciarRevisaoDue(){
   const due=questoesDueHoje();
   if(!due.length){showToast('Nenhuma revisão vencida. Tudo em dia!');return;}
-  quizQueue=interleavePorTopico(due.slice(0,REVISAO_LOTE));
-  quizArea='REVISAO';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;
-  abrirRunnerQuiz();
-  document.getElementById('quiz-area-tag').textContent='Revisão do dia · FSRS';
-  navTo('quiz');renderQuizQ();
+  trocarSessaoAtiva(()=>{
+    quizQueue=interleavePorTopico(due.slice(0,REVISAO_LOTE));
+    quizArea='REVISAO';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;
+    abrirRunnerQuiz();
+    document.getElementById('quiz-area-tag').textContent='Revisão do dia · FSRS';
+    navTo('quiz');renderQuizQ();
+  });
 }
 // b172/ponto2: "mais uma rodada" pós-sessão, decisão do João — nunca foi pra repetir as MESMAS
 // questões (a intenção sempre foi manter o estudante no app); o que estava errado era só o
@@ -3924,6 +3928,10 @@ function _introReabrir(){
   _introRenderizar(_introUltimo.titulo,_introUltimo.sub,_introUltimo.itens,'Entendi');
 }
 function abrirIntro(tipo,arg,arg2){
+  // b183/P6: guard único no topo — cobre os dois ramos de baixo (modal normal E o atalho
+  // "já visto" que chama acao() direto). Se há sessão viva, pede confirmação e só reentra
+  // aqui (já sem sessão) depois do "Descartar e continuar".
+  if(sessaoQuizViva()){trocarSessaoAtiva(()=>abrirIntro(tipo,arg,arg2));return;}
   const g=id=>document.getElementById(id);
   let titulo,sub,itens,btn,acao;
   if(tipo==='diagnostico'){
@@ -4646,7 +4654,7 @@ function consumirDeepLink(){
   const acao=m[1],t=m[2];
   if(!Object.prototype.hasOwnProperty.call(TOPICOS,t))return false;
   try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
-  if(acao==='p'){_introLimparBotao();praticarTopico(t);}else revisarTopico(t);
+  if(acao==='p'){_introLimparBotao();trocarSessaoAtiva(()=>praticarTopico(t));}else revisarTopico(t);
   return true;
 }
 
@@ -4915,7 +4923,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.272';
+const APP_VERSAO='v1.273';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -5664,7 +5672,7 @@ function focoAbrirEtapa(tipo,id){
     revisarCardsDoTopico(t);
   } else if(tipo==='questoes'){
     _introLimparBotao();
-    praticarTopico(t);   // marcado como feito em registrarRespostaAdaptativa(), só ao responder de verdade
+    trocarSessaoAtiva(()=>praticarTopico(t));   // marcado como feito em registrarRespostaAdaptativa(), só ao responder de verdade
   }
   atualizarBarraFoco();
 }
@@ -6246,10 +6254,10 @@ function renderAreaList(){
 // CTA da Sessão do dia — extraída pra ser reaproveitada como PRINCIPAL (sem sessão pausada)
 // ou SECUNDÁRIA (sessão pausada, ver renderQuizHub). Mesma lógica (concluída ou não) nos
 // dois casos; só a classe do botão principal muda de peso.
-// b174 (pendência #2, parcial): só o lançador DO HUB (a CTA secundária logo abaixo de
-// "Retomar sessão" — a colisão óbvia) confirma antes de descartar uma sessão pausada.
-// Os demais lançadores (área/tópico, Estudo Rápido, deep link) ficam de fora nesta rodada —
-// refatorar os 16 call sites de novo no mesmo commit é como se introduz defeito novo.
+// b183/P6: abrirIntro() guarda sozinho no topo (sessaoQuizViva()+trocarSessaoAtiva), cobrindo
+// os 2 ramos internos — por isso os wraps manuais que existiam aqui saíram. Os pontos fora do
+// funil (iniciarEstudoTopico, deep link do ebook, refazerErrosDoSimulado, questões da Tela de
+// Foco) se protegem cada um com o mesmo trocarSessaoAtiva().
 function trocarSessaoAtiva(fn){
   if(!sessaoQuizViva()){fn();return;}
   confirmarAcao({
@@ -6261,16 +6269,14 @@ function trocarSessaoAtiva(fn){
     ]
   });
 }
-function _ctaSessaoDoDia(classeBtn,confirmarSeVivo){
+function _ctaSessaoDoDia(classeBtn){
   // code-review (b172): a Sessão do dia sempre monta uma rodada de tamanho ~metaDiaria
   // (montarTreinoDoDiaCru(tam), não tam=resta) — um hint "N questões ainda hoje" aqui
   // prometeria um número que o clique não entrega. Sem contagem, mesma copy do modal.
-  const irSessao=confirmarSeVivo?`trocarSessaoAtiva(()=>abrirIntro('sessao'))`:`abrirIntro('sessao')`;
-  const maisMeta=confirmarSeVivo?`trocarSessaoAtiva(()=>abrirIntro('meta',1))`:`abrirIntro('meta',1)`;
   return !treinoFeitoHoje()
-    ? `<button class="${classeBtn}" style="width:100%" onclick="${irSessao}">Ir para a Sessão do dia</button>
+    ? `<button class="${classeBtn}" style="width:100%" onclick="abrirIntro('sessao')">Ir para a Sessão do dia</button>
        <div class="hub-hint">Questões e flashcards intercalados, na medida do seu dia.</div>`
-    : `<div class="hub-ok">✓ Sessão do dia concluída</div><button class="btn-weak" style="width:100%" onclick="${maisMeta}">Responder mais assim mesmo</button>`;
+    : `<div class="hub-ok">✓ Sessão do dia concluída</div><button class="btn-weak" style="width:100%" onclick="abrirIntro('meta',1)">Responder mais assim mesmo</button>`;
 }
 function renderQuizHub(){
   sincronizarDiagCard();   // FEAT-01 · b173: card de nivelamento, agora morador desta tela
@@ -6282,7 +6288,7 @@ function renderQuizHub(){
     const restam=pendentesQuiz();
     cta.innerHTML = `<button class="btn-primary" style="width:100%" onclick="retomarSessaoQuiz()">Retomar sessão</button>
        <div class="hub-hint">${restam} ${restam===1?'item restante':'itens restantes'}.</div>
-       <div style="margin-top:10px">${_ctaSessaoDoDia('btn-weak',true)}</div>`;
+       <div style="margin-top:10px">${_ctaSessaoDoDia('btn-weak')}</div>`;
     _setHubModosAberto(false);
     return;
   }
@@ -6842,7 +6848,7 @@ function _hubCards(){
     ? `<button class="btn-primary" style="width:100%" onclick="abrirIntro('sessao')">Ir para a Sessão do dia</button>
        <div class="hub-hint">${resta>0?resta+' card'+(resta!==1?'s':'')+' ainda hoje. Ou toque':'Toque'} um card abaixo para estudar avulso.</div>`
     : `<div class="hub-ok">✓ Sessão do dia concluída</div>${acervo>0?`<button class="btn-weak" style="width:100%" onclick="iniciarMetaCards()">Revisar mais assim mesmo</button>`:`<div class="hub-hint">Tudo revisado. Fixe com questões na Sessão do dia.</div>`}`;
-  body.innerHTML=`<div class="hub-inicio">${cta}</div>`+renderCardLista();
+  body.innerHTML=`<div class="hub-inicio" role="status">${cta}</div>`+renderCardLista();
 }
 function iniciarMetaCards(){cardsModo='estudo';cardsUnico=false;cardsFiltroTopico=null;_estudoCards();irAoTopoDoConteudo();}
 function voltarHubCards(){cardsModo='hub';cardsUnico=false;renderCards();irAoTopoDoConteudo();}
@@ -7305,7 +7311,7 @@ function _hubResumos(){
     : (acervo>0
         ? `<div class="hub-ok">✓ Resumos em dia</div><button class="btn-weak" style="width:100%" onclick="iniciarMetaResumos()">Ler mais assim mesmo</button>`
         : `<div class="hub-ok">✓ Resumos em dia</div><div class="hub-hint">Próximas revisões já agendadas. Fixe com questões na Sessão do dia.</div>`);
-  content.innerHTML=`<div class="hub-inicio">${cta}</div>`+renderResumoLista();
+  content.innerHTML=`<div class="hub-inicio" role="status">${cta}</div>`+renderResumoLista();
 }
 function iniciarMetaResumos(){resumosModo='estudo';resumosUnico=false;_estudoResumos();irAoTopoDoConteudo();}
 function voltarHubResumos(){resumosModo='hub';resumosUnico=false;renderResumos();irAoTopoDoConteudo();}
@@ -7787,10 +7793,12 @@ function toggleSimRevisao(){
 function refazerErrosDoSimulado(){
   if(!simRevisao.length){showToast('Sem erros para revisar!');return;}
   const erradas=simRevisao.map(it=>it.q);
-  quizQueue=interleavePorTopico(erradas);quizArea='ERRO';quizModoErro=true;quizIdx=0;quizSessao={c:0,t:0};
-  abrirRunnerQuiz();
-  document.getElementById('quiz-area-tag').textContent='Erros do simulado';
-  navTo('quiz');renderQuizQ();
+  trocarSessaoAtiva(()=>{
+    quizQueue=interleavePorTopico(erradas);quizArea='ERRO';quizModoErro=true;quizIdx=0;quizSessao={c:0,t:0};
+    abrirRunnerQuiz();
+    document.getElementById('quiz-area-tag').textContent='Erros do simulado';
+    navTo('quiz');renderQuizQ();
+  });
 }
 
 // S49: diagnóstico local, sem rede e sem custo. Prioriza por PONTOS EM JOGO
@@ -7996,13 +8004,15 @@ function togglePadrao(i){
 function mostrarExemplo(qid){
   const q=allQuestoes[qid];
   if(!q){showToast('Questão não encontrada.');return;}
-  _introLimparBotao();
-  navTo('quiz');
-  quizQueue=[q];quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;quizArea=q.area;
-  abrirRunnerQuiz();
-  quizExemploAtivo=true; // b174: fora de fluxo de sessão — nunca retomável, sempre descarta ao fechar
-  document.getElementById('quiz-area-tag').textContent='Exemplo: '+q.area;
-  renderQuizQ();
+  trocarSessaoAtiva(()=>{
+    _introLimparBotao();
+    navTo('quiz');
+    quizQueue=[q];quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;quizArea=q.area;
+    abrirRunnerQuiz();
+    quizExemploAtivo=true; // b174: fora de fluxo de sessão — nunca retomável, sempre descarta ao fechar
+    document.getElementById('quiz-area-tag').textContent='Exemplo: '+q.area;
+    renderQuizQ();
+  });
 }
 
 // ═══════════════════════════════
@@ -8888,14 +8898,16 @@ function renderObjetivoSemana(){
 
 function iniciarEstudoTopico(t){
   if(!allQuestoes||!Object.keys(allQuestoes).length){showToast('Banco ainda carregando, tente em instantes.');return;}
-  _introLimparBotao();
   let fila=Object.values(allQuestoes).filter(q=>q.topico===t).sort((x,y)=>questaoDue(x.id)-questaoDue(y.id));
   if(!fila.length){showToast('Sem questões para este tópico.');return;}
-  fila=shuffle(fila.slice(0,12));
-  quizQueue=fila;quizArea='ADAPTATIVO';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;
-  abrirRunnerQuiz();
-  document.getElementById('quiz-area-tag').textContent='Foco '+t;
-  navTo('quiz');renderQuizQ();
+  trocarSessaoAtiva(()=>{
+    _introLimparBotao();
+    fila=shuffle(fila.slice(0,12));
+    quizQueue=fila;quizArea='ADAPTATIVO';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;
+    abrirRunnerQuiz();
+    document.getElementById('quiz-area-tag').textContent='Foco '+t;
+    navTo('quiz');renderQuizQ();
+  });
 }
 
 // ═══════════════════════════════
