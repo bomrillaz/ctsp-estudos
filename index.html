@@ -546,7 +546,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .acc-body{display:none;padding:2px 14px 14px;}
 .acc-item.open .acc-body{display:block;animation:fadeInDown .18s var(--ease-out);}
 .acc-def{font-size:13px;color:var(--text2);line-height:1.6;}
-.acc-fonte{font-size:10.5px;color:var(--text3);margin-top:8px;}
+.acc-fonte{font-size:11.5px;color:var(--text3);margin-top:8px;}
 /* S30: seletor de tema */
 .theme-seg{display:flex;background:var(--paper-2);border:1px solid var(--border);border-radius:11px;padding:3px;gap:2px;}
 .theme-seg button{font-size:11px;font-weight:700;padding:7px 11px;border-radius:8px;background:transparent;color:var(--text2);transition:all .15s;}
@@ -593,7 +593,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
    perdeu o cartão próprio (ver #pg-atividade .chart-wrap no desktop). Evita 3-4 rótulos
    idênticos em maiúscula empilhados na mesma tela (Por área / E agora / Evolução). */
 .pg-mod-h-soft{font-family:inherit;font-size:12.5px;font-weight:700;text-transform:none;letter-spacing:normal;color:var(--text2);margin:4px 0 10px;}
-.pg-legend{display:flex;flex-direction:column;gap:5px;margin:12px 0;font-size:10.5px;color:var(--text2);line-height:1.4;}
+.pg-legend{display:flex;flex-direction:column;gap:5px;margin:12px 0;font-size:11.5px;color:var(--text2);line-height:1.4;}
 .pg-legend i{display:inline-block;width:16px;height:8px;border-radius:2px;margin-right:7px;vertical-align:-1px;flex-shrink:0;}
 .pg-area-row{display:flex;gap:10px;padding:15px 0;border-top:1px solid var(--line-soft);}
 .pg-area-row:first-of-type{border-top:none;}
@@ -1046,6 +1046,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .resumos-list{display:flex;flex-direction:column;gap:10px;}
 .resumo-list-item{background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px;cursor:pointer;}
 .resumo-list-vence{font-size:11px;color:var(--text3);}
+.resumo-list-vence--pend{color:var(--amber);font-weight:800;}
 /* "Praticar toda a área" é a ação do painel, não mais um tópico igual aos de baixo */
 .quiz-area-cta{background:var(--paper-2);}
 .quiz-area-cta:active{background:var(--border);}
@@ -1187,10 +1188,10 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .pix-parcelas{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px;}
 .pix-parc-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:56px;padding:8px 4px;border-radius:10px;background:var(--paper-2);border:1px solid var(--line-soft);font-family:inherit;color:var(--text2);cursor:pointer;}
 .pix-parc-btn b{font-size:13px;font-weight:800;color:var(--text);}
-.pix-parc-btn span{font-size:10.5px;color:var(--text3);}
+.pix-parc-btn span{font-size:11.5px;color:var(--text3);}
 .pix-parc-btn.on{background:var(--navy);border-color:var(--navy);}
 .pix-parc-btn.on b,.pix-parc-btn.on span{color:#fff;}
-.pix-parc-tag{font-style:normal;font-size:8.5px;font-weight:700;line-height:1.2;color:var(--green);margin-top:2px;text-align:center;}
+.pix-parc-tag{font-style:normal;font-size:10.5px;font-weight:700;line-height:1.2;color:var(--green);margin-top:2px;text-align:center;}
 .pix-parc-btn.on .pix-parc-tag{color:#9FE6C0;}
 /* Confirmação em passo separado: sem escolha, não tem href e não clica. */
 .pix-confirmar{display:block;margin-top:9px;padding:12px;border-radius:12px;text-align:center;font-size:13px;font-weight:800;text-decoration:none;background:var(--green-light);color:var(--green);}
@@ -1285,7 +1286,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .pg-veredito-nome{font-size:12.5px;font-weight:800;color:var(--text);letter-spacing:.02em;}
 .pg-veredito-dom{font-size:11.5px;font-weight:700;}
 .pg-veredito-dom-vazio{color:var(--text3);font-weight:600;}
-.pg-veredito-txt{flex-basis:100%;font-size:10.5px;color:var(--text2);line-height:1.3;}
+.pg-veredito-txt{flex-basis:100%;font-size:11.5px;color:var(--text2);line-height:1.3;}
 
 /* F2a — Nível 2/3 do mestre-detalhe: painel da área selecionada. */
 .pg-area-detalhe{margin-top:10px;}
@@ -1424,10 +1425,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .rep-item-id{font-size:11px;color:var(--text3);font-weight:700;}
 .rep-item-ctx{font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.4;}
 .rep-item-desc{font-size:13px;color:var(--text);line-height:1.45;margin-bottom:8px;}
-.rep-item-meta{font-size:10.5px;color:var(--text3);margin-bottom:8px;}
+.rep-item-meta{font-size:11.5px;color:var(--text3);margin-bottom:8px;}
 .rep-item-diag{margin-bottom:8px;}
 .rep-item-diag summary{font-size:11px;color:var(--text3);cursor:pointer;}
-.rep-item-diag pre{font-size:10.5px;color:var(--text2);white-space:pre-wrap;word-break:break-word;margin:6px 0 0;line-height:1.4;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+.rep-item-diag pre{font-size:11.5px;color:var(--text2);white-space:pre-wrap;word-break:break-word;margin:6px 0 0;line-height:1.4;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
 .rep-item-acts{display:flex;gap:7px;}
 .rep-item-acts button{padding:7px 12px;border-radius:9px;font-size:11.5px;font-weight:700;border:none;cursor:pointer;}
 .rep-resolve{background:var(--green);color:#fff;}
@@ -4923,7 +4924,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.273';
+const APP_VERSAO='v1.274';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -6198,6 +6199,20 @@ function _confirmExec(i){
 }
 function fecharConfirm(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('modal-confirm').classList.add('hidden');}
 
+// Anatomia comum do item-folha (ícone 32px + título + legenda) das listas Área→Tópico do
+// Quiz/Cards/Resumos — estava copiada literalmente em 4 pontos (achado da auditoria do b184,
+// grep por "resumo-list-vence" devolveu os 4). HTML de saída idêntico ao anterior, só fatorado.
+// `titulo` chega JÁ SANITIZADO pelos 4 call sites — quem adicionar um 5º precisa manter isso.
+// subTom:'pend' destaca item que pede ação HOJE (vencido/nunca estudado — não histórico de já
+// ter sido revisado); Cards/Resumos calculam com pendente()/vencido() já existentes na função-mãe.
+// Os 2 call sites do Quiz carregam contagem, não estado, e ficam neutros.
+function itemFolhaHTML({icBox,icon,titulo,sub,subTom,onclick,extraClass,seta,minw0}){
+  return `<div class="resumo-list-item${extraClass?' '+extraClass:''}" role="button" tabindex="0" onclick="${onclick}">
+        <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${icon}</div>
+        <div style="flex:1${minw0?';min-width:0':''}"><div style="font-size:13px;font-weight:700">${titulo}</div><div class="resumo-list-vence${subTom?' resumo-list-vence--'+subTom:''}">${sub}</div></div>
+        ${seta?'<div style="color:var(--text3);font-size:18px">→</div>':''}
+      </div>`;
+}
 // A2 (bloco 53): acordeão único por área — funde "Escolha uma área" + "Praticar por tópico".
 // Clique na linha da área só abre/fecha (toggleAreaTopicos, reaproveitado de Meu Progresso);
 // iniciar a área inteira é a 1ª linha de dentro ("Praticar toda a área").
@@ -6215,11 +6230,7 @@ function renderAreaList(){
     const icBox=`background:${a.bg};color:${a.color}`;
     const topicosHTML=tops.map(t=>{
       const nt=contQ[t]||0;
-      return `<div class="resumo-list-item" role="button" tabindex="0" onclick="abrirIntro('topico','${t}')">
-        <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${a.icon}</div>
-        <div style="flex:1"><div style="font-size:13px;font-weight:700">${sanitize(nomeTopico(t))}</div><div class="resumo-list-vence">${nt} quest${nt!==1?'ões':'ão'}</div></div>
-        <div style="color:var(--text3);font-size:18px">→</div>
-      </div>`;
+      return itemFolhaHTML({icBox,icon:a.icon,titulo:sanitize(nomeTopico(t)),sub:`${nt} quest${nt!==1?'ões':'ão'}`,onclick:`abrirIntro('topico','${t}')`,seta:true});
     }).join('');
     html+=`<div class="pg-area-row quiz-area-row" data-area="${k}">
       <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false">
@@ -6231,11 +6242,7 @@ function renderAreaList(){
         <svg class="pg-area-chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
       </div>
       <div class="pg-area-topicos">
-        <div class="resumo-list-item quiz-area-cta" role="button" tabindex="0" onclick="abrirIntro('quiz','${k}')">
-          <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${a.icon}</div>
-          <div style="flex:1"><div style="font-size:13px;font-weight:700">Praticar toda a área</div><div class="resumo-list-vence">${n} quest${n!==1?'ões':'ão'}</div></div>
-          <div style="color:var(--text3);font-size:18px">→</div>
-        </div>
+        ${itemFolhaHTML({icBox,icon:a.icon,titulo:'Praticar toda a área',sub:`${n} quest${n!==1?'ões':'ão'}`,onclick:`abrirIntro('quiz','${k}')`,extraClass:'quiz-area-cta',seta:true})}
         ${topicosHTML}
       </div>
     </div>`;
@@ -6987,10 +6994,7 @@ function renderCardLista(){
       let itens=`<div class="lista-topico lista-topico-acao" role="button" tabindex="0" onclick="revisarCardsDoTopico('${t}')">Estudar o tópico inteiro<span class="lt-acao">${doTopico.length} card${doTopico.length!==1?'s':''} →</span></div>`;
       doTopico.forEach(fc=>{
         const uc=userCards[fc.id];const rot=(uc&&uc.reps>0)?'Revisão':'Novo';
-        itens+=`<div class="resumo-list-item" role="button" tabindex="0" onclick="estudarCardUnico('${fc.id}')">
-          <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${aInfo.icon||''}</div>
-          <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">${sanitize(fc.f)}</div><div class="resumo-list-vence">${rot}</div></div>
-        </div>`;
+        itens+=itemFolhaHTML({icBox,icon:aInfo.icon||'',titulo:sanitize(fc.f),sub:rot,subTom:pendente(fc)?'pend':null,onclick:`estudarCardUnico('${fc.id}')`,minw0:true});
       });
       dentro+=hubTopicoHTML(sanitize(nomeTopico(t)),`${doTopico.length}${nPendT?` · ${nPendT} pend.`:''}`,itens);
     });
@@ -7410,10 +7414,7 @@ function renderResumoLista(){
         const ur=userStats['resumo_'+r.id];
         const ehNovoR2=!ur||!ur.reps; // igual ao selo Novo/Revisão de Cards (S47) — sem isso, resumo nunca lido aparecia como "Revisão: Hoje"
         const vence=ehNovoR2?'Novo':`Revisão: ${ur?.next?new Date(ur.next).toLocaleDateString('pt-BR'):'Hoje'}`;
-        itens+=`<div class="resumo-list-item" role="button" tabindex="0" onclick="mostrarResumoDirecto('${r.id}')">
-          <div class="area-row-icon" style="width:32px;height:32px;border-radius:8px;font-size:14px;${icBox}">${aInfo.icon}</div>
-          <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">${sanitize(r.titulo)}</div><div class="resumo-list-vence">${vence}</div></div>
-        </div>`;
+        itens+=itemFolhaHTML({icBox,icon:aInfo.icon,titulo:sanitize(r.titulo),sub:vence,subTom:vencido(r)?'pend':null,onclick:`mostrarResumoDirecto('${r.id}')`,minw0:true});
       });
       dentro+=hubTopicoHTML(sanitize(nomeTopico(t)),`${doTopico.length}${nPendT?` · ${nPendT} a revisar`:''}`,itens);
     });
