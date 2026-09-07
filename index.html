@@ -873,6 +873,9 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
 @media (max-height:480px){.tour-box{max-height:min(40vh,calc(100vh - 32px));}}
 .modal-box{background:var(--surface);border-radius:24px 24px 0 0;padding:28px 22px 40px;width:100%;max-width:480px;position:relative;max-height:90vh;overflow-y:auto;overflow-x:hidden;}
 .modal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--fire-line);}
+/* b190: alvo de toque WCAG 2.5.5/HIG (min 44px) só nos botões do confirmarAcao — .btn-weak
+   global fica como está (43 usos fora daqui, sem motivo pra crescer todos). */
+#confirm-acoes button{min-height:44px;}
 .modal-fechar-bar{position:sticky;top:0;height:0;z-index:5;}
 .modal-fechar{position:absolute;top:2px;right:0;width:30px;height:30px;border:none;background:var(--paper-2);border-radius:50%;font-size:15px;line-height:1;color:var(--text2);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12);}
 .modal-fechar::before{content:'';position:absolute;inset:-6px;}
@@ -1206,9 +1209,14 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .ring-container{position:relative;display:inline-flex;align-items:center;justify-content:center;isolation:isolate;}
 
 /* Toast */
-.toast{position:fixed;bottom:calc(var(--nav-h) + 20px);left:50%;transform:translateX(-50%) translateY(24px) scale(.95);background:rgba(13,21,48,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:white;border-radius:14px;padding:11px 22px;font-size:13px;font-weight:600;opacity:0;transition:all .3s var(--ease-out);z-index:9998;white-space:nowrap;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:12px;}
+.toast{position:fixed;bottom:calc(var(--nav-h) + 20px);left:50%;transform:translateX(-50%) translateY(24px) scale(.95);background:rgba(13,21,48,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:white;border-radius:14px;padding:11px 22px;font-size:13px;font-weight:600;opacity:0;transition:all .3s var(--ease-out);z-index:9998;white-space:nowrap;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:12px;pointer-events:none;}
 .toast-action{background:none;border:none;color:var(--ember);font-weight:800;font-size:12.5px;cursor:pointer;white-space:nowrap;padding:0;flex-shrink:0;}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1);}
+/* b190: sem isto, o toast fica sempre clicável (mesmo vazio/opacity:0) na sua faixa fixa
+   perto do rodapé, bloqueando silenciosamente qualquer botão que caia nela por baixo —
+   achado ao investigar "Descartar sessão" travado no confirmarAcao. Os outros 3 elementos
+   fixed+opacity:0 do arquivo (.sheet-overlay, #save-flash, .rep-overlay) já seguiam esse
+   padrão; só o toast tinha ficado de fora. */
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1);pointer-events:auto;}
 
 /* Util */
 .hidden{display:none!important;}
@@ -4924,7 +4932,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.278';
+const APP_VERSAO='v1.279';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -6280,10 +6288,11 @@ function renderAreaList(){
 function trocarSessaoAtiva(fn){
   if(!sessaoQuizViva()){fn();return;}
   confirmarAcao({
-    titulo:'Descartar sessão pausada?',
-    texto:'Você tem uma sessão em andamento. Começar outra descarta o que ficou pra trás.',
+    titulo:'Sessão em andamento',
+    texto:'Você pode retomar de onde parou, ou descartar para começar isto agora.',
     acoes:[
-      {rotulo:'Descartar e continuar',primaria:true,fn:()=>{encerrarSessaoQuiz();fn();}},
+      {rotulo:'Retomar sessão',primaria:true,fn:()=>{navTo('quiz');retomarSessaoQuiz();}},
+      {rotulo:'Descartar e continuar',fn:()=>{encerrarSessaoQuiz();fn();}},
       {rotulo:'Cancelar',fn:()=>{}}
     ]
   });
