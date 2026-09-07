@@ -460,6 +460,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 /* SCREENS */
 .screen{display:none;animation:none;}
+/* ⚠️ O `both` deixa `transform:translateY(0)` grudado na tela ativa para sempre, e
+   transform em ancestral vira containing block que QUEBRA position:sticky descendente.
+   Sticky novo dentro de `.screen` nasce quebrado por causa disto — medido no b200. */
 .screen.active{display:block;animation:screenIn .2s var(--ease-out) both;}
 
 /* ═══ DASHBOARD ═══ */
@@ -1000,7 +1003,12 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
 .sim-hist-item{background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
 .sim-hist-date{font-size:12px;color:var(--text2);}
 .sim-hist-score{font-family:var(--font-display);font-size:18px;font-weight:700;}
-.sim-running-header{background:linear-gradient(160deg,var(--navy-2),var(--navy));padding:14px 16px;color:white;position:sticky;top:var(--header-h);z-index:10;}
+/* top:0, NÃO var(--header-h). O scrolling ancestor deste sticky é `.app-content`
+   (overflow-y:auto), cujo scrollport JÁ começa abaixo do `.app-header` — descontar a altura
+   do header de novo empurrava esta barra 60px para baixo da posição natural, e ela cobria o
+   "Questão N" e a primeira linha do enunciado. Acontecia com rolagem ZERO, então o conserto
+   de rolagem herdada do b180 não alcançava: era o usuário vendo a questão sem enunciado. */
+.sim-running-header{background:linear-gradient(160deg,var(--navy-2),var(--navy));padding:14px 16px;color:white;position:sticky;top:0;z-index:10;}
 .sim-running-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--fire-line);opacity:.85;}
 .sim-timer{font-family:var(--font-display);font-size:34px;font-weight:700;letter-spacing:.06em;}
 .sim-timer-sub{font-size:11px;opacity:.75;}
@@ -4937,7 +4945,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.291';
+const APP_VERSAO='v1.292';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
