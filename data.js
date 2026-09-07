@@ -335,7 +335,6 @@ AT5:[{id:"a5_01",topico:"T5.1",st:"T5.1b",e:"Qual NÃO é motivo para transferê
 {id:"a5_08",topico:"T5.5",st:"T5.5d",e:"Qual órgão define a Certificação Logística das Células da FR² (IT 04.3)?",ops:["Academia de Bombeiro Militar (ABM).","Batalhão de Busca e Salvamento (BBS).","Assessoria de Operações e Defesa Civil (AODC).","Departamento Administrativo (DA).","Centro de Controle Operacional de Bombeiro (CCOB)."],g:2,doc:"IT 04.3/AODC-GCG",exp:"A AODC define a Certificação Logística das Células da FR²."},
 {id:"a5_09",topico:"T5.4",st:"T5.4b",e:"Sobre a Parte Disciplinar (Caderno Temático ABM 2023), qual alternativa está INCORRETA?",ops:["Todo militar que souber de fato contrário à disciplina deve participar ao superior, verbalmente (confirmado em 2 dias úteis).","A parte deve ser clara e precisa, com dados identificadores, local, data, hora, circunstâncias e alegações.","É PERMITIDO ao comunicante tecer comentários ou opiniões pessoais.","A parte deve ser apresentada em até 2 dias úteis da constatação.","'A parte disciplinar é o relato de uma transgressão cometida por um militar estadual' (RDBM)."],g:2,doc:"Caderno Temático ABM 2023",exp:"NÃO é permitido tecer comentários ou opiniões pessoais na parte disciplinar."},
 {id:"a5_10",topico:"T5.4",st:"T5.4d",e:"Sobre valências para elaborar documento oficial, quais estão CORRETAS? I-Selecionar documentos adequados; II-Elaborar conforme padrões; III-Utilizar norma culta; IV-Buscar clareza e precisão; V-Identificar grau de sigilosidade.",ops:["Apenas II e IV corretas.","I, II, III, IV e V corretas.","Todas incorretas.","Incorretas: I, II e V.","Apenas V incorreta."],g:1,doc:"Caderno Temático ABM 2023",exp:"Todas as 5 valências estão corretas e constam no Caderno Temático ABM 2023."},
-{id:"a5_11",topico:"T5.4",st:"T5.4a",e:"\"Documento de comunicação interna, pelo qual o subordinado participa ao superior informações inerentes à rotina administrativa, operacional, pessoal ou disciplinar.\" Que documento é esse?",ops:["Parte","Memorando","Ofício","Mensagem Eletrônica","Processo (PROA)"],g:0,doc:"Caderno Temático ABM 2023",exp:"É a PARTE — comunicação interna (subordinado → superior) sobre rotina do serviço."},
 {id:"a5_12",topico:"T5.4",st:"T5.4b",e:"Numa parte de acidente de serviço (Caderno Temático ABM 2023), qual informação NÃO deve constar?",ops:["Dia, data e horário; militares envolvidos.","Testemunhas, relato do acontecimento e repercussões imediatas.","Medidas saneadoras; viaturas despachadas e empregadas.","Comentários ou opiniões pessoais; custeio das despesas.","Dados do atendimento médico (hospital, hora, etc.)."],g:3,doc:"Caderno Temático ABM 2023",exp:"Comentários pessoais e custeio de despesas NÃO devem constar na parte de acidente de serviço."}],
 AT1B:[
 {id:"b1_01",topico:"T1.3",st:"T1.3b",e:"Segundo o Decreto Estadual nº 51.803/2014, ao aplicar a pena de ADVERTÊNCIA, a autoridade competente concederá, para sanar a irregularidade, o prazo de:",ops:["15 dias corridos.","30 dias corridos.","20 dias úteis.","10 dias úteis.","60 dias corridos."],g:1,doc:"Decreto 51.803/2014, art. 13, parágrafo único",exp:"Ao aplicar a pena de advertência, a autoridade competente concederá prazo de 30 dias consecutivos para que seja sanada a irregularidade constatada (art. 13, parágrafo único)."},
@@ -651,7 +650,6 @@ const FCI=[
 {id:"fc03",topico:"T1.3",st:"T1.3a",a:"AT1",f:"Penalidades do Decreto 51.803/2014",v:"Advertência → Multa → Multa diária → Interdição (EMBARGO não existe!)"},
 {id:"fc04",topico:"T1.3",st:"T1.3c",a:"AT1",f:"Diferença: Interdição Sanção × Interdição Prévia",v:"Sanção = decurso do tempo sem sanar | Prévia = poder de polícia por iminente risco à vida"},
 {id:"fc05",topico:"T2.2",st:"T2.2a",a:"AT2",f:"Pressão mínima de PROVA das mangueiras",v:"28 kgf/cm² (tipos 2/4/5) — 42 kgf/cm² é a pressão de RUPTURA, não de prova"},
-{id:"fc06",topico:"T2.1",st:"T2.1a",a:"AT2",f:"Concentração de O₂ para 'queima viva'",v:"Entre 21% e 14% | Abaixo de 14%: chama se apaga"},
 {id:"fc07",topico:"T2.4",st:"T2.4b",a:"AT2",f:"4 ferramentas de arrombamento (Manual CBMMG)",v:"Pé de Cabra + Malho 10 kg + Alavanca Halligan + Corta-vergalhão"},
 {id:"fc08",topico:"T2.3",st:"T2.3a",a:"AT2",f:"Ataque indireto/tridimensional — quando usar?",v:"Quando NÃO é possível atacar o foco diretamente → água nas camadas quentes de fumaça"},
 {id:"fc09",topico:"T3.2",st:"T3.2a",a:"AT3",f:"XABCDE — significado completo",v:"X=eXsanguinação | A=Airway | B=Breathing | C=Circulation | D=Disability | E=Exposure"},
@@ -664,7 +662,7 @@ const FCI=[
 {id:"fc16",topico:"T4.2",st:"T4.2f",a:"AT4",f:"Uso de uniforme em atividade político-partidária",v:"É VEDADO — não facultado! (LC 10.990/97)"},
 {id:"fc17",topico:"T4.3",st:"T4.3c",a:"AT4",f:"Princípios da Administração Pública — LIMPE",v:"Legalidade + Impessoalidade + Moralidade + Publicidade + EFICIÊNCIA (não 'eficácia')"},
 {id:"fc18",topico:"T4.3",st:"T4.3c",a:"AT4",f:"Prazo do concurso público (art. 37 CF)",v:"Até 2 anos, prorrogável UMA vez por igual período"},
-{id:"fc19",topico:"T4.7",st:"T4.7a",a:"AT4",f:"Prazo do IPM (IR 008/Corregedoria CBMRS)",v:"40 dias + 20 dias (prorrogação) → pedido fundamentado do encarregado"},
+{id:"fc19",topico:"T4.7",st:"T4.7a",a:"AT4",f:"Prazo do IPM (IR 008/Corregedoria CBMRS)",v:"40 dias + 20 dias (prorrogação) → pedido fundamentado do encarregado, 2 dias úteis de antecedência"},
 {id:"fc20",topico:"T4.7",st:"T4.7b",a:"AT4",f:"Prazo da Sindicância Militar (IR 006/Corregedoria CBMRS)",v:"30 dias + 20 dias → pedido do SINDICANTE, 2 dias úteis de antecedência"},
 {id:"fc21",topico:"T5.5",st:"T5.5a",a:"AT5",f:"Como enviar a IPO (IT 03/AODC-GCG)?",v:"Via WhatsApp ou Telegram ao CCOB — imediatamente, com: tipo + prefixo + síntese + endereço + horário"},
 {id:"fc22",topico:"T5.5",st:"T5.5d",a:"AT5",f:"Quem define a Certificação Logística das Células da FR²?",v:"AODC — Assessoria de Operações e Defesa Civil"},
@@ -686,14 +684,12 @@ const FCI=[
 {id:"fc38",topico:"T4.3",st:"T4.3b",a:"AT4",f:"CF art. 42 — o que define?",v:"PM e CBM dos Estados = MILITARES DOS ESTADOS (regime próprio: hierarquia e disciplina)"},
 {id:"fc39",topico:"T4.5",st:"T4.5a",a:"AT4",f:"Crime militar em tempo de paz — base legal",v:"CPM (DL 1.001/69), art. 9º — define pelas circunstâncias (autor, local, situação, vítima)"},
 {id:"fc40",topico:"T4.6",st:"T4.6a",a:"AT4",f:"Quem exerce a Polícia Judiciária Militar? (CPPM art. 7º)",v:"Comandantes, Diretores e Chefes (e quem os substituir/tiver delegação)"},
-{id:"fc41",topico:"T4.3",st:"T4.3a",a:"AT4",f:"CF art. 144 — CBM tem qual atribuição constitucional?",v:"Execução de atividades de DEFESA CIVIL, além das definidas em lei"},
 {id:"fc42",topico:"T5.4",st:"T5.4a",a:"AT5",f:"PARTE × OFÍCIO",v:"Parte = comunicação INTERNA (caserna, subordinado→superior) | Ofício = pode ser INTERNO (mesmo órgão) ou EXTERNO (outras instituições) — absorveu Memorando/Circular/Aviso"},
 {id:"fc43",topico:"T5.4",st:"T5.4c",a:"AT5",f:"Prazo de apresentação da Parte",v:"Até 2 (dois) dias úteis da constatação/conhecimento (ressalvadas cautelares — RDBM arts. 17/18)"},
 {id:"fc44",topico:"T4.2",st:"T4.2b",a:"AT4",f:"Acúmulo de férias (LC 10.990/97)",v:"Por absoluta necessidade de serviço: até o máximo de 3 (três) anos"},
 
 
 {id:"fc47",topico:"T3.2",st:"T3.2b",a:"AT3",f:"Onde se avalia o nível de consciência no XABCDE?",v:"Etapa D (Disability) — Escala de Coma de Glasgow; ECG ≤ 8 → COF"},
-{id:"fc48",topico:"T3.3",st:"T3.3a",a:"AT3",f:"Sinal de Guaxinim × Sinal de Battle",v:"Guaxinim = hematoma periorbitário | Battle = equimose retroauricular (ambos sugerem TCE)"},
 {id:"fc49",topico:"T1.1",st:"T1.1a",a:"AT1",f:"Altura ascendente × descendente (LC 14.376/2013 art. 6º)",v:"ASCENDENTE: do nível de descarga até o ponto mais BAIXO do piso do pavimento mais baixo (mede p/ baixo, ex.: subsolos). DESCENDENTE: até o ponto mais ALTO do piso do último pavimento (mede p/ cima)"},
 {id:"fc50",topico:"T1.1",st:"T1.1a",a:"AT1",f:"Andar × Edificação térrea (LC 14.376/2013)",v:"Andar = volume entre dois pavimentos consecutivos | Térrea = um pavimento, mezaninos com soma ≤ 1/3 da área e ≤ 250 m²"},
 {id:"fc51",topico:"T1.1",st:"T1.1c",a:"AT1",f:"Critérios de classificação do art. 28 (LC 14.376/2013, red. LC 14.924/16)",v:"Altura + Área total construída + Ocupação/uso + Capacidade de lotação + Grau de risco de incêndio. ⚠️ Carga de incêndio FOI REMOVIDA — não é mais critério do art. 28"},
@@ -719,8 +715,6 @@ const FCI=[
 {id:"fc71",topico:"T4.3",st:"T4.3e",a:"AT4",f:"Justiça Militar Estadual (CF art. 125 §4º)",v:"Julga crimes militares de militares estaduais. ⚠️ Crime DOLOSO contra a vida de vítima CIVIL → Tribunal do Júri (Justiça Comum)"},
 {id:"fc72",topico:"T4.5",st:"T4.5d",a:"AT4",f:"Deserção × Abandono de posto × Insubmissão (CPM)",v:"Deserção: ausência sem licença > 8 dias (art. 187) | Abandono de posto: deixar o serviço sem ordem (art. 195) | Insubmissão: convocado CIVIL que não se apresenta"},
 {id:"fc73",topico:"T4.5",st:"T4.5c",a:"AT4",f:"Ação penal nos crimes militares",v:"REGRA: pública incondicionada, promovida pelo Ministério Público Militar. Exceção: condicionada à requisição nos crimes dos arts. 136-141 do CPM. Nunca de iniciativa privada (salvo a subsidiária da pública, art. 121 §ún)."},
-{id:"fc74",topico:"T4.7",sts:["T4.7a","T4.7b"],a:"AT4",f:"Prazos Corregedoria CBMRS — Sindicância × IPM",v:"Sindicância: 30 + 20 dias (pedido do SINDICANTE, 2 dias úteis de antecedência) | IPM: 40 + 20 dias"},
-{id:"fc75",topico:"T5.1",st:"T5.1c",a:"AT5",f:"Atos de movimentação (Dec. 57.390/2023)",v:"Inclusão = integra o efetivo | Adição = vincula SEM integrar | Efetivação = atribui ao efetivo do OPM onde já serve | Desligamento = desvincula"},
 {id:"fc76",topico:"T5.1",st:"T5.1e",a:"AT5",f:"Prazo de trânsito (Dec. 57.390/2023)",v:"Até 100 km: 2 dias | Acima de 100 km: 5 dias"},
 {id:"fc77",topico:"T4.2",st:"T4.2d",a:"AT4",f:"Proventos (LC 10.990/1997)",v:"Nome da remuneração dos militares na INATIVIDADE — não é 'salário' nem 'vencimentos'"},
 {id:"fc78",topico:"T4.2",st:"T4.2e",a:"AT4",f:"Reforma por limite de idade (LC 10.990/1997)",v:"70 anos para Oficiais | 65 anos para Praças"},
@@ -763,9 +757,9 @@ const FCI=[
 {id:"fc120",topico:"T5.5",st:"T5.5f",a:"AT5",f:"IT 04.3/FR² — Status e cores do plano de chamada",v:"Alerta=Branca · Sobreaviso=Amarela · Prontidão=Laranja · Operação=Vermelho · Desmobilização=Azul."},
 {id:"fc121",topico:"T5.5",sts:["T5.5d","T5.5f"],a:"AT5",f:"IT 04.3/FR² — Níveis Operacionais e codificação de emprego",v:"Níveis: 1=efetivo/EPI/viatura · 2=+acomodação · 3=+acomodação e alimentação. Emprego: FR8/FR12/FR16/FR24 = turnos de 8/12/16/24h."},
 
-{id:"fc122",topico:"T5.2",st:"T5.2b",a:"AT5",f:"Ajuda de custo (Lei 6.196) — conceito e valor",v:"Custeia viagem, mudança e instalação, EXCETO transporte (art. 35). Valor (art. 37): 1 mês de soldo sem dependentes; 2 meses com dependentes; reduz 50% se o destino ficar a menos de 100 km da sede. A Lei 9.862/93 (que trocava 'soldo' por 'remuneração total') foi declarada inconstitucional."},
+{id:"fc122",topico:"T5.2",st:"T5.2b",a:"AT5",f:"Ajuda de custo (Lei 6.196) — conceito",v:"Custeia viagem, mudança e instalação, EXCETO transporte (art. 35). A Lei 9.862/93 (que trocava 'soldo' por 'remuneração total') foi declarada inconstitucional."},
 {id:"fc123",topico:"T5.2",st:"T5.2d",a:"AT5",f:"Diárias na Lei 6.196 — de viagem x de policiamento",v:"Viagem (art. 28): hospedagem/alimentação fora da sede; NÃO abonada se o afastamento for inferior a 8h consecutivas (art. 29). Policiamento (art. 30): só sacada em serviço de no mínimo 6h (art. 33); não acumula com diária de viagem nem gratificação de representação (art. 34)."},
-{id:"fc124",topico:"T5.2",st:"T5.2f",a:"AT5",f:"Substituição temporária (Dec 35.818) — motivos e regra geral",v:"Motivos (art. 3º): I=cargo/função vago · II=afastamento superior a 30 dias · III=afastamento igual/inferior a 30 dias · IV=eventual (impossibilidade não superior a 3 dias). Regra geral (art. 22): salvo Comando/Direção/Chefia, dá-se por acumulação, vedadas as subsequentes. Conceito (art. 2º): grau superior OU igual."},
+{id:"fc124",topico:"T5.2",st:"T5.2f",a:"AT5",f:"Substituição temporária (Dec 35.818) — motivos e conceito",v:"Motivos (art. 3º): I=cargo/função vago · II=afastamento superior a 30 dias · III=afastamento igual/inferior a 30 dias. Conceito (art. 2º): grau superior OU igual."},
 {id:"fc125",topico:"T5.1",st:"T5.1a",a:"AT5",f:"Dec. 57.390/2023 — quais as duas MODALIDADES de movimentação e o que gera cada uma?",v:"CLASSIFICAÇÃO (art. 6º): atribui OPM/OCBM por nomeação, promoção, reversão, exoneração e conclusão/interrupção de curso. TRANSFERÊNCIA (art. 7º): movimentação entre órgãos por necessidade da administração, saúde, risco, Lei Maria da Penha, inconveniência, interesse do militar, permuta ou acompanhamento de cônjuge."},
 {id:"fc126",topico:"T5.1",st:"T5.1c",a:"AT5",f:"Dec. 57.390/2023 (art. 14) — diferencie Inclusão, Exclusão, Adição, Efetivação e Desligamento.",v:"INCLUSÃO: integra ao efetivo (não apresentado até chegar). EXCLUSÃO: deixa de integrar. ADIÇÃO: vincula SEM integrar. EFETIVAÇÃO: atribui situação de efetivo dentro do mesmo OPM/OCBM. DESLIGAMENTO: desvincula do OPM/OCBM."},
 {id:"fc127",topico:"T5.1",st:"T5.1e",a:"AT5",f:"Dec. 57.390/2023 — prazos e concessão de TRÂNSITO × INSTALAÇÃO.",v:"TRÂNSITO (art. 21): 2 dias se ≤100 km, 5 dias se >100 km; afastamento total com mudança de município; concedido pelo OPM/OCBM de ORIGEM. INSTALAÇÃO (art. 23): 10 dias, independentemente do trânsito; concedido pelo OPM/OCBM de DESTINO, após apresentação; solicitável em até 6 meses."},
@@ -786,7 +780,7 @@ const FCI=[
 ,{id:"fc161",topico:"T2.4",st:"T2.4b",a:"AT2",f:"Alavanca Halligan — ficha técnica",v:"Criada por Hugh A. Halligan (déc. 1940). Peça única de aço carbono tratado e zincado (não faísca), ~4 kg, de 45 cm a 140 cm. Partes: garfo, ponteira e cunha (adz)."}
 ,{id:"fc162",topico:"T2.4",st:"T2.4c",a:"AT2",f:"Porta que abre para dentro — onde inserir a cunha e qual a marcação da ferramenta",v:"Cunha cerca de 15 cm acima ou abaixo da fechadura. Marcação de referência: 3 cm da extremidade do garfo e da cunha."}
 ,{id:"fc163",topico:"T3.1",st:"T3.1a",a:"AT3",f:"RCP — proporção compressão:ventilação por vítima e nº de socorristas (ITO 23, Tabela 2)",v:"ADULTO: 30:2 com 1 OU 2 socorristas. CRIANÇA e LACTENTE: 30:2 com 1 socorrista; 15:2 com 2 socorristas. NEONATO: 3:1. Com via aérea avançada, não interrompa as compressões para ventilar."}
-,{id:"fc164",topico:"T3.1",st:"T3.1a",a:"AT3",f:"RCP adulto — profundidade e frequência das compressões (ITO 23, 3ª ed., P206)",v:"Frequência: no mínimo 100 e no máximo 120 por minuto. Profundidade: 5 a 6 cm no adulto (≈5 cm criança, ≈4 cm lactente). Permita o retorno total do tórax, mantenha fração de compressão de 80% e interrupções de no máximo 10 s."}
+,{id:"fc164",topico:"T3.1",st:"T3.1a",a:"AT3",f:"RCP adulto — profundidade e frequência das compressões (ITO 23, 3ª ed., P206)",v:"Frequência: no mínimo 100 e no máximo 120 por minuto. Profundidade: 5 a 6 cm no adulto (≈5 cm criança, ≈4 cm lactente). Permita o retorno total do tórax, mantenha fração de compressão de 80% e interrupções de no máximo 10 s. Não se apoie sobre o tórax e evite excesso de ventilação."}
 ,{id:"fc165",topico:"T3.1",st:"T3.1c",a:"AT3",f:"DEA — sequência correta de uso",v:"Ligar → colocar as pás → analisar o ritmo (TODOS se afastam e PARAM a RCP) → desfibrilar se indicado → retomar a RCP imediatamente. Menores de 8 anos: pás pediátricas ou atenuador de dose (na falta, pás adultas em posição anteroposterior)."}
 ,{id:"fc166",topico:"T3.1",st:"T3.1c",a:"AT3",f:"DEA com a Unidade de Resgate em deslocamento e RCP em andamento — como agir? (ITO 23, P206)",v:"Mantenha as pás conectadas, MAS não pare a viatura, não cesse a RCP para o DEA analisar e NÃO ministre o choque, mesmo se indicado. Se a PCR começar DENTRO da viatura: pare, desligue o veículo e adote os passos de RCP e desfibrilação."}
 ,{id:"fc167",topico:"T3.1",st:"T3.1e",a:"AT3",f:"PCR sem SAV disponível — quando transportar ao hospital de referência? (ITO 23, P205)",v:"Transporta se: (1) retorno da circulação espontânea; (2) após 6 a 9 choques separados por 2 min de RCP; (3) 3 mensagens consecutivas de 'choque não indicado', separadas por 2 min de RCP; ou (4) ambiente hostil."}
@@ -795,7 +789,6 @@ const FCI=[
 ,{id:"fc170",topico:"T3.1",st:"T3.1e",a:"AT3",f:"ITO 23 — Quando CESSAR a RCP",v:"(a) rigor ou livor mortis; (b) exaustão da guarnição após os revezamentos; (c) determinação do SAV/regulação médica; (d) transferência a outra equipe; (e) retorno espontâneo da circulação (pulso central, respiração, consciência). NÃO há critério de tempo fixo (ex.: 30 min)."}
 ,{id:"fc171",topico:"T3.1",st:"T3.1d",a:"AT3",f:"ITO 23 — OVACE: obstrução LEVE × GRAVE",v:"LEVE: tosse, emite som (choro/fala) e respira → acalmar e instruir a tossir, sem manobras. GRAVE: não tosse nem emite som (tosse silenciosa), pode cianosar e evoluir para inconsciência → tapotagem/compressões ou Heimlich."}
 ,{id:"fc172",topico:"T3.1",st:"T3.1d",a:"AT3",f:"ITO 23 — OVACE: conduta por faixa etária",v:"LACTENTE/NEONATO: 5 tapotagens + 5 compressões torácicas (repetir até respirar ou ficar inconsciente). ADULTO e CRIANÇA: Heimlich (compressões abdominais em J). GESTANTE e OBESO: compressões no OSSO ESTERNO. Se ficar inconsciente: deslocar fazendo RCP, sem cânula orofaríngea, com inspeção visual antes de cada ventilação."}
-,{id:"fc173",topico:"T3.1",st:"T3.1b",a:"AT3",f:"ITO 23 — RCP de alta qualidade (números)",v:"Frequência 100–120 compressões/min. Profundidade: adulto 5–6 cm; criança ~5 cm; lactente ~4 cm. Fração de tempo de compressão 80%. Interrupções: no máximo 10 s. Permitir o retorno total do tórax; não se apoiar sobre ele; evitar excesso de ventilação."}
 ,{id:"fc174",topico:"T3.1",st:"T3.1a",a:"AT3",f:"ITO 23 — Local/técnica das compressões por faixa",v:"LACTENTE: 1 socorrista = dois dedos (médio e anelar) a 1 dedo abaixo da linha intermamilar; 2+ socorristas = dois polegares com as mãos envolvendo o tórax. CRIANÇA/ADULTO: metade inferior do esterno (nunca sobre o processo xifoide); na criança, 1 ou 2 mãos conforme o porte."}
 ,{id:"fc175",topico:"T3.1",st:"T3.1b",a:"AT3",f:"ITO 23 — Ventilações na PARADA RESPIRATÓRIA (via comum × avançada)",v:"NEONATO: 40–60 vent/min (igual nas duas). LACTENTE/CRIANÇA: 1 ventilação a cada 3 s (≈20/min), nas duas. ADULTO: via comum 1 a cada 5 s (≈12/min); via aérea avançada 1 a cada 6 s (≈10/min). Ciclos de 2 min."}
 ,{id:"fc176",topico:"T3.1",st:"T3.1b",a:"AT3",f:"ITO 23 — Definição de Parada Respiratória (PR)",v:"ADULTO: irresponsivo, COM pulso e não respira. PEDIÁTRICO: irresponsivo, frequência cardíaca > 60 BPM e não respira. Geralmente coincide, precede ou evolui para a PCR."}
@@ -934,12 +927,7 @@ texto:`Fases de combustão pelo O₂:
 • 21% → concentração normal do ar
 • Entre 21% e 14% → QUEIMA VIVA (chama visível)
 • Entre 14% e 7% → queima sem chama
-• Abaixo de 7% → combustão não se sustenta
-
-Incêndio = combustão FORA DE CONTROLE
-Chama = manifestação visual da combustão
-Calor = energia térmica em trânsito
-Temperatura = medida da agitação molecular`},
+• Abaixo de 7% → combustão não se sustenta`},
 {id:"r_at2_03",topico:"T2.3",st:"T2.3c",area:"AT2",titulo:"Técnicas de Ataque a Incêndio",prob:"media",
 texto:`5 técnicas distintas (MABOM Cap.5):
 • Direto: água na base do foco
@@ -1045,18 +1033,12 @@ COBOM — Centro de Operações de Bombeiro Militar:
 • Atendimento do 193: atende, cadastra e empenha guarnições no Ebombeiro WEB
 
 FR² (IT 04.3/AODC-GCG): o Cmt de BBM solicita apoio diretamente ao CCOB quando o evento excede a capacidade operativa da Célula da sua ART.`},
-{id:"r_at5_03",topico:"T5.4",sts:["T5.4a","T5.4b","T5.4c"],area:"AT5",titulo:"Parte Disciplinar e Documentos (T5.4)",prob:"media",
+{id:"r_at5_03",topico:"T5.4",sts:["T5.4b","T5.4c"],area:"AT5",titulo:"Parte Disciplinar (T5.4)",prob:"media",
 texto:`Parte Disciplinar:
 • É o relato de uma transgressão cometida por militar estadual
 • Prazo: até 2 dias úteis da constatação
 • Deve ser clara, precisa, com: identificação + local + data + hora + circunstâncias
-• É PROIBIDO tecer comentários ou opiniões pessoais!
-
-Tipos de documentos (Caderno Temático ABM 2023 — padrão ofício):
-• PARTE: comunicação interna, subordinado → superior, rotina do serviço
-• OFÍCIO INTERNO: comunicação entre unidades do MESMO órgão (absorveu o antigo Memorando)
-• OFÍCIO EXTERNO: comunicação com outras instituições (absorveu também Circular e Aviso)
-⚠️ O Memorando deixou de ser documento autônomo.`},
+• É PROIBIDO tecer comentários ou opiniões pessoais!`},
 
 // ── AT1 novos ──
 {id:"r_at1_06",topico:"T1.1",st:"T1.1c",area:"AT1",titulo:"Classificação de Ocupações — Dec. 51.803/2014 (LC 14.376/2013)",prob:"media",
@@ -1515,28 +1497,6 @@ Escala de Coma de Glasgow (etapa D):
 • Aplicada em TODOS os pacientes (responsivos ou não), inclusive para quantificar o grau de irresponsividade.
 • ECG ≤ 8 → via aérea ameaçada → inserir Cânula Orofaríngea (COF).
 • Os scores individuais (abertura ocular, resposta verbal, motora) DEVEM ser repassados à equipe que recebe o paciente — não apenas o total.`},
-{id:"r_at5_06",topico:"T5.2",area:"AT5",titulo:"Vencimentos, Diárias e Substituições (T5.2)",prob:"media",
-texto:`Indenizações (Lei 6.196/1971, arts. 23-24):
-• Compreendem: diárias, ajuda de custo, transporte e moradia
-• NÃO se confundem com vencimentos (soldo, gratificações)
-
-Soldo na substituição (Lei 6.196, art. 10):
-• Cargo/função privativa de posto SUPERIOR → percebe o soldo desse posto
-• Se atribuído a mais de um posto: soldo do MENOR (§1º)
-• Não se aplica a dispensas de até 30 dias (§3º)
-
-Ajuda de custo (Lei 6.196, art. 37):
-• 1 mês de soldo SEM dependentes | 2 meses de soldo COM dependentes
-• Reduz 50% se deslocamento for a menos de 100 km da sede
-
-Diárias (Dec. 24.846/1976):
-• NÃO cabe diária quando o deslocamento for exigência PERMANENTE do cargo (art. 6º §2º)
-• Paga pela METADE: sem pernoite fora da sede | deslocamento no interior do próprio município | hospedagem paga diretamente pelo Estado (art. 7º)
-• Prestação de contas: até 10 dias do REGRESSO, sob pena de ALCANCE (Dec. 35.693/1994, art. 1º)
-
-Substituições temporárias (Dec. 35.818/1995):
-• Afastamento EVENTUAL: impossibilidade de exercer o cargo por prazo NÃO SUPERIOR a 3 dias (art. 3º §3º)
-• Forma padrão: ACUMULAÇÃO, exceto cargos de Comando/Direção/Chefia — vedadas substituições subsequentes (art. 22)`},
 {id:"r_at1_13",topico:"T1.4",sts:["T1.4d","T1.4f"],area:"AT1",titulo:"Saídas de Emergência (RT 11 P01/2016) e Sinalização (RT 12/2021)",prob:"alta",texto:"SAÍDAS DE EMERGÊNCIA — RT CBMRS nº 11 Parte 01/2016:\n• Dimensionamento: N = P/C | unidade de passagem (UP) = 0,55 m | largura mínima geral = 1,10 m (H-3: acessos/descargas 2,00 m, escadas/rampas 2,20 m)\n• Portas: abrem no sentido de saída quando população total > 50 | barra antipânico (NBR 11785) quando > 200 | vãos de 80 cm (1 UP), 1,00 m (2 UP), 1,60 m (3 UP); acima de 1,50 m = duas folhas\n• Acesso principal: 60% a 70% das UP | locais de reunião F-5/F-6/F-11/F-12: 2+ saídas em paredes diversas, afastamento mínimo 10 m\n• Tipos de escada: NE (comum) · EP (paredes ≥120 min, porta P-60) · PF (paredes ≥240 min, antecâmara, porta P-60) · PFP (pressurizada, NBR 14880, porta P-90) · AE (aberta externa, até 45 m, porta P-90)\n• Degraus: altura 16-18 cm | Lei de Blondel 63 ≤ (2h+b) ≤ 64 cm | lanço máximo 3,70 m | guarda-corpo interno ≥1,05 m, externo ≥1,30 m | corrimão 0,80-0,92 m\n• Área de refúgio: E-5/E-6 (>6 m) e H-2/H-3 ≥ 30% da área do pavimento; máximo 2000 m²\n\nSINALIZAÇÃO DE EMERGÊNCIA — RT CBMRS nº 12/2021 (vigora desde 01/01/2022):\n• Básica: proibição, alerta, orientação e salvamento, equipamentos | complementar: obstáculos, lotação, demarcação etc.\n• Formas/cores: proibição = circular, faixa/barra VERMELHA (fundo branco) | alerta = triangular, AMARELO | equipamentos = fundo VERMELHO | orientação e salvamento = fundo VERDE (azul só na área de resgate)\n• Altura padrão de instalação: 1,80 m | rota de fuga em parede: 1,80-2,10 m; no teto: 2,10-3,10 m\n• Risco generalizado: placas a no máximo 15 m entre si; risco pontual: placa a no máximo 1 m\n• Dimensionamento: visualização de 4 a 50 m | A ≥ L²/2000 | altura da letra h ≥ L/125 | fonte Univers 65 ou Helvetica Bold, caixa alta\n• Cor de segurança cobre ≥ 50% da área do símbolo (≥ 35% na proibição) | tubulação hidráulica de combate = vermelha (anéis vermelhos de 0,20 m a cada 5 m)\n• Planta de emergência: telefone 193, tamanho A4 admitido, instalada a 1,20-1,60 m"},
 {id:"r_at4_12",topico:"T4.7",st:"T4.7d",area:"AT4",titulo:"PADM — Processo Administrativo Disciplinar Militar (IR nº 003.1/Cor-G)",prob:"alta",texto:"CONCEITO\n• Analisa a conduta do BM acusado de transgressão(ões) disciplinar(es); apura responsabilidade de militares ESTÁVEIS e NÃO estáveis.\n• Garante CONTRADITÓRIO e AMPLA DEFESA (citação pessoal do BM + advogado). Diferente do IPM (inquisitivo, sigiloso, apura CRIME) e da Sindicância (apuração ampla, quando há dúvida sobre materialidade/autoria).\n• Instaura-se quando há indícios suficientes de transgressão E autoria; do contrário, Sindicância ou IPM.\n\nCOMPETÊNCIA (art. 20 RDBM) — inerente ao CARGO/função, não ao grau hierárquico\n• Governador, Cmt/Subcmt-Geral, Chefe do Estado-Maior, Corregedor-Geral, Cmts de BBM e Diretores, Cmts de OBM/Subunidades, Cmts de Pelotões Destacados.\n• Preferência: autoridade de MENOR nível com ascendência sobre o acusado.\n\nPRAZOS\n• Conclusão do PADM: 60 dias após a instauração (prorrogável por igual período).\n• Audiência de justificação: mínimo 3 dias úteis da notificação.\n• Recurso: decidido em até 8 dias (art. 56 RDBM). Prazos recursais (reconsideração/queixa/representação): 3 dias úteis.\n\nPRESCRIÇÃO (Lei 10.098/94)\n• Interrompida pela instauração; volta a correr por INTEIRO após 140 dias.\n• Detenção = 24 meses; repreensão/advertência = 12 meses; se também for crime, prazo penal.\n\nRECURSOS (art. 47 RDBM)\n• Reconsideração de ato (à autoridade que praticou o ato); Queixa (exige reconsideração prévia denegada); Representação (autoridade em favor de subordinado SEU). A decisão não pode agravar a punição do recorrente.\n\nPENAS (art. 37 RDBM)\n• Leve: advertência/repreensão. Média: repreensão até 10 dias de detenção com prejuízo. Grave: detenção com prejuízo até 30 dias.\n• PRISÃO só por determinação judicial (nunca administrativa).\n\nCOMPORTAMENTO (art. 46 RDBM)\n• Excepcional (72 meses/máx. 1 advertência) · Ótimo (48 meses/máx. 1 repreensão) · Bom (24 meses/máx. 1 detenção) · Insuficiente (12 meses/máx. 1 detenção c/ prejuízo) · Mau (12 meses/2 detenções c/ prejuízo + outra).\n\nLICENCIAMENTO A BEM DA DISCIPLINA\n• Praça NÃO estável (transgressão expulsória, art. 9º V RDBM); julgado pelo Comandante-Geral (Portaria SSP 108/2019); cabe só recurso de reconsideração.\n• Autor ESTÁVEL: praça/aluno-oficial → Conselho de Disciplina (Dec. Fed. 71.500/72); Oficial → Conselho de Justificação (Lei Fed. 5.836/72)."},
 {id:"r_at3_12",topico:"T3.6",area:"AT3",titulo:"Busca, Salvamento e Resgate — IT nº 010/AODC-GCG (T3.6)",prob:"media",
