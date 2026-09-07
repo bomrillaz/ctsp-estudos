@@ -3890,11 +3890,6 @@ function montarSessaoDoDia(tam=userStats.metaDiaria||DOSE_PADRAO.questoes){
 
 // ── Tela-intro: apresenta a sessão ANTES de cair na 1ª questão (o que é, quantas,
 // só questões, o que acontece ao errar e ao terminar). Uma vez, um toque para começar.
-// A4 (b155): pedágio permanente em 10 caminhos (Treino, Rápido, Focado, Erro, Quiz por
-// área, Intercalado, Meta, tópico, ids, Diagnóstico) — quem já viu não precisa ver nunca
-// mais. "Já visto" persiste em localStorage, NUNCA em RTDB (mesmo padrão de
-// onboardDismiss/diagCardDismiss, CLAUDE.md §2 — nada de campo novo em usuarios/$uid).
-function _introVistos(){try{return JSON.parse(localStorage.getItem('introVistos')||'{}');}catch(_){return {};}}
 let _introAcao=null;
 let _introUltimo=null;      // {titulo,sub,itens,btn} do último abrirIntro() — pro "?" reabrir sob demanda
 let _introReabertura=false; // true = modal reaberto só pra CONSULTA (não reinicia a sessão ao fechar)
@@ -3937,8 +3932,7 @@ function _introReabrir(){
   _introRenderizar(_introUltimo.titulo,_introUltimo.sub,_introUltimo.itens,'Entendi');
 }
 function abrirIntro(tipo,arg,arg2){
-  // b183/P6: guard único no topo — cobre os dois ramos de baixo (modal normal E o atalho
-  // "já visto" que chama acao() direto). Se há sessão viva, pede confirmação e só reentra
+  // b183/P6: guard único no topo. Se há sessão viva, pede confirmação e só reentra
   // aqui (já sem sessão) depois do "Descartar e continuar".
   if(sessaoQuizViva()){trocarSessaoAtiva(()=>abrirIntro(tipo,arg,arg2));return;}
   const g=id=>document.getElementById(id);
@@ -4038,10 +4032,6 @@ function abrirIntro(tipo,arg,arg2){
   _introUltimo={titulo,sub,itens,btn};
   _introAcao=acao;
   const rb=document.getElementById('intro-reabrir-btn');if(rb)rb.style.display='';
-  const vistos=_introVistos();
-  if(vistos[tipo]){acao();return;} // 2ª vez em diante: pula o modal, vai direto
-  vistos[tipo]=1;
-  try{localStorage.setItem('introVistos',JSON.stringify(vistos));}catch(_){}
   _introRenderizar(titulo,sub,itens,btn);
 }
 function fecharIntro(e){
@@ -4932,7 +4922,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.279';
+const APP_VERSAO='v1.280';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
