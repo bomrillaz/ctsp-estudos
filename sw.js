@@ -49,13 +49,13 @@ self.addEventListener('notificationclick', (e) => {
   })());
 });
 
-const CACHE = 'ctsp-cache-v17';
+const CACHE = 'ctsp-cache-v18';
 const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
   'assets/cesar-coin.png',
   'assets/loading.mp4', 'assets/loading-poster.jpg',
-  'data.js?v=187'
+  'data.js?v=188'
 ];
 const CROSS = [
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',

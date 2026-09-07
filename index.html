@@ -2928,7 +2928,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
   </div>
 </div>
-<script src="data.js?v=187"></script>
+<script src="data.js?v=188"></script>
 <script>
 if(window.top!==window.self) window.top.location=window.self.location;
 // ═══════════════════════════════
@@ -3592,14 +3592,26 @@ let doseExtra={cards:0,resumos:0};
 // Casa um item (resumo/flashcard) com um tópico. Aceita `topico` ou `topicos:[]`.
 function itemDoTopico(x,t){return x.topico===t||(Array.isArray(x.topicos)&&x.topicos.includes(t));}
 function topicoDe(x){return x.topico||(Array.isArray(x.topicos)?x.topicos[0]:'');}
+// Mesma ideia, para subtópico (`st` ou `sts:[]` — resumo que cobre mais de um subassunto do tópico).
+function itemDoSt(x,st){return x.st===st||(Array.isArray(x.sts)&&x.sts.includes(st));}
 
-// Material de estudo de um tópico — o elo que faltava.
-function materialDoTopico(t){
-  if(!t)return{resumos:[],cards:[],questoes:[]};
+// Material de estudo de um tópico — o elo que faltava. `st` (opcional) restringe a um
+// subtópico; sem `st`, comportamento idêntico ao de antes do piloto de subtópicos.
+// Sem correspondência de subtópico, cai pro material do tópico inteiro (resumosDoSt/cardsDoSt=false).
+function materialDoTopico(t,st){
+  if(!t)return{resumos:[],cards:[],questoes:[],resumosDoSt:false,cardsDoSt:false};
+  const resumosTopico=RESUMOS_BANCO.filter(r=>itemDoTopico(r,t));
+  const cardsTopico=Object.values(allFlashcards).filter(c=>itemDoTopico(c,t));
+  const questoes=Object.values(allQuestoes).filter(q=>q.topico===t);
+  if(!st)return{resumos:resumosTopico,cards:cardsTopico,questoes,resumosDoSt:false,cardsDoSt:false};
+  const resumosSt=resumosTopico.filter(r=>itemDoSt(r,st));
+  const cardsSt=cardsTopico.filter(c=>itemDoSt(c,st));
   return{
-    resumos:RESUMOS_BANCO.filter(r=>itemDoTopico(r,t)),
-    cards:Object.values(allFlashcards).filter(c=>itemDoTopico(c,t)),
-    questoes:Object.values(allQuestoes).filter(q=>q.topico===t)
+    resumos:resumosSt.length?resumosSt:resumosTopico,
+    cards:cardsSt.length?cardsSt:cardsTopico,
+    questoes,
+    resumosDoSt:resumosSt.length>0,
+    cardsDoSt:cardsSt.length>0
   };
 }
 
@@ -3661,19 +3673,22 @@ function praticarIds(ids,rotulo){
 }
 
 // Manda o usuário para o resumo exato de um tópico (ou para a aba, se não houver).
-function revisarTopico(t){
-  const m=materialDoTopico(t);
+// `st` opcional (piloto de subtópicos): sem ele, comportamento idêntico ao de antes.
+function revisarTopico(t,st){
+  const m=materialDoTopico(t,st);
   navTo('resumos');
   if(m.resumos.length)mostrarResumoDirecto(m.resumos[0].id);
   else{renderResumos();showToast('Este tópico ainda não tem resumo. Revise pelos flashcards.');}
 }
 
 // Abre a aba de cards já filtrada por um tópico (usado no ciclo erro → flashcard).
-let cardsFiltroTopico=null;
-function revisarCardsDoTopico(t){
-  const m=materialDoTopico(t);
+// `st` opcional (piloto de subtópicos): sem ele, comportamento idêntico ao de antes.
+let cardsFiltroTopico=null,cardsFiltroSt=null;
+function revisarCardsDoTopico(t,st){
+  const m=materialDoTopico(t,st);
   if(!m.cards.length){showToast('Este tópico ainda não tem flashcards.');return;}
   cardsFiltroTopico=t;
+  cardsFiltroSt=(st&&m.cardsDoSt)?st:null;
   navTo('cards');
   // Entra direto no modo estudo com o filtro do tópico (o hub ignoraria o filtro).
   cardsModo='estudo';cardsUnico=false;
@@ -4922,7 +4937,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.280';
+const APP_VERSAO='v1.281';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -5827,10 +5842,11 @@ function _ativarTelaLocal(screenId){
 // Reforço a partir de uma questão errada: marca a ORIGEM para devolver à questão
 // (não ao carrossel) quando o usuário concluir a leitura/revisão.
 function reforcoAbrirResumo(id){origemReforco='quiz';_ativarTelaLocal('screen-resumos');mostrarResumoDirecto(id);}
-function reforcoAbrirCards(t){
-  const m=materialDoTopico(t);
+// `st` opcional (piloto de subtópicos): sem ele, comportamento idêntico ao de antes.
+function reforcoAbrirCards(t,st){
+  const m=materialDoTopico(t,st);
   if(!m.cards.length){showToast('Este tópico ainda não tem flashcards.');return;}
-  origemReforco='quiz';cardsFiltroTopico=t;_ativarTelaLocal('screen-cards');renderCards();
+  origemReforco='quiz';cardsFiltroTopico=t;cardsFiltroSt=(st&&m.cardsDoSt)?st:null;_ativarTelaLocal('screen-cards');renderCards();
 }
 // Volta à questão de origem SEM re-renderizar o quiz (preserva o feedback e o botão
 // "Próxima →" que já estavam na tela). navTo('quiz') não serve: ele abre o MENU do quiz.
@@ -6688,11 +6704,20 @@ async function responderQuiz(idx){
   // na hora. Fecha o laço erro → memorização em vez de só registrar o erro.
   const rf=document.getElementById('quiz-fb-reforco');
   if(rf){
-    const m=q.topico?materialDoTopico(q.topico):{resumos:[],cards:[]};
+    const m=q.topico?materialDoTopico(q.topico,q.st):{resumos:[],cards:[],resumosDoSt:false,cardsDoSt:false};
     if(!acertou&&(m.cards.length||m.resumos.length)){
-      let h=`<div class="rf-txt">Reforço de ${sanitize(nomeTopico(q.topico))}</div>`;
-      if(m.cards.length)h+=`<button class="inc-btn praticar" onclick="reforcoAbrirCards('${q.topico}')">Revisar ${m.cards.length} flashcard${m.cards.length!==1?'s':''}</button>`;
-      if(m.resumos.length)h+=`<button class="inc-btn revisar" onclick="reforcoAbrirResumo('${m.resumos[0].id}')">Ler o resumo</button>`;
+      // Piloto de subtópicos (st): com st, nome/rótulo dizem se o material é do subassunto
+      // exato ou fallback do tópico inteiro. Sem st, texto idêntico ao de antes do piloto.
+      const nomeBloco=(q.st&&SUBTOPICOS[q.st])?SUBTOPICOS[q.st].n:nomeTopico(q.topico);
+      let h=`<div class="rf-txt">Reforço de ${sanitize(nomeBloco)}</div>`;
+      if(m.cards.length){
+        const rotuloCards=q.st?`Revisar ${m.cards.length} flashcard${m.cards.length!==1?'s':''} ${m.cardsDoSt?'deste assunto':'do tópico'}`:`Revisar ${m.cards.length} flashcard${m.cards.length!==1?'s':''}`;
+        h+=`<button class="inc-btn praticar" onclick="reforcoAbrirCards('${q.topico}','${q.st||''}')">${rotuloCards}</button>`;
+      }
+      if(m.resumos.length){
+        const rotuloResumo=(q.st&&!m.resumosDoSt)?'Ver resumos do tópico':'Ler o resumo';
+        h+=`<button class="inc-btn revisar" onclick="reforcoAbrirResumo('${m.resumos[0].id}')">${rotuloResumo}</button>`;
+      }
       rf.innerHTML=h;rf.classList.remove('hidden');
     } else {rf.innerHTML='';rf.classList.add('hidden');}
   }
@@ -6846,8 +6871,10 @@ function cardVencido(fc,now){const uc=userCards[fc.id];return !!(uc&&uc.reps>0&&
 // Fila completa de cards pendentes (vencidos + novos), sem corte de dose.
 function cardsPendentes(filtro){
   const now=Date.now();
-  const f=(filtro===undefined)?cardsFiltroTopico:filtro;
-  const todos=Object.values(allFlashcards).filter(fc=>!f||itemDoTopico(fc,f));
+  const usaGlobal=filtro===undefined;
+  const f=usaGlobal?cardsFiltroTopico:filtro;
+  const st=usaGlobal?cardsFiltroSt:null; // st só se aplica junto do filtro global de tópico (piloto de subtópicos)
+  const todos=Object.values(allFlashcards).filter(fc=>(!f||itemDoTopico(fc,f))&&(!st||itemDoSt(fc,st)));
   const vencidos=todos.filter(fc=>cardVencido(fc,now));
   const novos=todos.filter(fc=>{const uc=userCards[fc.id];return !uc||!uc.reps;});
   return{vencidos,novos,todos:[...vencidos,...novos]};
@@ -6875,7 +6902,7 @@ function _hubCards(){
     : `<div class="hub-ok">✓ Sessão do dia concluída</div>${acervo>0?`<button class="btn-weak" style="width:100%" onclick="iniciarMetaCards()">Revisar mais assim mesmo</button>`:`<div class="hub-hint">Tudo revisado. Fixe com questões na Sessão do dia.</div>`}`;
   body.innerHTML=`<div class="hub-inicio" role="status">${cta}</div>`+renderCardLista();
 }
-function iniciarMetaCards(){cardsModo='estudo';cardsUnico=false;cardsFiltroTopico=null;_estudoCards();irAoTopoDoConteudo();}
+function iniciarMetaCards(){cardsModo='estudo';cardsUnico=false;cardsFiltroTopico=null;cardsFiltroSt=null;_estudoCards();irAoTopoDoConteudo();}
 function voltarHubCards(){cardsModo='hub';cardsUnico=false;renderCards();irAoTopoDoConteudo();}
 // Dose de cards do dia (meta): mesma seleção que o Hub oferece — priorizarPorMalha por
 // vencido/fraqueza, cortada no que falta pra bater a meta. Reusada pela Sessão do dia
@@ -6942,7 +6969,7 @@ function _estudoCards(){
 
 // Segunda sessão: quem tem tempo continua; quem não tem, fecha o dia sem dever nada.
 function maisCards(){doseExtra.cards+=dose('cards');renderCards();}
-function limparFiltroCards(){cardsFiltroTopico=null;doseExtra.cards=0;renderCards();}
+function limparFiltroCards(){cardsFiltroTopico=null;cardsFiltroSt=null;doseExtra.cards=0;renderCards();}
 
 // Miolo do card: flip (frente/verso) + os 3 botões de avaliação. Fonte única — b171/D4 reusa
 // isto no runner da Sessão do dia dentro do Quiz. Nunca duplicar este markup em outro lugar.
@@ -7040,7 +7067,7 @@ function renderCardLista(){
 function estudarCardUnico(id){
   const fc=allFlashcards[id]||Object.values(allFlashcards).find(x=>x.id===id);
   if(!fc)return;
-  cardsModo='estudo';cardsUnico=true;cardsFiltroTopico=null;
+  cardsModo='estudo';cardsUnico=true;cardsFiltroTopico=null;cardsFiltroSt=null;
   document.getElementById('cards-body').classList.add('cards-estudo'); // b117: mesmo gatilho de _estudoCards()
   cardQueue=[fc];cardIdx=0;renderCard();
   irAoTopoDoConteudo();
