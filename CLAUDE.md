@@ -195,7 +195,9 @@ VENDIDO) ficou untracked por 3 blocos e quase subiu junto num commit de tracking
 organizar depois.
 
 - Fontes oficiais: **Edital 004/ABM-DENS/2025 + Aditamento 10**.
-- **Cotas do edital (60 questões): AT1=14 · AT2=8 · AT3=14 · AT4=12 · AT5=12.** `CTSP_CORTE=53`.
+- **Cotas do edital (60 questões): AT1=14 · AT2=8 · AT3=14 · AT4=12 · AT5=12.**
+  Não existe nota de corte oficial do CTSP (edital não define nota mínima) — `CTSP_CORTE` foi
+  removido do app na v1.297. Ver `decisoes/nota-de-corte-removida-do-app` do vault.
 - AT2 do edital = MABOM caps. 1, 2, 3, 5, 7. Caps. 4, 6 e 13 estão **fora**.
 - CE/RS: aplicar as emendas EC 67/14, 73/17, 82/22.
 - Auditoria: varrer TODAS as subpastas, nunca parar no primeiro resultado.
