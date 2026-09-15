@@ -22,6 +22,9 @@
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="canonical" href="https://bomrillaz.github.io/ctsp-estudos/"/>
 <title>Prontidão: Plataforma de Estudos para o CTSP (CBMRS)</title>
+<!-- contagem-varia: "533" abaixo (e nas demais meta tags, no hero, em "Como foi feito" e no
+     modal "sobre") é snapshot, não sincronizado com o banco real -- o número cresce com o tempo,
+     defasagem não é bug. Ver vault decisoes/contadores-de-questoes-nao-sincronizados-variacao-esperada. -->
 <meta name="description" content="A Prontidão prepara você para o CTSP: 533 questões autorais, simulado real, flashcards com revisão espaçada e diagnóstico das áreas fracas."/>
 <meta property="og:type" content="website"/>
 <meta property="og:site_name" content="Prontidão · Bomrillaz"/>
@@ -294,6 +297,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .lp-card h3{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);margin-bottom:7px;letter-spacing:.02em;}
 .lp-card p{font-size:13.5px;line-height:1.6;color:var(--text2);}
 .lp-card-ciencia{border-top:3px solid var(--ember);}
+
+/* Vídeo de apresentação */
+.lp-video-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);margin-top:20px;max-width:640px;}
+.lp-video-card video{display:block;width:100%;aspect-ratio:16/9;background:#000;}
 .lp-tag{display:inline-block;font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ember-text);background:var(--amber-light);border-radius:20px;padding:4px 11px;margin-bottom:10px;}
 .lp-nota-honesta{margin-top:16px;background:var(--surface);border-left:3px solid var(--navy);border-radius:0 12px 12px 0;padding:14px 16px;font-size:13.5px;line-height:1.6;color:var(--text2);}
 
@@ -1778,11 +1785,29 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       </div>
       <div class="lp-hero-selo">Sem cartão · sem cobrança automática</div>
     </div>
+    <!-- contagem-varia, ver nota em :25 -->
     <div class="lp-hero-fita">
       <span><b>533</b> questões</span>
       <span><b>174</b> flashcards</span>
       <span><b>78</b> resumos</span>
       <span><b>27</b> tópicos do edital</span>
+    </div>
+  </section>
+
+  <!-- ── VÍDEO · APRESENTAÇÃO ──
+       b213: auto-hospedado (assets/apresentacao.mp4, H.264, ~10,5MB, transcodificado do MOV/HEVC
+       original em materiais/marca/videos/). Sem autoplay, preload="none" -- só carrega no toque.
+       NÃO entra no SHELL do sw.js: cache HTTP normal depois de assistido, não no precache do PWA. -->
+  <section class="lp-sec">
+    <div class="lp-sec-in">
+      <div class="lp-label">Vídeo de apresentação · 7 min</div>
+      <h2 class="lp-h2">Um passeio guiado pelas funcionalidades da plataforma.</h2>
+      <p class="lp-p">Sessão do dia, questões comentadas, flashcards, resumos e o painel de domínio por área, tudo mostrado na tela real do app.</p>
+      <div class="lp-video-card">
+        <video controls preload="none" playsinline poster="assets/apresentacao-poster.jpg">
+          <source src="assets/apresentacao.mp4" type="video/mp4">
+        </video>
+      </div>
     </div>
   </section>
 
@@ -1928,6 +1953,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <div class="lp-label lp-label-claro">Como foi feito</div>
       <h2 class="lp-h2 lp-h2-claro">Nasceu do caderno de quem está fazendo a mesma prova.</h2>
       <p class="lp-p lp-p-claro">A Prontidão começou como o material de estudo de um Bombeiro Militar do CBMRS se preparando para o próprio CTSP. Questões, resumos e flashcards são todos autorais, escritos a partir das mesmas normas que a prova cobra. O que era caderno virou plataforma quando ficou claro que o problema não era falta de conteúdo. Era falta de método.</p>
+      <!-- contagem-varia, ver nota em :25 -->
       <div class="lp-numeros">
         <div><b>533</b><span>questões no banco</span></div>
         <div><b>174</b><span>flashcards</span></div>
@@ -9666,6 +9692,7 @@ function _docRodape(){
   return s;
 }
 const DOCS={
+  // contagem-varia, ver nota em :25
   sobre:{titulo:'Como este material foi feito',html:()=>`
     <p>O <b>${EMPRESA.produto}</b> nasceu do estudo de um Bombeiro Militar do CBMRS para o CTSP. Não é material oficial da Corporação, não é endossado pelo CBMRS nem pela banca, e não tem qualquer vínculo institucional com eles.</p>
     <h3>De onde vem o conteúdo</h3>
