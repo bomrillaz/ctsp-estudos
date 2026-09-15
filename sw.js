@@ -55,7 +55,7 @@ const SAME = [
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
   'assets/cesar-coin.png',
   'assets/loading.mp4', 'assets/loading-poster.jpg',
-  'data.js?v=203'
+  'data.js?v=204'
 ];
 const CROSS = [
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
