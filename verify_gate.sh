@@ -66,7 +66,7 @@ contem(){ # contem <texto> -- linha que nao comeca com chave=
 
 echo "=== GATE ==="
 
-# --- igualdade: seguranca ---
+# --- igualdade: seguranca (independem do data.js) ---
 exato unsafe-eval 0
 exato initializeApp 1
 exato onclick_texto_livre 0
@@ -74,22 +74,40 @@ contem '"Parte 3.1"=0'
 contem '"Parte 7.2"=0'
 contem '"57390"=0'
 
-# data.js tem de continuar sendo SO dados
-contem 'unsafe-eval=0 initializeApp=0'
-
-# --- igualdade: sintaxe (o que faz o site abrir em branco) ---
+# --- igualdade: sintaxe do index.html (o que faz o site abrir em branco) ---
 exato index_script OK
-exato data_js OK
-exato combinado OK
-printf '%s\n' "$OUT" | grep -q '^tag_data_js=OK' || falhar "tag_data_js sem cachebuster"
 
-# --- igualdade: integridade do banco ---
-exato duplicatas 0
-exato sem_topico 0
-exato ops_diferente_de_5 0
-exato gabarito_fora_do_range 0
-exato topico_invalido 0
-exato incidencia_ids_fantasma 0
+# --- PS1 (b220): data.js saiu do repo publico, e gitignorado -----------------
+# No runner do CI ele nao existe (nao foi commitado nunca): as asercoes de
+# CONTEUDO nao se aplicam mais aqui — viraram pre-requisito de
+# materiais/entregas/publicacao/publicar_conteudo.js, que roda ANTES de publicar
+# no RTDB, que e onde importam de verdade. Rodando local (data.js presente em
+# disco, so gitignorado) elas continuam conferidas, de bonus.
+if printf '%s\n' "$OUT" | grep -q '^data.js: AUSENTE'; then
+  echo "[gate] data.js ausente (esperado no CI desde o PS1/b220) — pulando asercoes de conteudo."
+else
+  contem 'unsafe-eval=0 initializeApp=0'
+  exato data_js OK
+  # NAO "exato combinado OK": desde o PS1 (b220) index.html declara
+  # `var TOPICOS,QI,FCI,RESUMOS_BANCO,INCIDENCIA;` (populados em runtime pelo
+  # carregarConteudo()) e data.js declara os mesmos nomes como `const` — os dois
+  # NUNCA mais coexistem no mesmo escopo (data.js só é lido isolado, via
+  # vm.runInContext, pelo publicar_conteudo.js). Concatenar os dois agora É
+  # SyntaxError de redeclaração por construção, não regressão.
+  exato duplicatas 0
+  exato sem_topico 0
+  exato ops_diferente_de_5 0
+  exato gabarito_fora_do_range 0
+  exato topico_invalido 0
+  exato incidencia_ids_fantasma 0
+  # Os mesmos 3 pisos vivem TAMBÉM em materiais/entregas/publicacao/publicar_conteudo.js
+  # (PISO_QUESTOES/FLASHCARDS/RESUMOS) — esta cópia só roda local, quando data.js está
+  # presente; a que importa de verdade (bloqueia publicação) é a de lá. Mudou um valor,
+  # muda os dois.
+  piso questoes_total 533
+  piso flashcards 174
+  piso resumos 78
+fi
 
 # --- piso: sobem com funcao nova, so reprovam se CAIREM ---
 # Folga proposital sobre a baseline v1.240 (isAdmin=18, sanitize=89): colar no
@@ -97,9 +115,6 @@ exato incidencia_ids_fantasma 0
 piso isAdmin 14
 piso sanitize 80
 piso checkRateLimit 2
-piso questoes_total 533
-piso flashcards 174
-piso resumos 78
 
 if [ "$FALHAS" -gt 0 ]; then
   echo "[gate] $FALHAS asercao(oes) reprovada(s)."

@@ -22,7 +22,8 @@
    decisão. Não cobre "spam" qualitativo (conta de aparência falsa mas cadastro isolado) —
    esse sinal continua dependendo do João notar no painel.
 
-   Segredo: FIREBASE_SERVICE_ACCOUNT (mesmo já usado por enviar-push.js).
+   Secrets: FIREBASE_SERVICE_ACCOUNT (mesmo já usado por enviar-push.js) e ADMIN_UID
+   (b220 — antes vivia em texto puro neste arquivo, público).
    databaseURL é público (já vive no index.html). */
 
 const admin = require('firebase-admin');
@@ -43,7 +44,10 @@ admin.initializeApp({
 const db = admin.database();
 const msg = admin.messaging();
 
-const ADMIN_UID = 'DyNxtutn1aaemZk8cbMtGOnM0iG3';
+// b220 (PS1): saiu do texto puro (este arquivo é público) — vem do secret ADMIN_UID
+// do GitHub Actions, mesmo padrão do FIREBASE_SERVICE_ACCOUNT.
+const ADMIN_UID = process.env.ADMIN_UID;
+if (!ADMIN_UID) { console.error('ADMIN_UID ausente (configurar secret no GitHub Actions).'); process.exit(1); }
 const CURSOR_REF = 'sistema/avisoNovoUsuario/ultimoTs';
 const VENC_MARCAS_REF = 'sistema/avisoVencimento';
 const VENC_JANELA_MS = 3 * 86400000; // mesma carência de 3 dias da regra do RTDB (S6)
