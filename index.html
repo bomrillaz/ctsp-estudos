@@ -139,6 +139,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 #loading p.fade-out{opacity:0;}
 #loading .welcome-text{position:absolute;z-index:2;bottom:12vh;color:white;font-size:22px;font-weight:800;letter-spacing:.02em;text-align:center;padding:0 32px;opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s ease;line-height:1.4;}
 #loading .welcome-text.show{opacity:1;transform:translateY(0);}
+/* PS1 (b220): tela de erro do carregarConteudo() — reaproveita o #loading, nunca some
+   sozinha (só via "Tentar de novo"). */
+#loading-erro-conteudo{display:none;z-index:3;flex-direction:column;align-items:center;gap:18px;max-width:340px;padding:0 24px;text-align:center;}
+#loading-erro-conteudo.show{display:flex;}
+#loading-erro-conteudo div{color:rgba(255,255,255,.92);font-size:15px;font-weight:500;line-height:1.5;}
+#loading-erro-conteudo .btn-primary{width:auto;padding:14px 28px;}
 
 /* SPLASH SCREEN pós-login — painel de quartel */
 #splash-screen{position:fixed;inset:0;background:linear-gradient(170deg,var(--navy-2) 0%,var(--navy-deep) 70%);z-index:9990;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;}
@@ -1704,6 +1710,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   </video>
   <div class="welcome-text" id="welcome-text">Bem-vindo,<br>vamos iniciar os estudos?</div>
   <p id="loading-sub">PRONTIDÃO · BOMRILLAZ</p>
+  <div id="loading-erro-conteudo">
+    <div>Não foi possível carregar o conteúdo de estudo. Confira sua conexão e tente de novo.</div>
+    <button class="btn-primary" onclick="location.reload()">Tentar de novo</button>
+  </div>
 </div>
 
 <!-- SPLASH SCREEN pós-login -->
@@ -2962,9 +2972,13 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
   </div>
 </div>
-<script src="data.js?v=204"></script>
 <script>
 if(window.top!==window.self) window.top.location=window.self.location;
+// PS1 (b220): TOPICOS/QI/FCI/RESUMOS_BANCO/INCIDENCIA não vêm mais de data.js (script
+// estático, servido antes do login) — vêm do RTDB, atrás de auth+aprovado, via
+// carregarConteudo(). `var` (não `const`): populados depois, por atribuição, não na
+// declaração — precisa do hoisting.
+var TOPICOS,QI,FCI,RESUMOS_BANCO,INCIDENCIA;
 // ═══════════════════════════════
 // FIREBASE
 // ═══════════════════════════════
@@ -3010,7 +3024,19 @@ function setTema(p){
   try{mq.addEventListener('change',cb);}catch(e){try{mq.addListener(cb);}catch(e2){}}
   aplicarTema(lerTema());
 })();
-const ADMIN_EMAIL="jvictor.projetos.ti@gmail.com";
+// SHA-256 do e-mail admin, não o e-mail em texto puro — index.html é público, esconder o
+// valor não dá (view-source mostra tudo), mas não precisa ficar plantado pra qualquer um
+// ler. NÃO é o perímetro de segurança (isso é `admin:true` no banco, checado por
+// `isAdmin()`/regra do RTDB — ver comentário logo abaixo de onde isAdmEmail é usado);
+// isto só evita publicar o Gmail pessoal em claro.
+const ADMIN_EMAIL_HASH="52b6875efe9cd62a85a1fc55fa5084f8eefde34eb2015fe63f40fccfac641267";
+async function _emailBateAdmin(email){
+  try{
+    const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(String(email||'').trim().toLowerCase()));
+    const hex=[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+    return hex===ADMIN_EMAIL_HASH;
+  }catch(e){return false;}
+}
 
 // ── Sanitize XSS ──
 function sanitize(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
@@ -4264,7 +4290,8 @@ const AI={
   AT5:{nome:"Normas Administrativas",icon:'<svg class="ai-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><rect x="9" y="2.5" width="6" height="3.5" rx="1"/><path d="M9 11h6M9 15h6"/></svg>',color:"var(--at5)",bg:"color-mix(in srgb,var(--at5) 15%,transparent)",n:12}
 };
 // F1.1 — taxonomia de tópicos (base inerte p/ Fase 2; sem lógica adaptativa)
-// [v1.53] Bancos TOPICOS/QI/FCI/RESUMOS_BANCO movidos para data.js (carregado acima)
+// [v1.53→b220] Bancos TOPICOS/QI/FCI/RESUMOS_BANCO viveram em data.js; desde o PS1 (b220)
+// vêm do RTDB via carregarConteudo() — ver comentário no topo daquele bloco.
 
 
 
@@ -4310,7 +4337,8 @@ estrategia:"Não vale gastar tempo treinando este formato. Fica listado apenas p
 exemplo:null}
 ];
 
-// INCIDENCIA vive em data.js (Bloco A — dado fora da lógica)
+// INCIDENCIA vive em data.js (dado fora da lógica); desde o PS1 (b220) chega em memória
+// via carregarConteudo() (RTDB), não mais por <script src>.
 
 // ═══════════════════════════════
 // AUTH
@@ -4425,6 +4453,100 @@ function doLogout(){
 }
 
 // ═══════════════════════════════
+// CONTEÚDO (PS1, b220) — banco vem do RTDB, cacheado no IndexedDB por versão
+// ═══════════════════════════════
+const CONTEUDO_DB='ctspConteudo',CONTEUDO_STORE='blocos';
+// Memoizada: só negocia a conexão UMA vez por carregamento de página (isto roda no
+// caminho quente de entrada no app, antes de qualquer tela aparecer) — leitura e
+// escrita do cache reaproveitam a mesma promise/conexão.
+let _conteudoDbPromise=null;
+function _abrirConteudoDB(){
+  if(_conteudoDbPromise)return _conteudoDbPromise;
+  return _conteudoDbPromise=new Promise((res,rej)=>{
+    try{
+      const req=indexedDB.open(CONTEUDO_DB,1);
+      req.onupgradeneeded=()=>{req.result.createObjectStore(CONTEUDO_STORE);};
+      req.onsuccess=()=>res(req.result);
+      req.onerror=()=>{_conteudoDbPromise=null;rej(req.error);};
+    }catch(e){_conteudoDbPromise=null;rej(e);}
+  });
+}
+async function _lerConteudoCache(){
+  try{
+    const bd=await _abrirConteudoDB();
+    return await new Promise((res,rej)=>{
+      const tx=bd.transaction(CONTEUDO_STORE,'readonly');
+      const req=tx.objectStore(CONTEUDO_STORE).get('atual');
+      req.onsuccess=()=>res(req.result||null);
+      req.onerror=()=>rej(req.error);
+    });
+  }catch(e){return null;}
+}
+async function _gravarConteudoCache(c){
+  try{
+    const bd=await _abrirConteudoDB();
+    await new Promise((res,rej)=>{
+      const tx=bd.transaction(CONTEUDO_STORE,'readwrite');
+      tx.objectStore(CONTEUDO_STORE).put(c,'atual');
+      tx.oncomplete=res;tx.onerror=()=>rej(tx.error);
+    });
+  }catch(e){}
+}
+function _popularGlobaisConteudo(c){
+  TOPICOS=JSON.parse(c.topicos);QI=JSON.parse(c.qi);FCI=JSON.parse(c.fci);
+  RESUMOS_BANCO=JSON.parse(c.resumos);INCIDENCIA=JSON.parse(c.incidencia);
+}
+// try/catch AQUI (não só no caminho de download): cache do IndexedDB corrompido/parcial
+// não pode virar exceção não tratada dentro do onAuthStateChanged async — trata como
+// "cache não serve", deixa o chamador decidir o próximo passo, nunca trava a tela de loading.
+function _usarConteudo(c){
+  try{_popularGlobaisConteudo(c);}catch(e){console.warn('carregarConteudo: cache corrompido, ignorando.',e.message);return false;}
+  return true;
+}
+const _CAMPOS_CONTEUDO=['topicos','qi','fci','resumos','incidencia'];
+// Compara conteudo/versao com o cache local: igual → 0 download. Diferente/vazio → baixa
+// os 5 blocos. Falha de rede sem cache local: devolve false (o chamador mostra erro e
+// NUNCA deixa o app entrar com o banco vazio).
+async function carregarConteudo(){
+  // Cache local (IndexedDB) e versão remota (rede) são independentes — em paralelo, não em série.
+  const [cache,versaoRemota]=await Promise.all([
+    _lerConteudoCache(),
+    (async()=>{
+      try{return (await withTimeout(db.ref('conteudo/versao').get(),12000)).val();}
+      catch(e){
+        // PERMISSION_DENIED aqui quase sempre é usuarios/$uid/aprovado!==true no BANCO
+        // divergindo do isAdmEmail local (ex.: conta admin recriada por auto-reparo antes
+        // do aprovado:true gravar) — log explícito pra não parecer queda de rede genérica.
+        console.warn('carregarConteudo: versão remota indisponível.',e.code||'',e.message);
+        return null;
+      }
+    })(),
+  ]);
+  // Cache bate com a versão remota E populou sem erro: pronto. Se estiver corrompido,
+  // cai para os ramos abaixo (rede indisponível → falha; rede disponível → baixa de novo).
+  if(cache&&versaoRemota!==null&&cache.versao===versaoRemota&&_usarConteudo(cache))return true;
+  if(versaoRemota===null)return cache?_usarConteudo(cache):false;
+  try{
+    const c=(await withTimeout(db.ref('conteudo').get(),20000)).val();
+    // typeof, não falsy: um bloco vazio de verdade ainda é uma STRING ('[]', '{}'), nunca ausente.
+    if(!c||!_CAMPOS_CONTEUDO.every(k=>typeof c[k]==='string'))throw new Error('conteúdo incompleto');
+    await _gravarConteudoCache(c);
+    return _usarConteudo(c);
+  }catch(e){
+    console.warn('carregarConteudo: download falhou.',e.message);
+    return cache?_usarConteudo(cache):false;
+  }
+}
+function mostrarErroConteudo(){
+  const v=document.getElementById('loading-video'),w=document.getElementById('welcome-text'),
+    s=document.getElementById('loading-sub'),er=document.getElementById('loading-erro-conteudo');
+  if(v)v.classList.add('hidden');
+  if(w)w.classList.add('hidden');
+  if(s)s.classList.add('hidden');
+  if(er)er.classList.add('show');
+}
+
+// ═══════════════════════════════
 // AUTH STATE
 // ═══════════════════════════════
 // Timeout de segurança: se onAuthStateChanged não disparar em 8s, vai para login
@@ -4466,7 +4588,7 @@ auth.onAuthStateChanged(async user=>{
   currentUser=user;
   // B58: mesmo tratamento do cadastro — o e-mail vai normalizado para o banco.
   const emailNorm=String(user.email||'').trim().toLowerCase();
-  const isAdmEmail=emailNorm===String(ADMIN_EMAIL).toLowerCase();
+  const isAdmEmail=await _emailBateAdmin(emailNorm);
   try{
     // b121: se doRegister() está gravando o perfil agora, espera terminar antes de checar
     // "existe" — sem isto, esta leitura corre na frente do write dele, acha o nó vazio e
@@ -4485,14 +4607,19 @@ auth.onAuthStateChanged(async user=>{
       await withTimeout(db.ref('usuarios/'+user.uid).set({nome:emailNorm,email:emailNorm,admin:false,aprovado:isAdmEmail,criadoEm:Date.now()}));
     }
     const freshSnap=await withTimeout(db.ref('usuarios/'+user.uid).get());
-    userProfile={nome:user.email,email:user.email,admin:false,aprovado:isAdmEmail,...(freshSnap.val()||{})};
+    userProfile={nome:user.email,email:user.email,admin:false,aprovado:isAdmEmail,...(freshSnap.val()||{}),_isAdmEmail:isAdmEmail};
   }catch(e){
     console.warn('Auth profile fallback:',e.message);
-    userProfile={nome:user.email,email:user.email,admin:false,aprovado:isAdmEmail,_perfilIncerto:true};
+    userProfile={nome:user.email,email:user.email,admin:false,aprovado:isAdmEmail,_perfilIncerto:true,_isAdmEmail:isAdmEmail};
   }
   if(!userProfile.aprovado&&!isAdmEmail){
     document.getElementById('loading').style.display='none';
     showAuth('pending');return;
+  }
+  // PS1: o banco (TOPICOS/QI/FCI/RESUMOS_BANCO/INCIDENCIA) só existe em memória depois
+  // daqui. Nunca entrar no app (nem na animação de boas-vindas) com ele vazio.
+  if(!(await carregarConteudo())){
+    mostrarErroConteudo();return;
   }
   // Animação de boas-vindas no loading (com toque-para-pular)
   const loadVid=document.querySelector('#loading video');
@@ -4602,7 +4729,7 @@ async function initApp(){
   // checa. O e-mail ainda abre a porta, mas bloqueada e com o motivo na tela — antes o painel
   // abria confiando no e-mail e toda escrita morria em silêncio.
   const admOk=isAdmin();
-  if(admOk||(currentUser&&currentUser.email===ADMIN_EMAIL)){
+  if(admOk||(currentUser&&userProfile._isAdmEmail)){
     const admIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
     const admSub=admOk?'Painel de gestão':'Bloqueado: o banco não confirma';
     const motivoIncerto=!!userProfile._perfilIncerto;
@@ -4970,7 +5097,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.300';
+const APP_VERSAO='v1.301';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio

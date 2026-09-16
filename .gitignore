@@ -38,3 +38,10 @@ DESIGN.md
 # qualquer um que clone o repo PUBLICO. Fica em disco, funciona igual (o Claude Code le
 # do disco, nao do GitHub). Segunda via: copia no vault, que sincroniza com o Drive.
 CLAUDE.md
+
+# b220 (PS1) — o banco de conteudo sai do repo publico. Fica na raiz, gitignorado; o
+# cliente busca via carregarConteudo() no RTDB (no "conteudo", atras do login), publicado
+# por materiais/entregas/publicacao/publicar_conteudo.js. Continua em disco, todas as
+# ferramentas de auditoria/edicao seguem achando o arquivo igual.
+# Ver materiais/entregas/planos/PLANO_conteudo_pos_login.md.
+data.js

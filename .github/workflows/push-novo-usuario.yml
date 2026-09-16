@@ -31,4 +31,5 @@ jobs:
         working-directory: .github/scripts
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          ADMIN_UID: ${{ secrets.ADMIN_UID }}
         run: node avisar-novo-usuario.js

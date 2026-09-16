@@ -1,13 +1,15 @@
 /* Service Worker — Prontidão · CBMRS (Fase 2 + hotfix v1.106)
-   REGRA DE OURO: só o APP (same-origin: index, data.js, assets) e os SCRIPTS ESTATICOS
+   REGRA DE OURO: só o APP (same-origin: index, assets) e os SCRIPTS ESTATICOS
    do Firebase SDK (gstatic /firebasejs/) passam pelo cache. TUDO que e Firebase DINAMICO
    (RTDB firebaseio.com, Auth googleapis.com, reCAPTCHA) passa DIRETO, sem intercept —
    senao o SW cacheava as chamadas do banco e o app abria zerado / "sem conexao".
+   PS1 (b220): o `data.js` SAIU do SHELL — o conteúdo agora vem do RTDB (nó `conteudo`,
+   atrás do login) via `carregarConteudo()`, e passa por aqui DIRETO junto com o resto do
+   Firebase dinâmico. Nunca reintroduzir `data.js` aqui.
    - navegacao (HTML): network-first (offline cai no cache).
    - demais GET elegiveis: stale-while-revalidate.
    Atualizacao: skipWaiting no install (hotfix chega automatico); no controllerchange
-   o app recarrega UMA vez (guard de 1a instalacao no index).
-   OBS: ao mudar o ?v= do data.js, atualizar a URL abaixo. */
+   o app recarrega UMA vez (guard de 1a instalacao no index). */
 
 /* ── Fase 4: FCM em background (SW ÚNICO, sem guerra de escopo) ──
    Importamos SÓ app+messaging (NUNCA database) — a regra de ouro continua valendo:
@@ -49,13 +51,12 @@ self.addEventListener('notificationclick', (e) => {
   })());
 });
 
-const CACHE = 'ctsp-cache-v33';
+const CACHE = 'ctsp-cache-v34';
 const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
   'assets/cesar-coin.png',
-  'assets/loading.mp4', 'assets/loading-poster.jpg',
-  'data.js?v=204'
+  'assets/loading.mp4', 'assets/loading-poster.jpg'
 ];
 const CROSS = [
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
@@ -112,11 +113,13 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // data.js: match EXATO (com ?v=) — ignoreSearch aqui deixava o SW servir uma versao antiga
-  // cacheada mesmo depois de um bump de ?v= sem bump de CACHE (ver licao no vault).
-  const dataJs = url.pathname.endsWith('/data.js');
+  // Match EXATO (com querystring) pra qualquer URL same-origin QUE TENHA querystring —
+  // generaliza a regra que antes só cobria 'data.js?v=': ignoreSearch geral deixava o SW
+  // servir uma versao antiga cacheada mesmo depois de um bump de cache-buster (?v=...) sem
+  // bump de CACHE. Sem querystring, ignoreSearch:true (comportamento normal).
+  const temQuery = url.search !== '';
   e.respondWith(
-    caches.match(req, { ignoreSearch: !dataJs }).then((cached) => {
+    caches.match(req, { ignoreSearch: !temQuery }).then((cached) => {
       const net = fetch(req).then((res) => { cachePut(req, res.clone()); return res; }).catch(() => cached);
       return cached || net;
     })
