@@ -2978,7 +2978,7 @@ if(window.top!==window.self) window.top.location=window.self.location;
 // estático, servido antes do login) — vêm do RTDB, atrás de auth+aprovado, via
 // carregarConteudo(). `var` (não `const`): populados depois, por atribuição, não na
 // declaração — precisa do hoisting.
-var TOPICOS,QI,FCI,RESUMOS_BANCO,INCIDENCIA;
+var TOPICOS,QI,FCI,RESUMOS_BANCO,INCIDENCIA,SUBTOPICOS;
 // ═══════════════════════════════
 // FIREBASE
 // ═══════════════════════════════
@@ -4495,6 +4495,7 @@ async function _gravarConteudoCache(c){
 function _popularGlobaisConteudo(c){
   TOPICOS=JSON.parse(c.topicos);QI=JSON.parse(c.qi);FCI=JSON.parse(c.fci);
   RESUMOS_BANCO=JSON.parse(c.resumos);INCIDENCIA=JSON.parse(c.incidencia);
+  SUBTOPICOS=JSON.parse(c.subtopicos);
 }
 // try/catch AQUI (não só no caminho de download): cache do IndexedDB corrompido/parcial
 // não pode virar exceção não tratada dentro do onAuthStateChanged async — trata como
@@ -4503,9 +4504,9 @@ function _usarConteudo(c){
   try{_popularGlobaisConteudo(c);}catch(e){console.warn('carregarConteudo: cache corrompido, ignorando.',e.message);return false;}
   return true;
 }
-const _CAMPOS_CONTEUDO=['topicos','qi','fci','resumos','incidencia'];
+const _CAMPOS_CONTEUDO=['topicos','qi','fci','resumos','incidencia','subtopicos'];
 // Compara conteudo/versao com o cache local: igual → 0 download. Diferente/vazio → baixa
-// os 5 blocos. Falha de rede sem cache local: devolve false (o chamador mostra erro e
+// os 6 blocos. Falha de rede sem cache local: devolve false (o chamador mostra erro e
 // NUNCA deixa o app entrar com o banco vazio).
 async function carregarConteudo(){
   // Cache local (IndexedDB) e versão remota (rede) são independentes — em paralelo, não em série.
@@ -5097,7 +5098,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.301';
+const APP_VERSAO='v1.302';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
