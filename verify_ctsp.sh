@@ -51,9 +51,32 @@ open('main.js','w',encoding='utf-8').write(max(s, key=len))
 node --check main.js && echo "index_script=OK" || echo "index_script=FALHOU"
 if [ -n "$DATA" ]; then
 node --check data.js && echo "data_js=OK" || echo "data_js=FALHOU"
-grep -q '<script src="data.js?v=' index.html && echo "tag_data_js=OK (bumpar ?v= quando data.js mudar)" || echo "tag_data_js=AUSENTE_OU_SEM_CACHEBUSTER"
-cat data.js main.js > _combined.js
-node --check _combined.js && echo "combinado=OK" || echo "combinado=FALHOU"
+# PS1 (b220): data.js saiu do repo publico e NAO e mais servido por <script src>.
+# A tag de volta significa conteudo exposto de novo. Esperado agora: AUSENTE.
+grep -q '<script[^>]*src="data.js' index.html && echo "tag_data_js=FALHOU (voltou o <script src=data.js> -- conteudo exposto no repo publico)" || echo "tag_data_js=AUSENTE_OK (correto pos-PS1)"
+# Substitui o antigo check "combinado" (PJ25, b224). Concatenar data.js + o script do
+# index.html simulava o layout pre-PS1 e sempre falhava por dupla declaracao de TOPICOS.
+# O contrato que importa hoje e outro: TODO bloco de topo do data.js tem de chegar ao
+# app por _popularGlobaisConteudo(). Foi essa classe que quebrou o SUBTOPICOS no b221.
+cat > _globais.js <<'EOF'
+const fs=require('fs');
+const data=fs.readFileSync('data.js','utf-8');
+const html=fs.readFileSync('index.html','utf-8');
+const NL=String.fromCharCode(10);
+const declarados=data.split(NL).map(l=>{const m=/^(?:const|let|var) +([A-Z][A-Z0-9_]*) *=/.exec(l);return m?m[1]:null;}).filter(Boolean);
+const ini=html.indexOf('function _popularGlobaisConteudo(');
+const populados=new Set();
+if(ini>=0){
+  const corpo=html.slice(ini,html.indexOf(NL+'}',ini));
+  const util=corpo.split(NL).filter(l=>l.trim().indexOf('//')!==0).join(NL);
+  [...util.matchAll(/([A-Z][A-Z0-9_]*) *=[^=]/g)].forEach(m=>populados.add(m[1]));
+}
+if(ini<0||!populados.size){console.log('globais_orfaos=INDETERMINADO (nao li _popularGlobaisConteudo no index.html)');process.exit(0);}
+const orfaos=declarados.filter(n=>!populados.has(n));
+console.log('blocos_em_data_js='+declarados.length+' populados_no_app='+populados.size);
+console.log('globais_orfaos='+orfaos.length+(orfaos.length?' ('+orfaos.join(',')+' -- declarados no data.js e NUNCA entregues ao app)':''));
+EOF
+node _globais.js
 fi
 
 echo "=== TOKENS CSS (esperado: tokens_fantasma=0) ==="
