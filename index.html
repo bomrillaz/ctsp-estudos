@@ -2978,7 +2978,7 @@ if(window.top!==window.self) window.top.location=window.self.location;
 // estático, servido antes do login) — vêm do RTDB, atrás de auth+aprovado, via
 // carregarConteudo(). `var` (não `const`): populados depois, por atribuição, não na
 // declaração — precisa do hoisting.
-var TOPICOS,QI,FCI,RESUMOS_BANCO,INCIDENCIA,SUBTOPICOS;
+var TOPICOS,QI,FCI,RESUMOS_BANCO,INCIDENCIA,SUBTOPICOS,GLOSARIO,NORMAS;
 // ═══════════════════════════════
 // FIREBASE
 // ═══════════════════════════════
@@ -4496,6 +4496,16 @@ function _popularGlobaisConteudo(c){
   TOPICOS=JSON.parse(c.topicos);QI=JSON.parse(c.qi);FCI=JSON.parse(c.fci);
   RESUMOS_BANCO=JSON.parse(c.resumos);INCIDENCIA=JSON.parse(c.incidencia);
   SUBTOPICOS=JSON.parse(c.subtopicos);
+  // b224: GLOSARIO e NORMAS ficaram de fora do PS1 e a tela Consulta abriu vazia por 3 dias.
+  // Bloco novo no data.js entra AQUI e no payload do publicar_conteudo.js, nos dois.
+  // O verify_ctsp.sh mede a lacuna (globais_orfaos).
+  // Tolerantes de propósito, e FORA do _CAMPOS_CONTEUDO: são acervo secundário (Consulta e
+  // busca global). Exigi-los transformaria "um bloco não publicado" em "o app não abre",
+  // inclusive para quem só quer estudar. Ausência = aviso no console + lista vazia, que é o
+  // que os 4 pontos de leitura já toleram com typeof.
+  GLOSARIO=c.glosario?JSON.parse(c.glosario):[];
+  NORMAS=c.normas?JSON.parse(c.normas):[];
+  if(!c.glosario||!c.normas)console.warn('conteudo: GLOSARIO/NORMAS ausentes no RTDB. A tela Consulta vai abrir vazia; republicar com publicar_conteudo.js.');
 }
 // try/catch AQUI (não só no caminho de download): cache do IndexedDB corrompido/parcial
 // não pode virar exceção não tratada dentro do onAuthStateChanged async — trata como
@@ -4504,9 +4514,11 @@ function _usarConteudo(c){
   try{_popularGlobaisConteudo(c);}catch(e){console.warn('carregarConteudo: cache corrompido, ignorando.',e.message);return false;}
   return true;
 }
+// Conjunto OBRIGATÓRIO: sem qualquer um destes o app não tem o que ensinar, e o download é
+// rejeitado. GLOSARIO/NORMAS ficam fora de propósito (b224), ver _popularGlobaisConteudo.
 const _CAMPOS_CONTEUDO=['topicos','qi','fci','resumos','incidencia','subtopicos'];
 // Compara conteudo/versao com o cache local: igual → 0 download. Diferente/vazio → baixa
-// os 6 blocos. Falha de rede sem cache local: devolve false (o chamador mostra erro e
+// o nó inteiro. Falha de rede sem cache local: devolve false (o chamador mostra erro e
 // NUNCA deixa o app entrar com o banco vazio).
 async function carregarConteudo(){
   // Cache local (IndexedDB) e versão remota (rede) são independentes — em paralelo, não em série.
@@ -5098,7 +5110,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.302';
+const APP_VERSAO='v1.303';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
