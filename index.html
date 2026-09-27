@@ -1212,7 +1212,8 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .aviso-cob-sub{display:block;font-weight:600;opacity:.85;margin-top:2px;}
 .aviso-cob-btn{margin-left:auto;flex-shrink:0;background:var(--navy);color:#fff;border:none;font-family:inherit;font-weight:800;font-size:12px;padding:8px 14px;border-radius:10px;cursor:pointer;}
 /* PE16 — cartões da tela Atualizações e selo "Atualizado" nos hubs (Quiz/Cards/Resumos/Aulas). */
-.atu-list{display:flex;flex-direction:column;gap:14px;}
+.atu-list{display:flex;flex-direction:column;gap:10px;}
+.atu-cards{display:flex;flex-direction:column;gap:12px;}
 .atu-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);}
 .atu-card-top{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
 .atu-tag{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;}
@@ -1534,9 +1535,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   /* FASE 2 — grids multi-coluna (auto-fit escala sem hard-code de contagem) */
   .quick-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
   .sim-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start;}
-  /* PE16 — cartões de Atualizações não são mestre-detalhe (nenhum é sub-item de área),
-     então grid direto basta: sem display:contents, sem row-gap:0. */
-  .atu-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));align-items:start;}
+  /* Atualizações viraram acordeão por área (b233): o mestre-detalhe é o do B57 abaixo
+     (.atu-list entra nos mesmos seletores); aqui só a grade dos cartões dentro do painel. */
+  .atu-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start;}
   /* B57 — hubs (Quiz/Cards/Resumos) em MESTRE-DETALHE. As áreas ficam empilhadas
      numa coluna estreita à esquerda (como no celular) e a área aberta ocupa o
      painel da direita, que tem altura própria. Isso mata o desalinhamento de
@@ -1547,15 +1548,16 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
      row-gap:0 é obrigatório: o painel gera linhas implícitas vazias e qualquer
      gap nelas viraria centenas de pixels de buraco. O respiro entre áreas vem
      do margin-bottom do cabeçalho. */
-  .area-list,.resumos-list,.aulas-list{display:grid;grid-template-columns:minmax(240px,320px) 1fr;column-gap:20px;row-gap:0;align-items:start;}
-  .area-list>.quiz-area-row,.resumos-list>.quiz-area-row,.aulas-list>.quiz-area-row{display:contents;}
+  .area-list,.resumos-list,.aulas-list,.atu-list{display:grid;grid-template-columns:minmax(240px,320px) 1fr;column-gap:20px;row-gap:0;align-items:start;}
+  .area-list>.quiz-area-row,.resumos-list>.quiz-area-row,.aulas-list>.quiz-area-row,.atu-list>.quiz-area-row{display:contents;}
   .quiz-area-row>.area-row{grid-column:1;margin-bottom:10px;}
   .pg-area-row.quiz-area-row.open>.area-row{border-radius:16px;box-shadow:var(--shadow);}
   .quiz-area-row>.pg-area-topicos{grid-column:2;grid-row:1/span 99;align-self:start;border:1px solid var(--line-soft);border-radius:16px;margin-top:0;padding:12px 14px 14px;position:sticky;top:16px;max-height:calc(100vh - 120px);overflow:auto;}
   .hub-detalhe-vazio{display:flex;align-items:center;justify-content:center;grid-column:2;grid-row:1/span 99;align-self:start;min-height:200px;border:1px dashed var(--line-soft);border-radius:16px;color:var(--text3);font-size:13px;line-height:1.5;padding:24px;text-align:center;}
   .area-list:has(.quiz-area-row.open) .hub-detalhe-vazio,
   .resumos-list:has(.quiz-area-row.open) .hub-detalhe-vazio,
-  .aulas-list:has(.quiz-area-row.open) .hub-detalhe-vazio{display:none;}
+  .aulas-list:has(.quiz-area-row.open) .hub-detalhe-vazio,
+  .atu-list:has(.quiz-area-row.open) .hub-detalhe-vazio{display:none;}
   /* PJ18: infográfico em 2 colunas a partir daqui (1 coluna no celular, regra mobile-first). */
   .aula-info-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
   /* v1.224 — Meu progresso nunca tinha layout de desktop: virava "celular esticado" a
@@ -5428,7 +5430,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.309';
+const APP_VERSAO='v1.310';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -8352,17 +8354,40 @@ function atuSeloHTML(t){
 function abrirAtualizacao(id){
   navTo('atualizacoes');
   const el=id&&document.getElementById('atu-card-'+id);
-  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+  if(!el)return;
+  // O cartão mora dentro do acordeão da área, fechado por padrão: abre a área dele antes de rolar.
+  const row=el.closest('.pg-area-row');
+  if(row&&!row.classList.contains('open'))toggleAreaTopicos(row.querySelector('.area-row'));
+  el.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function renderAtualizacoes(){
   const content=document.getElementById('atualizacoes-content');
   if(!content)return;
   const lista=(typeof ATUALIZACOES!=='undefined'&&Array.isArray(ATUALIZACOES))?ATUALIZACOES:[];
-  content.innerHTML=lista.length?('<div class="atu-list">'+lista.map(atuCardHTML).join('')+'</div>')
-    :'<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Nenhuma atualização publicada ainda.</div>';
+  if(!lista.length){content.innerHTML='<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Nenhuma atualização publicada ainda.</div>';return;}
+  // Acordeão por área, mesmo componente de Quiz/Aulas (.quiz-area-row + toggleAreaTopicos).
+  // Dentro da área mantém a ordem do banco (mais recente primeiro).
+  const porArea={};
+  lista.forEach(e=>{const a=AI[e.area]?e.area:'Geral';(porArea[a]=porArea[a]||[]).push(e);});
+  const html=Object.keys(porArea).sort().map(a=>{
+    const aInfo=AI[a]||{};
+    const itens=porArea[a];
+    const ultima=itens.map(e=>e.data).sort().pop();
+    return `<div class="pg-area-row quiz-area-row" data-area="${sanitize(a)}">
+      <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false">
+        <div class="area-row-icon" style="background:${aInfo.bg||'var(--paper-2)'};color:${aInfo.color||'var(--text2)'}">${aInfo.icon||''}</div>
+        <div class="area-row-info">
+          <div class="area-row-name">${AI[a]?sanitize(a)+' · '+sanitize(aInfo.nome||''):'Geral'}</div>
+          <div class="area-row-meta">${itens.length} atualiza${itens.length!==1?'ções':'ção'} · última em ${_dataBR(ultima)}</div>
+        </div>
+        <svg class="pg-area-chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="pg-area-topicos"><div class="atu-cards">${itens.map(atuCardHTML).join('')}</div></div>
+    </div>`;
+  }).join('');
+  content.innerHTML='<div class="atu-list">'+html+'<div class="hub-detalhe-vazio">Escolha uma área ao lado para ver as atualizações.</div></div>';
 }
 function atuCardHTML(e){
-  const aInfo=AI[e.area]||{};
   const tipoClasse='atu-tag--'+(e.tipo||'').toLowerCase();
   const mudancas=(e.mudancas||[]).map(m=>`<div class="atu-mud-row">
       <div class="atu-mud-rotulo">${sanitize(m.rotulo)}</div>
@@ -8374,7 +8399,6 @@ function atuCardHTML(e){
   return `<div class="atu-card" id="atu-card-${e.id}">
     <div class="atu-card-top">
       <span class="atu-tag ${tipoClasse}">${sanitize(ATU_TIPO_ROTULO[e.tipo]||e.tipo)}</span>
-      <span class="atu-tag atu-tag--area" style="background:${aInfo.bg||'var(--paper-2)'};color:${aInfo.color||'var(--text2)'}">${sanitize(e.area||'')}</span>
       <span class="atu-data">${_dataBR(e.data)}</span>
     </div>
     <div class="atu-titulo">${sanitize(e.titulo)}</div>
