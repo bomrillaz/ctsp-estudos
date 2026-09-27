@@ -141,11 +141,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 #loading .welcome-text.show{opacity:1;transform:translateY(0);}
 /* PS1 (b220): tela de erro do carregarConteudo() — reaproveita o #loading, nunca some
    sozinha (só via "Tentar de novo"). PS3/A1 (v17): #loading-renovacao é a mesma ideia
-   pra quem venceu de verdade, com abrirPagamento()/doLogout() em vez de recarregar. */
-#loading-erro-conteudo,#loading-renovacao{display:none;z-index:3;flex-direction:column;align-items:center;gap:18px;max-width:340px;padding:0 24px;text-align:center;}
-#loading-erro-conteudo.show,#loading-renovacao.show{display:flex;}
-#loading-erro-conteudo div,#loading-renovacao div{color:rgba(255,255,255,.92);font-size:15px;font-weight:500;line-height:1.5;}
-#loading-erro-conteudo .btn-primary,#loading-renovacao .btn-primary{width:auto;padding:14px 28px;}
+   pra quem venceu de verdade, com abrirPagamento()/doLogout() em vez de recarregar.
+   PS3/A3: #loading-confirmar-email é a mesma família pra quem ainda não confirmou o
+   e-mail — checada ANTES de carregarConteudo(), então o PERMISSION_DENIED novo da regra
+   nunca chega a existir pra essa pessoa (nunca cai na tela de renovação por engano). */
+#loading-erro-conteudo,#loading-renovacao,#loading-confirmar-email{display:none;z-index:3;flex-direction:column;align-items:center;gap:18px;max-width:340px;padding:0 24px;text-align:center;}
+#loading-erro-conteudo.show,#loading-renovacao.show,#loading-confirmar-email.show{display:flex;}
+#loading-erro-conteudo div,#loading-renovacao div,#loading-confirmar-email div{color:rgba(255,255,255,.92);font-size:15px;font-weight:500;line-height:1.5;}
+#loading-erro-conteudo .btn-primary,#loading-renovacao .btn-primary,#loading-confirmar-email .btn-primary{width:auto;padding:14px 28px;}
 /* PS3/A1: "Renovar acesso" abre o Pix por cima do #loading (z 9999) — sem isso o modal
    (z 1000) e o toast de falha do Pix (z 9998) nascem escondidos atrás da tela. */
 #pix-overlay{z-index:10000;}
@@ -1722,6 +1725,12 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <div id="loading-renovacao">
     <div id="loading-renovacao-texto"></div>
     <button class="btn-primary" onclick="abrirPagamento(planoAtual())">Renovar acesso</button>
+    <button class="btn-primary btn-ghost-dark" onclick="doLogout()">Sair</button>
+  </div>
+  <div id="loading-confirmar-email">
+    <div id="loading-confirmar-email-texto"></div>
+    <button class="btn-primary" id="btn-ja-confirmei" onclick="_jaConfirmeiEmail()">Já confirmei</button>
+    <button class="btn-primary btn-ghost-dark" id="btn-reenviar-email" onclick="_reenviarEmailVerificacao()">Reenviar e-mail</button>
     <button class="btn-primary btn-ghost-dark" onclick="doLogout()">Sair</button>
   </div>
 </div>
@@ -4445,6 +4454,10 @@ async function doRegister(){
     // sendo o `aprovado` revogado manualmente no vencimento do pagamento. Diferente do
     // "renascimento" pós-Remover logo abaixo, que continua trancando de propósito.
     await db.ref('usuarios/'+cred.user.uid).set({nome,email:e,admin:false,aprovado:true,criadoEm:Date.now()});
+    // PS3/A3: dispara o e-mail de verificação. NUNCA pode derrubar o cadastro — a conta e
+    // o nó já existem nesse ponto; falha aqui só significa "reenviar" depois pelo botão da
+    // tela de confirmação (onAuthStateChanged barra o acesso ao conteúdo até confirmar).
+    try{auth.languageCode='pt-BR';await cred.user.sendEmailVerification();}catch(e){console.warn('doRegister: falha ao enviar e-mail de verificação.',e.message);}
   }catch(err){showMsg('reg-msg',mensagemErroAuth(err,'Erro ao criar conta.'));}
   finally{btn.disabled=false;btn.textContent='Criar conta';_registroEmAndamento=false;}
 }
@@ -4587,6 +4600,19 @@ async function carregarConteudo(){
     return cache?_usarConteudo(cache):false;
   }
 }
+// A4 (PS3, v18): storage persistente evita o navegador despejar o IndexedDB do cache de
+// conteúdo (e o resto do app) sob pressão de espaço. Uma vez por sessão (a flag de módulo
+// evita repetir a cada re-render), silencioso, nunca bloqueia o carregamento.
+let _storagePersistentePedido=false;
+async function _pedirStoragePersistente(){
+  if(_storagePersistentePedido)return;
+  _storagePersistentePedido=true;
+  try{
+    if(!navigator.storage||!navigator.storage.persist)return;
+    const jaPersiste=await navigator.storage.persisted();
+    if(!jaPersiste)await navigator.storage.persist();
+  }catch(e){console.warn('_pedirStoragePersistente:',e.message);}
+}
 function mostrarErroConteudo(){
   const v=document.getElementById('loading-video'),w=document.getElementById('welcome-text'),
     s=document.getElementById('loading-sub'),er=document.getElementById('loading-erro-conteudo');
@@ -4607,6 +4633,65 @@ function mostrarTelaRenovacao(st){
   if(s)s.classList.add('hidden');
   if(txt)txt.textContent='Seu acesso venceu.'+(st&&st.label?' '+st.label+'.':'')+' Renove para continuar estudando.';
   if(rv)rv.classList.add('show');
+}
+
+// PS3/A3 (v18): tela própria de quem ainda não confirmou o e-mail. Checada ANTES de
+// carregarConteudo() no onAuthStateChanged — nunca deixa a leitura de conteudo/ disparar
+// pra essa pessoa, então o PERMISSION_DENIED novo da regra nunca aparece pra ela (não cai
+// na tela de renovação do A1, que é para quem venceu, não para quem não confirmou).
+let _cooldownReenvio=0;
+function mostrarTelaConfirmarEmail(){
+  const v=document.getElementById('loading-video'),w=document.getElementById('welcome-text'),
+    s=document.getElementById('loading-sub'),ce=document.getElementById('loading-confirmar-email'),
+    txt=document.getElementById('loading-confirmar-email-texto');
+  if(v)v.classList.add('hidden');
+  if(w)w.classList.add('hidden');
+  if(s)s.classList.add('hidden');
+  const email=sanitize(currentUser&&currentUser.email||'');
+  if(txt)txt.innerHTML='Confirme seu e-mail para continuar. Enviamos um link para <b>'+email+'</b>. Depois de clicar no link, volte aqui e toque em "Já confirmei". Não chegou? Confira a caixa de spam.';
+  if(ce)ce.classList.add('show');
+}
+async function _jaConfirmeiEmail(){
+  const btn=document.getElementById('btn-ja-confirmei');
+  if(btn){btn.disabled=true;btn.textContent='Verificando...';}
+  try{
+    await currentUser.reload();
+    await currentUser.getIdToken(true); // token só carrega email_verified novo depois do refresh
+    if(currentUser.emailVerified){location.reload();return;} // reentra pelo onAuthStateChanged já limpo
+    const txt=document.getElementById('loading-confirmar-email-texto');
+    if(txt)txt.textContent='Ainda não confirmado. Confira sua caixa de entrada (e o spam).';
+  }catch(e){
+    console.warn('_jaConfirmeiEmail: falha ao checar.',e.message);
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='Já confirmei';}
+  }
+}
+async function _reenviarEmailVerificacao(){
+  const btn=document.getElementById('btn-reenviar-email');
+  if(Date.now()<_cooldownReenvio){return;}
+  if(btn){btn.disabled=true;}
+  try{
+    auth.languageCode='pt-BR';
+    await currentUser.sendEmailVerification();
+    _cooldownReenvio=Date.now()+60000;
+    let restante=60;
+    const tick=()=>{
+      if(!btn)return;
+      if(restante<=0||Date.now()>=_cooldownReenvio){btn.disabled=false;btn.textContent='Reenviar e-mail';return;}
+      btn.textContent='Reenviar em '+restante+'s';restante--;
+      setTimeout(tick,1000);
+    };
+    tick();
+  }catch(e){
+    if(e&&e.code==='auth/too-many-requests'){
+      if(btn)btn.textContent='Aguarde antes de reenviar';
+      _cooldownReenvio=Date.now()+60000;
+      setTimeout(()=>{if(btn){btn.disabled=false;btn.textContent='Reenviar e-mail';}},60000);
+    }else{
+      console.warn('_reenviarEmailVerificacao: falha ao reenviar.',e.message);
+      if(btn){btn.disabled=false;}
+    }
+  }
 }
 
 // ═══════════════════════════════
@@ -4679,6 +4764,21 @@ auth.onAuthStateChanged(async user=>{
     document.getElementById('loading').style.display='none';
     showAuth('pending');return;
   }
+  // PS3/A3 (v18): e-mail confirmado é pré-requisito pra ler conteudo/ (espelha a regra do
+  // RTDB — admin bypassa lá e aqui). TEM de vir ANTES de carregarConteudo(): a regra nova
+  // faz PERMISSION_DENIED pra quem não confirmou, e se essa checagem viesse depois, cairia
+  // na tela de RENOVAÇÃO do A1 (que é pra quem venceu, não pra quem não confirmou) — o
+  // ramo 'vencido' de carregarConteudo() só evita isso pra date, não pra email_verified.
+  // Sessão persistida guarda emailVerified e o token ANTIGOS: quem foi marcado verificado pelo
+  // admin (marcar_email_verificado.js) ou confirmou em outro aparelho só é visto depois de
+  // reload() + token novo. Sem isso, cai na tela de confirmação ou toma PERMISSION_DENIED.
+  if(!user.emailVerified){try{await user.reload();}catch(e){}}
+  if(user.emailVerified){
+    try{const r=await user.getIdTokenResult();if(r.claims.email_verified!==true)await user.getIdToken(true);}catch(e){}
+  }
+  if(!user.emailVerified&&!isAdmEmail&&!(userProfile&&userProfile.admin===true)){
+    mostrarTelaConfirmarEmail();return;
+  }
   // PS1: o banco (TOPICOS/QI/FCI/RESUMOS_BANCO/INCIDENCIA) só existe em memória depois
   // daqui. Nunca entrar no app (nem na animação de boas-vindas) com ele vazio.
   const conteudoOk=await carregarConteudo();
@@ -4688,6 +4788,9 @@ auth.onAuthStateChanged(async user=>{
   if(!conteudoOk){
     mostrarErroConteudo();return;
   }
+  // A4 (PS3): pede armazenamento persistente ao navegador uma vez por sessão, depois que o
+  // conteúdo carregou com sucesso (não é gate de nada — silencioso, nunca bloqueia).
+  _pedirStoragePersistente();
   // Animação de boas-vindas no loading (com toque-para-pular)
   const loadVid=document.querySelector('#loading video');
   const loadImg=document.querySelector('#loading img');
@@ -5164,7 +5267,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.304';
+const APP_VERSAO='v1.305';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
