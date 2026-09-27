@@ -4614,6 +4614,19 @@ async function _apagarAudioAulaCache(chave){
     });
   }catch(e){}
 }
+// PJ18/Bloco B: existência só (getKey, não get) — o hub marca "· Baixada" sem carregar
+// o Blob inteiro (podem ser MBs) de cada tópico só para saber se ele existe.
+async function _temAudioAulaCache(chave){
+  try{
+    const bd=await _abrirConteudoDB();
+    return await new Promise((res,rej)=>{
+      const tx=bd.transaction(AULAS_AUDIO_STORE,'readonly');
+      const req=tx.objectStore(AULAS_AUDIO_STORE).getKey(chave);
+      req.onsuccess=()=>res(req.result!==undefined);
+      req.onerror=()=>rej(req.error);
+    });
+  }catch(e){return false;}
+}
 function _popularGlobaisConteudo(c){
   TOPICOS=JSON.parse(c.topicos);QI=JSON.parse(c.qi);FCI=JSON.parse(c.fci);
   RESUMOS_BANCO=JSON.parse(c.resumos);INCIDENCIA=JSON.parse(c.incidencia);
@@ -5366,7 +5379,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.306';
+const APP_VERSAO='v1.307';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -6659,8 +6672,8 @@ function fecharConfirm(e){if(e&&e.target!==e.currentTarget)return;document.getEl
 // Os 2 call sites do Quiz carregam contagem, não estado, e ficam neutros.
 // PD1 (auditoria b184/b185): o ícone de 32px era igual ao da área-mãe, repetido em cada item sem
 // carregar informação própria. Removido; icBox/icon seguem chegando dos 4 call sites, ignorados.
-function itemFolhaHTML({icBox,icon,titulo,sub,subTom,onclick,extraClass,seta,minw0}){
-  return `<div class="resumo-list-item${extraClass?' '+extraClass:''}" role="button" tabindex="0" onclick="${onclick}">
+function itemFolhaHTML({icBox,icon,titulo,sub,subTom,onclick,extraClass,seta,minw0,id}){
+  return `<div${id?` id="${id}"`:''} class="resumo-list-item${extraClass?' '+extraClass:''}" role="button" tabindex="0" onclick="${onclick}">
         <div style="flex:1${minw0?';min-width:0':''}"><div style="font-size:13px;font-weight:700">${titulo}</div><div class="resumo-list-vence${subTom?' resumo-list-vence--'+subTom:''}">${sub}</div></div>
         ${seta?'<div style="color:var(--text3);font-size:18px">→</div>':''}
       </div>`;
@@ -8036,6 +8049,9 @@ function ouvirResumo(id){
 // mecanismo, não o assunto), infográfico e mapa mental. PLANO_aulas_ui.md.
 // ═══════════════════════════════
 let aulasModo='hub',aulaAtual=null,_aulaAudioBaixando=null,_aulaAudioUrl=null;
+// PLANO_aulas_ui.md §3.5: rótulo fixo no topo dos dois modos (hub e detalhe) — fonte
+// única para não duplicar o texto entre _hubAulas e _detalheAula.
+const AULAS_ORIGEM_HTML='<div class="aulas-origem">O áudio foi gerado por IA a partir das normas, e o infográfico e o mapa foram escritos a partir dele. Tudo foi revisado contra as normas, mas serve para aprofundar e não substitui o texto oficial: em qualquer divergência, vale a norma.</div>';
 function aulasDados(){return (typeof AULAS!=='undefined'&&AULAS)?AULAS:{};}
 // PJ18: só entra na lista quem tem tópico VÁLIDO (existe em TOPICOS, filtro contra
 // lixo/typo no bloco publicado) e pelo menos um formato (áudio, infográfico ou mapa).
@@ -8047,7 +8063,25 @@ function renderAulas(){
 function _hubAulas(){
   const content=document.getElementById('aulas-content');
   if(!content)return;
-  content.innerHTML=renderAulaLista();
+  content.innerHTML=AULAS_ORIGEM_HTML+renderAulaLista();
+  _marcarAulasBaixadas();
+}
+// IndexedDB é assíncrono e navTo/renderAulas são SÍNCRONOS (§3.2 do plano) — o hub
+// renderiza normal e este loop entra por baixo, atualizando cada sub quando a leitura
+// volta. Checa a cada volta se ainda estamos na tela Aulas em modo hub antes de tocar
+// no DOM: se o usuário já abriu outro tópico ou saiu da tela, para sem erro.
+async function _marcarAulasBaixadas(){
+  const topicos=aulasTopicos().filter(t=>aulasDados()[t].audio);
+  const aulasAtiva=()=>aulasModo==='hub'&&document.getElementById('screen-aulas')?.classList.contains('active');
+  for(const t of topicos){
+    if(!aulasAtiva())return;
+    const info=aulasDados()[t].audio;
+    const baixada=await _temAudioAulaCache(_chaveAudioAula(t,info.av));
+    if(!baixada||!aulasAtiva())continue;
+    const item=document.getElementById('aula-item-'+t);
+    const sub=item&&item.querySelector('.resumo-list-vence');
+    if(sub)sub.textContent+=' · Baixada';
+  }
 }
 function abrirAula(t){
   _encerrarAudioAula();
@@ -8077,7 +8111,7 @@ function renderAulaLista(){
       if(item.audio)formatos.push('Áudio'+(item.audio.dur?` ${Math.round(item.audio.dur/60)} min`:''));
       if(item.info)formatos.push('Infográfico');
       if(item.mapa)formatos.push('Mapa mental');
-      return itemFolhaHTML({icBox,icon:aInfo.icon,titulo:sanitize(nomeTopico(t)),sub:formatos.join(' · '),onclick:`abrirAula('${t}')`,seta:true,minw0:true});
+      return itemFolhaHTML({icBox,icon:aInfo.icon,titulo:sanitize(nomeTopico(t)),sub:formatos.join(' · '),onclick:`abrirAula('${t}')`,seta:true,minw0:true,id:'aula-item-'+t});
     }).join('');
     html+=`<div class="pg-area-row quiz-area-row" data-area="${a}">
       <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false">
@@ -8100,7 +8134,7 @@ function _detalheAula(t){
   const content=document.getElementById('aulas-content');
   if(!content)return;
   let html=`<button onclick="voltarHubAulas()" style="width:100%;margin-bottom:10px;padding:9px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:700;color:var(--text2)">← Aulas</button>
-    <div class="aulas-origem">O áudio foi gerado por IA a partir das normas, e o infográfico e o mapa foram escritos a partir dele. Tudo foi revisado contra as normas, mas serve para aprofundar e não substitui o texto oficial: em qualquer divergência, vale a norma.</div>
+    ${AULAS_ORIGEM_HTML}
     <div class="tela-header" style="padding:14px 0 10px">
       <h2 class="tela-h-title">${sanitize(nomeTopico(t))}</h2>
       <div class="tela-h-sub">${area?sanitize(area+' · '+(aInfo.nome||'')):''}</div>
@@ -8124,7 +8158,7 @@ function _labelBotaoAudio(audio){return 'Ouvir · '+_mbTexto(audio);}
 // Estimativa do tamanho de download: o áudio trafega em base64 (json do RTDB), não no
 // binário original — ~4/3 do tamanho comprimido. Arredondado pra cima (nunca subestimar
 // pra quem está em dado móvel, PLANO_aulas_ui.md §2.2).
-function _mbTexto(audio){return (Math.ceil((audio.bytes||0)*4/3)/1e6).toFixed(1)+' MB';}
+function _mbTexto(audio){return (Math.ceil((audio.bytes||0)*4/3)/1e6).toLocaleString('pt-BR',{maximumFractionDigits:1})+' MB';}
 function _infograficoHTML(info){
   const blocos=(info.blocos||[]).map(b=>{
     const cards=(b.cards||[]).map(c=>`<div class="aula-info-card${c.destaque?' aula-info-card--destaque':''}"><div class="aula-info-card-t">${sanitize(c.titulo||'')}</div><div class="aula-info-card-txt">${sanitize(c.texto||'')}</div></div>`).join('');
