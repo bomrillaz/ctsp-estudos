@@ -1211,6 +1211,31 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .aviso-cob-ic{font-size:18px;flex-shrink:0;}
 .aviso-cob-sub{display:block;font-weight:600;opacity:.85;margin-top:2px;}
 .aviso-cob-btn{margin-left:auto;flex-shrink:0;background:var(--navy);color:#fff;border:none;font-family:inherit;font-weight:800;font-size:12px;padding:8px 14px;border-radius:10px;cursor:pointer;}
+/* PE16 — cartões da tela Atualizações e selo "Atualizado" nos hubs (Quiz/Cards/Resumos/Aulas). */
+.atu-list{display:flex;flex-direction:column;gap:14px;}
+.atu-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);}
+.atu-card-top{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.atu-tag{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;}
+.atu-tag--norma-atualizada{background:var(--blue-light);color:var(--blue);}
+.atu-tag--correcao{background:var(--red-light);color:var(--red);}
+.atu-tag--conteudo-novo{background:var(--green-light);color:var(--green);}
+.atu-tag--ajuste-de-fonte{background:var(--amber-light);color:var(--amber);}
+.atu-data{margin-left:auto;font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums;}
+.atu-titulo{font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.atu-fonte{font-size:11px;color:var(--text3);margin-bottom:8px;}
+.atu-resumo{font-size:13px;color:var(--text2);line-height:1.45;}
+.atu-mudancas{margin-top:10px;display:flex;flex-direction:column;gap:8px;}
+.atu-mud-row{background:var(--paper-2);border-radius:10px;padding:8px 10px;}
+.atu-mud-rotulo{font-size:11px;font-weight:800;color:var(--text2);margin-bottom:3px;}
+.atu-mud-antes{font-size:12.5px;color:var(--red);text-decoration:line-through;opacity:.75;}
+.atu-mud-agora{font-size:12.5px;color:var(--green);font-weight:600;}
+.atu-novo-t{font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-top:10px;}
+.atu-novo-lista{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--text2);line-height:1.5;}
+.atu-acoes{margin-top:12px;display:flex;flex-direction:column;gap:8px;}
+/* Selo dentro da linha/cabeçalho do tópico. stopPropagation (na função que o gera, não
+   aqui) impede que o toque dispare a ação do tópico/acordeão por trás. */
+.atu-selo{display:inline-flex;align-items:baseline;gap:5px;margin-left:6px;padding:1px 8px;border-radius:20px;background:var(--amber-light);color:var(--amber);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;cursor:pointer;vertical-align:middle;}
+.atu-selo-sub{font-size:9px;font-weight:700;text-transform:none;letter-spacing:0;opacity:.85;}
 /* B99 — folha de pagamento Pix. Reaproveita .rep-overlay/.rep-sheet do reportar erro.
    A ordem visual é pensada para o iPhone, que é a prioridade do projeto: quem paga
    está no MESMO aparelho e não consegue escanear a própria tela, então o copia-e-cola
@@ -1509,6 +1534,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   /* FASE 2 — grids multi-coluna (auto-fit escala sem hard-code de contagem) */
   .quick-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
   .sim-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start;}
+  /* PE16 — cartões de Atualizações não são mestre-detalhe (nenhum é sub-item de área),
+     então grid direto basta: sem display:contents, sem row-gap:0. */
+  .atu-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));align-items:start;}
   /* B57 — hubs (Quiz/Cards/Resumos) em MESTRE-DETALHE. As áreas ficam empilhadas
      numa coluna estreita à esquerda (como no celular) e a área aberta ocupa o
      painel da direita, que tem altura própria. Isso mata o desalinhamento de
@@ -2621,6 +2649,17 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       </div>
     </div>
 
+    <!-- ATUALIZAÇÕES (PE16) — histórico do que mudou no conteúdo e nas normas -->
+    <div class="screen" id="screen-atualizacoes">
+      <div class="resumos-screen">
+        <div class="tela-header">
+          <h2 class="tela-h-title">Atualizações</h2>
+          <div class="tela-h-sub">O que mudou no conteúdo e nas normas</div>
+        </div>
+        <div id="atualizacoes-content"></div>
+      </div>
+    </div>
+
     <!-- ADMIN -->
     <div class="screen" id="screen-admin">
       <div class="admin-screen">
@@ -2810,6 +2849,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="nav-item nav-desk hidden" id="nav-desk-aulas" onclick="navMais('aulas')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>Aulas
     </div>
+    <div class="nav-item nav-desk" id="nav-desk-atualizacoes" onclick="navMais('atualizacoes')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Atualizações
+    </div>
     <div class="nav-item nav-mais-btn" id="nav-mais" onclick="abrirMais()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Mais
     </div>
@@ -2839,6 +2881,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <button class="sheet-item hidden" id="sheet-aulas" onclick="navMais('aulas')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
         <div><div class="sheet-item-t">Aulas</div><div class="sheet-item-sub">Áudio, infográfico e mapa mental</div></div>
+      </button>
+      <button class="sheet-item" id="sheet-atualizacoes" onclick="navMais('atualizacoes')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div><div class="sheet-item-t">Atualizações</div><div class="sheet-item-sub">O que mudou no conteúdo e nas normas</div></div>
       </button>
     </div>
   </div>
@@ -3036,7 +3082,7 @@ if(window.top!==window.self) window.top.location=window.self.location;
 // estático, servido antes do login) — vêm do RTDB, atrás de auth+aprovado, via
 // carregarConteudo(). `var` (não `const`): populados depois, por atribuição, não na
 // declaração — precisa do hoisting.
-var TOPICOS,QI,FCI,RESUMOS_BANCO,INCIDENCIA,SUBTOPICOS,GLOSARIO,NORMAS,AULAS;
+var TOPICOS,QI,FCI,RESUMOS_BANCO,INCIDENCIA,SUBTOPICOS,GLOSARIO,NORMAS,AULAS,ATUALIZACOES;
 // ═══════════════════════════════
 // FIREBASE
 // ═══════════════════════════════
@@ -4645,6 +4691,9 @@ function _popularGlobaisConteudo(c){
   // (produção contínua, PLANO_aulas_ui.md), então "ausente" é o estado normal por muito
   // tempo, não um erro a avisar no console.
   AULAS=c.aulas?JSON.parse(c.aulas):{};
+  // PE16: mesmo tratamento tolerante de GLOSARIO/NORMAS/AULAS — "sem publicação ainda"
+  // não pode travar o app, e o hub de tópico não pode quebrar por selo ausente.
+  ATUALIZACOES=c.atualizacoes?JSON.parse(c.atualizacoes):[];
 }
 // try/catch AQUI (não só no caminho de download): cache do IndexedDB corrompido/parcial
 // não pode virar exceção não tratada dentro do onAuthStateChanged async — trata como
@@ -5379,7 +5428,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.308';
+const APP_VERSAO='v1.309';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -5625,6 +5674,7 @@ function _navToInner(s,skipStagger){
   if(s==='padroes'){renderPadroes();}
   if(s==='progresso'){renderDashboard();}
   if(s==='aulas'){aulasModo='hub';renderAulas();}
+  if(s==='atualizacoes'){renderAtualizacoes();}
   if(s==='foco'){renderFoco();}
   if(s==='admin'&&isAdmin()){loadAdminUsers();loadReportes();}
   // BLOCO 34+redesign pós-login: a animação de entrada roda SÓ DEPOIS dos renders de
@@ -6695,7 +6745,7 @@ function renderAreaList(){
     const icBox=`background:${a.bg};color:${a.color}`;
     const topicosHTML=tops.map(t=>{
       const nt=contQ[t]||0;
-      return itemFolhaHTML({icBox,icon:a.icon,titulo:sanitize(nomeTopico(t)),sub:`${nt} quest${nt!==1?'ões':'ão'}`,onclick:`abrirIntro('topico','${t}')`,seta:true});
+      return itemFolhaHTML({icBox,icon:a.icon,titulo:sanitize(nomeTopico(t))+atuSeloHTML(t),sub:`${nt} quest${nt!==1?'ões':'ão'}`,onclick:`abrirIntro('topico','${t}')`,seta:true});
     }).join('');
     html+=`<div class="pg-area-row quiz-area-row" data-area="${k}">
       <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false">
@@ -7486,7 +7536,7 @@ function renderCardLista(){
         const uc=userCards[fc.id];const rot=(uc&&uc.reps>0)?'Revisão':'Novo';
         itens+=itemFolhaHTML({icBox,icon:aInfo.icon||'',titulo:sanitize(fc.f),sub:rot,subTom:pendente(fc)?'pend':null,onclick:`estudarCardUnico('${fc.id}')`,minw0:true});
       });
-      dentro+=hubTopicoHTML(sanitize(nomeTopico(t)),`${doTopico.length}${nPendT?` · ${nPendT} pend.`:''}`,itens);
+      dentro+=hubTopicoHTML(sanitize(nomeTopico(t))+atuSeloHTML(t),`${doTopico.length}${nPendT?` · ${nPendT} pend.`:''}`,itens);
     });
     html+=`<div class="pg-area-row quiz-area-row" data-area="${a}">
       <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false">
@@ -7907,7 +7957,7 @@ function renderResumoLista(){
         const vence=ehNovoR2?'Novo':`Revisão: ${ur?.next?new Date(ur.next).toLocaleDateString('pt-BR'):'Hoje'}`;
         itens+=itemFolhaHTML({icBox,icon:aInfo.icon,titulo:sanitize(r.titulo),sub:vence,subTom:vencido(r)?'pend':null,onclick:`mostrarResumoDirecto('${r.id}')`,minw0:true});
       });
-      dentro+=hubTopicoHTML(sanitize(nomeTopico(t)),`${doTopico.length}${nPendT?` · ${nPendT} a revisar`:''}`,itens);
+      dentro+=hubTopicoHTML(sanitize(nomeTopico(t))+atuSeloHTML(t),`${doTopico.length}${nPendT?` · ${nPendT} a revisar`:''}`,itens);
     });
     html+=`<div class="pg-area-row quiz-area-row" data-area="${a}">
       <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false">
@@ -8111,7 +8161,7 @@ function renderAulaLista(){
       if(item.audio)formatos.push('Áudio'+(item.audio.dur?` ${Math.round(item.audio.dur/60)} min`:''));
       if(item.info)formatos.push('Infográfico');
       if(item.mapa)formatos.push('Mapa mental');
-      return itemFolhaHTML({icBox,icon:aInfo.icon,titulo:sanitize(nomeTopico(t)),sub:formatos.join(' · '),onclick:`abrirAula('${t}')`,seta:true,minw0:true,id:'aula-item-'+t});
+      return itemFolhaHTML({icBox,icon:aInfo.icon,titulo:sanitize(nomeTopico(t))+atuSeloHTML(t),sub:formatos.join(' · '),onclick:`abrirAula('${t}')`,seta:true,minw0:true,id:'aula-item-'+t});
     }).join('');
     html+=`<div class="pg-area-row quiz-area-row" data-area="${a}">
       <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false">
@@ -8273,6 +8323,63 @@ function _encerrarAudioAula(){
   const audioEl=document.querySelector('#aula-audio-box audio');
   if(audioEl)audioEl.pause();
   if(_aulaAudioUrl){URL.revokeObjectURL(_aulaAudioUrl);_aulaAudioUrl=null;}
+}
+
+// ═══════════════════════════════
+// ATUALIZAÇÕES (PE16) — o que mudou no conteúdo e nas normas
+// ═══════════════════════════════
+const ATU_TIPO_ROTULO={'NORMA-ATUALIZADA':'Norma atualizada','CORRECAO':'Correção','CONTEUDO-NOVO':'Conteúdo novo','AJUSTE-DE-FONTE':'Fonte ajustada'};
+function _dataBR(iso){const p=String(iso||'').split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:'';}
+// Fonte única do selo "Atualizado": consumida pelo hub de Quiz/Aulas (itemFolhaHTML) e
+// pelo de Cards/Resumos (hubTopicoHTML). Some sozinho 30 dias após `data` — diaLocal()/
+// diffDias() já existentes (nunca toISOString(), CLAUDE.md §2). Sem estado gravado.
+function atualizacaoRecente(t){
+  const lista=(typeof ATUALIZACOES!=='undefined'&&Array.isArray(ATUALIZACOES))?ATUALIZACOES:[];
+  return lista.find(e=>e.topicos&&e.topicos.includes(t)&&diffDias(e.data,diaLocal())>=0&&diffDias(e.data,diaLocal())<30)||null;
+}
+// Selo compacto usado dentro da linha/cabeçalho do tópico. stopPropagation obrigatório:
+// a linha por trás abre o tópico (quiz/aula) ou o acordeão (cards/resumos), e o toque no
+// selo tem de abrir Atualizações, não as duas coisas.
+function atuSeloHTML(t){
+  const e=atualizacaoRecente(t);
+  if(!e)return '';
+  return `<span class="atu-selo" role="button" tabindex="0" onclick="event.stopPropagation();abrirAtualizacao('${e.id}')">Atualizado <span class="atu-selo-sub">ver o que mudou</span></span>`;
+}
+function abrirAtualizacao(id){
+  navTo('atualizacoes');
+  const el=id&&document.getElementById('atu-card-'+id);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function renderAtualizacoes(){
+  const content=document.getElementById('atualizacoes-content');
+  if(!content)return;
+  const lista=(typeof ATUALIZACOES!=='undefined'&&Array.isArray(ATUALIZACOES))?ATUALIZACOES:[];
+  content.innerHTML=lista.length?('<div class="atu-list">'+lista.map(atuCardHTML).join('')+'</div>')
+    :'<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Nenhuma atualização publicada ainda.</div>';
+}
+function atuCardHTML(e){
+  const aInfo=AI[e.area]||{};
+  const tipoClasse='atu-tag--'+(e.tipo||'').toLowerCase();
+  const mudancas=(e.mudancas||[]).map(m=>`<div class="atu-mud-row">
+      <div class="atu-mud-rotulo">${sanitize(m.rotulo)}</div>
+      <div class="atu-mud-antes">${sanitize(m.antes)}</div>
+      <div class="atu-mud-agora">${sanitize(m.agora)}</div>
+    </div>`).join('');
+  const novo=(e.novo&&e.novo.length)?('<div class="atu-novo-t">Novo</div><ul class="atu-novo-lista">'+e.novo.map(n=>'<li>'+sanitize(n)+'</li>').join('')+'</ul>'):'';
+  const botoes=(e.topicos||[]).map(t=>`<button class="btn-weak btn-bloco" onclick="abrirIntro('topico','${t}')">Refazer as questões de ${sanitize(nomeTopico(t))}</button>`).join('');
+  return `<div class="atu-card" id="atu-card-${e.id}">
+    <div class="atu-card-top">
+      <span class="atu-tag ${tipoClasse}">${sanitize(ATU_TIPO_ROTULO[e.tipo]||e.tipo)}</span>
+      <span class="atu-tag atu-tag--area" style="background:${aInfo.bg||'var(--paper-2)'};color:${aInfo.color||'var(--text2)'}">${sanitize(e.area||'')}</span>
+      <span class="atu-data">${_dataBR(e.data)}</span>
+    </div>
+    <div class="atu-titulo">${sanitize(e.titulo)}</div>
+    <div class="atu-fonte">${sanitize(e.fonte)}</div>
+    <div class="atu-resumo">${sanitize(e.resumo)}</div>
+    ${mudancas?'<div class="atu-mudancas">'+mudancas+'</div>':''}
+    ${novo}
+    ${botoes?'<div class="atu-acoes">'+botoes+'</div>':''}
+  </div>`;
 }
 
 // ═══════════════════════════════
@@ -9852,13 +9959,15 @@ const TOUR_PASSOS=[
   {tela:'resumos',casco:true,sel:'#nav-resumos',titulo:'Resumos',
    texto:'O conteúdo do edital destrinchado por tópico, também organizado por área. Bom para revisar antes de encarar questão de um assunto novo.'},
   // ── Volta ao painel para os ultimos passos do casco ──
-  // Mobile: os 4 destinos moram no bottom sheet "Mais".
+  // Mobile: os 5 destinos moram no bottom sheet "Mais".
   {tela:'inicio',casco:true,sel:'#nav-mais',titulo:'Mais',
-   texto:'Aqui dentro ficam o Simulado completo, a Consulta (glossário e normas), os Padrões das provas e o Meu progresso.'},
-  // Desktop (>=1024px): os mesmos 4 destinos ja ficam soltos no rail lateral.
-  {tela:'inicio',casco:true,sel:['#nav-desk-simulado','#nav-desk-consulta','#nav-desk-padroes','#nav-desk-progresso'],
-   titulo:'Simulado, Consulta, Padrões e Meu progresso',
-   texto:'Simulado completo na proporção do edital, glossário e normas na Consulta, estatística das provas em Padrões, e seu domínio por área em Meu progresso.'},
+   texto:'Aqui dentro ficam o Simulado completo, a Consulta (glossário e normas), os Padrões das provas, o Meu progresso e as Atualizações.'},
+  // Desktop (>=1024px): os mesmos 5 destinos ja ficam soltos no rail lateral. PE16:
+  // Atualizações nasce SEMPRE visível (diferente de Aulas, gate por aulasTopicos().length),
+  // então entra direto no passo — sem risco de alvo com rect 0x0 (achado do b156).
+  {tela:'inicio',casco:true,sel:['#nav-desk-simulado','#nav-desk-consulta','#nav-desk-padroes','#nav-desk-progresso','#nav-desk-atualizacoes'],
+   titulo:'Simulado, Consulta, Padrões, Meu progresso e Atualizações',
+   texto:'Simulado completo na proporção do edital, glossário e normas na Consulta, estatística das provas em Padrões, seu domínio por área em Meu progresso, e o que mudou no conteúdo em Atualizações.'},
   {tela:'inicio',casco:true,sel:'.btn-header-menu',titulo:'Menu',
    texto:'Tema claro/escuro, configurações e sua conta. É por aqui também que você abre este tutorial de novo e instala o app na tela de início, quando quiser.'},
   // b123: passo novo, no fim. #install-banner só existe/aparece em parte dos casos
