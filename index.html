@@ -1214,6 +1214,11 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 /* PE16 — cartões da tela Atualizações e selo "Atualizado" nos hubs (Quiz/Cards/Resumos/Aulas). */
 .atu-list{display:flex;flex-direction:column;gap:10px;}
 .atu-cards{display:flex;flex-direction:column;gap:12px;}
+/* b233 — Anterior/Próximo na sequência de resumos de um tópico (revisarTopico). */
+.resumo-seq-nav{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.resumo-seq-nav button{flex:1;padding:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;color:var(--text2);cursor:pointer;}
+.resumo-seq-nav button:disabled{opacity:.4;cursor:default;}
+.resumo-seq-nav span{flex-shrink:0;font-size:12px;font-weight:700;color:var(--text3);min-width:52px;text-align:center;}
 .atu-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);scroll-margin-top:76px;}/* 76 = .app-header sticky (60) + respiro; sem isso o selo leva o cartão pra baixo do cabeçalho */
 .atu-card-top{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
 .atu-tag{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;}
@@ -3840,10 +3845,16 @@ function praticarIds(ids,rotulo){
 
 // Manda o usuário para o resumo exato de um tópico (ou para a aba, se não houver).
 // `st` opcional (piloto de subtópicos): sem ele, comportamento idêntico ao de antes.
+// b233: "Revisar · N resumos" (Padrões) e o deep link #t= abrem os N resumos do tópico em
+// sequência, com Anterior/Próximo e avanço ao avaliar. Antes abria só o 1º e o resto sumia.
+let _resumoSeq=null; // {ids,i,t} — só existe enquanto a sequência está na tela
 function revisarTopico(t,st){
   const m=materialDoTopico(t,st);
   navTo('resumos');
-  if(m.resumos.length)mostrarResumoDirecto(m.resumos[0].id);
+  if(m.resumos.length){
+    _resumoSeq=m.resumos.length>1?{ids:m.resumos.map(r=>r.id),i:0,t}:null;
+    mostrarResumoDirecto(m.resumos[0].id,true);
+  }
   else{renderResumos();showToast('Este tópico ainda não tem resumo. Revise pelos flashcards.');}
 }
 
@@ -5430,7 +5441,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.311';
+const APP_VERSAO='v1.312';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -7863,9 +7874,16 @@ function _hubResumos(){
   content.innerHTML=`<div class="hub-inicio" role="status">${cta}</div>`+renderResumoLista();
 }
 function iniciarMetaResumos(){resumosModo='estudo';resumosUnico=false;_estudoResumos();irAoTopoDoConteudo();}
-function voltarHubResumos(){resumosModo='hub';resumosUnico=false;renderResumos();irAoTopoDoConteudo();}
+function voltarHubResumos(){_resumoSeq=null;resumosModo='hub';resumosUnico=false;renderResumos();irAoTopoDoConteudo();}
+function _resumoSeqIr(i){
+  if(!_resumoSeq)return;
+  _resumoSeq.i=Math.max(0,Math.min(i,_resumoSeq.ids.length-1));
+  mostrarResumoDirecto(_resumoSeq.ids[_resumoSeq.i],true);
+  irAoTopoDoConteudo();
+}
 // Modo estudo imersivo: um resumo por vez, sem o índice competindo.
 function _estudoResumos(){
+  _resumoSeq=null; // meta de resumos tem fila própria; sequência de tópico largada não pode sequestrar o avaliar
   const acervo=resumosPendentes().length;
   const fila=resumosDose();
   const rf=document.getElementById('resumos-fila');if(rf)rf.textContent=fila.length;
@@ -7980,16 +7998,23 @@ function renderResumoLista(){
     +'<div class="hub-detalhe-vazio">Escolha uma área ao lado para ver os tópicos e os resumos.</div></div>';
 }
 
-function mostrarResumoDirecto(id){
+function mostrarResumoDirecto(id,emSeq){
+  if(!emSeq)_resumoSeq=null; // Foco, reforço, busca e índice abrem resumo avulso
   const r=RESUMOS_BANCO.find(x=>x.id===id);
   if(!r)return;
+  const sq=_resumoSeq, sqN=sq?sq.ids.length:0;
+  const navSeq=sq?`<div class="resumo-seq-nav">
+      <button type="button" onclick="_resumoSeqIr(${sq.i-1})" ${sq.i===0?'disabled':''}>← Anterior</button>
+      <span>${sq.i+1} de ${sqN}</span>
+      <button type="button" onclick="_resumoSeqIr(${sq.i+1})" ${sq.i===sqN-1?'disabled':''}>Próximo →</button>
+    </div>`:'';
   resumosModo='estudo';resumosUnico=true;
   const aInfo=AI[r.area]||{};
   // Rótulos suportados: alta | media | baixa (o Bloco A usa só os dois primeiros).
   const probLabel=r.prob==='alta'?'Alta':r.prob==='baixa'?'Baixa':'Média';
   const probCor=r.prob==='alta'?'background:var(--red-light);color:var(--red-dark)':r.prob==='baixa'?'background:var(--green-light);color:var(--green)':'background:var(--amber-light);color:var(--amber)';
   resumoAtualId=id;
-  document.getElementById('resumos-content').innerHTML=`
+  document.getElementById('resumos-content').innerHTML=`${navSeq}
     <div class="resumo-card">
       <div class="resumo-card-top">
         <span class="resumo-area-tag" style="background:${aInfo.bg};color:${aInfo.color}">${aInfo.icon} ${r.area}</span>
@@ -8043,6 +8068,18 @@ async function avaliarResumo(dif){
       sub:'Continue o tópico de onde parou no Foco.',
       primariaHTML:`<button class="btn-primary" style="width:100%" onclick="navTo('foco')">← Voltar ao Foco</button>`
     });
+    return;
+  }
+  if(_resumoSeq){ // sequência do tópico: avança; no último, fecha oferecendo a prática
+    if(_resumoSeq.i<_resumoSeq.ids.length-1){_resumoSeqIr(_resumoSeq.i+1);return;}
+    const n=_resumoSeq.ids.length,t=_resumoSeq.t;_resumoSeq=null;resumosUnico=false;resumosModo='hub'; // tela de fim é inline; voltar à aba cai no índice
+    document.getElementById('resumos-content').innerHTML=fimInlineHTML({
+      titulo:'✓ Resumos do tópico revisados',
+      sub:`Você passou pelos ${n} resumos de <b>${sanitize(nomeTopico(t))}</b>. Agora <b>teste o que leu</b>: recuperar fixa muito mais que reler.`,
+      primariaHTML:`<button class="btn-primary" style="width:100%" onclick="abrirIntro('topico','${t}')">Praticar este tópico →</button>`,
+      linksHTML:`<button class="fim-inline-link" onclick="voltarHubResumos()">← Voltar aos resumos</button>`
+    });
+    irAoTopoDoConteudo();
     return;
   }
   if(resumosUnico){voltarHubResumos();return;} // resumo avulso do índice: volta ao hub
