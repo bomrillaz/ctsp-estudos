@@ -140,11 +140,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 #loading .welcome-text{position:absolute;z-index:2;bottom:12vh;color:white;font-size:22px;font-weight:800;letter-spacing:.02em;text-align:center;padding:0 32px;opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s ease;line-height:1.4;}
 #loading .welcome-text.show{opacity:1;transform:translateY(0);}
 /* PS1 (b220): tela de erro do carregarConteudo() — reaproveita o #loading, nunca some
-   sozinha (só via "Tentar de novo"). */
-#loading-erro-conteudo{display:none;z-index:3;flex-direction:column;align-items:center;gap:18px;max-width:340px;padding:0 24px;text-align:center;}
-#loading-erro-conteudo.show{display:flex;}
-#loading-erro-conteudo div{color:rgba(255,255,255,.92);font-size:15px;font-weight:500;line-height:1.5;}
-#loading-erro-conteudo .btn-primary{width:auto;padding:14px 28px;}
+   sozinha (só via "Tentar de novo"). PS3/A1 (v17): #loading-renovacao é a mesma ideia
+   pra quem venceu de verdade, com abrirPagamento()/doLogout() em vez de recarregar. */
+#loading-erro-conteudo,#loading-renovacao{display:none;z-index:3;flex-direction:column;align-items:center;gap:18px;max-width:340px;padding:0 24px;text-align:center;}
+#loading-erro-conteudo.show,#loading-renovacao.show{display:flex;}
+#loading-erro-conteudo div,#loading-renovacao div{color:rgba(255,255,255,.92);font-size:15px;font-weight:500;line-height:1.5;}
+#loading-erro-conteudo .btn-primary,#loading-renovacao .btn-primary{width:auto;padding:14px 28px;}
+/* PS3/A1: "Renovar acesso" abre o Pix por cima do #loading (z 9999) — sem isso o modal
+   (z 1000) e o toast de falha do Pix (z 9998) nascem escondidos atrás da tela. */
+#pix-overlay{z-index:10000;}
+body:has(#loading-renovacao.show) .toast{z-index:10001;}
 
 /* SPLASH SCREEN pós-login — painel de quartel */
 #splash-screen{position:fixed;inset:0;background:linear-gradient(170deg,var(--navy-2) 0%,var(--navy-deep) 70%);z-index:9990;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;}
@@ -1364,7 +1369,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .obj-card .btn-bloco{margin-top:10px;}
 
 /* Botão voltar quiz */
-.btn-ghost-dark{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:white;}
+.btn-ghost-dark{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:white;box-shadow:none;}
 .btn-voltar-quiz{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:white;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;}
 .btn-voltar-quiz:active{opacity:.7;}
 /* b123: banner de instalação — casco fixo + duas formas (CTA de linha × guia vertical) */
@@ -1713,6 +1718,11 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <div id="loading-erro-conteudo">
     <div>Não foi possível carregar o conteúdo de estudo. Confira sua conexão e tente de novo.</div>
     <button class="btn-primary" onclick="location.reload()">Tentar de novo</button>
+  </div>
+  <div id="loading-renovacao">
+    <div id="loading-renovacao-texto"></div>
+    <button class="btn-primary" onclick="abrirPagamento(planoAtual())">Renovar acesso</button>
+    <button class="btn-primary btn-ghost-dark" onclick="doLogout()">Sair</button>
   </div>
 </div>
 
@@ -4492,6 +4502,18 @@ async function _gravarConteudoCache(c){
     });
   }catch(e){}
 }
+// PS3/A1 (v17): quem vence de verdade (PERMISSION_DENIED + estadoCobranca vencido) não
+// pode continuar estudando pelo cache antigo — ver carregarConteudo().
+async function _apagarConteudoCache(){
+  try{
+    const bd=await _abrirConteudoDB();
+    await new Promise((res,rej)=>{
+      const tx=bd.transaction(CONTEUDO_STORE,'readwrite');
+      tx.objectStore(CONTEUDO_STORE).delete('atual');
+      tx.oncomplete=res;tx.onerror=()=>rej(tx.error);
+    });
+  }catch(e){}
+}
 function _popularGlobaisConteudo(c){
   TOPICOS=JSON.parse(c.topicos);QI=JSON.parse(c.qi);FCI=JSON.parse(c.fci);
   RESUMOS_BANCO=JSON.parse(c.resumos);INCIDENCIA=JSON.parse(c.incidencia);
@@ -4522,19 +4544,34 @@ const _CAMPOS_CONTEUDO=['topicos','qi','fci','resumos','incidencia','subtopicos'
 // NUNCA deixa o app entrar com o banco vazio).
 async function carregarConteudo(){
   // Cache local (IndexedDB) e versão remota (rede) são independentes — em paralelo, não em série.
-  const [cache,versaoRemota]=await Promise.all([
+  const [cache,leitura]=await Promise.all([
     _lerConteudoCache(),
     (async()=>{
-      try{return (await withTimeout(db.ref('conteudo/versao').get(),12000)).val();}
+      try{return {val:(await withTimeout(db.ref('conteudo/versao').get(),12000)).val(),code:null};}
       catch(e){
-        // PERMISSION_DENIED aqui quase sempre é usuarios/$uid/aprovado!==true no BANCO
-        // divergindo do isAdmEmail local (ex.: conta admin recriada por auto-reparo antes
-        // do aprovado:true gravar) — log explícito pra não parecer queda de rede genérica.
+        // PERMISSION_DENIED aqui é usuarios/$uid/aprovado!==true no BANCO (divergindo do
+        // isAdmEmail local, ex.: auto-reparo antes do aprovado:true gravar) OU, desde a
+        // v17 (PS3/A1), o corte por DATA de trial/mensal vencido — o ramo logo abaixo
+        // decide qual dos dois é, comparando com estadoCobranca(). Log explícito pra não
+        // parecer queda de rede genérica.
         console.warn('carregarConteudo: versão remota indisponível.',e.code||'',e.message);
-        return null;
+        return {val:null,code:e.code||null};
       }
     })(),
   ]);
+  const versaoRemota=leitura.val;
+  // PS3/A1: só é corte por assinatura quando o SERVIDOR negou de fato (PERMISSION_DENIED
+  // real) E o cliente concorda que venceu — nunca o inverso. estadoCobranca() é ATÉ MAIS
+  // rígido que a regra (marca vencido sem a carência de 3d que a regra dá aos planos
+  // pagos), então quem a regra ainda deixa ler nunca cai aqui: a leitura acima teria
+  // sucesso e `leitura.code` ficaria null. Timeout/offline/outro erro (code!==
+  // 'PERMISSION_DENIED') e quem está em dia continuam EXATAMENTE como antes — serve o
+  // cache sem apagar nada; decisão do João: ninguém em dia perde o cache por instabilidade
+  // de rede. Admin nunca cai aqui (a regra sempre deixa admin ler).
+  if(leitura.code==='PERMISSION_DENIED'&&!isAdmin()&&estadoCobranca(userProfile).estado==='vencido'){
+    await _apagarConteudoCache();
+    return 'vencido';
+  }
   // Cache bate com a versão remota E populou sem erro: pronto. Se estiver corrompido,
   // cai para os ramos abaixo (rede indisponível → falha; rede disponível → baixa de novo).
   if(cache&&versaoRemota!==null&&cache.versao===versaoRemota&&_usarConteudo(cache))return true;
@@ -4557,6 +4594,19 @@ function mostrarErroConteudo(){
   if(w)w.classList.add('hidden');
   if(s)s.classList.add('hidden');
   if(er)er.classList.add('show');
+}
+// PS3/A1 (v17): tela própria de quem venceu de verdade — nunca a de erro genérico, que
+// convida a "tentar de novo" algo que vai negar de novo. Reaproveita abrirPagamento() (o
+// mesmo Pix/cartão/WhatsApp da Home) e doLogout() (o mesmo fluxo de sair de sempre).
+function mostrarTelaRenovacao(st){
+  const v=document.getElementById('loading-video'),w=document.getElementById('welcome-text'),
+    s=document.getElementById('loading-sub'),rv=document.getElementById('loading-renovacao'),
+    txt=document.getElementById('loading-renovacao-texto');
+  if(v)v.classList.add('hidden');
+  if(w)w.classList.add('hidden');
+  if(s)s.classList.add('hidden');
+  if(txt)txt.textContent='Seu acesso venceu.'+(st&&st.label?' '+st.label+'.':'')+' Renove para continuar estudando.';
+  if(rv)rv.classList.add('show');
 }
 
 // ═══════════════════════════════
@@ -4631,7 +4681,11 @@ auth.onAuthStateChanged(async user=>{
   }
   // PS1: o banco (TOPICOS/QI/FCI/RESUMOS_BANCO/INCIDENCIA) só existe em memória depois
   // daqui. Nunca entrar no app (nem na animação de boas-vindas) com ele vazio.
-  if(!(await carregarConteudo())){
+  const conteudoOk=await carregarConteudo();
+  if(conteudoOk==='vencido'){
+    mostrarTelaRenovacao(estadoCobranca(userProfile));return;
+  }
+  if(!conteudoOk){
     mostrarErroConteudo();return;
   }
   // Animação de boas-vindas no loading (com toque-para-pular)
@@ -5110,7 +5164,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.303';
+const APP_VERSAO='v1.304';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
