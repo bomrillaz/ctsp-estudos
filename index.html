@@ -1214,7 +1214,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 /* PE16 — cartões da tela Atualizações e selo "Atualizado" nos hubs (Quiz/Cards/Resumos/Aulas). */
 .atu-list{display:flex;flex-direction:column;gap:10px;}
 .atu-cards{display:flex;flex-direction:column;gap:12px;}
-.atu-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);}
+.atu-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);scroll-margin-top:76px;}/* 76 = .app-header sticky (60) + respiro; sem isso o selo leva o cartão pra baixo do cabeçalho */
 .atu-card-top{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
 .atu-tag{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;}
 .atu-tag--norma-atualizada{background:var(--blue-light);color:var(--blue);}
@@ -5430,7 +5430,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.310';
+const APP_VERSAO='v1.311';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
