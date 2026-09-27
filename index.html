@@ -1083,6 +1083,24 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .quiz-area-cta{background:var(--paper-2);}
 .quiz-area-cta:active{background:var(--border);}
 
+/* ═══ AULAS (PJ18) ═══ */
+.aulas-list{display:flex;flex-direction:column;gap:10px;}
+.aulas-origem{font-size:12px;line-height:1.5;color:var(--text3);background:var(--paper-2);border-radius:10px;padding:10px 12px;margin-bottom:4px;}
+.aula-audio-box{margin-bottom:4px;}
+.aula-audio-box audio{display:block;margin-bottom:6px;}
+.aula-infografico{display:flex;flex-direction:column;gap:14px;}
+.aula-info-bloco-t{font-size:13px;font-weight:800;margin-bottom:8px;}
+.aula-info-cards{display:flex;flex-direction:column;gap:8px;}
+.aula-info-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;padding:10px 12px;}
+.aula-info-card--destaque{background:var(--amber-light);border-color:transparent;border-left:3px solid var(--amber);}
+.aula-info-card-t{font-size:13px;font-weight:700;margin-bottom:3px;}
+.aula-info-card-txt{font-size:13px;line-height:1.5;color:var(--text2);}
+.aula-mapa-cab{display:flex;align-items:center;gap:8px;min-height:44px;padding:6px 4px 6px calc(var(--nivel,0) * 16px);cursor:pointer;font-size:13px;font-weight:700;}
+.aula-mapa-chev{flex-shrink:0;transition:transform .2s;}
+.aula-mapa-cab[aria-expanded="true"] .aula-mapa-chev{transform:rotate(90deg);}
+.aula-mapa-folha{padding:6px 4px 6px calc(var(--nivel,0) * 16px + 22px);font-size:13px;color:var(--text2);line-height:1.5;}
+.aula-fontes{margin:0;padding-left:18px;font-size:12px;color:var(--text3);line-height:1.6;}
+
 /* ═══ PADRÕES ═══ */
 .padroes-screen{padding:16px;background:transparent;}
 .padrao-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;padding:14px;box-shadow:var(--shadow);margin-bottom:10px;cursor:pointer;}
@@ -1501,14 +1519,17 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
      row-gap:0 é obrigatório: o painel gera linhas implícitas vazias e qualquer
      gap nelas viraria centenas de pixels de buraco. O respiro entre áreas vem
      do margin-bottom do cabeçalho. */
-  .area-list,.resumos-list{display:grid;grid-template-columns:minmax(240px,320px) 1fr;column-gap:20px;row-gap:0;align-items:start;}
-  .area-list>.quiz-area-row,.resumos-list>.quiz-area-row{display:contents;}
+  .area-list,.resumos-list,.aulas-list{display:grid;grid-template-columns:minmax(240px,320px) 1fr;column-gap:20px;row-gap:0;align-items:start;}
+  .area-list>.quiz-area-row,.resumos-list>.quiz-area-row,.aulas-list>.quiz-area-row{display:contents;}
   .quiz-area-row>.area-row{grid-column:1;margin-bottom:10px;}
   .pg-area-row.quiz-area-row.open>.area-row{border-radius:16px;box-shadow:var(--shadow);}
   .quiz-area-row>.pg-area-topicos{grid-column:2;grid-row:1/span 99;align-self:start;border:1px solid var(--line-soft);border-radius:16px;margin-top:0;padding:12px 14px 14px;position:sticky;top:16px;max-height:calc(100vh - 120px);overflow:auto;}
   .hub-detalhe-vazio{display:flex;align-items:center;justify-content:center;grid-column:2;grid-row:1/span 99;align-self:start;min-height:200px;border:1px dashed var(--line-soft);border-radius:16px;color:var(--text3);font-size:13px;line-height:1.5;padding:24px;text-align:center;}
   .area-list:has(.quiz-area-row.open) .hub-detalhe-vazio,
-  .resumos-list:has(.quiz-area-row.open) .hub-detalhe-vazio{display:none;}
+  .resumos-list:has(.quiz-area-row.open) .hub-detalhe-vazio,
+  .aulas-list:has(.quiz-area-row.open) .hub-detalhe-vazio{display:none;}
+  /* PJ18: infográfico em 2 colunas a partir daqui (1 coluna no celular, regra mobile-first). */
+  .aula-info-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
   /* v1.224 — Meu progresso nunca tinha layout de desktop: virava "celular esticado" a
      1040-1180px de largura (cartão-herói e KPIs com número pequeno perdido num retângulo
      enorme). "Por área" ganha o MESMO mestre-detalhe dos hubs acima (lista fixa à esquerda,
@@ -2589,6 +2610,17 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       </div>
     </div>
 
+    <!-- AULAS — áudio (partes do RTDB), infográfico e mapa mental por tópico -->
+    <div class="screen" id="screen-aulas">
+      <div class="resumos-screen">
+        <div class="tela-header">
+          <h2 class="tela-h-title">Aulas</h2>
+          <div class="tela-h-sub">Áudio, infográfico e mapa mental por tópico</div>
+        </div>
+        <div id="aulas-content"></div>
+      </div>
+    </div>
+
     <!-- ADMIN -->
     <div class="screen" id="screen-admin">
       <div class="admin-screen">
@@ -2775,6 +2807,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="nav-item nav-desk" id="nav-desk-progresso" onclick="navMais('progresso')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>Meu progresso
     </div>
+    <div class="nav-item nav-desk hidden" id="nav-desk-aulas" onclick="navMais('aulas')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>Aulas
+    </div>
     <div class="nav-item nav-mais-btn" id="nav-mais" onclick="abrirMais()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Mais
     </div>
@@ -2800,6 +2835,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <button class="sheet-item" id="sheet-progresso" onclick="navMais('progresso')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
         <div><div class="sheet-item-t">Meu progresso</div><div class="sheet-item-sub">Domínio, cobertura, evolução e projeção</div></div>
+      </button>
+      <button class="sheet-item hidden" id="sheet-aulas" onclick="navMais('aulas')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+        <div><div class="sheet-item-t">Aulas</div><div class="sheet-item-sub">Áudio, infográfico e mapa mental</div></div>
       </button>
     </div>
   </div>
@@ -2997,7 +3036,7 @@ if(window.top!==window.self) window.top.location=window.self.location;
 // estático, servido antes do login) — vêm do RTDB, atrás de auth+aprovado, via
 // carregarConteudo(). `var` (não `const`): populados depois, por atribuição, não na
 // declaração — precisa do hoisting.
-var TOPICOS,QI,FCI,RESUMOS_BANCO,INCIDENCIA,SUBTOPICOS,GLOSARIO,NORMAS;
+var TOPICOS,QI,FCI,RESUMOS_BANCO,INCIDENCIA,SUBTOPICOS,GLOSARIO,NORMAS,AULAS;
 // ═══════════════════════════════
 // FIREBASE
 // ═══════════════════════════════
@@ -4478,19 +4517,32 @@ function doLogout(){
 // ═══════════════════════════════
 // CONTEÚDO (PS1, b220) — banco vem do RTDB, cacheado no IndexedDB por versão
 // ═══════════════════════════════
-const CONTEUDO_DB='ctspConteudo',CONTEUDO_STORE='blocos';
+const CONTEUDO_DB='ctspConteudo',CONTEUDO_STORE='blocos',AULAS_AUDIO_STORE='aulas_audio';
 // Memoizada: só negocia a conexão UMA vez por carregamento de página (isto roda no
 // caminho quente de entrada no app, antes de qualquer tela aparecer) — leitura e
 // escrita do cache reaproveitam a mesma promise/conexão.
 let _conteudoDbPromise=null;
+// PJ18/Bloco B: versão 1 -> 2 pra acrescentar o store do áudio das Aulas, sem apagar
+// `blocos` — checa contains() em vez de recriar tudo, então funciona tanto pra quem já
+// tinha o banco na v1 (upgrade) quanto pra instalação nova (oldVersion 0, os dois nascem juntos).
 function _abrirConteudoDB(){
   if(_conteudoDbPromise)return _conteudoDbPromise;
   return _conteudoDbPromise=new Promise((res,rej)=>{
     try{
-      const req=indexedDB.open(CONTEUDO_DB,1);
-      req.onupgradeneeded=()=>{req.result.createObjectStore(CONTEUDO_STORE);};
+      const req=indexedDB.open(CONTEUDO_DB,2);
+      req.onupgradeneeded=()=>{
+        const bd=req.result;
+        if(!bd.objectStoreNames.contains(CONTEUDO_STORE))bd.createObjectStore(CONTEUDO_STORE);
+        if(!bd.objectStoreNames.contains(AULAS_AUDIO_STORE))bd.createObjectStore(AULAS_AUDIO_STORE);
+      };
       req.onsuccess=()=>res(req.result);
       req.onerror=()=>{_conteudoDbPromise=null;rej(req.error);};
+      // Achado do code-review: sem isto, uma aba/instalação PWA antiga aberta em paralelo
+      // (app é instalável — usuário pode ter as duas) trava a transação de upgrade pra
+      // sempre, e a promise nunca resolve NEM rejeita — todo mundo que depende dela
+      // (cache de conteúdo E o áudio das Aulas) fica pendurado. Rejeitar deixa quem chama
+      // (todos já em try/catch) degradar em vez de travar.
+      req.onblocked=()=>{_conteudoDbPromise=null;rej(new Error('IndexedDB bloqueado por outra aba/instância aberta com versão antiga.'));};
     }catch(e){_conteudoDbPromise=null;rej(e);}
   });
 }
@@ -4527,6 +4579,41 @@ async function _apagarConteudoCache(){
     });
   }catch(e){}
 }
+// PJ18/Bloco B: cache do áudio das Aulas, store próprio (AULAS_AUDIO_STORE), chave
+// "<topico>:<av>" — o av na chave é o que faz uma republicação invalidar o cache velho
+// sem precisar apagá-lo: a chave nova nunca bate com a antiga, então nunca lê o Blob errado.
+function _chaveAudioAula(t,av){return t+':'+av;}
+async function _lerAudioAulaCache(chave){
+  try{
+    const bd=await _abrirConteudoDB();
+    return await new Promise((res,rej)=>{
+      const tx=bd.transaction(AULAS_AUDIO_STORE,'readonly');
+      const req=tx.objectStore(AULAS_AUDIO_STORE).get(chave);
+      req.onsuccess=()=>res(req.result||null);
+      req.onerror=()=>rej(req.error);
+    });
+  }catch(e){return null;}
+}
+async function _gravarAudioAulaCache(chave,blob){
+  try{
+    const bd=await _abrirConteudoDB();
+    await new Promise((res,rej)=>{
+      const tx=bd.transaction(AULAS_AUDIO_STORE,'readwrite');
+      tx.objectStore(AULAS_AUDIO_STORE).put(blob,chave);
+      tx.oncomplete=res;tx.onerror=()=>rej(tx.error);
+    });
+  }catch(e){}
+}
+async function _apagarAudioAulaCache(chave){
+  try{
+    const bd=await _abrirConteudoDB();
+    await new Promise((res,rej)=>{
+      const tx=bd.transaction(AULAS_AUDIO_STORE,'readwrite');
+      tx.objectStore(AULAS_AUDIO_STORE).delete(chave);
+      tx.oncomplete=res;tx.onerror=()=>rej(tx.error);
+    });
+  }catch(e){}
+}
 function _popularGlobaisConteudo(c){
   TOPICOS=JSON.parse(c.topicos);QI=JSON.parse(c.qi);FCI=JSON.parse(c.fci);
   RESUMOS_BANCO=JSON.parse(c.resumos);INCIDENCIA=JSON.parse(c.incidencia);
@@ -4541,6 +4628,10 @@ function _popularGlobaisConteudo(c){
   GLOSARIO=c.glosario?JSON.parse(c.glosario):[];
   NORMAS=c.normas?JSON.parse(c.normas):[];
   if(!c.glosario||!c.normas)console.warn('conteudo: GLOSARIO/NORMAS ausentes no RTDB. A tela Consulta vai abrir vazia; republicar com publicar_conteudo.js.');
+  // PJ18/Bloco B: mesmo tratamento tolerante — a tela Aulas ainda cobre poucos tópicos
+  // (produção contínua, PLANO_aulas_ui.md), então "ausente" é o estado normal por muito
+  // tempo, não um erro a avisar no console.
+  AULAS=c.aulas?JSON.parse(c.aulas):{};
 }
 // try/catch AQUI (não só no caminho de download): cache do IndexedDB corrompido/parcial
 // não pode virar exceção não tratada dentro do onAuthStateChanged async — trata como
@@ -4927,6 +5018,14 @@ async function initApp(){
       nav.appendChild(a);
     }
   }
+  // PJ18/Bloco B: os itens de menu nascem `hidden` no HTML — só aparecem quando o
+  // conteúdo já carregou (AULAS populado) E existe pelo menos 1 tópico com algo
+  // publicado. Deliberadamente NÃO entram no array de seletores do tour casco logo
+  // abaixo (`#nav-desk-simulado`/...): item hidden viraria passo com rect 0x0.
+  if(aulasTopicos().length){
+    const ndA=document.getElementById('nav-desk-aulas');if(ndA)ndA.classList.remove('hidden');
+    const shA=document.getElementById('sheet-aulas');if(shA)shA.classList.remove('hidden');
+  }
   // A1 (b155): teto de segurança do skeleton. Os dois .dash-body já nascem `.carregando`
   // no HTML (índices 2183/2496) — sem uma saída garantida, um travamento/erro não pego no
   // load inicial deixaria os dois presos assim pra sempre (CTAs desabilitados, sem número
@@ -5267,7 +5366,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.305';
+const APP_VERSAO='v1.306';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -5492,6 +5591,10 @@ function _navToInner(s,skipStagger){
     if(quizExemploAtivo)encerrarSessaoQuiz();
     _ocultarRunnerQuiz();
   }
+  // PJ18/Bloco B: sair da tela Aulas libera o object URL do áudio tocado (revogar
+  // ao entrar de novo custaria uma navegação extra do URL antigo; aqui é síncrono e
+  // acontece exatamente uma vez por saída, igual ao clear de origemReforco acima).
+  if(s!=='aulas')_encerrarAudioAula();
   document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   const sc=document.getElementById('screen-'+s);
@@ -5508,6 +5611,7 @@ function _navToInner(s,skipStagger){
   if(s==='consulta'){renderConsulta();}
   if(s==='padroes'){renderPadroes();}
   if(s==='progresso'){renderDashboard();}
+  if(s==='aulas'){aulasModo='hub';renderAulas();}
   if(s==='foco'){renderFoco();}
   if(s==='admin'&&isAdmin()){loadAdminUsers();loadReportes();}
   // BLOCO 34+redesign pós-login: a animação de entrada roda SÓ DEPOIS dos renders de
@@ -7925,6 +8029,213 @@ function ouvirResumo(id){
   const aoCarregarVozes=()=>{if(feito)return;feito=true;falar();};
   speechSynthesis.addEventListener('voiceschanged',aoCarregarVozes,{once:true});
   setTimeout(()=>{if(feito)return;feito=true;speechSynthesis.removeEventListener('voiceschanged',aoCarregarVozes);falar();},1000);
+}
+
+// ═══════════════════════════════
+// AULAS — áudio real em partes do RTDB (NUNCA TTS, CLAUDE.md §2: a trava é o
+// mecanismo, não o assunto), infográfico e mapa mental. PLANO_aulas_ui.md.
+// ═══════════════════════════════
+let aulasModo='hub',aulaAtual=null,_aulaAudioBaixando=null,_aulaAudioUrl=null;
+function aulasDados(){return (typeof AULAS!=='undefined'&&AULAS)?AULAS:{};}
+// PJ18: só entra na lista quem tem tópico VÁLIDO (existe em TOPICOS, filtro contra
+// lixo/typo no bloco publicado) e pelo menos um formato (áudio, infográfico ou mapa).
+function aulasTopicos(){const a=aulasDados();return Object.keys(a).filter(t=>TOPICOS[t]&&(a[t].audio||a[t].mapa||a[t].info));}
+function renderAulas(){
+  if(aulasModo==='detalhe'&&aulaAtual&&aulasDados()[aulaAtual])_detalheAula(aulaAtual);
+  else _hubAulas();
+}
+function _hubAulas(){
+  const content=document.getElementById('aulas-content');
+  if(!content)return;
+  content.innerHTML=renderAulaLista();
+}
+function abrirAula(t){
+  _encerrarAudioAula();
+  aulasModo='detalhe';aulaAtual=t;
+  renderAulas();irAoTopoDoConteudo();
+}
+function voltarHubAulas(){
+  _encerrarAudioAula();
+  aulasModo='hub';aulaAtual=null;
+  renderAulas();irAoTopoDoConteudo();
+}
+// Acordeão por área, igual ao Quiz (renderAreaList): o TÓPICO é a ação (abre a aula),
+// 1 nível só — Aulas não tem 3º nível como Cards/Resumos, então nada de hubTopicoHTML.
+function renderAulaLista(){
+  const topicos=aulasTopicos();
+  if(!topicos.length)return '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Nenhuma aula publicada ainda.</div>';
+  const porArea={};
+  topicos.forEach(t=>{const a=TOPICOS[t].a;(porArea[a]=porArea[a]||[]).push(t);});
+  let html='';
+  Object.keys(porArea).sort().forEach(a=>{
+    const aInfo=AI[a]||{};
+    const icBox=`background:${aInfo.bg};color:${aInfo.color}`;
+    const tops=porArea[a].sort((x,y)=>String(x).localeCompare(String(y),undefined,{numeric:true}));
+    const itens=tops.map(t=>{
+      const item=aulasDados()[t];
+      const formatos=[];
+      if(item.audio)formatos.push('Áudio'+(item.audio.dur?` ${Math.round(item.audio.dur/60)} min`:''));
+      if(item.info)formatos.push('Infográfico');
+      if(item.mapa)formatos.push('Mapa mental');
+      return itemFolhaHTML({icBox,icon:aInfo.icon,titulo:sanitize(nomeTopico(t)),sub:formatos.join(' · '),onclick:`abrirAula('${t}')`,seta:true,minw0:true});
+    }).join('');
+    html+=`<div class="pg-area-row quiz-area-row" data-area="${a}">
+      <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false">
+        <div class="area-row-icon" style="${icBox}">${aInfo.icon}</div>
+        <div class="area-row-info">
+          <div class="area-row-name">${a} · ${sanitize(aInfo.nome||'')}</div>
+          <div class="area-row-meta">${tops.length} aula${tops.length!==1?'s':''}</div>
+        </div>
+        <svg class="pg-area-chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="pg-area-topicos">${itens}</div>
+    </div>`;
+  });
+  return '<div class="aulas-list">'+html+'<div class="hub-detalhe-vazio">Escolha uma área ao lado para ver os tópicos.</div></div>';
+}
+function _detalheAula(t){
+  const item=aulasDados()[t]||{};
+  const area=TOPICOS[t]&&TOPICOS[t].a;
+  const aInfo=AI[area]||{};
+  const content=document.getElementById('aulas-content');
+  if(!content)return;
+  let html=`<button onclick="voltarHubAulas()" style="width:100%;margin-bottom:10px;padding:9px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:700;color:var(--text2)">← Aulas</button>
+    <div class="aulas-origem">O áudio foi gerado por IA a partir das normas, e o infográfico e o mapa foram escritos a partir dele. Tudo foi revisado contra as normas, mas serve para aprofundar e não substitui o texto oficial: em qualquer divergência, vale a norma.</div>
+    <div class="tela-header" style="padding:14px 0 10px">
+      <h2 class="tela-h-title">${sanitize(nomeTopico(t))}</h2>
+      <div class="tela-h-sub">${area?sanitize(area+' · '+(aInfo.nome||'')):''}</div>
+    </div>`;
+  if(item.audio){
+    html+=`<div id="aula-audio-box" class="aula-audio-box"><button class="btn-primary" id="aula-audio-btn" style="width:100%" onclick="ouvirAula('${t}')">${_labelBotaoAudio(item.audio)}</button></div>`;
+  }
+  if(item.info){
+    html+='<div class="sec-title mt14">Infográfico</div>'+_infograficoHTML(item.info);
+  }
+  if(item.mapa){
+    html+='<div class="sec-title mt14">Mapa mental</div><div class="aula-mapa">'+arvoreAulaHTML(item.mapa,0)+'</div>';
+  }
+  if(item.info&&Array.isArray(item.info.fontes)&&item.info.fontes.length){
+    html+='<div class="sec-title mt14">Fontes</div><ul class="aula-fontes">'+item.info.fontes.map(f=>'<li>'+sanitize(f)+'</li>').join('')+'</ul>';
+  }
+  content.innerHTML=html;
+  if(item.audio)_atualizarBotaoAudio(t);
+}
+function _labelBotaoAudio(audio){return 'Ouvir · '+_mbTexto(audio);}
+// Estimativa do tamanho de download: o áudio trafega em base64 (json do RTDB), não no
+// binário original — ~4/3 do tamanho comprimido. Arredondado pra cima (nunca subestimar
+// pra quem está em dado móvel, PLANO_aulas_ui.md §2.2).
+function _mbTexto(audio){return (Math.ceil((audio.bytes||0)*4/3)/1e6).toFixed(1)+' MB';}
+function _infograficoHTML(info){
+  const blocos=(info.blocos||[]).map(b=>{
+    const cards=(b.cards||[]).map(c=>`<div class="aula-info-card${c.destaque?' aula-info-card--destaque':''}"><div class="aula-info-card-t">${sanitize(c.titulo||'')}</div><div class="aula-info-card-txt">${sanitize(c.texto||'')}</div></div>`).join('');
+    return `<div class="aula-info-bloco"><div class="aula-info-bloco-t">${sanitize(b.titulo||'')}</div><div class="aula-info-cards">${cards}</div></div>`;
+  }).join('');
+  return '<div class="aula-infografico">'+blocos+'</div>';
+}
+// Árvore recolhível: raiz (nível 0) nasce aberta mostrando o 1º nível de filhos; cada
+// nível abaixo nasce fechado. Folha (sem filhos) não ganha seta nem é clicável.
+function arvoreAulaHTML(no,nivel){
+  const filhos=no.filhos||[];
+  if(!filhos.length)return `<div class="aula-mapa-folha" style="--nivel:${nivel}">${sanitize(no.titulo||'')}</div>`;
+  const aberto=nivel===0;
+  return `<div class="aula-mapa-no">
+    <div class="aula-mapa-cab" role="button" tabindex="0" aria-expanded="${aberto}" onclick="_toggleArvoreAula(this)" style="--nivel:${nivel}">
+      <svg class="aula-mapa-chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      <span>${sanitize(no.titulo||'')}</span>
+    </div>
+    <div class="aula-mapa-filhos${aberto?'':' hidden'}">${filhos.map(f=>arvoreAulaHTML(f,nivel+1)).join('')}</div>
+  </div>`;
+}
+function _toggleArvoreAula(el){
+  const filhos=el.nextElementSibling;
+  if(!filhos)return;
+  const abrir=filhos.classList.contains('hidden');
+  filhos.classList.toggle('hidden',!abrir);
+  el.setAttribute('aria-expanded',abrir?'true':'false');
+}
+// ── Áudio: download em partes do RTDB, cache no IndexedDB por 'topico:av' ──────────
+function _base64ParaBytes(b64){
+  const bin=atob(b64);
+  const arr=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+  return arr;
+}
+// Achado do code-review: `_aulaAudioBaixando` era um boolean ÚNICO (não por tópico) e as
+// atualizações de texto do botão dentro do loop buscavam `#aula-audio-btn` direto do DOM sem
+// checar se ainda era a aula certa — abrir a aula B enquanto A baixava (1) ficava bloqueado
+// em silêncio (mutex global) e (2) o progresso de A escrevia por cima do botão de B (mesmo
+// id, DOM trocado por `_detalheAula`). Agora o mutex é por TÓPICO e todo toque no botão passa
+// por `setBtn`, que só mexe no DOM se `aulaAtual` ainda for este `t`.
+async function ouvirAula(t){
+  const info=(aulasDados()[t]||{}).audio;
+  if(!info||_aulaAudioBaixando===t)return;
+  _aulaAudioBaixando=t;
+  const setBtn=(texto,habilitado)=>{
+    if(aulaAtual!==t)return;
+    const btn=document.getElementById('aula-audio-btn');
+    if(!btn)return;
+    if(texto!==undefined)btn.textContent=texto;
+    if(habilitado!==undefined)btn.disabled=!habilitado;
+  };
+  setBtn(undefined,false);
+  try{
+    const chaveLocal=_chaveAudioAula(t,info.av);
+    let blob=await _lerAudioAulaCache(chaveLocal);
+    if(!blob){
+      const chaveRtdb=t.replace(/\./g,'_');
+      const partes=[];
+      for(let i=0;i<info.partes;i++){
+        setBtn(`Baixando ${i} de ${info.partes}…`);
+        const snap=await withTimeout(db.ref(`aulas_audio/${chaveRtdb}/v${info.av}/${i}`).get(),20000);
+        const b64=snap.val();
+        if(!b64)throw new Error('parte '+i+' ausente no RTDB');
+        partes.push(_base64ParaBytes(b64));
+      }
+      setBtn(`Baixando ${info.partes} de ${info.partes}…`);
+      blob=new Blob(partes,{type:info.mime||'audio/mp4'});
+      await _gravarAudioAulaCache(chaveLocal,blob);
+    }
+    // Corrida: o usuário pode ter saído da aula (ou aberto outra) enquanto baixava.
+    if(aulaAtual===t)_tocarBlobAula(t,blob);
+  }catch(e){
+    console.warn('ouvirAula: falha ao baixar.',t,e.message);
+    showToast('Não foi possível baixar. Verifique a conexão e tente de novo.');
+    setBtn(_labelBotaoAudio(info),true);
+  }finally{
+    if(_aulaAudioBaixando===t)_aulaAudioBaixando=null;
+  }
+}
+// Chamada tanto pelo download quanto pelo cache já existente (_atualizarBotaoAudio) —
+// <audio> só nasce com o blob pronto, nunca com `src` de rede (PLANO_aulas_ui.md §3.4).
+function _tocarBlobAula(t,blob){
+  if(_aulaAudioUrl){URL.revokeObjectURL(_aulaAudioUrl);_aulaAudioUrl=null;}
+  _aulaAudioUrl=URL.createObjectURL(blob);
+  const box=document.getElementById('aula-audio-box');
+  if(!box)return;
+  box.innerHTML=`<audio controls style="width:100%" src="${_aulaAudioUrl}"></audio>
+    <button class="fim-inline-link" onclick="removerAudioAulaDoAparelho('${t}')">Remover do aparelho</button>`;
+}
+async function _atualizarBotaoAudio(t){
+  const info=(aulasDados()[t]||{}).audio;
+  if(!info)return;
+  const blob=await _lerAudioAulaCache(_chaveAudioAula(t,info.av));
+  if(blob&&aulaAtual===t)_tocarBlobAula(t,blob);
+}
+async function removerAudioAulaDoAparelho(t){
+  const info=(aulasDados()[t]||{}).audio;
+  if(!info)return;
+  await _apagarAudioAulaCache(_chaveAudioAula(t,info.av));
+  if(_aulaAudioUrl){URL.revokeObjectURL(_aulaAudioUrl);_aulaAudioUrl=null;}
+  if(aulaAtual===t)renderAulas();
+}
+// Achado do code-review: `.screen`/`.screen.active` só troca `display` (CSS) — o
+// <audio> não sai do DOM ao navegar pra outra tela, então sem pause() explícito ele
+// continua tocando escondido (revogar a object URL não para mídia já anexada/tocando
+// nos navegadores testados).
+function _encerrarAudioAula(){
+  const audioEl=document.querySelector('#aula-audio-box audio');
+  if(audioEl)audioEl.pause();
+  if(_aulaAudioUrl){URL.revokeObjectURL(_aulaAudioUrl);_aulaAudioUrl=null;}
 }
 
 // ═══════════════════════════════
