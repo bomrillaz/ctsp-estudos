@@ -6722,9 +6722,12 @@ function fecharConfirm(e){if(e&&e.target!==e.currentTarget)return;document.getEl
 // Os 2 call sites do Quiz carregam contagem, não estado, e ficam neutros.
 // PD1 (auditoria b184/b185): o ícone de 32px era igual ao da área-mãe, repetido em cada item sem
 // carregar informação própria. Removido; icBox/icon seguem chegando dos 4 call sites, ignorados.
-function itemFolhaHTML({icBox,icon,titulo,sub,subTom,onclick,extraClass,seta,minw0,id}){
+// PE16: `topico` opcional — quando o call site passa o código do tópico, a própria
+// função anexa o selo "Atualizado" (fonte única, CLAUDE.md §10: consertar a fonte
+// compartilhada, nunca o call site). Ausente = comportamento igual a antes.
+function itemFolhaHTML({icBox,icon,titulo,sub,subTom,onclick,extraClass,seta,minw0,id,topico}){
   return `<div${id?` id="${id}"`:''} class="resumo-list-item${extraClass?' '+extraClass:''}" role="button" tabindex="0" onclick="${onclick}">
-        <div style="flex:1${minw0?';min-width:0':''}"><div style="font-size:13px;font-weight:700">${titulo}</div><div class="resumo-list-vence${subTom?' resumo-list-vence--'+subTom:''}">${sub}</div></div>
+        <div style="flex:1${minw0?';min-width:0':''}"><div style="font-size:13px;font-weight:700">${titulo}${topico?atuSeloHTML(topico):''}</div><div class="resumo-list-vence${subTom?' resumo-list-vence--'+subTom:''}">${sub}</div></div>
         ${seta?'<div style="color:var(--text3);font-size:18px">→</div>':''}
       </div>`;
 }
@@ -6745,7 +6748,7 @@ function renderAreaList(){
     const icBox=`background:${a.bg};color:${a.color}`;
     const topicosHTML=tops.map(t=>{
       const nt=contQ[t]||0;
-      return itemFolhaHTML({icBox,icon:a.icon,titulo:sanitize(nomeTopico(t))+atuSeloHTML(t),sub:`${nt} quest${nt!==1?'ões':'ão'}`,onclick:`abrirIntro('topico','${t}')`,seta:true});
+      return itemFolhaHTML({icBox,icon:a.icon,titulo:sanitize(nomeTopico(t)),topico:t,sub:`${nt} quest${nt!==1?'ões':'ão'}`,onclick:`abrirIntro('topico','${t}')`,seta:true});
     }).join('');
     html+=`<div class="pg-area-row quiz-area-row" data-area="${k}">
       <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false">
@@ -7536,7 +7539,7 @@ function renderCardLista(){
         const uc=userCards[fc.id];const rot=(uc&&uc.reps>0)?'Revisão':'Novo';
         itens+=itemFolhaHTML({icBox,icon:aInfo.icon||'',titulo:sanitize(fc.f),sub:rot,subTom:pendente(fc)?'pend':null,onclick:`estudarCardUnico('${fc.id}')`,minw0:true});
       });
-      dentro+=hubTopicoHTML(sanitize(nomeTopico(t))+atuSeloHTML(t),`${doTopico.length}${nPendT?` · ${nPendT} pend.`:''}`,itens);
+      dentro+=hubTopicoHTML(sanitize(nomeTopico(t)),`${doTopico.length}${nPendT?` · ${nPendT} pend.`:''}`,itens,t);
     });
     html+=`<div class="pg-area-row quiz-area-row" data-area="${a}">
       <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false">
@@ -7957,7 +7960,7 @@ function renderResumoLista(){
         const vence=ehNovoR2?'Novo':`Revisão: ${ur?.next?new Date(ur.next).toLocaleDateString('pt-BR'):'Hoje'}`;
         itens+=itemFolhaHTML({icBox,icon:aInfo.icon,titulo:sanitize(r.titulo),sub:vence,subTom:vencido(r)?'pend':null,onclick:`mostrarResumoDirecto('${r.id}')`,minw0:true});
       });
-      dentro+=hubTopicoHTML(sanitize(nomeTopico(t))+atuSeloHTML(t),`${doTopico.length}${nPendT?` · ${nPendT} a revisar`:''}`,itens);
+      dentro+=hubTopicoHTML(sanitize(nomeTopico(t)),`${doTopico.length}${nPendT?` · ${nPendT} a revisar`:''}`,itens,t);
     });
     html+=`<div class="pg-area-row quiz-area-row" data-area="${a}">
       <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false">
@@ -8161,7 +8164,7 @@ function renderAulaLista(){
       if(item.audio)formatos.push('Áudio'+(item.audio.dur?` ${Math.round(item.audio.dur/60)} min`:''));
       if(item.info)formatos.push('Infográfico');
       if(item.mapa)formatos.push('Mapa mental');
-      return itemFolhaHTML({icBox,icon:aInfo.icon,titulo:sanitize(nomeTopico(t))+atuSeloHTML(t),sub:formatos.join(' · '),onclick:`abrirAula('${t}')`,seta:true,minw0:true,id:'aula-item-'+t});
+      return itemFolhaHTML({icBox,icon:aInfo.icon,titulo:sanitize(nomeTopico(t)),topico:t,sub:formatos.join(' · '),onclick:`abrirAula('${t}')`,seta:true,minw0:true,id:'aula-item-'+t});
     }).join('');
     html+=`<div class="pg-area-row quiz-area-row" data-area="${a}">
       <div class="area-row" onclick="toggleAreaTopicos(this)" role="button" tabindex="0" aria-expanded="false">
@@ -8335,7 +8338,8 @@ function _dataBR(iso){const p=String(iso||'').split('-');return p.length===3?p[2
 // diffDias() já existentes (nunca toISOString(), CLAUDE.md §2). Sem estado gravado.
 function atualizacaoRecente(t){
   const lista=(typeof ATUALIZACOES!=='undefined'&&Array.isArray(ATUALIZACOES))?ATUALIZACOES:[];
-  return lista.find(e=>e.topicos&&e.topicos.includes(t)&&diffDias(e.data,diaLocal())>=0&&diffDias(e.data,diaLocal())<30)||null;
+  const hoje=diaLocal();
+  return lista.find(e=>e.topicos&&e.topicos.includes(t)&&diffDias(e.data,hoje)>=0&&diffDias(e.data,hoje)<30)||null;
 }
 // Selo compacto usado dentro da linha/cabeçalho do tópico. stopPropagation obrigatório:
 // a linha por trás abre o tópico (quiz/aula) ou o acordeão (cards/resumos), e o toque no
@@ -8343,7 +8347,7 @@ function atualizacaoRecente(t){
 function atuSeloHTML(t){
   const e=atualizacaoRecente(t);
   if(!e)return '';
-  return `<span class="atu-selo" role="button" tabindex="0" onclick="event.stopPropagation();abrirAtualizacao('${e.id}')">Atualizado <span class="atu-selo-sub">ver o que mudou</span></span>`;
+  return `<span class="atu-selo" role="button" tabindex="0" onclick="event.stopPropagation();abrirAtualizacao('${e.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();abrirAtualizacao('${e.id}')}">Atualizado <span class="atu-selo-sub">ver o que mudou</span></span>`;
 }
 function abrirAtualizacao(id){
   navTo('atualizacoes');
@@ -8806,10 +8810,11 @@ function toggleAreaTopicos(el){
 
 // B57 — bloco de tópico fechado usado por Cards e Resumos. `nome` e `itensHTML`
 // já chegam sanitizados pelo chamador (é HTML montado, não texto de banco cru).
-function hubTopicoHTML(nome,contaTxt,itensHTML){
+// PE16: `topico` opcional (4º param) — mesma lógica de itemFolhaHTML, fonte única do selo.
+function hubTopicoHTML(nome,contaTxt,itensHTML,topico){
   return '<div class="hub-topico">'
     +'<div class="hub-topico-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleTopicoItens(this)">'
-      +'<span class="hub-topico-nome">'+nome+'</span>'
+      +'<span class="hub-topico-nome">'+nome+(topico?atuSeloHTML(topico):'')+'</span>'
       +'<span class="hub-topico-n">'+contaTxt+'</span>'
       +'<svg class="hub-topico-chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>'
     +'</div>'
