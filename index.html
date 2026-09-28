@@ -1908,6 +1908,13 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 
 /* ═══ PM1/M4 — A5 "contadores" ═══ */
 .lp-numeros b{font-variant-numeric:tabular-nums;}
+
+/* ═══ PM1/M4 — A7 "transição landing → login" ═══ */
+.lp-a7-sai{animation:lp-a7-sai-kf .26s var(--ease-out) forwards;}
+@keyframes lp-a7-sai-kf{to{opacity:0;transform:scale(.97);}}
+#login-view{opacity:1;transform:scale(1);transition:opacity .3s var(--ease-out),transform .3s var(--ease-out);}
+#login-view.lp-a7-entra{opacity:0;transform:scale(1.03);}
+@media(prefers-reduced-motion:reduce){.lp-a7-sai{animation:none;}#login-view{transition:none;}}
 </style>
 </head>
 <body>
@@ -5316,13 +5323,29 @@ auth.onAuthStateChanged(async user=>{
 // variável de memória não sobrevive. Isso é só a etiqueta do preço que será exibido:
 // abrirPagamento() valida contra PIX_PLANOS, então um valor adulterado aqui não vira
 // cobrança errada — no máximo mostra o plano errado para a própria pessoa.
+// PM1/M4 (A7): landing→login com a mesma sensação de "entrar" do A1 (a porta), sem
+// View Transitions (trava do projeto) — CSS puro, hidden-class do landing atrasado
+// só o suficiente pra a animação de saída rodar antes de sumir de vez. _a7Timer
+// guarda esse atraso: "Voltar" rápido (<260ms, achado ao testar) tem de CANCELAR
+// o timeout pendente, senão ele reesconde a landing um instante depois de já ter
+// voltado — verLanding() limpa o mesmo timer.
+let _a7Timer=null;
 function verLogin(tab,plano){
   if(plano==='anual'||plano==='mensal'){
     try{localStorage.setItem('planoEscolhido',plano);}catch(e){}
   }
   const l=document.getElementById('landing-view'),v=document.getElementById('login-view');
-  if(l)l.classList.add('hidden');
-  if(v)v.classList.remove('hidden');
+  if(_a7Timer){clearTimeout(_a7Timer);_a7Timer=null;}
+  if(l&&v&&!movimentoReduzido()){
+    l.classList.add('lp-a7-sai');
+    v.classList.remove('hidden');
+    v.classList.add('lp-a7-entra');
+    requestAnimationFrame(()=>v.classList.remove('lp-a7-entra'));
+    _a7Timer=setTimeout(()=>{l.classList.add('hidden');l.classList.remove('lp-a7-sai');_a7Timer=null;},260);
+  }else{
+    if(l)l.classList.add('hidden');
+    if(v)v.classList.remove('hidden');
+  }
   showAuthTab(tab||'login');
   irAoTopoDoConteudo();
 }
@@ -5517,8 +5540,12 @@ function scrollProgress(el,cb,opts){
 })();
 function verLanding(){
   const l=document.getElementById('landing-view'),v=document.getElementById('login-view');
+  if(_a7Timer){clearTimeout(_a7Timer);_a7Timer=null;}  // ver nota em verLogin()
   if(v)v.classList.add('hidden');
-  if(l)l.classList.remove('hidden');
+  if(l){
+    l.classList.remove('hidden');
+    l.classList.remove('lp-a7-sai');
+  }
   montarInstalarLanding();                         // b126: variante certa ao voltar do login
   irAoTopoDoConteudo();
 }
@@ -5937,7 +5964,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.318';
+const APP_VERSAO='v1.319';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
