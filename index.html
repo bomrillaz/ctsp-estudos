@@ -1854,8 +1854,16 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   border-radius:20px;padding:22px 20px;box-shadow:var(--shadow-md);}
 .lp-a2-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .lp-a2-tag{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ember);}
-.lp-a2-cesar{width:38px;height:38px;border-radius:50%;object-fit:cover;box-shadow:0 4px 14px rgba(0,0,0,.4);
-  transform:scale(1) rotate(0deg);transition:transform var(--dur-base) var(--ease-spring);}
+/* PM1/M6.5 — César instrutor do A2 (bulk uncoreado, fundo transparente): sem recorte
+   circular (a arte já é de meio corpo, cover cortava o gesto). object-fit:contain pra
+   nunca esticar. .mirror só na pose "aponta" (ela aponta pra direita no master; o
+   personagem fica à direita do card, então espelhar faz o dedo apontar PRA DENTRO,
+   pro enunciado) — nunca no comemora/pensa, cujos masters já ficam de frente. */
+.lp-a2-cesar{width:88px;height:88px;flex-shrink:0;object-fit:contain;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));
+  transition:transform var(--dur-base) var(--ease-spring);}
+@media(min-width:768px){.lp-a2-cesar{width:120px;height:120px;}}
+.lp-a2-cesar.mirror{transform:scaleX(-1);}
 .lp-a2-cesar.reage{transform:scale(1.16) rotate(-7deg);}
 .lp-a2-enun{font-size:16px;line-height:1.5;color:var(--text);font-weight:600;margin-bottom:16px;}
 .lp-a2-opts{display:flex;flex-direction:column;gap:9px;}
@@ -2156,7 +2164,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="lp-a2-card">
           <div class="lp-a2-head">
             <span class="lp-a2-tag">Exemplo · Suporte Básico de Vida</span>
-            <img class="lp-a2-cesar" id="lp-a2-cesar" src="assets/cesar-coin.png" data-comemora="assets/cesar-coin-comemora.png" alt="" aria-hidden="true" onerror="this.style.display='none'">
+            <img class="lp-a2-cesar mirror" id="lp-a2-cesar" src="assets/cesar-aponta.png" data-pensa="assets/cesar-pensa.png" data-comemora="assets/cesar-coin-comemora.png" alt="" aria-hidden="true" onerror="this.onerror=null;this.src='assets/cesar-coin.png';this.classList.remove('mirror')">
           </div>
           <p class="lp-a2-enun">Durante o atendimento a uma vítima consciente com sangramento intenso em membro superior, qual é a primeira conduta indicada?</p>
           <div class="lp-a2-opts">
@@ -5540,15 +5548,18 @@ function scrollProgress(el,cb,opts){
   // resolve sozinho como já fazia. resolvidoPeloToque trava o motor de scroll pra não
   // reescrever por cima do estado que a pessoa já viu (senão o próximo scroll "desfaz"
   // a resposta certa, porque o cálculo por progresso ainda não tinha chegado lá).
-  var resolvidoPeloToque=false,cesarTrocado=false;
-  // PM1/M6.5 (opcional) — troca pra pose de comemoração SE o arquivo existir; sem
-  // ele, fica a imagem original (cesar-coin.png) + o wobble de transform que já
-  // tinha. Pré-carrega antes de trocar pra nunca mostrar um <img> quebrado.
-  function trocarCesarComemora(){
-    if(cesarTrocado||!cesar||!cesar.dataset.comemora)return;
-    cesarTrocado=true;
-    var alt=cesar.dataset.comemora,teste=new Image();
-    teste.onload=function(){cesar.src=alt;};
+  var resolvidoPeloToque=false,poseCesar='aponta';
+  // PM1/M6.5 — três poses (aponta/pensa/comemora), sempre a mesma dimensão (360x360
+  // nos masters) pra troca não pular. poseCesar só evita recarregar a MESMA pose de
+  // novo a cada tick de scroll — troca pra frente e pra trás segue o `p` atual, igual
+  // brasa/elipse/certa/exp (nenhum desses trava depois de tocado; nem por toque o
+  // usuário volta, mas resolvidoPeloToque já cuida disso separadamente).
+  // Pré-carrega antes de trocar pra nunca mostrar um <img> quebrado.
+  function trocarCesarPose(pose){
+    if(poseCesar===pose||!cesar||!cesar.dataset[pose])return;
+    poseCesar=pose;
+    var alt=cesar.dataset[pose],teste=new Image();
+    teste.onload=function(){cesar.src=alt;cesar.classList.remove('mirror');};
     teste.src=alt;
   }
   function estadoFinal(){
@@ -5557,7 +5568,7 @@ function scrollProgress(el,cb,opts){
     elipse.style.strokeDashoffset='0';
     certa.classList.add('circulada');
     cesar.classList.add('reage');
-    trocarCesarComemora();
+    trocarCesarPose('comemora');
     exp.classList.add('show');
     fill.style.width=DOM_FIM+'%';
     pct.textContent=DOM_FIM+'%';
@@ -5565,6 +5576,7 @@ function scrollProgress(el,cb,opts){
   function tentarDeNovo(opt){
     opt.classList.add('jog-errada');
     vibrarFeedback(false);
+    trocarCesarPose('pensa');
     if(dica){dica.classList.add('show');clearTimeout(dica._t);dica._t=setTimeout(function(){dica.classList.remove('show');},1100);}
     setTimeout(function(){opt.classList.remove('jog-errada');},700);
   }
@@ -5586,7 +5598,8 @@ function scrollProgress(el,cb,opts){
     elipse.style.strokeDashoffset=String(DASH*(1-penP));
     certa.classList.toggle('circulada',penP>0.05);
     cesar.classList.toggle('reage',p>=0.55);
-    if(p>=0.55)trocarCesarComemora();
+    if(p>=0.55)trocarCesarPose('comemora');
+    else if(brasaAcesa)trocarCesarPose('pensa');
     exp.classList.toggle('show',p>=0.72);
     var domP=Math.min(1,Math.max(0,(p-0.70)/0.30));
     var domVal=Math.round(DOM_INI+(DOM_FIM-DOM_INI)*domP);
@@ -6169,7 +6182,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.325';
+const APP_VERSAO='v1.326';
 // PM1/M6.5 (opcional, decisão do João) — 'video' preserva o loading.mp4 de sempre;
 // 'cesar' troca pela abertura pulsando com o César. Não mexe em NENHUMA função de
 // erro/renovação/e-mail (elas continuam só escondendo loading-video; escondemos o
