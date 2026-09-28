@@ -1780,7 +1780,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   </div>
   <div id="loading-renovacao">
     <div id="loading-renovacao-texto"></div>
-    <button class="btn-primary" onclick="abrirPagamento(planoAtual())">Renovar acesso</button>
+    <button class="btn-primary" id="loading-renovacao-btn">Renovar acesso</button>
     <button class="btn-primary btn-ghost-dark" onclick="doLogout()">Sair</button>
   </div>
   <div id="loading-confirmar-email">
@@ -4718,6 +4718,14 @@ function _usarConteudo(c){
 // Conjunto OBRIGATÓRIO: sem qualquer um destes o app não tem o que ensinar, e o download é
 // rejeitado. GLOSARIO/NORMAS ficam fora de propósito (b224), ver _popularGlobaisConteudo.
 const _CAMPOS_CONTEUDO=['topicos','qi','fci','resumos','incidencia','subtopicos'];
+// Função pura (sem depender de userProfile/RTDB) pra decidir se um PERMISSION_DENIED real
+// deve ser tratado como corte por assinatura. 'vencido' sempre bloqueia; 'sem_data' bloqueia
+// SÓ quando o perfil não é o de fallback (_perfilIncerto, linha ~4927) — nesse caso o
+// PERMISSION_DENIED pode ser por outro motivo (email_verified, aprovado falso) e a pessoa
+// nem está vencida. Teste: materiais/entregas/testes/teste_cob_bloqueia_conteudo.js.
+function _cobBloqueiaConteudo(estado,perfilIncerto){
+  return estado==='vencido'||(estado==='sem_data'&&!perfilIncerto);
+}
 // Compara conteudo/versao com o cache local: igual → 0 download. Diferente/vazio → baixa
 // o nó inteiro. Falha de rede sem cache local: devolve false (o chamador mostra erro e
 // NUNCA deixa o app entrar com o banco vazio).
@@ -4747,7 +4755,7 @@ async function carregarConteudo(){
   // 'PERMISSION_DENIED') e quem está em dia continuam EXATAMENTE como antes — serve o
   // cache sem apagar nada; decisão do João: ninguém em dia perde o cache por instabilidade
   // de rede. Admin nunca cai aqui (a regra sempre deixa admin ler).
-  if(leitura.code==='PERMISSION_DENIED'&&!isAdmin()&&estadoCobranca(userProfile).estado==='vencido'){
+  if(leitura.code==='PERMISSION_DENIED'&&!isAdmin()&&_cobBloqueiaConteudo(estadoCobranca(userProfile).estado,!!userProfile._perfilIncerto)){
     await _apagarConteudoCache();
     return 'vencido';
   }
@@ -4793,11 +4801,35 @@ function mostrarErroConteudo(){
 function mostrarTelaRenovacao(st){
   const v=document.getElementById('loading-video'),w=document.getElementById('welcome-text'),
     s=document.getElementById('loading-sub'),rv=document.getElementById('loading-renovacao'),
-    txt=document.getElementById('loading-renovacao-texto');
+    txt=document.getElementById('loading-renovacao-texto'),
+    btn=document.getElementById('loading-renovacao-btn');
   if(v)v.classList.add('hidden');
   if(w)w.classList.add('hidden');
   if(s)s.classList.add('hidden');
-  if(txt)txt.textContent='Seu acesso venceu.'+(st&&st.label?' '+st.label+'.':'')+' Renove para continuar estudando.';
+  const semData=!!(st&&st.estado==='sem_data');
+  if(txt)txt.textContent=semData
+    ?'Não encontramos a data de vencimento do seu plano. Fale com o suporte para regularizar.'
+    :'Seu acesso venceu.'+(st&&st.label?' '+st.label+'.':'')+' Renove para continuar estudando.';
+  // b235: a tela é reaproveitada entre chamadas (vencido numa vez, sem_data noutra) — os
+  // dois estados do botão primário são setados SEMPRE aqui, nunca só o do ramo que entrou,
+  // senão um texto/onclick antigo pode sobreviver de uma chamada anterior.
+  if(btn){
+    if(semData){
+      const email=userProfile&&userProfile.email?' E-mail: '+userProfile.email:'';
+      const url=linkWhats('Olá, meu plano aparece sem data de vencimento no Prontidão.'+email);
+      if(url){
+        btn.style.display='';
+        btn.textContent='Falar com o suporte';
+        btn.onclick=()=>window.open(url,'_blank','noopener,noreferrer');
+      }else{
+        btn.style.display='none';
+      }
+    }else{
+      btn.style.display='';
+      btn.textContent='Renovar acesso';
+      btn.onclick=()=>abrirPagamento(planoAtual());
+    }
+  }
   if(rv)rv.classList.add('show');
 }
 
@@ -5441,7 +5473,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.312';
+const APP_VERSAO='v1.313';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
