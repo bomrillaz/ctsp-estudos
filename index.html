@@ -989,7 +989,7 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
 .hub-hint{font-size:12px;color:var(--text3);text-align:center;margin-top:8px;line-height:1.45;}
 .hub-ok{font-size:15px;font-weight:800;color:var(--green);text-align:center;margin-bottom:8px;}
 .cards-body{padding:14px;}
-.card-flip-wrap{perspective:1000px;width:100%;margin:0 auto 16px;}
+.card-flip-wrap{perspective:1000px;width:100%;margin:0 auto 16px;touch-action:pan-y;}
 .card-flip{width:100%;min-height:200px;position:relative;transform-style:preserve-3d;transition:transform .5s;cursor:pointer;}
 .card-flip.flipped{transform:rotateY(180deg);}
 .card-face{position:absolute;inset:0;border-radius:18px;padding:24px;display:flex;flex-direction:column;align-items:center;text-align:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow-y:auto;}
@@ -5971,7 +5971,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.320';
+const APP_VERSAO='v1.321';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -8146,6 +8146,75 @@ async function avaliarCard(dif){
   else{cardIdx++;renderCard();}
 }
 
+// PM1/M6 (C1) — arrastar o flashcard. O gesto só CHAMA avaliarCard(), o mesmo
+// caminho dos 3 botões — nenhuma gravação paralela, FSRS/BKT intocados. Só os 2
+// extremos têm gesto: esquerda=Difícil, direita=Fácil (mapeamento conservador —
+// não existe um 4º nível "esqueci" nesta escala de 3 botões). Médio continua só
+// por botão. Cobre os dois pontos de entrada de cardMioloHTML() (Cards e Sessão
+// do dia dentro do Quiz) de graça, por delegação de evento — nenhum dos dois
+// precisou de fix separado. touch-action:pan-y (CSS) libera o scroll vertical da
+// página sem precisar de preventDefault não-passivo.
+(function initCardDrag(){
+  const LIMIAR_INTENCAO=10,LIMIAR_COMMIT=90;
+  let at=null;
+  function wrapDoAlvo(el){
+    const wrap=el&&el.closest&&el.closest('.card-flip-wrap');
+    if(!wrap)return null;
+    const flip=wrap.querySelector('.card-flip');
+    return(flip&&flip.classList.contains('flipped'))?wrap:null; // só com a resposta visível
+  }
+  document.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse'&&e.button!==0)return;
+    const wrap=wrapDoAlvo(e.target);
+    if(!wrap)return;
+    at={wrap,x0:e.clientX,y0:e.clientY,dx:0,decidido:false,travado:false,id:e.pointerId};
+  },{passive:true});
+  document.addEventListener('pointermove',e=>{
+    if(!at||at.id!==e.pointerId)return;
+    const dx=e.clientX-at.x0,dy=e.clientY-at.y0;
+    if(!at.decidido){
+      if(Math.abs(dx)<LIMIAR_INTENCAO&&Math.abs(dy)<LIMIAR_INTENCAO)return;
+      at.decidido=true;
+      at.travado=Math.abs(dx)>Math.abs(dy);
+      if(at.travado){try{at.wrap.setPointerCapture(e.pointerId);}catch(err){}}
+    }
+    if(!at.travado)return;
+    at.dx=dx;
+    at.wrap.style.transition='none';
+    at.wrap.style.transform=`translateX(${dx}px) rotate(${dx/18}deg)`;
+    at.wrap.style.opacity=String(Math.max(.4,1-Math.abs(dx)/500));
+  },{passive:true});
+  function soltar(e){
+    if(!at||at.id!==e.pointerId)return;
+    const {wrap,dx,travado}=at;at=null;
+    if(!travado){wrap.style.transition='';wrap.style.transform='';wrap.style.opacity='';return;}
+    const reduzido=movimentoReduzido();
+    wrap.style.transition=reduzido?'none':'transform .3s var(--ease-spring), opacity .3s var(--ease-out)';
+    if(Math.abs(dx)>=LIMIAR_COMMIT){
+      const dif=dx<0?'dif':'fac';
+      wrap.style.transform=`translateX(${dx<0?-600:600}px) rotate(${dx<0?-24:24}deg)`;
+      wrap.style.opacity='0';
+      setTimeout(()=>avaliarCard(dif),reduzido?0:180);
+    }else{
+      wrap.style.transform='translateX(0) rotate(0)';
+      wrap.style.opacity='1';
+    }
+  }
+  document.addEventListener('pointerup',soltar,{passive:true});
+  document.addEventListener('pointercancel',soltar,{passive:true});
+  // PC: setas fazem o mesmo gesto. Só quando um card está com a resposta visível
+  // e o foco não está num campo de texto (não rouba digitação de outro lugar).
+  document.addEventListener('keydown',e=>{
+    if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
+    const tag=document.activeElement&&document.activeElement.tagName;
+    if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
+    const flip=document.getElementById('card-flip-el');
+    if(!flip||!flip.classList.contains('flipped'))return;
+    e.preventDefault();
+    avaliarCard(e.key==='ArrowLeft'?'dif':'fac');
+  });
+})();
+
 // ═══════════════════════════════
 // RESUMOS
 // ═══════════════════════════════
@@ -10059,10 +10128,12 @@ function renderDominio(){
   // F2a: herói virou anel — número, faixa nomeada e cor vêm da mesma escala DOM_ESCALA da
   // barra de área (domFaixa/domCor). O CSS de .ring-fg já faz a transição suave sozinho.
   // PM1/M5 (B1): no PRIMEIRO render da sessão, número e anel partem do valor da ÚLTIMA
-  // vez (localStorage, só apresentação — nunca grava no RTDB nem mexe no cálculo do
-  // BKT). Sem valor guardado (1º acesso/outro aparelho), cai no comportamento de
-  // sempre (animateCount/CSS partem de 0). Renders seguintes na mesma sessão já usam
-  // data-cv do próprio animateCount, este bloco não repete.
+  // vez (localStorage POR UID, mesmo padrão de chaveEspelho() — aparelho compartilhado
+  // ou troca de conta não vaza o domínio de outra pessoa; só apresentação, nunca grava
+  // no RTDB nem mexe no cálculo do BKT). Sem valor guardado (1º acesso/outro
+  // aparelho/deslogado), cai no comportamento de sempre (animateCount/CSS partem de
+  // 0). Renders seguintes na mesma sessão já usam data-cv do próprio animateCount,
+  // este bloco não repete.
   {
     const numEl=document.getElementById('dominio-geral-num');
     const faixaEl=document.getElementById('dominio-geral-faixa');
@@ -10077,7 +10148,7 @@ function renderDominio(){
       const primeiroRenderDaSessao=numEl&&!numEl.hasAttribute('data-cv');
       let domAnterior=null;
       if(primeiroRenderDaSessao){
-        try{const v=localStorage.getItem('domGeralAnterior');if(v!==null&&!isNaN(+v))domAnterior=+v;}catch(e){}
+        try{const v=localStorage.getItem('ctsp_dom_geral_'+(currentUser?currentUser.uid:'anon'));if(v!==null&&!isNaN(+v))domAnterior=+v;}catch(e){}
       }
       if(numEl){
         numEl.style.color=fx.cor;
@@ -10095,7 +10166,7 @@ function renderDominio(){
         }
         ringEl.style.strokeDashoffset=String(circ*(1-geral/100));
       }
-      try{localStorage.setItem('domGeralAnterior',String(geral));}catch(e){}
+      try{localStorage.setItem('ctsp_dom_geral_'+(currentUser?currentUser.uid:'anon'),String(geral));}catch(e){}
     }
   }
   renderVereditos();
