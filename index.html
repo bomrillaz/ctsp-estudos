@@ -1931,6 +1931,42 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 #login-view{opacity:1;transform:scale(1);transition:opacity .3s var(--ease-out),transform .3s var(--ease-out);}
 #login-view.lp-a7-entra{opacity:0;transform:scale(1.03);}
 @media(prefers-reduced-motion:reduce){.lp-a7-sai{animation:none;}#login-view{transition:none;}}
+
+/* ═══ PM1/M6.5 — A2 jogável (toque/clique resolve na hora) ═══ */
+.lp-a2-opt.jog-errada{border-color:rgba(224,58,27,.6);background:rgba(224,58,27,.08);animation:lpA2Balanco .3s ease;}
+@keyframes lpA2Balanco{0%,100%{transform:translateX(0);}25%{transform:translateX(-4px);}75%{transform:translateX(4px);}}
+.lp-a2-dica{margin-top:10px;text-align:center;font-size:12px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--red);opacity:0;transition:opacity var(--dur-fast) var(--ease-out);}
+.lp-a2-dica.show{opacity:1;}
+@media(prefers-reduced-motion:reduce){.lp-a2-opt.jog-errada{animation:none;}}
+
+/* ═══ PM1/M6.5 — trio do celular: respingo d'água no toque (pointer:coarse) ═══ */
+.lp-agua-gota{position:fixed;z-index:9998;pointer-events:none;width:14px;height:14px;left:0;top:0;
+  transform:translate(-50%,-50%) scale(0);border-radius:50%;
+  background:radial-gradient(circle,rgba(180,222,255,.7),rgba(120,180,240,.18) 60%,transparent 75%);
+  animation:lpAguaRespingo .5s var(--ease-out) forwards;}
+@keyframes lpAguaRespingo{
+  0%{transform:translate(-50%,-50%) scale(0);opacity:.9;}
+  60%{transform:translate(-50%,-50%) scale(2.6);opacity:.45;}
+  100%{transform:translate(-50%,-50%) scale(4);opacity:0;}
+}
+
+/* ═══ PM1/M6.5 — cursor-brasa (PC, pointer:fine, só na vitrine) ═══ */
+.lp-brasa-faisca{position:fixed;z-index:9997;pointer-events:none;width:5px;height:5px;left:0;top:0;
+  transform:translate(-50%,-50%);border-radius:50%;
+  background:radial-gradient(circle,#FFE1A8,var(--ember) 55%,transparent 80%);
+  box-shadow:0 0 6px 1px rgba(240,136,60,.6);animation:lpFaiscaCai .6s ease-out forwards;}
+@keyframes lpFaiscaCai{
+  0%{opacity:1;transform:translate(-50%,-50%) translateY(0) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-50%) translateY(18px) scale(.3);}
+}
+
+/* ═══ PM1/M6.5 — escada do caminhão como indicador de progresso da vitrine ═══
+   Vive colada na borda de baixo do topbar (que já é sticky) em vez de precisar
+   saber a altura dele de antemão. */
+.lp-escada-progresso{position:absolute;left:0;right:0;bottom:-4px;height:4px;background:rgba(255,255,255,.1);}
+.lp-escada-fill{height:100%;width:0%;transform-origin:left;
+  background:repeating-linear-gradient(90deg,var(--ember) 0 13px,var(--ember-deep) 13px 16px);}
 </style>
 </head>
 <body>
@@ -2019,6 +2055,8 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <button type="button" class="lp-btn-cta lp-btn-sm" onclick="verLogin('register')">Criar conta</button>
       </div>
     </div>
+    <!-- PM1/M6.5: escada do caminhão como indicador de progresso da vitrine inteira -->
+    <div class="lp-escada-progresso" aria-hidden="true"><div class="lp-escada-fill" id="lp-escada-fill"></div></div>
   </header>
 
   <!-- ── HERO (texto, lido em paz — sem concorrência de movimento) ── -->
@@ -2105,6 +2143,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <div class="lp-a2-dominio-track"><div class="lp-a2-dominio-fill" id="lp-a2-dominio-fill"></div></div>
             <span class="lp-a2-dominio-pct" id="lp-a2-dominio-pct">41%</span>
           </div>
+          <div class="lp-a2-dica" id="lp-a2-dica" aria-live="polite">Tente de novo</div>
         </div>
       </div>
     </div>
@@ -5387,6 +5426,14 @@ function planoAtual(){
 function movimentoReduzido(){
   return matchMedia('(prefers-reduced-motion:reduce)').matches||!!(navigator.connection&&navigator.connection.saveData);
 }
+// PM1/M6.5 — vibração curta de confirmação (feature-detect: iOS Safari não tem
+// Vibration API, fica só com a animação visual que já existe). Desliga junto com
+// movimentoReduzido() por pedido explícito, mesmo não sendo "visual".
+function vibrarFeedback(sucesso){
+  if(movimentoReduzido())return;
+  if(!('vibrate' in navigator))return;
+  try{navigator.vibrate(sucesso?15:[15,40,15]);}catch(e){}
+}
 // CSP bloqueia CDN (cdnjs/jsdelivr): sem lib de scroll, ~30 linhas de JS puro.
 // Contrato reduced-motion (CLAUDE.md): o kill global de CSS zera transition/animation,
 // mas NÃO para animação guiada por scroll/JS — por isso todo consumidor deste motor
@@ -5439,10 +5486,41 @@ function scrollProgress(el,cb,opts){
       cesar=document.getElementById('lp-a2-cesar'),
       exp=document.getElementById('lp-a2-exp'),
       fill=document.getElementById('lp-a2-dominio-fill'),
-      pct=document.getElementById('lp-a2-dominio-pct');
+      pct=document.getElementById('lp-a2-dominio-pct'),
+      dica=document.getElementById('lp-a2-dica');
   if(!brasa||!elipse)return;
   var DASH=400,DOM_INI=41,DOM_FIM=58;
+  // PM1/M6.5 — A2 jogável: quem toca/clica resolve na hora; quem não toca, o scroll
+  // resolve sozinho como já fazia. resolvidoPeloToque trava o motor de scroll pra não
+  // reescrever por cima do estado que a pessoa já viu (senão o próximo scroll "desfaz"
+  // a resposta certa, porque o cálculo por progresso ainda não tinha chegado lá).
+  var resolvidoPeloToque=false;
+  function estadoFinal(){
+    brasa.classList.remove('show');brasa.classList.add('apagada');
+    errada.classList.remove('acesa');
+    elipse.style.strokeDashoffset='0';
+    certa.classList.add('circulada');
+    cesar.classList.add('reage');
+    exp.classList.add('show');
+    fill.style.width=DOM_FIM+'%';
+    pct.textContent=DOM_FIM+'%';
+  }
+  function tentarDeNovo(opt){
+    opt.classList.add('jog-errada');
+    vibrarFeedback(false);
+    if(dica){dica.classList.add('show');clearTimeout(dica._t);dica._t=setTimeout(function(){dica.classList.remove('show');},1100);}
+    setTimeout(function(){opt.classList.remove('jog-errada');},700);
+  }
+  document.querySelectorAll('#lp-a2 .lp-a2-opt').forEach(function(opt){
+    opt.style.cursor='pointer';
+    opt.addEventListener('click',function(){
+      if(resolvidoPeloToque)return;
+      if(opt===certa){resolvidoPeloToque=true;vibrarFeedback(true);estadoFinal();}
+      else tentarDeNovo(opt);
+    });
+  });
   scrollProgress(track,function(p){
+    if(resolvidoPeloToque)return; // já resolvido por toque — scroll não reescreve
     var brasaAcesa=p>=0.15&&p<0.55;
     brasa.classList.toggle('show',p>=0.15);
     brasa.classList.toggle('apagada',p>=0.55);
@@ -5498,6 +5576,59 @@ function scrollProgress(el,cb,opts){
     });
   },{threshold:.2,rootMargin:'0px 0px -40px 0px'});
   els.forEach(function(el){io.observe(el);});
+})();
+// PM1/M6.5 — respingo d'água no toque, só na vitrine. pointer-events:none no
+// respingo e listener passive: nunca bloqueia o toque nem o scroll (trava do
+// adendo). Checa e.pointerType por evento (não a mídia do aparelho como um todo),
+// que é o jeito certo de saber se ESTE toque especificamente foi um dedo.
+(function initToqueAgua(){
+  document.addEventListener('pointerdown',function(e){
+    if(e.pointerType!=='touch'||movimentoReduzido())return;
+    if(!e.target.closest('#landing-view,#login-view'))return;
+    var gota=document.createElement('div');
+    gota.className='lp-agua-gota';
+    gota.style.left=e.clientX+'px';
+    gota.style.top=e.clientY+'px';
+    document.body.appendChild(gota);
+    setTimeout(function(){gota.remove();},520);
+  },{passive:true});
+})();
+// PM1/M6.5 — cursor-brasa: só PC (pointer:fine) e só na vitrine. Throttle de 70ms
+// pra não inundar o DOM de faíscas num mousemove contínuo.
+(function initCursorBrasa(){
+  if(!matchMedia('(pointer:fine)').matches)return;
+  var ultimo=0;
+  document.addEventListener('mousemove',function(e){
+    if(movimentoReduzido())return;
+    if(!e.target.closest('#landing-view,#login-view'))return;
+    var agora=performance.now();
+    if(agora-ultimo<70)return;
+    ultimo=agora;
+    var faisca=document.createElement('div');
+    faisca.className='lp-brasa-faisca';
+    faisca.style.left=e.clientX+'px';
+    faisca.style.top=e.clientY+'px';
+    document.body.appendChild(faisca);
+    setTimeout(function(){faisca.remove();},620);
+  },{passive:true});
+})();
+// PM1/M6.5 — escada do caminhão = indicador de progresso da vitrine inteira. Fica
+// ATIVO mesmo com reduced-motion (é leitura de estado — quanto já rolei —, não
+// autoplay; a transição de largura já é curta o bastante pra não incomodar).
+(function initEscadaProgresso(){
+  var fill=document.getElementById('lp-escada-fill'),landing=document.getElementById('landing-view');
+  if(!fill||!landing)return;
+  var raf=null;
+  function calc(){
+    raf=null;
+    var total=landing.scrollHeight-innerHeight;
+    var p=total>0?Math.min(1,Math.max(0,-landing.getBoundingClientRect().top/total)):0;
+    fill.style.width=(p*100)+'%';
+  }
+  function onScroll(){if(raf==null)raf=requestAnimationFrame(calc);}
+  addEventListener('scroll',onScroll,{passive:true});
+  addEventListener('resize',onScroll,{passive:true});
+  calc();
 })();
 // PM1/M4 — A4: o caminhão anda pela rota (getPointAtLength, não interpolação linear
 // x/y — a rota curva, teria dessincronia visível). Cada parada acende com a MESMA cor
@@ -5980,7 +6111,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.322';
+const APP_VERSAO='v1.323';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -7696,6 +7827,7 @@ async function responderQuiz(idx){
   quizRespondidasSessao.add(quizIdx); // a partir daqui a função só chega ao fim (sem outro return)
   const correta=q._shuffledG!==undefined?q._shuffledG:q.g;
   const acertou=idx===correta;
+  vibrarFeedback(acertou); // PM1/M6.5
   const opts=document.querySelectorAll('.quiz-opt');
   opts.forEach((o,i)=>{
     o.style.pointerEvents='none';
@@ -8172,6 +8304,7 @@ async function avaliarCard(dif){
   if(!fc)return;                       // fila já esgotada — nada a avaliar
   const existing=userCards[fc.id]||{};
   const updated=fsrsCardUpdate(existing,dif);
+  vibrarFeedback(dif!=='dif'); // PM1/M6.5 — curto em med/fac, duplo em dif
   await saveCard(fc.id,updated);
   if(dif==='fac'){userStats.cardStreak=(userStats.cardStreak||0)+1;}
   else userStats.cardStreak=0;
