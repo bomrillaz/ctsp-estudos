@@ -71,6 +71,8 @@
   --nav-h:84px;--header-h:60px;
   --ease-out:cubic-bezier(0.16,1,0.3,1);
   --ease-spring:cubic-bezier(0.34,1.56,0.64,1);
+  /* PM1/M0: tokens de duração do plano de movimento. Reaproveitam os --ease-* acima. */
+  --dur-instant:120ms;--dur-fast:200ms;--dur-base:300ms;--dur-slow:500ms;--dur-cinema:800ms;
   --glass-bg:rgba(255,255,255,0.08);
   --glass-border:rgba(255,255,255,0.14);
   --font-display:'Barlow Condensed',-apple-system,'Helvetica Neue',Arial,sans-serif;
@@ -5051,6 +5053,35 @@ function planoAtual(){
   const p=userProfile&&userProfile.cob&&userProfile.cob.plano;
   return (p==='anual'||p==='mensal')?p:planoEscolhido();
 }
+// ═══════════════════════════════
+// PM1/M0 — motor de scroll para cenas pinadas da vitrine (Zona A)
+// ═══════════════════════════════
+// CSP bloqueia CDN (cdnjs/jsdelivr): sem lib de scroll, ~30 linhas de JS puro.
+// Contrato reduced-motion (CLAUDE.md): o kill global de CSS zera transition/animation,
+// mas NÃO para animação guiada por scroll/JS — por isso todo consumidor deste motor
+// recebe o estado final (progress=1) uma única vez e nunca liga o listener de scroll.
+function scrollProgress(el,cb,opts){
+  opts=opts||{};
+  if(!el||typeof cb!=='function')return function(){};
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches){cb(1);return function(){};}
+  var raf=null;
+  function calc(){
+    raf=null;
+    var r=el.getBoundingClientRect(),vh=innerHeight,total=r.height-vh,p;
+    if(total<=0)p=r.top<=0?1:0;
+    else p=Math.min(1,Math.max(0,(-r.top)/total));
+    cb(p);
+  }
+  function onScroll(){if(raf==null)raf=requestAnimationFrame(calc);}
+  addEventListener('scroll',onScroll,{passive:true});
+  addEventListener('resize',onScroll,{passive:true});
+  calc();
+  return function destroy(){
+    removeEventListener('scroll',onScroll);
+    removeEventListener('resize',onScroll);
+    if(raf!=null)cancelAnimationFrame(raf);
+  };
+}
 function verLanding(){
   const l=document.getElementById('landing-view'),v=document.getElementById('login-view');
   if(v)v.classList.add('hidden');
@@ -5473,7 +5504,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.313';
+const APP_VERSAO='v1.314';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
