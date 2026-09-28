@@ -802,8 +802,15 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 /* Quick actions */
 .quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
 .adapt-btn{display:flex;align-items:center;gap:12px;background:linear-gradient(140deg,var(--navy-2),var(--navy-deep));color:#fff;border-radius:16px;padding:14px 16px;margin-bottom:12px;cursor:pointer;box-shadow:var(--shadow-md);transition:transform .2s var(--ease-out);position:relative;overflow:hidden;}
-.adapt-btn::before{content:'';position:absolute;top:-40px;right:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(240,136,60,.06),transparent 75%);pointer-events:none;}
+.adapt-btn::before{content:'';position:absolute;top:-40px;right:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(240,136,60,.06),transparent 75%);pointer-events:none;opacity:1;transform:scale(1);}
 .adapt-btn:active{transform:scale(.98);}
+/* PM1/M5 (B3): "porta da sessão" respira — só o brilho decorativo (::before, já
+   existia) pulsa opacity/transform; o cartão em si não muda de tamanho, então não
+   afeta o layout ao redor nem o alvo medido pelo tour. */
+@media(prefers-reduced-motion:no-preference){
+  .adapt-btn.rec::before{animation:lp-b3-respira 3.6s var(--ease-out) infinite;}
+}
+@keyframes lp-b3-respira{0%,100%{opacity:.55;transform:scale(1);}50%{opacity:1;transform:scale(1.18);}}
 .adapt-btn-icon{font-size:26px;width:44px;height:44px;border-radius:12px;background:rgba(240,136,60,.14);border:1px solid rgba(240,136,60,.3);color:var(--ember);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .adapt-btn-icon svg{width:22px;height:22px;}
 .adapt-btn-info{flex:1;}
@@ -5964,7 +5971,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.319';
+const APP_VERSAO='v1.320';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -10051,6 +10058,11 @@ function renderDominio(){
   {const el=document.getElementById('kpi-cobertura');if(el)el.textContent=cobGeral===null?'—':cobGeral+'%';}
   // F2a: herói virou anel — número, faixa nomeada e cor vêm da mesma escala DOM_ESCALA da
   // barra de área (domFaixa/domCor). O CSS de .ring-fg já faz a transição suave sozinho.
+  // PM1/M5 (B1): no PRIMEIRO render da sessão, número e anel partem do valor da ÚLTIMA
+  // vez (localStorage, só apresentação — nunca grava no RTDB nem mexe no cálculo do
+  // BKT). Sem valor guardado (1º acesso/outro aparelho), cai no comportamento de
+  // sempre (animateCount/CSS partem de 0). Renders seguintes na mesma sessão já usam
+  // data-cv do próprio animateCount, este bloco não repete.
   {
     const numEl=document.getElementById('dominio-geral-num');
     const faixaEl=document.getElementById('dominio-geral-faixa');
@@ -10062,9 +10074,28 @@ function renderDominio(){
       if(ringEl){ringEl.style.stroke='var(--text3)';ringEl.style.strokeDashoffset=String(circ);}
     }else{
       const fx=domFaixa(geral);
-      if(numEl){numEl.style.color=fx.cor;animateCount(numEl,geral,'%');}
+      const primeiroRenderDaSessao=numEl&&!numEl.hasAttribute('data-cv');
+      let domAnterior=null;
+      if(primeiroRenderDaSessao){
+        try{const v=localStorage.getItem('domGeralAnterior');if(v!==null&&!isNaN(+v))domAnterior=+v;}catch(e){}
+      }
+      if(numEl){
+        numEl.style.color=fx.cor;
+        if(domAnterior!==null)numEl.setAttribute('data-cv',domAnterior);
+        animateCount(numEl,geral,'%');
+      }
       if(faixaEl)faixaEl.textContent=fx.rot;
-      if(ringEl){ringEl.style.stroke=fx.cor;ringEl.style.strokeDashoffset=String(circ*(1-geral/100));}
+      if(ringEl){
+        ringEl.style.stroke=fx.cor;
+        if(domAnterior!==null){
+          ringEl.style.transition='none';
+          ringEl.style.strokeDashoffset=String(circ*(1-domAnterior/100));
+          void ringEl.offsetWidth; // força reflow — sem isto o browser funde os dois sets e não anima
+          ringEl.style.transition='';
+        }
+        ringEl.style.strokeDashoffset=String(circ*(1-geral/100));
+      }
+      try{localStorage.setItem('domGeralAnterior',String(geral));}catch(e){}
     }
   }
   renderVereditos();
