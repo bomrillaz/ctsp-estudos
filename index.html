@@ -1770,17 +1770,17 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 /* ═══ PM1 — vitrine escura cinematográfica (decisão do João, b236) ═══
    Tokens redefinidos SÓ nestes containers — nunca via html[data-theme="dark"], que é
    do APP pós-login (tema claro é o padrão lá, decisão tema-claro-e-o-padrao). Todo
-   var(--surface)/var(--text)/var(--line-soft)/... que os componentes .lp-*/.auth-*/
+   var(--surface)/var(--text)/var(--line-soft)/... que os componentes .lp-*, .auth-*,
    .planos-* já usam herda sozinho; só os poucos hardcoded (.link-inline, .lp-btn-linha)
-   precisam de override explícito, abaixo.
-   ACHADO DO M3 (reportado para investigação separada, fora do escopo do PM1 caçar a
-   causa raiz): uma regra de tokens aqui NESTE <style> — não importa o seletor
-   (id, classe, :not()), a lista de declarações, nem a posição no arquivo — era
-   silenciosamente descartada pelo parser nativo da página (confirmado: sobrevive
-   isolada, sobrevive via injeção dinâmica de <style> depois do load, nunca sobrevive
-   no HTML servido). Contorno: os tokens vão no atributo style="" de #landing-view e
-   #login-view (caminho de parsing diferente, imune ao bug); só as regras DERIVADAS
-   (.link-inline/.lp-btn-linha) ficam aqui, e essas sempre parsearam normalmente. */
+   precisam de override explícito, abaixo. */
+.pm1-vitrine-escura{
+  --paper:#0B1430;--paper-2:#131B36;--surface:#17204A;--bg:#0B1430;
+  --text:#F3F0E8;--text2:#B7BED2;--text3:#8890AC;
+  --border:#2A3560;--line-soft:#222C52;
+  --shadow:0 2px 8px rgba(0,0,0,.3),0 10px 34px rgba(0,0,0,.4);
+  --shadow-md:0 4px 14px rgba(0,0,0,.36),0 18px 46px rgba(0,0,0,.48);
+  background:var(--paper);color:var(--text);
+}
 .pm1-vitrine-escura .link-inline{color:var(--ember);}
 .pm1-vitrine-escura .lp-btn-linha{border-color:rgba(255,255,255,.32);color:var(--text);}
 .pm1-vitrine-escura .lp-btn-linha:hover{background:rgba(255,255,255,.08);}
@@ -1847,6 +1847,23 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .lp-a2-dominio-pct{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--ember);font-variant-numeric:tabular-nums;}
 @media(prefers-reduced-motion:reduce){
   .lp-a2-cesar,.lp-a2-brasa,.lp-a2-exp,.lp-a2-dominio-fill{transition:none;}
+}
+
+/* ═══ PM1/M4 — A3 "a curva" ═══ */
+.lp-a3-curva-scene{position:relative;}
+.lp-a3-track{position:relative;height:170vh;}
+.lp-a3-stage{position:sticky;top:0;height:100vh;min-height:480px;display:flex;align-items:center;overflow:hidden;background:var(--paper);}
+.lp-a3-inner{width:100%;max-width:640px;margin:0 auto;padding:0 20px;text-align:center;}
+.lp-a3-svg{width:100%;height:auto;max-height:38vh;margin:20px 0 8px;overflow:visible;}
+.lp-a3-guia{fill:none;stroke:var(--line-soft);stroke-width:2;}
+.lp-a3-path{fill:none;stroke:var(--ember);stroke-width:3;stroke-linecap:round;}
+.lp-a3-dot{fill:var(--paper);stroke:var(--ember);stroke-width:2;opacity:.4;transition:opacity var(--dur-base) var(--ease-out),fill var(--dur-base) var(--ease-out);}
+.lp-a3-dot.atingido{fill:var(--ember);opacity:1;}
+.lp-a3-caption{font-size:13px;color:var(--text2);margin-top:4px;}
+.lp-stagger{opacity:0;transform:translateY(14px);transition:opacity var(--dur-slow) var(--ease-out),transform var(--dur-slow) var(--ease-out);}
+.lp-stagger.lp-in{opacity:1;transform:translateY(0);}
+@media(prefers-reduced-motion:reduce){
+  .lp-a3-dot,.lp-stagger{transition:none;}
 }
 </style>
 </head>
@@ -1922,7 +1939,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
      ═══════════════════════════════════════════════════════════════════════ -->
 <div id="auth-screen">
 
-<div id="landing-view" class="pm1-vitrine-escura" style="--paper:#0B1430;--paper-2:#131B36;--surface:#17204A;--bg:#0B1430;--text:#F3F0E8;--text2:#B7BED2;--text3:#8890AC;--border:#2A3560;--line-soft:#222C52;--shadow:0 2px 8px rgba(0,0,0,.3),0 10px 34px rgba(0,0,0,.4);--shadow-md:0 4px 14px rgba(0,0,0,.36),0 18px 46px rgba(0,0,0,.48);background:var(--paper);color:var(--text);">
+<div id="landing-view" class="pm1-vitrine-escura">
   <!-- Barra fixa: marca à esquerda, porta de entrada à direita. O login nunca
        fica a mais de um toque de distância, em qualquer ponto da rolagem. -->
   <header class="lp-topbar">
@@ -2027,23 +2044,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
   </section>
 
-  <!-- ── VÍDEO · APRESENTAÇÃO ──
-       b213: auto-hospedado (assets/apresentacao.mp4, H.264, ~10,5MB, transcodificado do MOV/HEVC
-       original em materiais/marca/videos/). Sem autoplay, preload="none" -- só carrega no toque.
-       NÃO entra no SHELL do sw.js: cache HTTP normal depois de assistido, não no precache do PWA. -->
-  <section class="lp-sec">
-    <div class="lp-sec-in">
-      <div class="lp-label">Vídeo de apresentação · 7 min</div>
-      <h2 class="lp-h2">Um passeio guiado pelas funcionalidades da plataforma.</h2>
-      <p class="lp-p">Sessão do dia, questões comentadas, flashcards, resumos e o painel de domínio por área, tudo mostrado na tela real do app.</p>
-      <div class="lp-video-card">
-        <video controls preload="none" playsinline poster="assets/apresentacao-poster.jpg">
-          <source src="assets/apresentacao.mp4" type="video/mp4">
-        </video>
-      </div>
-    </div>
-  </section>
-
   <!-- ── 01 · O QUE É ── -->
   <section class="lp-sec">
     <div class="lp-sec-in">
@@ -2102,24 +2102,47 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
   </section>
 
-  <!-- ── 04 · A CIÊNCIA ── -->
+  <!-- ── A3 "a curva" (PM1/M4) ──
+       Curva de Ebbinghaus desenhada no scroll (stroke-dashoffset): decai, cada
+       revisão levanta e ACHATA a decadência seguinte (3 ciclos, cada um mais lento
+       que o anterior). É a tese do produto, não enfeite — ver PLANO_apresentacao_e_
+       movimento.md §0.3. Os 3 cards da base científica ficam na seção normal logo
+       abaixo, com stagger de entrada (zona B: só opacity/transform, sem duplicar a
+       cena pinada nelas — testado em grid único no A1 e descartado por overflow). -->
+  <section class="lp-a3-curva-scene" id="lp-a3">
+    <div class="lp-a3-track" id="lp-a3-track">
+      <div class="lp-a3-stage">
+        <div class="lp-a3-inner">
+          <div class="lp-label">A base científica</div>
+          <h2 class="lp-h2">Não é opinião sobre como estudar. É o que a pesquisa já mostrou.</h2>
+          <svg class="lp-a3-svg" viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true">
+            <path class="lp-a3-guia" d="M0,20 C60,25 110,90 150,170 L150,50 C220,60 280,110 320,140 L320,35 C400,45 480,75 550,100 L550,25 C570,30 585,40 600,55"/>
+            <path class="lp-a3-path" id="lp-a3-path" d="M0,20 C60,25 110,90 150,170 L150,50 C220,60 280,110 320,140 L320,35 C400,45 480,75 550,100 L550,25 C570,30 585,40 600,55"/>
+            <circle class="lp-a3-dot" id="lp-a3-dot1" cx="150" cy="170" r="5"/>
+            <circle class="lp-a3-dot" id="lp-a3-dot2" cx="320" cy="140" r="5"/>
+            <circle class="lp-a3-dot" id="lp-a3-dot3" cx="550" cy="100" r="5"/>
+          </svg>
+          <div class="lp-a3-caption">Cada revisão levanta a curva. A queda seguinte é mais lenta que a anterior.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="lp-sec lp-sec-papel2 lp-sec-espacosa">
     <div class="lp-sec-in">
-      <div class="lp-label">A base científica</div>
-      <h2 class="lp-h2">Não é opinião sobre como estudar. É o que a pesquisa já mostrou.</h2>
       <p class="lp-p">Três achados consolidados da psicologia cognitiva sustentam cada decisão da plataforma.</p>
-      <div class="lp-ciencia">
-        <article class="lp-card lp-card-ciencia">
+      <div class="lp-ciencia" id="lp-ciencia-cards">
+        <article class="lp-card lp-card-ciencia lp-stagger">
           <div class="lp-tag">Curva do esquecimento</div>
           <h3>Conhecimento novo despenca em dias</h3>
           <p>Hermann Ebbinghaus mediu isso ainda no século XIX: o que você aprende hoje evapora rápido se não for revisitado, e a queda é mais forte logo no começo. A resposta não é estudar mais. É <b>voltar no momento certo</b>. A plataforma agenda a revisão para o ponto em que você está prestes a esquecer: antes disso é desperdício, depois disso é recomeço.</p>
         </article>
-        <article class="lp-card lp-card-ciencia">
+        <article class="lp-card lp-card-ciencia lp-stagger">
           <div class="lp-tag">Prática de recuperação</div>
           <h3>Lembrar fixa mais do que reler</h3>
           <p>Puxar a informação da memória fortalece o traço; reler dá a <b>sensação</b> de domínio sem entregar retenção. É por isso que a Prontidão pergunta em vez de mostrar, e por isso que o flashcard esconde a resposta até você tentar. O desconforto de tentar lembrar é o mecanismo, não um efeito colateral.</p>
         </article>
-        <article class="lp-card lp-card-ciencia">
+        <article class="lp-card lp-card-ciencia lp-stagger">
           <div class="lp-tag">Modelo adaptativo</div>
           <h3>BKT para medir, FSRS para agendar</h3>
           <p>O <b>BKT</b> estima a probabilidade de você dominar cada tópico, descontando o acerto por sorte e o erro por desatenção. Por isso ele não é a sua taxa de acerto. O <b>FSRS</b> calcula quando cada item precisa voltar, item por item. Juntos, montam a Sessão do dia sem que você precise decidir nada.</p>
@@ -2127,6 +2150,25 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       </div>
       <div class="lp-nota-honesta">
         <b>Sem mágica.</b> São modelos consagrados, não promessa de resultado: eles cortam desperdício de tempo e atrasam o esquecimento. Estudar, continua sendo com você.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── VÍDEO · APRESENTAÇÃO ──
+       b213: auto-hospedado (assets/apresentacao.mp4, H.264, ~10,5MB, transcodificado do MOV/HEVC
+       original em materiais/marca/videos/). Sem autoplay, preload="none" -- só carrega no toque.
+       NÃO entra no SHELL do sw.js: cache HTTP normal depois de assistido, não no precache do PWA.
+       PM1/M4 (decisão 6-B.5): desceu de logo-após-o-A1 para depois do A3 -- a curva
+       explica a tese antes do passeio guiado pelas telas. -->
+  <section class="lp-sec">
+    <div class="lp-sec-in">
+      <div class="lp-label">Vídeo de apresentação · 7 min</div>
+      <h2 class="lp-h2">Um passeio guiado pelas funcionalidades da plataforma.</h2>
+      <p class="lp-p">Sessão do dia, questões comentadas, flashcards, resumos e o painel de domínio por área, tudo mostrado na tela real do app.</p>
+      <div class="lp-video-card">
+        <video controls preload="none" playsinline poster="assets/apresentacao-poster.jpg">
+          <source src="assets/apresentacao.mp4" type="video/mp4">
+        </video>
       </div>
     </div>
   </section>
@@ -2332,7 +2374,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 })();
 </script>
 
-<div id="login-view" class="hidden pm1-vitrine-escura" style="--paper:#0B1430;--paper-2:#131B36;--surface:#17204A;--bg:#0B1430;--text:#F3F0E8;--text2:#B7BED2;--text3:#8890AC;--border:#2A3560;--line-soft:#222C52;--shadow:0 2px 8px rgba(0,0,0,.3),0 10px 34px rgba(0,0,0,.4);--shadow-md:0 4px 14px rgba(0,0,0,.36),0 18px 46px rgba(0,0,0,.48);background:var(--paper);color:var(--text);">
+<div id="login-view" class="hidden pm1-vitrine-escura">
   <picture>
     <source srcset="img/banner.webp" type="image/webp">
     <img class="auth-bg-img" src="img/banner.jpg" alt="" onerror="this.style.display='none'">
@@ -5281,6 +5323,47 @@ function scrollProgress(el,cb,opts){
     pct.textContent=domVal+'%';
   });
 })();
+// PM1/M4 — A3: a curva de esquecimento se desenha no scroll (stroke-dashoffset medido
+// via getTotalLength(), não chutado). Cada "revisão" (ponto) acende quando o traço a
+// alcança. Os 3 cards da base científica entram com stagger (função seguinte) na seção
+// normal abaixo — juntar as duas coisas na MESMA cena pinada reproduziria o overflow
+// do grid único do A1 (texto+conteúdo não cabem em 100vh no celular, achado do M3).
+(function initA3Scene(){
+  var track=document.getElementById('lp-a3-track'),path=document.getElementById('lp-a3-path');
+  if(!track||!path)return;
+  var len=path.getTotalLength();
+  path.style.strokeDasharray=String(len);
+  var dots=[
+    {el:document.getElementById('lp-a3-dot1'),p:0.32},
+    {el:document.getElementById('lp-a3-dot2'),p:0.62},
+    {el:document.getElementById('lp-a3-dot3'),p:0.88}
+  ];
+  scrollProgress(track,function(p){
+    path.style.strokeDashoffset=String(len*(1-p));
+    dots.forEach(function(d){if(d.el)d.el.classList.toggle('atingido',p>=d.p);});
+  });
+})();
+// PM1/M4 — stagger de entrada dos cards da base científica (zona B: só opacity/
+// transform, reaproveita o mesmo padrão de reveal por IntersectionObserver já usado
+// na landing inteira — ver script logo após #landing-view).
+(function initStagger(){
+  var els=document.querySelectorAll('.lp-stagger');
+  if(!els.length)return;
+  if(movimentoReduzido()||!('IntersectionObserver' in window)){
+    els.forEach(function(el){el.classList.add('lp-in');});
+    return;
+  }
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(!entry.isIntersecting)return;
+      var i=Array.prototype.indexOf.call(els,entry.target);
+      entry.target.style.transitionDelay=(Math.max(0,i%6)*60)+'ms';
+      entry.target.classList.add('lp-in');
+      io.unobserve(entry.target);
+    });
+  },{threshold:.2,rootMargin:'0px 0px -40px 0px'});
+  els.forEach(function(el){io.observe(el);});
+})();
 function verLanding(){
   const l=document.getElementById('landing-view'),v=document.getElementById('login-view');
   if(v)v.classList.add('hidden');
@@ -5703,7 +5786,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.315';
+const APP_VERSAO='v1.316';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
