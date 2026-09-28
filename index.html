@@ -141,17 +141,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 #loading p.fade-out{opacity:0;}
 #loading .welcome-text{position:absolute;z-index:2;bottom:12vh;color:white;font-size:22px;font-weight:800;letter-spacing:.02em;text-align:center;padding:0 32px;opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s ease;line-height:1.4;}
 #loading .welcome-text.show{opacity:1;transform:translateY(0);}
-/* PM1/M6.5 (opcional) — abertura alternativa: César pulsando sobre um brilho de
-   brasa. Reaproveita o próprio @keyframes pulse já usado no #loading img. */
-#loading-cesar-abertura{position:relative;display:flex;align-items:center;justify-content:center;z-index:1;}
-#loading-cesar-abertura img{width:min(220px,56vw);height:min(220px,56vw);object-fit:contain;
-  animation:pulse 1.5s ease-in-out infinite;position:relative;z-index:1;
-  transition:opacity .6s ease,transform .6s ease;}
-#loading-cesar-abertura img.fade-out{opacity:0;transform:scale(.85);}
-.loading-cesar-brasa{position:absolute;width:min(320px,78vw);height:min(320px,78vw);border-radius:50%;
-  background:radial-gradient(circle,rgba(240,136,60,.35),transparent 70%);
-  animation:lpCesarBrasaPulso 2.4s ease-in-out infinite;}
-@keyframes lpCesarBrasaPulso{0%,100%{opacity:.5;transform:scale(.92);}50%{opacity:.9;transform:scale(1.08);}}
 /* PS1 (b220): tela de erro do carregarConteudo() — reaproveita o #loading, nunca some
    sozinha (só via "Tentar de novo"). PS3/A1 (v17): #loading-renovacao é a mesma ideia
    pra quem venceu de verdade, com abrirPagamento()/doLogout() em vez de recarregar.
@@ -741,18 +730,6 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .ring-fg{fill:none;stroke:var(--ember);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .8s var(--ease-out);}
 .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .ring-pct{font-family:var(--font-display);font-size:15px;font-weight:700;color:white;line-height:1;}
-/* PM1/M6.5 (opcional, MEDIDOR_TANQUE) — mesma métrica do .ring-fg, metáfora de tanque
-   que enche. Casco NÃO reaproveita .ring-bg: aquele traço (branco 12%) some no cartão
-   claro do app pós-login — o anel não precisa da própria borda pra ler, o tanque precisa
-   (senão não parece um recipiente). y/height animam pela transition abaixo — geometria
-   SVG como propriedade CSS, suportado nos 3 motores atuais. */
-.tanque-casco{fill:none;stroke:var(--line-soft);stroke-width:3;}
-.tanque-agua{transition:y .8s var(--ease-out),height .8s var(--ease-out);}
-.tanque-onda{opacity:.6;}
-@media (prefers-reduced-motion: no-preference){
-.tanque-onda{animation:tanqueOnda 2.6s ease-in-out infinite;}
-}
-@keyframes tanqueOnda{0%,100%{opacity:.45;}50%{opacity:.8;}}
 
 /* Barra de progresso por área */
 .area-prog-fill{height:100%;border-radius:3px;transition:width .4s;}
@@ -1414,7 +1391,6 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .pg-hero-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:18px 16px;box-shadow:var(--shadow);margin-bottom:16px;}
 .pg-hero-ring-row{display:flex;align-items:center;gap:16px;}
 .pg-hero-ring{width:120px;height:120px;flex-shrink:0;}
-.pg-hero-tanque{width:120px;height:120px;flex-shrink:0;}
 .pg-hero-info{flex:1;min-width:0;}
 .pg-hero-label{font-size:13px;color:var(--text2);font-weight:700;letter-spacing:.02em;}
 .pg-hero-faixa{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--text);margin-top:4px;text-transform:uppercase;letter-spacing:.06em;}
@@ -2025,14 +2001,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <video id="loading-video" autoplay muted playsinline preload="auto" poster="assets/loading-poster.jpg">
     <source src="assets/loading.mp4" type="video/mp4">
   </video>
-  <!-- PM1/M6.5 (opcional, decisão do João) — abertura alternativa em SVG/César, sem
-       apagar o vídeo. LOADING_ABERTURA controla qual aparece; 'video' preserva o
-       comportamento de sempre e é o padrão. As telas de erro/renovação/e-mail já
-       escondem #loading-video; escondem esta também pelo mesmo seletor .hidden. -->
-  <div id="loading-cesar-abertura" class="hidden">
-    <div class="loading-cesar-brasa" aria-hidden="true"></div>
-    <img src="assets/cesar-coin.png" alt="">
-  </div>
   <div class="welcome-text" id="welcome-text">Bem-vindo,<br>vamos iniciar os estudos?</div>
   <p id="loading-sub">PRONTIDÃO · BOMRILLAZ</p>
   <div id="loading-erro-conteudo">
@@ -3144,20 +3112,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
                   <circle class="ring-fg" id="pg-hero-ring-fg" cx="60" cy="60" r="50" stroke-width="10" stroke-dasharray="314.16" stroke-dashoffset="314.16"/>
                 </svg>
                 <div class="ring-center"><div class="dominio-geral-pct" id="dominio-geral-num">0%</div></div>
-              </div>
-              <!-- PM1/M6.5 (opcional, decisão do João) — tanque d'água que enche, mesma
-                   métrica do anel ao lado. Atrás de MEDIDOR_TANQUE (padrão false) ou
-                   ?preview=tanque; sem a flag fica .hidden e nunca é atualizado. -->
-              <div class="pg-hero-tanque ring-container hidden" id="pg-hero-tanque" aria-hidden="true">
-                <svg class="tanque-svg" width="120" height="120" viewBox="0 0 120 120">
-                  <defs><clipPath id="tanque-clip"><rect x="25" y="10" width="70" height="100" rx="14"/></clipPath></defs>
-                  <rect class="tanque-casco" x="25" y="10" width="70" height="100" rx="14"/>
-                  <g clip-path="url(#tanque-clip)">
-                    <rect class="tanque-agua" id="pg-tanque-agua" x="17" y="110" width="86" height="0"/>
-                    <rect class="tanque-onda" id="pg-tanque-onda" x="13" y="107" width="94" height="6"/>
-                  </g>
-                </svg>
-                <div class="ring-center"><div class="dominio-geral-pct" id="dominio-geral-num-tanque">0%</div></div>
               </div>
               <div class="pg-hero-info">
                 <div class="pg-hero-label">de domínio geral <span class="info-btn" onclick="showInfo('dominio')" aria-label="O que é domínio geral">?</span></div>
@@ -6238,33 +6192,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.328';
-// PM1/M6.5 (opcional, decisão do João) — 'video' preserva o loading.mp4 de sempre;
-// 'cesar' troca pela abertura pulsando com o César. Não mexe em NENHUMA função de
-// erro/renovação/e-mail (elas continuam só escondendo loading-video; escondemos o
-// alternativo aqui, uma vez, no boot, sem duplicar lógica nelas).
-const LOADING_ABERTURA='video';
-// PM1/M6.5 (opcional, decisão do João) — tanque d'água no lugar do anel de domínio
-// da Home. Padrão false: renderDominio() nem toca nos elementos do tanque.
-const MEDIDOR_TANQUE=false;
-// PM1/M6.5 — ?preview=cesar / ?preview=tanque deixam o Opus mostrar as duas opcionais
-// pro João sem mexer em código (link pronto, ninguém precisa trocar flag e commitar).
-// Só leitura de location.search, nunca grava nada (nem localStorage, nem RTDB).
-const _previewParam=(function(){try{return new URLSearchParams(location.search).get('preview');}catch(e){return null;}})();
-const _aberturaCesarAtiva=LOADING_ABERTURA==='cesar'||_previewParam==='cesar';
-const _medidorTanqueAtivo=MEDIDOR_TANQUE||_previewParam==='tanque';
-(function initAberturaLoading(){
-  if(!_aberturaCesarAtiva)return;
-  const v=document.getElementById('loading-video'),c=document.getElementById('loading-cesar-abertura');
-  if(v)v.classList.add('hidden');
-  if(c)c.classList.remove('hidden');
-})();
-(function initMedidorTanque(){
-  if(!_medidorTanqueAtivo)return;
-  const r=document.querySelector('.pg-hero-ring'),t=document.getElementById('pg-hero-tanque');
-  if(r)r.classList.add('hidden');
-  if(t)t.classList.remove('hidden');
-})();
+const APP_VERSAO='v1.329';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -10496,26 +10424,6 @@ function renderDominio(){
         ringEl.style.strokeDashoffset=String(circ*(1-geral/100));
       }
       try{localStorage.setItem('ctsp_dom_geral_'+(currentUser?currentUser.uid:'anon'),String(geral));}catch(e){}
-    }
-  }
-  // PM1/M6.5 (opcional, MEDIDOR_TANQUE) — mesmo `geral` do anel, geometria do tanque
-  // fixa (corpo y:10→110, 100px de altura útil) definida junto do SVG no HTML. Sem a
-  // flag/?preview=tanque, nem entra aqui: zero custo no caminho padrão.
-  if(_medidorTanqueAtivo){
-    const aguaEl=document.getElementById('pg-tanque-agua');
-    const ondaEl=document.getElementById('pg-tanque-onda');
-    const numTanqueEl=document.getElementById('dominio-geral-num-tanque');
-    const TANQUE_BASE=110,TANQUE_ALT=100;
-    if(geral===null){
-      if(aguaEl){aguaEl.style.fill='var(--text3)';aguaEl.setAttribute('height','0');aguaEl.setAttribute('y',String(TANQUE_BASE));}
-      if(ondaEl){ondaEl.style.fill='var(--text3)';ondaEl.setAttribute('y',String(TANQUE_BASE-3));}
-      if(numTanqueEl){numTanqueEl.textContent='ainda medindo';numTanqueEl.removeAttribute('data-cv');numTanqueEl.style.color='';}
-    }else{
-      const fxT=domFaixa(geral);
-      const h=TANQUE_ALT*(geral/100),y=TANQUE_BASE-h;
-      if(aguaEl){aguaEl.style.fill=fxT.cor;aguaEl.setAttribute('height',String(h));aguaEl.setAttribute('y',String(y));}
-      if(ondaEl){ondaEl.style.fill=fxT.cor;ondaEl.setAttribute('y',String(y-3));}
-      if(numTanqueEl){numTanqueEl.style.color=fxT.cor;animateCount(numTanqueEl,geral,'%');}
     }
   }
   renderVereditos();
