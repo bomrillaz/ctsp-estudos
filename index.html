@@ -212,6 +212,15 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .quiz-opt.correta{animation:optPulse .45s var(--ease-out);}
 .quiz-opt.errada{animation:optShake .4s ease;}
 }
+/* PM1/M6 (C2): carimbo voando, JS controla left/top/transform/opacity direto (posição
+   calculada em runtime a partir de dois elementos reais, não dá pra fixar em CSS). */
+.lp-c2-carimbo{position:fixed;z-index:9999;pointer-events:none;left:0;top:0;
+  transform:translate(-50%,-50%);opacity:1;transition:transform .6s var(--ease-out),opacity .6s var(--ease-out);
+  font-family:var(--font-display);font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--red);border:2px solid var(--red);border-radius:6px;padding:3px 7px;background:rgba(255,255,255,.94);
+  white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.18);}
+@keyframes lpC2Pulso{0%,100%{transform:scale(1);}50%{transform:scale(1.35);}}
+.lp-c2-pulso{animation:lpC2Pulso .35s var(--ease-spring);}
 /* AUTH */
 /* b59: o #auth-screen virou só o CONTÊINER das duas vistas. O layout de "cartão
    colado no rodapé sobre a foto" desceu para o #login-view — é dele, não da tela. */
@@ -5971,7 +5980,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.321';
+const APP_VERSAO='v1.322';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -7137,6 +7146,40 @@ function updateBadges(){
   if(dueQ>0){bq.classList.remove('hidden');bq.textContent=dueQ;}else bq.classList.add('hidden');
 }
 
+// PM1/M6 (C2) — carimbo "VOLTA AMANHÃ" sai da alternativa errada e pousa no ícone
+// do Quiz (onde a fila de questões, incluindo revisão, mora — não existe um badge
+// dedicado só de "revisão FSRS" hoje). Só ensina o mecanismo (erro reagenda pro dia
+// seguinte, CLAUDE.md §6) — não grava nada, não atrasa o próximo toque (dispara e
+// esquece, a UI segue respondendo normalmente enquanto ele voa). Some sozinho se
+// não achar o alvo (ex.: badge oculto por CSS ainda existe no DOM, então isso não
+// deveria faltar, mas o guard fica pelo caminho).
+function voarCarimboRevisao(origemEl){
+  if(!origemEl||movimentoReduzido())return;
+  // badge-quiz some (display:none) quando a meta do dia já foi batida (updateBadges) —
+  // teria voado pro canto 0x0 sem este check de visibilidade real (offsetParent).
+  const badge=document.getElementById('badge-quiz');
+  const alvo=(badge&&badge.offsetParent!==null)?badge:document.getElementById('nav-quiz');
+  if(!alvo||alvo.offsetParent===null)return;
+  const r0=origemEl.getBoundingClientRect(),r1=alvo.getBoundingClientRect();
+  const carimbo=document.createElement('div');
+  carimbo.className='lp-c2-carimbo';
+  carimbo.textContent='Volta amanhã';
+  carimbo.style.left=(r0.left+r0.width/2)+'px';
+  carimbo.style.top=(r0.top+r0.height/2)+'px';
+  document.body.appendChild(carimbo);
+  const dx=(r1.left+r1.width/2)-(r0.left+r0.width/2);
+  const dy=(r1.top+r1.height/2)-(r0.top+r0.height/2);
+  requestAnimationFrame(()=>{
+    carimbo.style.transform=`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.25) rotate(10deg)`;
+    carimbo.style.opacity='0';
+  });
+  setTimeout(()=>{
+    carimbo.remove();
+    alvo.classList.add('lp-c2-pulso');
+    setTimeout(()=>alvo.classList.remove('lp-c2-pulso'),350);
+  },620);
+}
+
 // ═══════════════════════════════
 // QUIZ
 // ═══════════════════════════════
@@ -7657,7 +7700,7 @@ async function responderQuiz(idx){
   opts.forEach((o,i)=>{
     o.style.pointerEvents='none';
     if(i===correta)o.classList.add('correta');
-    if(i===idx&&!acertou)o.classList.add('errada');
+    if(i===idx&&!acertou){o.classList.add('errada');voarCarimboRevisao(o);} // PM1/M6 (C2)
   });
   quizSessao.t++;
   if(acertou){quizSessao.c++;userStats.correct=(userStats.correct||0)+1;}
