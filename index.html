@@ -5493,11 +5493,19 @@ function scrollProgress(el,cb,opts){
     cb(p);
   }
   function onScroll(){if(raf==null)raf=requestAnimationFrame(calc);}
-  addEventListener('scroll',onScroll,{passive:true});
+  // b238 (achado do Opus/review) — quem rola de verdade varia com largura/motor (mesma nota
+  // de irAoTopoDoConteudo() em :3536): no dev dominante hoje é o <body> (overflow-x:hidden em
+  // html,body força overflow-y:auto computado nos dois — CSS spec), e 'scroll' em elemento
+  // não-window não borbulha pra window. addEventListener em FASE DE CAPTURA no window pega o
+  // evento de QUALQUER scroller descendente (body, html, .app-content, etc.) porque a captura
+  // desce a árvore até o alvo antes do bubble — não depende de qual é o scroller real. Custo:
+  // calc() dispara também em scroll de container do app pós-login, mas é rAF-throttled e sai
+  // cedo no guard de rect zerado (elemento da vitrine com display:none/oculto).
+  addEventListener('scroll',onScroll,{passive:true,capture:true});
   addEventListener('resize',onScroll,{passive:true});
   calc();
   return function destroy(){
-    removeEventListener('scroll',onScroll);
+    removeEventListener('scroll',onScroll,{capture:true});
     removeEventListener('resize',onScroll);
     if(raf!=null)cancelAnimationFrame(raf);
   };
@@ -5703,7 +5711,9 @@ function scrollProgress(el,cb,opts){
     fill.style.width=(p*100)+'%';
   }
   function onScroll(){if(raf==null)raf=requestAnimationFrame(calc);}
-  addEventListener('scroll',onScroll,{passive:true});
+  // b238 — mesmo bug/fix do scrollProgress() acima: quem rola de verdade é o <body>
+  // (não window), captura no window pega de qualquer scroller descendente.
+  addEventListener('scroll',onScroll,{passive:true,capture:true});
   addEventListener('resize',onScroll,{passive:true});
   calc();
 })();
@@ -6194,7 +6204,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.329';
+const APP_VERSAO='v1.331';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
