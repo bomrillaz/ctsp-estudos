@@ -1896,6 +1896,18 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .lp-a4-legenda li.atingido{opacity:1;}
 @media(prefers-reduced-motion:reduce){.lp-a4-legenda li,.lp-a4-parada circle{transition:none;}}
 @media(min-width:640px){.lp-a4-svg{width:160px;}}
+
+/* ═══ PM1/M4 — A6 "faixa tipográfica" ═══ */
+.lp-a6-faixa{overflow:hidden;background:var(--navy-deep);padding:16px 0;white-space:nowrap;}
+.lp-a6-track{display:inline-flex;gap:22px;animation:lp-a6-scroll 16s linear infinite;will-change:transform;}
+.lp-a6-track span{font-family:var(--font-display);font-size:clamp(24px,6.4vw,42px);font-weight:700;
+  color:rgba(255,255,255,.88);letter-spacing:.01em;text-transform:uppercase;}
+.lp-a6-track span.lp-a6-pt{color:var(--ember);}
+@keyframes lp-a6-scroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+@media(prefers-reduced-motion:reduce){.lp-a6-track{animation:none;}}
+
+/* ═══ PM1/M4 — A5 "contadores" ═══ */
+.lp-numeros b{font-variant-numeric:tabular-nums;}
 </style>
 </head>
 <body>
@@ -2111,6 +2123,18 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
   </section>
 
+  <!-- ── A6 "faixa tipográfica" (PM1/M4) ──
+       Resume o ciclo do produto em 4 palavras, ritmo editorial entre seções. Puramente
+       rítmico (as mesmas 4 palavras já estão explicadas em prosa acima/abaixo) —
+       aria-hidden, decorativo mas com FUNÇÃO (nomeia o mecanismo, não é enfeite
+       aleatório). Looping por CSS puro, sem JS, congela com prefers-reduced-motion. -->
+  <div class="lp-a6-faixa" aria-hidden="true">
+    <div class="lp-a6-track">
+      <span>Responde</span><span class="lp-a6-pt">·</span><span>Erra</span><span class="lp-a6-pt">·</span><span>Volta</span><span class="lp-a6-pt">·</span><span>Fixa</span><span class="lp-a6-pt">·</span>
+      <span>Responde</span><span class="lp-a6-pt">·</span><span>Erra</span><span class="lp-a6-pt">·</span><span>Volta</span><span class="lp-a6-pt">·</span><span>Fixa</span><span class="lp-a6-pt">·</span>
+    </div>
+  </div>
+
   <!-- ── 03 · COMO FUNCIONA ── -->
   <section class="lp-sec">
     <div class="lp-sec-in">
@@ -2298,13 +2322,15 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <div class="lp-label lp-label-claro">Como foi feito</div>
       <h2 class="lp-h2 lp-h2-claro">Nasceu do caderno de quem está fazendo a mesma prova.</h2>
       <p class="lp-p lp-p-claro">A Prontidão começou como o material de estudo de um Bombeiro Militar do CBMRS se preparando para o próprio CTSP. Questões, resumos e flashcards são todos autorais, escritos a partir das mesmas normas que a prova cobra. O que era caderno virou plataforma quando ficou claro que o problema não era falta de conteúdo. Era falta de método.</p>
-      <!-- contagem-varia, ver nota em :25 -->
-      <div class="lp-numeros">
-        <div><b>533</b><span>questões no banco</span></div>
-        <div><b>174</b><span>flashcards</span></div>
-        <div><b>78</b><span>resumos</span></div>
-        <div><b>27</b><span>tópicos mapeados</span></div>
-        <div><b>5</b><span>áreas temáticas</span></div>
+      <!-- contagem-varia, ver nota em :25. PM1/M4 (A5): data-conta guarda o valor
+           real (SEO/no-JS já mostra o número certo); o JS só anima 0→valor quando a
+           faixa entra na tela. "2017–2025" fica de fora (não é contagem). -->
+      <div class="lp-numeros" id="lp-numeros">
+        <div><b data-conta="533">533</b><span>questões no banco</span></div>
+        <div><b data-conta="174">174</b><span>flashcards</span></div>
+        <div><b data-conta="78">78</b><span>resumos</span></div>
+        <div><b data-conta="27">27</b><span>tópicos mapeados</span></div>
+        <div><b data-conta="5">5</b><span>áreas temáticas</span></div>
         <div><b>2017–2025</b><span>provas analisadas</span></div>
       </div>
       <p class="lp-p lp-p-claro lp-p-mini">Toda questão e todo card têm botão de reportar erro. Correção de conteúdo furado vem antes de qualquer funcionalidade nova.</p>
@@ -5460,6 +5486,35 @@ function scrollProgress(el,cb,opts){
     });
   });
 })();
+// PM1/M4 — A5: números contam de 0 até o valor real (que já está no HTML — SEO e
+// no-JS não perdem nada) quando a faixa entra na tela, uma vez só.
+(function initA5Contadores(){
+  var els=document.querySelectorAll('#lp-numeros b[data-conta]');
+  if(!els.length)return;
+  if(movimentoReduzido()||!('IntersectionObserver' in window))return;
+  function anima(el){
+    var alvo=parseInt(el.dataset.conta,10);
+    if(!alvo)return;
+    var t0=null,dur=900;
+    function passo(ts){
+      if(t0===null)t0=ts;
+      var f=Math.min(1,(ts-t0)/dur);
+      var ease=1-Math.pow(1-f,3);
+      el.textContent=Math.round(alvo*ease);
+      if(f<1)requestAnimationFrame(passo);
+      else el.textContent=alvo;
+    }
+    requestAnimationFrame(passo);
+  }
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(!entry.isIntersecting)return;
+      anima(entry.target);
+      io.unobserve(entry.target);
+    });
+  },{threshold:.5});
+  els.forEach(function(el){io.observe(el);});
+})();
 function verLanding(){
   const l=document.getElementById('landing-view'),v=document.getElementById('login-view');
   if(v)v.classList.add('hidden');
@@ -5882,7 +5937,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.317';
+const APP_VERSAO='v1.318';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
