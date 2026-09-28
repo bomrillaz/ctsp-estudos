@@ -5499,7 +5499,16 @@ function scrollProgress(el,cb,opts){
   var raf=null;
   function calc(){
     raf=null;
-    var r=el.getBoundingClientRect(),vh=innerHeight,total=r.height-vh,p;
+    var r=el.getBoundingClientRect();
+    // Achado PM1/M6.5: calc() pode rodar com o elemento ainda sem layout (display:none
+    // na hora, ou script correndo no meio do parse, document.readyState=='loading') —
+    // getBoundingClientRect() volta {top:0,height:0,width:0}. Sem essa guarda, o ramo
+    // total<=0 abaixo lia isso como "already scrolled past" (r.top<=0) e mandava p=1
+    // pro caller — cena inteira abria já resolvida, sem o usuário ter rolado nada.
+    // rect zerado = ainda não dá pra medir progresso nenhum, não chama cb (estado
+    // visual fica no default do HTML/CSS até o próximo scroll/resize real).
+    if(r.width===0&&r.height===0)return;
+    var vh=innerHeight,total=r.height-vh,p;
     if(total<=0)p=r.top<=0?1:0;
     else p=Math.min(1,Math.max(0,(-r.top)/total));
     cb(p);
@@ -5766,6 +5775,12 @@ function verLanding(){
   }
   montarInstalarLanding();                         // b126: variante certa ao voltar do login
   irAoTopoDoConteudo();
+  // PM1/M6.5: a vitrine estava display:none (login-view em cima) — os calc() de
+  // scrollProgress() (A1-A4) e o da escada rodaram sem layout válido enquanto ela
+  // esteve escondida e não têm como saber sozinhos que voltou a ficar visível.
+  // Disparar 'resize' reusa o MESMO listener que scroll/resize já ligam (nenhuma
+  // função nova de refresh) e força um calc() correto agora que há layout de novo.
+  dispatchEvent(new Event('resize'));
 }
 // Quem chega deslogado cai na APRESENTAÇÃO, não no formulário. A única exceção é
 // o 'pending': ali a pessoa acabou de se cadastrar e precisa ver o aviso de
@@ -6182,7 +6197,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.326';
+const APP_VERSAO='v1.327';
 // PM1/M6.5 (opcional, decisão do João) — 'video' preserva o loading.mp4 de sempre;
 // 'cesar' troca pela abertura pulsando com o César. Não mexe em NENHUMA função de
 // erro/renovação/e-mail (elas continuam só escondendo loading-video; escondemos o
