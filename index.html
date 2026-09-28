@@ -314,7 +314,9 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .lp-fumaca{position:relative;height:0;pointer-events:none;--fumaca-img:none;}
 .lp-fumaca::before{content:'';position:absolute;left:0;right:0;top:-40px;height:80px;
   background-image:var(--fumaca-img);background-size:cover;background-repeat:no-repeat;
-  background-position:center;opacity:0;}
+  background-position:center;opacity:0;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 35%,#000 65%,transparent 100%);
+  mask-image:linear-gradient(to bottom,transparent 0,#000 35%,#000 65%,transparent 100%);}
 .lp-fumaca-b::before{transform:scaleX(-1);}
 .lp-fumaca-c::before{background-position:right center;}
 .lp-fumaca.lp-fumaca-in::before{opacity:.32;transition:opacity 1.1s ease-out;}
