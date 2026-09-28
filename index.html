@@ -1865,6 +1865,37 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 @media(prefers-reduced-motion:reduce){
   .lp-a3-dot,.lp-stagger{transition:none;}
 }
+
+/* ═══ PM1/M4 — A4 "a rota do edital" ═══
+   Círculo de cada parada usa as MESMAS cores --at1..--at5 do resto do app (grade de
+   áreas, home) — a rota fala a mesma língua visual que a pessoa já vai ver logada. */
+.lp-a4-rota-scene{position:relative;}
+.lp-a4-track{position:relative;height:240vh;}
+.lp-a4-stage{position:sticky;top:0;height:100vh;min-height:560px;display:flex;align-items:center;overflow:hidden;background:var(--paper);}
+.lp-a4-inner{width:100%;max-width:900px;margin:0 auto;padding:0 20px;}
+.lp-a4-grid{display:flex;gap:18px;align-items:center;margin-top:16px;}
+.lp-a4-svg{width:140px;flex-shrink:0;height:auto;max-height:58vh;overflow:visible;}
+.lp-a4-guia{fill:none;stroke:var(--line-soft);stroke-width:3;stroke-linecap:round;}
+.lp-a4-parada circle{fill:var(--paper);stroke-width:4;transition:fill var(--dur-base) var(--ease-out);}
+#lp-a4-p1 circle{stroke:var(--at1);}
+#lp-a4-p2 circle{stroke:var(--at2);}
+#lp-a4-p3 circle{stroke:var(--at3);}
+#lp-a4-p4 circle{stroke:var(--at4);}
+#lp-a4-p5 circle{stroke:var(--at5);}
+#lp-a4-p1.atingido circle{fill:var(--at1);}
+#lp-a4-p2.atingido circle{fill:var(--at2);}
+#lp-a4-p3.atingido circle{fill:var(--at3);}
+#lp-a4-p4.atingido circle{fill:var(--at4);}
+#lp-a4-p5.atingido circle{fill:var(--at5);}
+.lp-a4-truck{fill:var(--ember);}
+.lp-a4-truck .lp-a4-roda{fill:var(--paper);}
+.lp-a4-legenda{list-style:none;margin:0;padding:0;flex:1;display:flex;flex-direction:column;gap:16px;min-width:0;}
+.lp-a4-legenda li{opacity:.3;transition:opacity var(--dur-base) var(--ease-out);font-size:13.5px;color:var(--text2);
+  display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line-soft);padding-bottom:9px;}
+.lp-a4-legenda li b{font-family:var(--font-display);color:var(--text);letter-spacing:.04em;}
+.lp-a4-legenda li.atingido{opacity:1;}
+@media(prefers-reduced-motion:reduce){.lp-a4-legenda li,.lp-a4-parada circle{transition:none;}}
+@media(min-width:640px){.lp-a4-svg{width:160px;}}
 </style>
 </head>
 <body>
@@ -2099,6 +2130,45 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <div><h3>O dia seguinte se ajusta</h3><p>A sessão do dia vem nesta ordem: revisão vencida primeiro, tópico fraco depois, assunto novo por peso do edital.</p></div>
         </li>
       </ol>
+    </div>
+  </section>
+
+  <!-- ── A4 "a rota do edital" (PM1/M4) ──
+       5 áreas, tamanho do círculo pela COTA real (14/8/14/12/12 = 60 questões da
+       prova, CLAUDE.md §5) — não é decoração, é o mesmo número que "assunto novo
+       por peso do edital" no passo 3 usa de verdade. Caminhão percorre a rota no
+       scroll; ao alcançar cada parada, ela acende e o nome/cota aparecem. -->
+  <section class="lp-a4-rota-scene" id="lp-a4">
+    <div class="lp-a4-track" id="lp-a4-track">
+      <div class="lp-a4-stage">
+        <div class="lp-a4-inner">
+          <div class="lp-label">Como o edital pesa</div>
+          <h2 class="lp-h2">A dose de cada área segue a cota real da prova.</h2>
+          <div class="lp-a4-grid">
+            <svg class="lp-a4-svg" id="lp-a4-svg" viewBox="0 0 300 640" aria-hidden="true">
+              <path class="lp-a4-guia" d="M150,50 C60,90 60,160 110,200 C220,250 220,310 150,350 C60,390 60,460 110,500 C220,550 220,590 150,610"/>
+              <g class="lp-a4-parada" id="lp-a4-p1"><circle cx="150" cy="50" r="27"/></g>
+              <g class="lp-a4-parada" id="lp-a4-p2"><circle cx="110" cy="200" r="18"/></g>
+              <g class="lp-a4-parada" id="lp-a4-p3"><circle cx="150" cy="350" r="27"/></g>
+              <g class="lp-a4-parada" id="lp-a4-p4"><circle cx="110" cy="500" r="23"/></g>
+              <g class="lp-a4-parada" id="lp-a4-p5"><circle cx="150" cy="610" r="23"/></g>
+              <g class="lp-a4-truck" id="lp-a4-truck">
+                <rect x="-15" y="-9" width="30" height="13" rx="2"/>
+                <rect x="5" y="-15" width="10" height="7" rx="1"/>
+                <circle class="lp-a4-roda" cx="-8" cy="5" r="4"/>
+                <circle class="lp-a4-roda" cx="8" cy="5" r="4"/>
+              </g>
+            </svg>
+            <ul class="lp-a4-legenda" id="lp-a4-legenda">
+              <li id="lp-a4-l1"><b>AT1</b><span>14 questões</span></li>
+              <li id="lp-a4-l2"><b>AT2</b><span>8 questões</span></li>
+              <li id="lp-a4-l3"><b>AT3</b><span>14 questões</span></li>
+              <li id="lp-a4-l4"><b>AT4</b><span>12 questões</span></li>
+              <li id="lp-a4-l5"><b>AT5</b><span>12 questões</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -5364,6 +5434,32 @@ function scrollProgress(el,cb,opts){
   },{threshold:.2,rootMargin:'0px 0px -40px 0px'});
   els.forEach(function(el){io.observe(el);});
 })();
+// PM1/M4 — A4: o caminhão anda pela rota (getPointAtLength, não interpolação linear
+// x/y — a rota curva, teria dessincronia visível). Cada parada acende com a MESMA cor
+// --atN da área no resto do app quando o caminhão a alcança; a legenda acompanha.
+(function initA4Scene(){
+  var track=document.getElementById('lp-a4-track'),
+      guia=document.querySelector('#lp-a4-svg .lp-a4-guia'),
+      truck=document.getElementById('lp-a4-truck');
+  if(!track||!guia||!truck)return;
+  var len=guia.getTotalLength();
+  var paradas=[
+    {el:document.getElementById('lp-a4-p1'),leg:document.getElementById('lp-a4-l1'),p:0.02},
+    {el:document.getElementById('lp-a4-p2'),leg:document.getElementById('lp-a4-l2'),p:0.26},
+    {el:document.getElementById('lp-a4-p3'),leg:document.getElementById('lp-a4-l3'),p:0.51},
+    {el:document.getElementById('lp-a4-p4'),leg:document.getElementById('lp-a4-l4'),p:0.76},
+    {el:document.getElementById('lp-a4-p5'),leg:document.getElementById('lp-a4-l5'),p:0.99}
+  ];
+  scrollProgress(track,function(p){
+    var pt=guia.getPointAtLength(len*p);
+    truck.setAttribute('transform','translate('+pt.x.toFixed(1)+','+pt.y.toFixed(1)+')');
+    paradas.forEach(function(s){
+      var on=p>=s.p;
+      if(s.el)s.el.classList.toggle('atingido',on);
+      if(s.leg)s.leg.classList.toggle('atingido',on);
+    });
+  });
+})();
 function verLanding(){
   const l=document.getElementById('landing-view'),v=document.getElementById('login-view');
   if(v)v.classList.add('hidden');
@@ -5786,7 +5882,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.316';
+const APP_VERSAO='v1.317';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
