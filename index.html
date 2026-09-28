@@ -317,6 +317,23 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 }
 .lp-sec-papel2{background:var(--paper-2);}
 .lp-sec-escura{background:var(--navy);color:#fff;}
+/* PM1/6-D — fumaça decorativa nas junções entre .lp-sec. Elemento de altura 0 (zero
+   CLS): o ::before é que bleeda pro padding das duas seções vizinhas via position:absolute,
+   nunca sobre o texto (bleed calibrado pra caber dentro do padding-top/bottom do .lp-sec).
+   --fumaca-img só ganha valor via JS (initFumaca, perto de movimentoReduzido) quando a
+   junção se aproxima do viewport — sem isso a imagem nunca é baixada. */
+.lp-fumaca{position:relative;height:0;pointer-events:none;}
+.lp-fumaca::before{content:'';position:absolute;left:0;right:0;top:-40px;height:80px;
+  background-image:var(--fumaca-img,none);background-size:cover;background-repeat:no-repeat;
+  background-position:center;opacity:0;}
+.lp-fumaca-b::before{transform:scaleX(-1);}
+.lp-fumaca-c::before{background-position:right center;}
+.lp-fumaca.lp-fumaca-in::before{opacity:.32;transition:opacity 1.1s ease-out;}
+@supports (animation-timeline: view()){
+  .lp-fumaca.lp-fumaca-in::before{transition:none;animation:lpFumacaFade linear both;animation-timeline:view();animation-range:entry 10% cover 45%;}
+}
+@keyframes lpFumacaFade{from{opacity:0;}to{opacity:.32;}}
+@media(min-width:768px){.lp-fumaca::before{top:-60px;height:120px;}}
 .lp-label{font-family:var(--font-display);font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ember-text);margin-bottom:14px;}
 .lp-label-claro{color:var(--ember);}
 .lp-h2{font-family:var(--font-display);font-size:clamp(26px,6.4vw,40px);font-weight:700;line-height:1.08;color:var(--text);letter-spacing:.01em;margin-bottom:14px;}
@@ -2189,6 +2206,8 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
   </section>
 
+  <div class="lp-fumaca lp-fumaca-a" aria-hidden="true"></div>
+
   <!-- ── 01 · O QUE É ── -->
   <section class="lp-sec">
     <div class="lp-sec-in">
@@ -2418,6 +2437,8 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
   </section>
 
+  <div class="lp-fumaca lp-fumaca-c" aria-hidden="true"></div>
+
   <!-- ── 06 · COMO FOI FEITO ── -->
   <section class="lp-sec lp-sec-escura">
     <div class="lp-sec-in">
@@ -2526,6 +2547,8 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <button type="button" class="lp-btn-cta lp-inst-btn" onclick="instalarApp()">Instalar agora</button>
     </div>
   </section>
+
+  <div class="lp-fumaca lp-fumaca-b" aria-hidden="true"></div>
 
   <!-- ── CTA FINAL ── -->
   <section class="lp-cta-final">
@@ -5523,6 +5546,24 @@ function scrollProgress(el,cb,opts){
     if(raf!=null)cancelAnimationFrame(raf);
   };
 }
+// PM1/6-D — fumaça das junções .lp-fumaca (landing). Só entra aqui (depois de
+// movimentoReduzido já definido) porque o script de reveal da landing (inline, mais
+// acima no HTML) roda ANTES deste bloco carregar — chamar a função lá de cima daria
+// ReferenceError. --fumaca-img só ganha valor quando a junção se aproxima do viewport
+// (rootMargin 200px): sem isso o navegador nunca baixa o webp.
+(function initFumaca(){
+  var els=document.querySelectorAll('#landing-view .lp-fumaca');
+  if(!els.length||movimentoReduzido()||!('IntersectionObserver' in window))return;
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(!entry.isIntersecting)return;
+      entry.target.style.setProperty('--fumaca-img',"url('assets/fumaca-secao.webp')");
+      entry.target.classList.add('lp-fumaca-in');
+      io.unobserve(entry.target);
+    });
+  },{rootMargin:'200px 0px 200px 0px'});
+  els.forEach(function(el){io.observe(el);});
+})();
 // PM1/M3 — A1: o celular cresce e troca de tela (home→quiz→card, capturas REAIS do
 // app) conforme o scroll da cena avança. Sem CSS scroll-driven animation (Firefox
 // ainda atrás de flag em 2026, ficaria sem nada) — scrollProgress() cobre os três motores.
@@ -6197,7 +6238,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.327';
+const APP_VERSAO='v1.328';
 // PM1/M6.5 (opcional, decisão do João) — 'video' preserva o loading.mp4 de sempre;
 // 'cesar' troca pela abertura pulsando com o César. Não mexe em NENHUMA função de
 // erro/renovação/e-mail (elas continuam só escondendo loading-video; escondemos o
