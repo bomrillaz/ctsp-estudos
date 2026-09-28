@@ -311,9 +311,9 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
    nunca sobre o texto (bleed calibrado pra caber dentro do padding-top/bottom do .lp-sec).
    --fumaca-img só ganha valor via JS (initFumaca, perto de movimentoReduzido) quando a
    junção se aproxima do viewport — sem isso a imagem nunca é baixada. */
-.lp-fumaca{position:relative;height:0;pointer-events:none;}
+.lp-fumaca{position:relative;height:0;pointer-events:none;--fumaca-img:none;}
 .lp-fumaca::before{content:'';position:absolute;left:0;right:0;top:-40px;height:80px;
-  background-image:var(--fumaca-img,none);background-size:cover;background-repeat:no-repeat;
+  background-image:var(--fumaca-img);background-size:cover;background-repeat:no-repeat;
   background-position:center;opacity:0;}
 .lp-fumaca-b::before{transform:scaleX(-1);}
 .lp-fumaca-c::before{background-position:right center;}
