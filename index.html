@@ -141,6 +141,17 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 #loading p.fade-out{opacity:0;}
 #loading .welcome-text{position:absolute;z-index:2;bottom:12vh;color:white;font-size:22px;font-weight:800;letter-spacing:.02em;text-align:center;padding:0 32px;opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s ease;line-height:1.4;}
 #loading .welcome-text.show{opacity:1;transform:translateY(0);}
+/* PM1/M6.5 (opcional) — abertura alternativa: César pulsando sobre um brilho de
+   brasa. Reaproveita o próprio @keyframes pulse já usado no #loading img. */
+#loading-cesar-abertura{position:relative;display:flex;align-items:center;justify-content:center;z-index:1;}
+#loading-cesar-abertura img{width:min(220px,56vw);height:min(220px,56vw);object-fit:contain;
+  animation:pulse 1.5s ease-in-out infinite;position:relative;z-index:1;
+  transition:opacity .6s ease,transform .6s ease;}
+#loading-cesar-abertura img.fade-out{opacity:0;transform:scale(.85);}
+.loading-cesar-brasa{position:absolute;width:min(320px,78vw);height:min(320px,78vw);border-radius:50%;
+  background:radial-gradient(circle,rgba(240,136,60,.35),transparent 70%);
+  animation:lpCesarBrasaPulso 2.4s ease-in-out infinite;}
+@keyframes lpCesarBrasaPulso{0%,100%{opacity:.5;transform:scale(.92);}50%{opacity:.9;transform:scale(1.08);}}
 /* PS1 (b220): tela de erro do carregarConteudo() — reaproveita o #loading, nunca some
    sozinha (só via "Tentar de novo"). PS3/A1 (v17): #loading-renovacao é a mesma ideia
    pra quem venceu de verdade, com abrirPagamento()/doLogout() em vez de recarregar.
@@ -209,7 +220,7 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 @keyframes optPulse{0%{transform:scale(1);}40%{transform:scale(1.02);}100%{transform:scale(1);}}
 @keyframes optShake{0%,100%{transform:translateX(0);}20%{transform:translateX(-5px);}40%{transform:translateX(5px);}60%{transform:translateX(-3px);}80%{transform:translateX(3px);}}
 @media (prefers-reduced-motion: no-preference){
-.quiz-opt.correta{animation:optPulse .45s var(--ease-out);}
+.quiz-opt.correta{animation:optPulse .12s var(--ease-out);}
 .quiz-opt.errada{animation:optShake .4s ease;}
 }
 /* PM1/M6 (C2): carimbo voando, JS controla left/top/transform/opacity direto (posição
@@ -1976,6 +1987,14 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <video id="loading-video" autoplay muted playsinline preload="auto" poster="assets/loading-poster.jpg">
     <source src="assets/loading.mp4" type="video/mp4">
   </video>
+  <!-- PM1/M6.5 (opcional, decisão do João) — abertura alternativa em SVG/César, sem
+       apagar o vídeo. LOADING_ABERTURA controla qual aparece; 'video' preserva o
+       comportamento de sempre e é o padrão. As telas de erro/renovação/e-mail já
+       escondem #loading-video; escondem esta também pelo mesmo seletor .hidden. -->
+  <div id="loading-cesar-abertura" class="hidden">
+    <div class="loading-cesar-brasa" aria-hidden="true"></div>
+    <img src="assets/cesar-coin.png" alt="">
+  </div>
   <div class="welcome-text" id="welcome-text">Bem-vindo,<br>vamos iniciar os estudos?</div>
   <p id="loading-sub">PRONTIDÃO · BOMRILLAZ</p>
   <div id="loading-erro-conteudo">
@@ -2124,7 +2143,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="lp-a2-card">
           <div class="lp-a2-head">
             <span class="lp-a2-tag">Exemplo · Suporte Básico de Vida</span>
-            <img class="lp-a2-cesar" id="lp-a2-cesar" src="assets/cesar-coin.png" alt="" aria-hidden="true" onerror="this.style.display='none'">
+            <img class="lp-a2-cesar" id="lp-a2-cesar" src="assets/cesar-coin.png" data-comemora="assets/cesar-coin-comemora.png" alt="" aria-hidden="true" onerror="this.style.display='none'">
           </div>
           <p class="lp-a2-enun">Durante o atendimento a uma vítima consciente com sangramento intenso em membro superior, qual é a primeira conduta indicada?</p>
           <div class="lp-a2-opts">
@@ -5494,13 +5513,24 @@ function scrollProgress(el,cb,opts){
   // resolve sozinho como já fazia. resolvidoPeloToque trava o motor de scroll pra não
   // reescrever por cima do estado que a pessoa já viu (senão o próximo scroll "desfaz"
   // a resposta certa, porque o cálculo por progresso ainda não tinha chegado lá).
-  var resolvidoPeloToque=false;
+  var resolvidoPeloToque=false,cesarTrocado=false;
+  // PM1/M6.5 (opcional) — troca pra pose de comemoração SE o arquivo existir; sem
+  // ele, fica a imagem original (cesar-coin.png) + o wobble de transform que já
+  // tinha. Pré-carrega antes de trocar pra nunca mostrar um <img> quebrado.
+  function trocarCesarComemora(){
+    if(cesarTrocado||!cesar||!cesar.dataset.comemora)return;
+    cesarTrocado=true;
+    var alt=cesar.dataset.comemora,teste=new Image();
+    teste.onload=function(){cesar.src=alt;};
+    teste.src=alt;
+  }
   function estadoFinal(){
     brasa.classList.remove('show');brasa.classList.add('apagada');
     errada.classList.remove('acesa');
     elipse.style.strokeDashoffset='0';
     certa.classList.add('circulada');
     cesar.classList.add('reage');
+    trocarCesarComemora();
     exp.classList.add('show');
     fill.style.width=DOM_FIM+'%';
     pct.textContent=DOM_FIM+'%';
@@ -5529,6 +5559,7 @@ function scrollProgress(el,cb,opts){
     elipse.style.strokeDashoffset=String(DASH*(1-penP));
     certa.classList.toggle('circulada',penP>0.05);
     cesar.classList.toggle('reage',p>=0.55);
+    if(p>=0.55)trocarCesarComemora();
     exp.classList.toggle('show',p>=0.72);
     var domP=Math.min(1,Math.max(0,(p-0.70)/0.30));
     var domVal=Math.round(DOM_INI+(DOM_FIM-DOM_INI)*domP);
@@ -6111,7 +6142,18 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.323';
+const APP_VERSAO='v1.324';
+// PM1/M6.5 (opcional, decisão do João) — 'video' preserva o loading.mp4 de sempre;
+// 'cesar' troca pela abertura pulsando com o César. Não mexe em NENHUMA função de
+// erro/renovação/e-mail (elas continuam só escondendo loading-video; escondemos o
+// alternativo aqui, uma vez, no boot, sem duplicar lógica nelas).
+const LOADING_ABERTURA='video';
+(function initAberturaLoading(){
+  if(LOADING_ABERTURA!=='cesar')return;
+  const v=document.getElementById('loading-video'),c=document.getElementById('loading-cesar-abertura');
+  if(v)v.classList.add('hidden');
+  if(c)c.classList.remove('hidden');
+})();
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
