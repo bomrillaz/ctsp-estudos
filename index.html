@@ -1981,14 +1981,26 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .lp-a4-fecho b{color:var(--ember-text);}
 @media(prefers-reduced-motion:reduce){.lp-a4-linha-topo,.lp-a4-fecho{transition:none;}}
 
-/* ═══ PM1/M4 — A6 "faixa tipográfica" ═══ */
-.lp-a6-faixa{overflow:hidden;background:var(--navy-deep);padding:16px 0;white-space:nowrap;}
-.lp-a6-track{display:inline-flex;gap:22px;animation:lp-a6-scroll 32s linear infinite;will-change:transform;}
-.lp-a6-track span{font-family:var(--font-display);font-size:clamp(24px,6.4vw,42px);font-weight:700;
-  color:rgba(255,255,255,.88);letter-spacing:.01em;text-transform:uppercase;}
-.lp-a6-track span.lp-a6-pt{color:var(--ember);}
-@keyframes lp-a6-scroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
-@media(prefers-reduced-motion:reduce){.lp-a6-track{animation:none;}}
+/* ═══ M4 — A8 "faixa do edital" (substitui a A6) ═══
+   3 faixas de texto puro CSS, sentidos opostos, conteúdo real (áreas via AI, fontes
+   oficiais via CLAUDE.md §5). Padrão de largura de faixa sem gutter lateral (texto
+   flui borda-a-borda, igual à extinta A6) — é ticker, não bloco de conteúdo. */
+.lp-a8-faixas{background:var(--navy-deep);padding:20px 0;display:flex;flex-direction:column;gap:10px;overflow:hidden;}
+.lp-a8-linha{overflow:hidden;white-space:nowrap;}
+.lp-a8-track{display:inline-flex;gap:22px;will-change:transform;animation-play-state:paused;}
+.lp-a8-esq .lp-a8-track{animation:lp-a8-esq 38s linear infinite;}
+.lp-a8-dir .lp-a8-track{animation:lp-a8-dir 44s linear infinite;}
+.lp-a8-mini .lp-a8-track{animation:lp-a8-esq 26s linear infinite;}
+.lp-a8-track span{font-family:var(--font-display);font-size:clamp(16px,3.2vw,22px);font-weight:700;
+  letter-spacing:.02em;text-transform:uppercase;color:rgba(255,255,255,.85);}
+.lp-a8-dir .lp-a8-track span{color:var(--ember);}
+.lp-a8-mini .lp-a8-track span{font-size:clamp(11px,2vw,13px);font-weight:600;color:rgba(255,255,255,.4);letter-spacing:.08em;}
+.lp-a8-track span.lp-a8-pt{color:rgba(255,255,255,.35);}
+.lp-a8-dir .lp-a8-track span.lp-a8-pt{color:rgba(240,136,60,.5);}
+.lp-a8-faixas.lp-a8-ativa .lp-a8-track{animation-play-state:running;}
+@keyframes lp-a8-esq{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+@keyframes lp-a8-dir{from{transform:translateX(-50%);}to{transform:translateX(0);}}
+@media(prefers-reduced-motion:reduce){.lp-a8-track{animation:none!important;}}
 
 /* ═══ PM1/M4 — A5 "contadores" ═══ */
 .lp-numeros b{font-variant-numeric:tabular-nums;}
@@ -2257,17 +2269,36 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
   </section>
 
-  <!-- ── A6 "faixa tipográfica" (PM1/M4) ──
-       Resume o ciclo do produto em 4 palavras, ritmo editorial entre seções. Puramente
-       rítmico (as mesmas 4 palavras já estão explicadas em prosa acima/abaixo) —
-       aria-hidden, decorativo mas com FUNÇÃO (nomeia o mecanismo, não é enfeite
-       aleatório). Looping por CSS puro, sem JS, congela com prefers-reduced-motion. -->
-  <div class="lp-a6-faixa" aria-hidden="true">
-    <div class="lp-a6-track">
-      <span>Responde</span><span class="lp-a6-pt">·</span><span>Erra</span><span class="lp-a6-pt">·</span><span>Volta</span><span class="lp-a6-pt">·</span><span>Fixa</span><span class="lp-a6-pt">·</span>
-      <span>Responde</span><span class="lp-a6-pt">·</span><span>Erra</span><span class="lp-a6-pt">·</span><span>Volta</span><span class="lp-a6-pt">·</span><span>Fixa</span><span class="lp-a6-pt">·</span>
-      <span>Responde</span><span class="lp-a6-pt">·</span><span>Erra</span><span class="lp-a6-pt">·</span><span>Volta</span><span class="lp-a6-pt">·</span><span>Fixa</span><span class="lp-a6-pt">·</span>
-      <span>Responde</span><span class="lp-a6-pt">·</span><span>Erra</span><span class="lp-a6-pt">·</span><span>Volta</span><span class="lp-a6-pt">·</span><span>Fixa</span><span class="lp-a6-pt">·</span>
+  <!-- ── A8 "faixa do edital" (M4) ──
+       Substitui a A6 (decisão do João, b243): mesma técnica de faixa em CSS puro,
+       conteúdo real em vez de palavras genéricas — nomes das 5 áreas (fonte AI, a
+       mesma do A4) e referências normativas já verificadas em CLAUDE.md §5 (nada
+       inventado). 3 faixas em sentidos opostos (motivo aprovado no M0). Diferente da
+       A6: pausa fora da tela e com a aba oculta via IntersectionObserver dedicado
+       (visibilidade, não é o motor de scroll — _scrollCenas fica de fora, "sem
+       listener novo" vale pro scroll). Sem travessão: separador "·".
+       materiais/entregas/planos/PLANO_motion_e_bombeiro.md. -->
+  <div class="lp-a8-faixas" id="lp-a8-faixas" aria-hidden="true">
+    <div class="lp-a8-linha lp-a8-esq">
+      <div class="lp-a8-track">
+        <span>Segurança Contra Incêndios</span><span class="lp-a8-pt">·</span><span>Combate a Incêndios</span><span class="lp-a8-pt">·</span><span>Buscas e Salvamentos</span><span class="lp-a8-pt">·</span><span>Direito Institucional</span><span class="lp-a8-pt">·</span><span>Normas Administrativas</span><span class="lp-a8-pt">·</span>
+        <span>Segurança Contra Incêndios</span><span class="lp-a8-pt">·</span><span>Combate a Incêndios</span><span class="lp-a8-pt">·</span><span>Buscas e Salvamentos</span><span class="lp-a8-pt">·</span><span>Direito Institucional</span><span class="lp-a8-pt">·</span><span>Normas Administrativas</span><span class="lp-a8-pt">·</span>
+        <span>Segurança Contra Incêndios</span><span class="lp-a8-pt">·</span><span>Combate a Incêndios</span><span class="lp-a8-pt">·</span><span>Buscas e Salvamentos</span><span class="lp-a8-pt">·</span><span>Direito Institucional</span><span class="lp-a8-pt">·</span><span>Normas Administrativas</span><span class="lp-a8-pt">·</span>
+      </div>
+    </div>
+    <div class="lp-a8-linha lp-a8-dir">
+      <div class="lp-a8-track">
+        <span>Edital 004/ABM-DENS/2025</span><span class="lp-a8-pt">·</span><span>Constituição Estadual CE/RS</span><span class="lp-a8-pt">·</span><span>Emenda 67/14</span><span class="lp-a8-pt">·</span><span>Emenda 73/17</span><span class="lp-a8-pt">·</span><span>Emenda 82/22</span><span class="lp-a8-pt">·</span>
+        <span>Edital 004/ABM-DENS/2025</span><span class="lp-a8-pt">·</span><span>Constituição Estadual CE/RS</span><span class="lp-a8-pt">·</span><span>Emenda 67/14</span><span class="lp-a8-pt">·</span><span>Emenda 73/17</span><span class="lp-a8-pt">·</span><span>Emenda 82/22</span><span class="lp-a8-pt">·</span>
+        <span>Edital 004/ABM-DENS/2025</span><span class="lp-a8-pt">·</span><span>Constituição Estadual CE/RS</span><span class="lp-a8-pt">·</span><span>Emenda 67/14</span><span class="lp-a8-pt">·</span><span>Emenda 73/17</span><span class="lp-a8-pt">·</span><span>Emenda 82/22</span><span class="lp-a8-pt">·</span>
+      </div>
+    </div>
+    <div class="lp-a8-linha lp-a8-mini">
+      <div class="lp-a8-track">
+        <span>AT1</span><span class="lp-a8-pt">·</span><span>AT2</span><span class="lp-a8-pt">·</span><span>AT3</span><span class="lp-a8-pt">·</span><span>AT4</span><span class="lp-a8-pt">·</span><span>AT5</span><span class="lp-a8-pt">·</span>
+        <span>AT1</span><span class="lp-a8-pt">·</span><span>AT2</span><span class="lp-a8-pt">·</span><span>AT3</span><span class="lp-a8-pt">·</span><span>AT4</span><span class="lp-a8-pt">·</span><span>AT5</span><span class="lp-a8-pt">·</span>
+        <span>AT1</span><span class="lp-a8-pt">·</span><span>AT2</span><span class="lp-a8-pt">·</span><span>AT3</span><span class="lp-a8-pt">·</span><span>AT4</span><span class="lp-a8-pt">·</span><span>AT5</span><span class="lp-a8-pt">·</span>
+      </div>
     </div>
   </div>
 
@@ -6140,6 +6171,29 @@ function scrollProgress(el,cb,opts){
   },{threshold:.5});
   els.forEach(function(el){io.observe(el);});
 })();
+// M4 — A8: pausa a faixa fora da tela e com a aba oculta (IntersectionObserver
+// dedicado à visibilidade — não é o motor de scroll, _scrollCenas fica de fora,
+// "sem listener novo" vale pro scroll). CSS cobre prefers-reduced-motion sozinho;
+// aqui cobrimos também saveData, que a media query não pega.
+(function initA8Faixas(){
+  var el=document.getElementById('lp-a8-faixas');
+  if(!el)return;
+  var saveData=!!(navigator.connection&&navigator.connection.saveData);
+  var visivel=false;
+  function aplicar(){
+    el.classList.toggle('lp-a8-ativa',visivel&&!document.hidden&&!movimentoReduzido()&&!saveData);
+  }
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(function(entries){
+      visivel=entries[entries.length-1].isIntersecting;
+      aplicar();
+    },{threshold:0.01}).observe(el);
+  } else {
+    visivel=true;
+  }
+  document.addEventListener('visibilitychange',aplicar);
+  aplicar();
+})();
 function verLanding(){
   const l=document.getElementById('landing-view'),v=document.getElementById('login-view');
   if(_a7Timer){clearTimeout(_a7Timer);_a7Timer=null;}  // ver nota em verLogin()
@@ -6572,7 +6626,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.340';
+const APP_VERSAO='v1.341';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
