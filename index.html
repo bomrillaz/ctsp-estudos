@@ -207,10 +207,8 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important;}}
 @keyframes navPop{0%{transform:scale(.8);}60%{transform:scale(1.15);}100%{transform:scale(1);}}
 @keyframes optPulse{0%{transform:scale(1);}40%{transform:scale(1.02);}100%{transform:scale(1);}}
-@keyframes optShake{0%,100%{transform:translateX(0);}20%{transform:translateX(-5px);}40%{transform:translateX(5px);}60%{transform:translateX(-3px);}80%{transform:translateX(3px);}}
 @media (prefers-reduced-motion: no-preference){
 .quiz-opt.correta{animation:optPulse .12s var(--ease-out);}
-.quiz-opt.errada{animation:optShake .4s ease;}
 }
 /* PM1/M6 (C2): carimbo voando, JS controla left/top/transform/opacity direto (posição
    calculada em runtime a partir de dois elementos reais, não dá pra fixar em CSS). */
@@ -418,7 +416,7 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .planos-wrap{background:var(--paper);width:100%;max-width:480px;margin:0 auto;padding:26px 22px 34px;}
 .planos-sub{font-size:12.5px;color:var(--text2);line-height:1.55;text-align:center;margin:8px 0 20px;}
 .planos-grid{display:flex;flex-direction:column;gap:12px;}
-.plano-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:18px 16px;box-shadow:var(--shadow);position:relative;}
+.plano-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:18px 16px;box-shadow:var(--shadow);position:relative;display:flex;flex-direction:column;}
 .plano-destaque{border:2px solid var(--ember);box-shadow:var(--shadow-md);}
 .plano-selo{position:absolute;top:-10px;left:16px;background:var(--ember);color:#fff;font-size:9.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;padding:4px 10px;border-radius:20px;}
 .plano-nome{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--text);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;}
@@ -429,8 +427,8 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .plano-lista{list-style:none;margin:12px 0 14px;padding:0;}
 .plano-lista li{font-size:12.5px;color:var(--text);line-height:1.5;padding-left:19px;position:relative;margin-bottom:7px;}
 .plano-lista li::before{content:'✓';position:absolute;left:0;color:var(--green);font-weight:800;}
-.plano-btn-weak{width:100%;}
-.plano-btn-cta{width:100%;}
+.plano-btn-weak{width:100%;margin-top:auto;}
+.plano-btn-cta{width:100%;margin-top:auto;}
 .planos-trial{font-size:12.5px;color:var(--green);line-height:1.55;text-align:center;background:var(--green-light);border-radius:12px;padding:12px 14px;margin-top:14px;}
 .planos-aviso{font-size:11px;color:var(--text2);line-height:1.55;margin-top:12px;padding:11px 13px;background:var(--paper-2);border-radius:10px;}
 .planos-links{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;margin-top:16px;font-size:12px;}
@@ -1707,7 +1705,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   .lp-passos{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
   .lp-passos li{border-top:none;border-left:2px solid var(--line-soft);padding:2px 0 2px 16px;flex-direction:column;gap:10px;}
   .lp-cta-final{padding:80px 0;}
-  .planos-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;}
+  .planos-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
   .doc-overlay{align-items:center;padding:24px;}
   .doc-box{border-radius:20px;max-height:80vh;}
   /* A1 — CTA dos hubs (Quiz/Cards/Resumos) proporcional à coluna desktop, sem mexer no .btn-weak global */
@@ -1898,12 +1896,13 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .lp-a2-dominio-fill{height:100%;width:41%;border-radius:4px;background:var(--fire-line);transition:width var(--dur-slow) var(--ease-out);}
 .lp-a2-dominio-pct{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--ember);font-variant-numeric:tabular-nums;}
 /* PV1/b240: erro treme o CARTÃO inteiro (não só a alternativa clicada) — dispara uma
-   vez por passagem de scroll (guard em JS) e no clique errado. Curto e discreto. */
-.lp-a2-card.treme{animation:lpA2CardBalanco .4s ease;}
-@keyframes lpA2CardBalanco{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+   vez por passagem de scroll (guard em JS) e no clique errado. Curto e discreto.
+   PV1/6: .treme-cartao é genérica — vitrine (.lp-a2-card) e quiz-body do app usam a mesma. */
+.treme-cartao{animation:tremerCartaoKf .4s ease;}
+@keyframes tremerCartaoKf{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
 @media(prefers-reduced-motion:reduce){
   .lp-a2-cesar,.lp-a2-exp,.lp-a2-dominio-fill{transition:none;}
-  .lp-a2-card.treme{animation:none;}
+  .treme-cartao{animation:none;}
 }
 
 /* ═══ PM1/M4 — A3 "a curva" ═══ */
@@ -5486,6 +5485,21 @@ function vibrarFeedback(sucesso){
   if(!('vibrate' in navigator))return;
   try{navigator.vibrate(sucesso?15:[15,40,15]);}catch(e){}
 }
+// PV1/6: shake do cartão de erro — .treme-cartao é usada tanto pelo cartão A2 da vitrine
+// quanto pelo .quiz-body do app (responderQuiz). Sem reflow forçado (nada de offsetWidth):
+// um listener delegado tira a classe no animationend, e um novo disparo enquanto ainda
+// treme é ignorado (a animação em curso já cobre o feedback, .4s é curto o bastante).
+function tremerCartao(el){
+  if(!el||el.classList.contains('treme-cartao'))return;
+  el.classList.add('treme-cartao');
+}
+function _tirarTremeCartao(e){
+  if(e.animationName==='tremerCartaoKf')e.target.classList.remove('treme-cartao');
+}
+// animationcancel: se o elemento sumir/escoder (.quiz-body vai pra hidden, troca de questão)
+// dentro dos .4s, animationend nunca dispara e a classe fica presa — próximo erro não treme.
+document.addEventListener('animationend',_tirarTremeCartao);
+document.addEventListener('animationcancel',_tirarTremeCartao);
 // CSP bloqueia CDN (cdnjs/jsdelivr): sem lib de scroll, ~30 linhas de JS puro.
 // Contrato reduced-motion (CLAUDE.md): o kill global de CSS zera transition/animation,
 // mas NÃO para animação guiada por scroll/JS — por isso todo consumidor deste motor
@@ -5649,11 +5663,10 @@ function scrollProgress(el,cb,opts){
   }
   // PV1/b240: erro treme o CARTÃO inteiro (.lp-a2-card), não só a alternativa —
   // dispara 1x por chamada; quem controla "uma vez por passagem" é o chamador.
-  // prefers-reduced-motion:reduce zera via CSS (@keyframes lpA2CardBalanco).
+  // prefers-reduced-motion:reduce zera via CSS (@keyframes tremerCartaoKf).
+  // PV1/6: shake em si é a função global tremerCartao() (compartilhada com o app).
   function tremerCard(){
-    card.classList.remove('treme');
-    void card.offsetWidth; // reflow: permite re-disparar a animação em passagens seguidas
-    card.classList.add('treme');
+    tremerCartao(card);
   }
   function estadoFinal(){
     errada.classList.remove('errada');
@@ -6280,7 +6293,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.336';
+const APP_VERSAO='v1.337';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -7997,12 +8010,13 @@ async function responderQuiz(idx){
   const correta=q._shuffledG!==undefined?q._shuffledG:q.g;
   const acertou=idx===correta;
   vibrarFeedback(acertou); // PM1/M6.5
-  const opts=document.querySelectorAll('.quiz-opt');
+  const opts=document.querySelectorAll('#quiz-running-view .quiz-opt'); // HOTFIX PV1/6: sem escopo pegava também o cartão A2 da vitrine (mesma classe reaproveitada)
   opts.forEach((o,i)=>{
     o.style.pointerEvents='none';
     if(i===correta)o.classList.add('correta');
     if(i===idx&&!acertou){o.classList.add('errada');voarCarimboRevisao(o);} // PM1/M6 (C2)
   });
+  if(!acertou)tremerCartao(document.querySelector('#quiz-running-view .quiz-body')); // PV1/6
   quizSessao.t++;
   if(acertou){quizSessao.c++;userStats.correct=(userStats.correct||0)+1;}
   else userStats.wrong=(userStats.wrong||0)+1;
