@@ -352,7 +352,11 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .lp-lista-quem li::before{content:'';position:absolute;left:0;top:9px;width:13px;height:2px;background:var(--ember);}
 .lp-lista-quem b{color:#fff;}
 .lp-quem-cesar{width:min(78%,320px);margin:8px auto 0;}
-.lp-cesar-vid{display:block;width:100%;height:auto;aspect-ratio:560/500;object-fit:contain;-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 90%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 90%,transparent 100%);}
+.lp-cesar-vid{display:block;width:100%;height:auto;aspect-ratio:560/500;object-fit:contain;}
+/* PV2 (review do Opus): a mascara so serve pro MP4 com fundo assado (WebM ja tem alpha
+   real, mascara nele so cortava o teto do caminhao e a roda esquerda, que encostam nos
+   cantos do quadro). Borda fina retangular (~5%) nos 4 lados, nao radial. */
+.lp-cesar-vid.fundo-assado{-webkit-mask-image:linear-gradient(to right,transparent,#000 5%,#000 95%,transparent),linear-gradient(to bottom,transparent,#000 5%,#000 95%,transparent);-webkit-mask-composite:source-in;mask-image:linear-gradient(to right,transparent,#000 5%,#000 95%,transparent),linear-gradient(to bottom,transparent,#000 5%,#000 95%,transparent);mask-composite:intersect;}
 
 /* Passos */
 .lp-passos{list-style:none;margin:22px 0 0;padding:0;counter-reset:p;}
@@ -2601,6 +2605,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   var webkit=/iPhone|iPad|iPod/.test(ua)||(/Safari/.test(ua)&&!/Chrome|Chromium|CriOS|Edg|Firefox|FxiOS|Android/.test(ua));
   var b='assets/landing/cesar-estribo.';
   var ext=(!webkit&&v.canPlayType('video/webm; codecs="vp9"'))?'webm':'mp4';
+  if(ext==='mp4')v.classList.add('fundo-assado'); // MP4 tem fundo assado: borda esfumada esconde diferença de cor
   new IntersectionObserver(function(es){
     es.forEach(function(e){
       if(e.isIntersecting){

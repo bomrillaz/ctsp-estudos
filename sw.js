@@ -118,7 +118,7 @@ self.addEventListener('fetch', (e) => {
   // servir uma versao antiga cacheada mesmo depois de um bump de cache-buster (?v=...) sem
   // bump de CACHE. Sem querystring, ignoreSearch:true (comportamento normal).
   // Video: iPhone pede com Range; respondWith de cache/rede sem 206 quebra a reproducao.
-  if (req.headers.has('range') || /\.(mp4|webm)$/.test(url.pathname)) return;
+  if (req.headers.has('range') || /\/assets\/landing\/.+\.(mp4|webm)$/.test(url.pathname)) return;
 
   const temQuery = url.search !== '';
   e.respondWith(
