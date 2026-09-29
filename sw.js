@@ -51,11 +51,11 @@ self.addEventListener('notificationclick', (e) => {
   })());
 });
 
-const CACHE = 'ctsp-cache-v35';
+const CACHE = 'ctsp-cache-v36';
 const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
-  'assets/cesar-coin.png',
+  'assets/cesar-coin.png', 'assets/cesar-aponta.png', 'assets/cesar-pensa.png', 'assets/cesar-coin-comemora.png',
   'assets/loading.mp4', 'assets/loading-poster.jpg'
 ];
 const CROSS = [

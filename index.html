@@ -1052,6 +1052,29 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
 .fim-inline-title{font-family:var(--font-display);font-size:24px;font-weight:700;margin-bottom:8px;}
 .fim-inline-sub{font-size:14px;color:var(--text2);}
 
+/* APP-D bloco 1 (b242): cascata do fim de sessão (#modal-fim, só Quiz) — César por
+   desempenho + 3 blocos com count-up. animation-fill-mode:both segura o estado final;
+   nunca punitivo — só a pose muda com desempenho baixo, o número do bloco continua
+   var(--text) normal. Reduced-motion: mostrarFimSessao() zera animation-delay por
+   elemento antes do replay (a regra global :207 só zera duration, nunca delay). */
+.fim-cascata{text-align:center;}
+.fim-cesar{width:84px;height:84px;object-fit:contain;margin:0 auto 12px;display:block;
+  opacity:0;transform:translateY(12px);animation:fimFade .28s var(--ease-out) forwards;}
+@keyframes fimFade{to{opacity:1;transform:translateY(0);}}
+.fim-stats{display:flex;gap:8px;margin:16px 0 18px;}
+.fim-stat{flex:1;background:var(--bg);border-radius:var(--radius-sm);padding:12px 6px;
+  opacity:0;transform:translateY(10px);animation:fimFade .32s var(--ease-out) forwards;}
+.fim-stat:nth-child(1){animation-delay:.36s;}
+.fim-stat:nth-child(2){animation-delay:.48s;}
+.fim-stat:nth-child(3){animation-delay:.6s;}
+.fim-stat-v{font-family:var(--font-display);font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1;}
+.fim-stat-l{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
+.fim-cascata .fim-title,.fim-cascata .fim-sub{opacity:0;animation:fimFade .3s var(--ease-out) forwards;}
+.fim-cascata .fim-title{animation-delay:.3s;}
+.fim-cascata .fim-sub{margin-bottom:0;animation-delay:.32s;}
+.fim-acoes{display:flex;flex-direction:column;gap:8px;
+  opacity:0;animation:fimFade .3s var(--ease-out) forwards;animation-delay:.74s;}
+
 /* ═══ SIMULADO ═══ */
 .sim-home{padding:16px;background:transparent;}
 .sim-home h2{font-family:var(--font-display);font-size:26px;font-weight:700;margin-bottom:2px;color:var(--text);letter-spacing:.02em;}
@@ -3353,13 +3376,25 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 </div>
 
 <div class="modal-overlay hidden" id="modal-fim" onclick="fecharFim(event)">
-  <div class="modal-box" onclick="event.stopPropagation()" style="text-align:center">
-    <div style="width:56px;height:56px;margin:0 auto 12px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;font-size:30px;font-weight:800">✓</div>
-    <div class="modal-title" id="fim-title">Treino do dia concluído!</div>
-    <div class="modal-sub" id="fim-sub"></div>
-    <div id="fim-score" style="font-family:var(--font-display);font-size:26px;font-weight:800;margin:8px 0 2px"></div>
-    <div id="fim-score-l" style="font-size:12px;color:var(--text3);margin-bottom:18px"></div>
-    <div id="fim-acoes" style="display:flex;flex-direction:column;gap:8px"></div>
+  <div class="modal-box fim-cascata" onclick="event.stopPropagation()">
+    <img class="fim-cesar" id="fim-cesar" alt="" onerror="this.onerror=null;this.src='assets/cesar-coin.png';">
+    <div class="modal-title fim-title" id="fim-title">Treino do dia concluído!</div>
+    <div class="modal-sub fim-sub" id="fim-sub"></div>
+    <div class="fim-stats">
+      <div class="fim-stat" id="fim-stat-acertos">
+        <div class="fim-stat-v" id="fim-v-acertos">0/0</div>
+        <div class="fim-stat-l">Acertos</div>
+      </div>
+      <div class="fim-stat" id="fim-stat-aproveitamento">
+        <div class="fim-stat-v"><span id="fim-v-pct">0</span>%</div>
+        <div class="fim-stat-l">Aproveitamento</div>
+      </div>
+      <div class="fim-stat" id="fim-stat-streak">
+        <div class="fim-stat-v"><span id="fim-v-streak">0</span></div>
+        <div class="fim-stat-l">Dias seguidos</div>
+      </div>
+    </div>
+    <div id="fim-acoes" class="fim-acoes"></div>
   </div>
 </div>
 
@@ -6327,7 +6362,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.338';
+const APP_VERSAO='v1.339';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -8242,10 +8277,9 @@ function mostrarFimSessao(){
   const subBase=pct>=70?(cfg.diario?'Mandou bem. Objetivo do dia cumprido.':'Mandou bem.'):pct>=50?'Bom trabalho, o reforço fixa o resto.':'O que vale é a constância; o que você errou volta espaçado.';
   const md=tempoMedioQuestao();
   const ritmo=md?` Ritmo ${fmtRitmo(md)}/questão${md>TEMPO_PROVA_POR_Q?' (acima dos 3min da prova)':''}.`:'';
+  g('fim-cesar').src=pct>=70?'assets/cesar-coin-comemora.png':pct>=50?'assets/cesar-aponta.png':'assets/cesar-pensa.png';
   g('fim-title').textContent=cfg.titulo;
   g('fim-sub').textContent=subBase+ritmo;
-  g('fim-score').textContent=c+' de '+t;
-  g('fim-score-l').textContent='aproveitamento '+pct+'%';
   window._fimSessaoFns=cfg.extras.map(x=>x.fn);
   g('fim-acoes').innerHTML=cfg.extras.map((x,i)=>
     `<button class="${x.primaria?'btn-primary':'btn-weak btn-neutral'}" onclick="fimIr(_fimSessaoFns[${i}])">${x.b}</button>`
@@ -8254,6 +8288,30 @@ function mostrarFimSessao(){
     <button class="btn-weak btn-neutral" onclick="fimIr(irCardsHub)">Flashcards →</button>
     <button class="btn-weak btn-neutral" onclick="fecharFim()">Voltar ao início</button>`;
   g('modal-fim').classList.remove('hidden');
+
+  // APP-D bloco 1 (b242): coreografia do César + 3 blocos (.fim-stat), achados do
+  // protótipo em .tmp/appd_fim/. Reduced-motion: a regra global :207 zera duration
+  // mas NUNCA animation-delay — zera o delay por elemento antes do replay, senão os
+  // blocos ficam invisíveis até o delay original passar. O replay troca só
+  // animation-name (nunca o shorthand `animation`, que reescreve o delay setado
+  // na linha de cima). Count-up só dispara depois do fade do próprio bloco
+  // (animationend), nunca antes do modal visível (já está, por causa do remove('hidden') acima).
+  const armado=movimentoReduzido();
+  const coreografados=[g('fim-cesar'),g('fim-title'),g('fim-sub'),
+    ...document.querySelectorAll('#modal-fim .fim-stat'),g('fim-acoes')];
+  coreografados.forEach(el=>{el.style.animationDelay=armado?'0s':'';});
+  coreografados.forEach(el=>{el.style.animationName='none';void el.offsetWidth;el.style.animationName='';});
+
+  const streak=userStats.streak||0;
+  if(armado){
+    g('fim-v-acertos').textContent=c+'/'+t;g('fim-v-acertos').setAttribute('data-cv',c);
+    g('fim-v-pct').textContent=pct;g('fim-v-pct').setAttribute('data-cv',pct);
+    g('fim-v-streak').textContent=streak;g('fim-v-streak').setAttribute('data-cv',streak);
+  }else{
+    g('fim-stat-acertos').addEventListener('animationend',()=>animateCount(g('fim-v-acertos'),c,'/'+t),{once:true});
+    g('fim-stat-aproveitamento').addEventListener('animationend',()=>animateCount(g('fim-v-pct'),pct),{once:true});
+    g('fim-stat-streak').addEventListener('animationend',()=>animateCount(g('fim-v-streak'),streak),{once:true});
+  }
 }
 
 function finishQuiz(){
