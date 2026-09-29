@@ -409,6 +409,12 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 /* ═══ BLOCO C (b58) — planos na tela de entrada + documentos ═══ */
 .link-inline{background:none;border:none;padding:0;font:inherit;color:var(--navy);font-weight:700;text-decoration:underline;cursor:pointer;}
 .auth-legal{font-size:11.5px;color:var(--text3);line-height:1.55;text-align:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft);}
+/* PV1/b240 (ajuste pós-review do Opus): rótulo+título de Planos nascem em
+   .lp-sec-in (1080px, alinhado à esquerda como todo o resto da vitrine), mas os
+   cards vivem dentro de .planos-wrap, mais estreito e centralizado — título ficava
+   solto, fora do eixo dos cards. Modificadora só aqui (#lp-planos), sem tocar
+   .lp-label/.lp-h2 globais. */
+#lp-planos .lp-label,#lp-planos .lp-h2{text-align:center;}
 .planos-wrap{background:var(--paper);width:100%;max-width:480px;margin:0 auto;padding:26px 22px 34px;}
 .planos-sub{font-size:12.5px;color:var(--text2);line-height:1.55;text-align:center;margin:8px 0 20px;}
 .planos-grid{display:flex;flex-direction:column;gap:12px;}
@@ -1826,6 +1832,12 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
    garante legibilidade nos dois temas. */
 .pm1-vitrine-escura .quiz-opt.errada{background:rgba(224,58,27,.14);border-color:var(--red);}
 .pm1-vitrine-escura .quiz-opt.correta{background:rgba(70,192,122,.14);border-color:var(--green);}
+/* PV1/b240 (ajuste pós-review do Opus): mesmo problema no .planos-trial — o fundo
+   sólido var(--green-light) (claro no tema claro do visitante) virava uma mancha
+   clara destoante dentro da vitrine escura. Translúcido sobre --paper, como acima;
+   fora da vitrine (app claro pós-login, se o componente for reaproveitado lá) o
+   .planos-trial base continua igual. */
+.pm1-vitrine-escura .planos-trial{background:rgba(70,192,122,.12);border:1px solid rgba(70,192,122,.32);color:#B7F0CE;}
 
 /* ═══ PM1/M3 — A1 "a porta": celular real cresce no scroll até virar a tela ═══
    Dois atos separados (não um grid lado-a-lado): 1) título lido em paz, sem
@@ -5670,12 +5682,16 @@ function scrollProgress(el,cb,opts){
   });
   scrollProgress(track,function(p){
     if(resolvidoPeloToque)return; // já resolvido por toque — scroll não reescreve
-    var faseErrada=p>=0.15&&p<0.55;
+    // PV1/b240 (ajuste pós-review do Opus): a errada FICA vermelha depois de revelada
+    // (sem limite superior) — no Quiz real a marcada errada continua ao lado da certa
+    // verde ("você marcou B, a certa era C"). Só volta a neutra se o scroll regredir
+    // antes do ponto em que ela acende (p<0.15) — reversível, igual ao resto da cena.
+    var faseErrada=p>=0.15;
     errada.classList.toggle('errada',faseErrada);
     if(faseErrada){
       if(!jaTremeuNestaPassagem){jaTremeuNestaPassagem=true;tremerCard();}
-    } else if(p<0.15){
-      jaTremeuNestaPassagem=false; // saiu da fase por cima — rearma pra próxima passagem
+    } else {
+      jaTremeuNestaPassagem=false;
     }
     certa.classList.toggle('correta',p>=0.55);
     cesar.classList.toggle('reage',p>=0.55);
@@ -6264,7 +6280,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.335';
+const APP_VERSAO='v1.336';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
