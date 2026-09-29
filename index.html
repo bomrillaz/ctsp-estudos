@@ -1959,36 +1959,27 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   .lp-a3-dot,.lp-stagger{transition:none;}
 }
 
-/* ═══ PM1/M4 — A4 "a rota do edital" ═══
-   Círculo de cada parada usa as MESMAS cores --at1..--at5 do resto do app (grade de
-   áreas, home) — a rota fala a mesma língua visual que a pessoa já vai ver logada. */
-.lp-a4-rota-scene{position:relative;}
-.lp-a4-track{position:relative;height:240vh;}
-.lp-a4-stage{position:sticky;top:0;height:100vh;min-height:560px;display:flex;align-items:center;overflow:hidden;background:var(--paper);}
-.lp-a4-inner{width:100%;max-width:900px;margin:0 auto;padding:0 20px;}
-.lp-a4-grid{display:flex;gap:18px;align-items:center;margin-top:16px;}
-.lp-a4-svg{width:140px;flex-shrink:0;height:auto;max-height:58vh;overflow:visible;}
-.lp-a4-guia{fill:none;stroke:var(--line-soft);stroke-width:3;stroke-linecap:round;}
-.lp-a4-parada circle{fill:var(--paper);stroke-width:4;transition:fill var(--dur-base) var(--ease-out);}
-#lp-a4-p1 circle{stroke:var(--at1);}
-#lp-a4-p2 circle{stroke:var(--at2);}
-#lp-a4-p3 circle{stroke:var(--at3);}
-#lp-a4-p4 circle{stroke:var(--at4);}
-#lp-a4-p5 circle{stroke:var(--at5);}
-#lp-a4-p1.atingido circle{fill:var(--at1);}
-#lp-a4-p2.atingido circle{fill:var(--at2);}
-#lp-a4-p3.atingido circle{fill:var(--at3);}
-#lp-a4-p4.atingido circle{fill:var(--at4);}
-#lp-a4-p5.atingido circle{fill:var(--at5);}
-.lp-a4-truck{fill:var(--ember);}
-.lp-a4-truck .lp-a4-roda{fill:var(--paper);}
-.lp-a4-legenda{list-style:none;margin:0;padding:0;flex:1;display:flex;flex-direction:column;gap:16px;min-width:0;}
-.lp-a4-legenda li{opacity:.3;transition:opacity var(--dur-base) var(--ease-out);font-size:13.5px;color:var(--text2);
-  display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line-soft);padding-bottom:9px;}
-.lp-a4-legenda li b{font-family:var(--font-display);color:var(--text);letter-spacing:.04em;}
-.lp-a4-legenda li.atingido{opacity:1;}
-@media(prefers-reduced-motion:reduce){.lp-a4-legenda li,.lp-a4-parada circle{transition:none;}}
-@media(min-width:640px){.lp-a4-svg{width:160px;}}
+/* ═══ M1 — A4 "como o edital pesa" ═══
+   Substituiu a rota SVG/caminhão (PM1/M4 original): 5 barras horizontais que nascem
+   de partículas, cor pelas MESMAS --at1..--at5 do resto do app. Decisão e protótipo
+   aprovado em materiais/entregas/planos/PLANO_motion_e_bombeiro.md (M0/M1). Sem pin
+   de scroll: a seção tem a altura do próprio conteúdo. */
+.lp-a4-inner{width:100%;max-width:640px;margin:0 auto;padding:0 20px;}
+.lp-a4-cena{position:relative;margin-top:16px;}
+.lp-a4-canvas{position:absolute;inset:0;width:100%;height:100%;}
+.lp-a4-lista{position:relative;display:flex;flex-direction:column;gap:22px;}
+.lp-a4-linha-topo{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:7px;
+  opacity:0;transform:translateY(6px);transition:opacity var(--dur-base) var(--ease-out),transform var(--dur-base) var(--ease-out);}
+.lp-a4-linha-topo.mostrar{opacity:1;transform:translateY(0);}
+.lp-a4-nome{font-size:13.5px;font-weight:600;color:var(--text);}
+.lp-a4-num{font-family:var(--font-display);font-variant-numeric:tabular-nums;font-size:15px;font-weight:700;color:var(--text2);}
+.lp-a4-bar-wrap{width:100%;height:16px;}
+.lp-a4-fecho{margin-top:12px;padding-top:20px;border-top:1px solid var(--line-soft);
+  font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--text);
+  opacity:0;transform:translateY(8px);transition:opacity var(--dur-base) var(--ease-out),transform var(--dur-base) var(--ease-out);}
+.lp-a4-fecho.mostrar{opacity:1;transform:translateY(0);}
+.lp-a4-fecho b{color:var(--ember-text);}
+@media(prefers-reduced-motion:reduce){.lp-a4-linha-topo,.lp-a4-fecho{transition:none;}}
 
 /* ═══ PM1/M4 — A6 "faixa tipográfica" ═══ */
 .lp-a6-faixa{overflow:hidden;background:var(--navy-deep);padding:16px 0;white-space:nowrap;}
@@ -2302,42 +2293,42 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
   </section>
 
-  <!-- ── A4 "a rota do edital" (PM1/M4) ──
-       5 áreas, tamanho do círculo pela COTA real (14/8/14/12/12 = 60 questões da
-       prova, CLAUDE.md §5) — não é decoração, é o mesmo número que "assunto novo
-       por peso do edital" no passo 3 usa de verdade. Caminhão percorre a rota no
-       scroll; ao alcançar cada parada, ela acende e o nome/cota aparecem. -->
-  <section class="lp-a4-rota-scene" id="lp-a4">
-    <div class="lp-a4-track" id="lp-a4-track">
-      <div class="lp-a4-stage">
-        <div class="lp-a4-inner">
-          <div class="lp-label">Como o edital pesa</div>
-          <h2 class="lp-h2">A dose de cada área segue a cota real da prova.</h2>
-          <div class="lp-a4-grid">
-            <svg class="lp-a4-svg" id="lp-a4-svg" viewBox="0 0 300 640" aria-hidden="true">
-              <path class="lp-a4-guia" d="M150,50 C60,90 60,160 110,200 C220,250 220,310 150,350 C60,390 60,460 110,500 C220,550 220,590 150,610"/>
-              <g class="lp-a4-parada" id="lp-a4-p1"><circle cx="150" cy="50" r="27"/></g>
-              <g class="lp-a4-parada" id="lp-a4-p2"><circle cx="110" cy="200" r="18"/></g>
-              <g class="lp-a4-parada" id="lp-a4-p3"><circle cx="150" cy="350" r="27"/></g>
-              <g class="lp-a4-parada" id="lp-a4-p4"><circle cx="110" cy="500" r="23"/></g>
-              <g class="lp-a4-parada" id="lp-a4-p5"><circle cx="150" cy="610" r="23"/></g>
-              <g class="lp-a4-truck" id="lp-a4-truck">
-                <rect x="-15" y="-9" width="30" height="13" rx="2"/>
-                <rect x="5" y="-15" width="10" height="7" rx="1"/>
-                <circle class="lp-a4-roda" cx="-8" cy="5" r="4"/>
-                <circle class="lp-a4-roda" cx="8" cy="5" r="4"/>
-              </g>
-            </svg>
-            <ul class="lp-a4-legenda" id="lp-a4-legenda">
-              <li id="lp-a4-l1"><b>AT1</b><span>14 questões</span></li>
-              <li id="lp-a4-l2"><b>AT2</b><span>8 questões</span></li>
-              <li id="lp-a4-l3"><b>AT3</b><span>14 questões</span></li>
-              <li id="lp-a4-l4"><b>AT4</b><span>12 questões</span></li>
-              <li id="lp-a4-l5"><b>AT5</b><span>12 questões</span></li>
-            </ul>
+  <!-- ── A4 "como o edital pesa" (M1) ──
+       5 barras, largura pela COTA real (14/8/14/12/12 = 60 questões da prova,
+       CLAUDE.md §5) — não é decoração, é o mesmo número que "assunto novo por peso
+       do edital" no passo 3 usa de verdade. Barras nascem de partículas quando a
+       seção entra na tela (dispara uma vez, ver initA4Barras). Substituiu o
+       caminhão/trajeto SVG: materiais/entregas/planos/PLANO_motion_e_bombeiro.md. -->
+  <section class="lp-sec" id="lp-a4">
+    <div class="lp-a4-inner">
+      <div class="lp-label">Como o edital pesa</div>
+      <h2 class="lp-h2">A dose de cada área segue a cota real da prova.</h2>
+      <div class="lp-a4-cena">
+        <canvas class="lp-a4-canvas" id="lp-a4-canvas" aria-hidden="true"></canvas>
+        <div class="lp-a4-lista" id="lp-a4-lista">
+          <div class="lp-a4-linha" data-area="AT1">
+            <div class="lp-a4-linha-topo"><span class="lp-a4-nome">AT1 · Segurança Contra Incêndios</span><span class="lp-a4-num" data-conta="14">14</span></div>
+            <div class="lp-a4-bar-wrap"></div>
+          </div>
+          <div class="lp-a4-linha" data-area="AT2">
+            <div class="lp-a4-linha-topo"><span class="lp-a4-nome">AT2 · Combate a Incêndios</span><span class="lp-a4-num" data-conta="8">8</span></div>
+            <div class="lp-a4-bar-wrap"></div>
+          </div>
+          <div class="lp-a4-linha" data-area="AT3">
+            <div class="lp-a4-linha-topo"><span class="lp-a4-nome">AT3 · Buscas e Salvamentos</span><span class="lp-a4-num" data-conta="14">14</span></div>
+            <div class="lp-a4-bar-wrap"></div>
+          </div>
+          <div class="lp-a4-linha" data-area="AT4">
+            <div class="lp-a4-linha-topo"><span class="lp-a4-nome">AT4 · Direito Institucional</span><span class="lp-a4-num" data-conta="12">12</span></div>
+            <div class="lp-a4-bar-wrap"></div>
+          </div>
+          <div class="lp-a4-linha" data-area="AT5">
+            <div class="lp-a4-linha-topo"><span class="lp-a4-nome">AT5 · Normas Administrativas</span><span class="lp-a4-num" data-conta="12">12</span></div>
+            <div class="lp-a4-bar-wrap"></div>
           </div>
         </div>
       </div>
+      <p class="lp-a4-fecho" id="lp-a4-fecho"><b id="lp-a4-fecho-num" data-conta="60">60</b> questões no total.</p>
     </div>
   </section>
 
@@ -3589,6 +3580,7 @@ function aplicarTema(pref){
   const tc=document.querySelector('meta[name="theme-color"]');if(tc)tc.setAttribute('content',dark?'#0D1322':'#101B3D');
   document.querySelectorAll('#theme-seg button').forEach(b=>b.classList.toggle('on',b.dataset.t===pref));
   const bt=document.getElementById('tema-icone');if(bt)bt.innerHTML=dark?_ICONE_SOL:_ICONE_LUA;
+  if(typeof _a4Recolorir==='function'&&_a4Recolorir)_a4Recolorir();
 }
 // Botão rápido do header: alterna claro⇄escuro (o seletor Auto continua em Configurações).
 function toggleTemaRapido(){const dark=document.documentElement.getAttribute('data-theme')==='dark';setTema(dark?'claro':'escuro');}
@@ -5616,6 +5608,10 @@ function _scrollRecalibrarTudo(){
   for(var i=0;i<_scrollCenas.length;i++)_scrollCenas[i].medir();
   _scrollAgendar();
 }
+// M1 — hook de recolorir as barras do A4 (canvas de partículas) se o tema mudar com
+// elas já sólidas, preenchido por initA4Barras() mais abaixo. A remedida no resize
+// não precisa de hook à parte: initA4Barras se registra como entry de _scrollCenas.
+var _a4Recolorir=null;
 // b238 (achado do Opus/review) — quem rola de verdade varia com largura/motor (mesma nota
 // de irAoTopoDoConteudo() em :3536): no dev dominante hoje é o <body> (overflow-x:hidden em
 // html,body força overflow-y:auto computado nos dois — CSS spec), e 'scroll' em elemento
@@ -5875,31 +5871,245 @@ function scrollProgress(el,cb,opts){
   if(!fill||!landing)return;
   scrollProgress(landing,function(p){fill.style.width=(p*100)+'%';},{semReducedMotion:true});
 })();
-// PM1/M4 — A4: o caminhão anda pela rota (getPointAtLength, não interpolação linear
-// x/y — a rota curva, teria dessincronia visível). Cada parada acende com a MESMA cor
-// --atN da área no resto do app quando o caminhão a alcança; a legenda acompanha.
-(function initA4Scene(){
-  var track=document.getElementById('lp-a4-track'),
-      guia=document.querySelector('#lp-a4-svg .lp-a4-guia'),
-      truck=document.getElementById('lp-a4-truck');
-  if(!track||!guia||!truck)return;
-  var len=guia.getTotalLength();
-  var paradas=[
-    {el:document.getElementById('lp-a4-p1'),leg:document.getElementById('lp-a4-l1'),p:0.02},
-    {el:document.getElementById('lp-a4-p2'),leg:document.getElementById('lp-a4-l2'),p:0.26},
-    {el:document.getElementById('lp-a4-p3'),leg:document.getElementById('lp-a4-l3'),p:0.51},
-    {el:document.getElementById('lp-a4-p4'),leg:document.getElementById('lp-a4-l4'),p:0.76},
-    {el:document.getElementById('lp-a4-p5'),leg:document.getElementById('lp-a4-l5'),p:0.99}
-  ];
-  scrollProgress(track,function(p){
-    var pt=guia.getPointAtLength(len*p);
-    truck.setAttribute('transform','translate('+pt.x.toFixed(1)+','+pt.y.toFixed(1)+')');
-    paradas.forEach(function(s){
-      var on=p>=s.p;
-      if(s.el)s.el.classList.toggle('atingido',on);
-      if(s.leg)s.leg.classList.toggle('atingido',on);
-    });
+// M1 — A4 vira 5 barras que nascem de partículas quando a seção entra na tela (uma
+// vez só, IntersectionObserver threshold 0.35 — mesmo padrão do initA5Contadores
+// abaixo, sem listener de scroll novo). Cor por --atN (mesma paleta do app); nome
+// vem de AI (fonte única, evita string nova/divergente). Substituiu o caminhão/rota
+// SVG: materiais/entregas/planos/PLANO_motion_e_bombeiro.md (M0/M1, aprovado pelo João).
+(function initA4Barras(){
+  var secao=document.getElementById('lp-a4'),
+      cena=document.querySelector('#lp-a4 .lp-a4-cena'),
+      lista=document.getElementById('lp-a4-lista'),
+      canvas=document.getElementById('lp-a4-canvas');
+  if(!secao||!cena||!lista||!canvas)return;
+  var ctx=canvas.getContext('2d');
+  if(!ctx)return;
+  var off=document.createElement('canvas'),octx=off.getContext('2d');
+  var ORDEM=['AT1','AT2','AT3','AT4','AT5'];
+  var linhas=ORDEM.map(function(k){return lista.querySelector('[data-area="'+k+'"]');});
+  if(linhas.some(function(l){return !l;}))return;
+  var topos=linhas.map(function(l){return l.querySelector('.lp-a4-linha-topo');});
+  var numEls=linhas.map(function(l){return l.querySelector('.lp-a4-num');});
+  var wraps=linhas.map(function(l){return l.querySelector('.lp-a4-bar-wrap');});
+  var fecho=document.getElementById('lp-a4-fecho'),fechoNum=document.getElementById('lp-a4-fecho-num');
+
+  // nome vem de AI (fonte única já usada no resto do app) — o HTML já nasce certo
+  // p/ SEO e no-JS, isto só evita divergir se AI mudar.
+  ORDEM.forEach(function(k,i){
+    var info=AI[k],elNome=linhas[i].querySelector('.lp-a4-nome');
+    if(info&&elNome)elNome.textContent=k+' · '+info.nome;
   });
+  var MAX_N=Math.max.apply(null,ORDEM.map(function(k){return AI[k].n;}));
+
+  var W=0,H=0,dpr=Math.min(window.devicePixelRatio||1,2),N_POR_BARRA=100;
+  var barras=ORDEM.map(function(){return{x:0,y:0,w:0,h:0,pts:[],cor:'#fff'};});
+
+  function atualizarCores(){
+    ORDEM.forEach(function(k,i){
+      barras[i].cor=getComputedStyle(document.documentElement).getPropertyValue('--at'+k.slice(2)).trim();
+    });
+  }
+  function roundRectPath(c,x,y,w,h,r){
+    r=Math.max(0,Math.min(r,w/2,h/2));
+    c.beginPath();
+    c.moveTo(x+r,y);
+    c.arcTo(x+w,y,x+w,y+h,r);
+    c.arcTo(x+w,y+h,x,y+h,r);
+    c.arcTo(x,y+h,x,y,r);
+    c.arcTo(x,y,x+w,y,r);
+    c.closePath();
+  }
+  function easeOutQuart(t){return 1-Math.pow(1-t,4);}
+  function easeOutCubic(t){return 1-Math.pow(1-t,3);}
+  function bezierPt(p0,c,p2,t){
+    var mt=1-t;
+    return{x:mt*mt*p0.x+2*mt*t*c.x+t*t*p2.x,y:mt*mt*p0.y+2*mt*t*c.y+t*t*p2.y};
+  }
+  function amostrarBarra(w,h){
+    off.width=Math.max(1,Math.round(w));off.height=Math.max(1,Math.round(h));
+    octx.clearRect(0,0,off.width,off.height);
+    octx.fillStyle='#fff';
+    roundRectPath(octx,0,0,off.width,off.height,off.height/2);
+    octx.fill();
+    var img=octx.getImageData(0,0,off.width,off.height).data,pts=[];
+    var passo=Math.max(2,Math.floor(Math.sqrt((off.width*off.height)/N_POR_BARRA)));
+    for(var y=0;y<off.height;y+=passo){
+      for(var x=0;x<off.width;x+=passo){
+        var idx=(y*off.width+x)*4;
+        if(img[idx+3]>128)pts.push({x:x,y:y});
+      }
+    }
+    if(!pts.length){
+      // guard (achado do code-review, b243): barra rasterizada estreita demais pro
+      // passo de amostragem achar pixel de alpha>128 — distribui direto no
+      // retângulo em vez de colapsar as partículas todas num canto.
+      var gx=8,gy=2;
+      for(var iy=0;iy<gy;iy++)for(var ix=0;ix<gx;ix++)
+        pts.push({x:(ix+0.5)/gx*off.width,y:(iy+0.5)/gy*off.height});
+    }
+    return pts;
+  }
+  // Geometria é barata (só getBoundingClientRect); a amostragem por pixel
+  // (getImageData) é cara e fica separada, chamada só quando vai animar de
+  // verdade — nunca em todo resize (achado do code-review, b243).
+  function medirGeometria(){
+    var rCena=cena.getBoundingClientRect();
+    if(rCena.width<2||rCena.height<2)return false;
+    W=rCena.width;H=rCena.height;
+    canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ORDEM.forEach(function(k,i){
+      var rWrap=wraps[i].getBoundingClientRect();
+      barras[i].x=rWrap.left-rCena.left;
+      barras[i].y=rWrap.top-rCena.top;
+      barras[i].w=rWrap.width*(AI[k].n/MAX_N);
+      barras[i].h=rWrap.height;
+    });
+    return true;
+  }
+  function amostrarPontos(){
+    ORDEM.forEach(function(k,i){
+      var b=barras[i],pts=amostrarBarra(b.w,b.h);
+      b.pts=pts.map(function(p){return{x:p.x+b.x,y:p.y+b.y};});
+    });
+  }
+
+  var CASCADE_STEP=160,DELAY_MAX=100,DUR_MIN=450,DUR_MAX=600,MERGE_FADE=250;
+  var MERGE_START=DELAY_MAX+DUR_MAX,BAR_WINDOW=MERGE_START+MERGE_FADE;
+  var TOTAL_INICIO=(ORDEM.length-1)*CASCADE_STEP+BAR_WINDOW+100;
+  var SEQ_END=TOTAL_INICIO+450+100;
+
+  var particulasPorBarra=[];
+  function sortearParticulas(){
+    particulasPorBarra=barras.map(function(b){
+      var lista=[];
+      for(var k=0;k<N_POR_BARRA;k++){
+        var margem=0.18;
+        var home={x:(-margem+Math.random()*(1+margem*2))*W,y:(-margem+Math.random()*(1+margem*2))*H};
+        var target=b.pts.length?b.pts[k%b.pts.length]:{x:b.x,y:b.y};
+        var curva=40+Math.random()*60;
+        var control={x:(home.x+target.x)/2+(Math.random()-0.5)*curva,y:(home.y+target.y)/2+(Math.random()-0.5)*curva};
+        lista.push({home:home,control:control,target:target,delay:Math.random()*DELAY_MAX,dur:DUR_MIN+Math.random()*(DUR_MAX-DUR_MIN)});
+      }
+      return lista;
+    });
+  }
+
+  var ultimoElapsed=null;
+  function desenharFrame(elapsed){
+    ctx.clearRect(0,0,W,H);
+    ORDEM.forEach(function(k,i){
+      var inicioBarra=i*CASCADE_STEP,local=elapsed-inicioBarra;
+      if(local<0)return;
+      var b=barras[i],area=AI[k];
+      topos[i].classList.add('mostrar');
+      var contaFase=Math.min(1,local/BAR_WINDOW);
+      numEls[i].textContent=String(Math.round(easeOutCubic(contaFase)*area.n));
+      if(local>=BAR_WINDOW){
+        ctx.globalAlpha=1;ctx.fillStyle=b.cor;
+        roundRectPath(ctx,b.x,b.y,b.w,b.h,b.h/2);ctx.fill();
+        return;
+      }
+      if(local>=MERGE_START){
+        var fase=(local-MERGE_START)/MERGE_FADE;
+        ctx.globalAlpha=fase;ctx.fillStyle=b.cor;
+        roundRectPath(ctx,b.x,b.y,b.w,b.h,b.h/2);ctx.fill();
+        ctx.globalAlpha=1-fase;
+      }else{
+        ctx.globalAlpha=1;
+      }
+      ctx.fillStyle=b.cor;
+      var ps=particulasPorBarra[i]||[];
+      for(var pi=0;pi<ps.length;pi++){
+        var p=ps[pi];
+        if(local<p.delay)continue;
+        var t=Math.min(1,(local-p.delay)/p.dur);
+        var pos=bezierPt(p.home,p.control,p.target,easeOutQuart(t));
+        ctx.beginPath();ctx.arc(pos.x,pos.y,1.7,0,Math.PI*2);ctx.fill();
+      }
+    });
+    ctx.globalAlpha=1;
+    var fechoLocal=elapsed-TOTAL_INICIO;
+    if(fechoLocal>=0){
+      fecho.classList.add('mostrar');
+      fechoNum.textContent=String(Math.round(easeOutCubic(Math.min(1,fechoLocal/450))*60));
+    }
+    ultimoElapsed=elapsed;
+  }
+
+  var t0=null,lastTs=null;
+  function loop(ts){
+    if(document.hidden){requestAnimationFrame(loop);return;}
+    if(lastTs===null){lastTs=ts;requestAnimationFrame(loop);return;}
+    lastTs=ts;
+    var elapsed=ts-t0;
+    desenharFrame(Math.min(elapsed,SEQ_END));
+    if(elapsed<SEQ_END)requestAnimationFrame(loop);
+  }
+  // Só desconecta o IO quando a medida realmente deu certo (achado do code-review,
+  // b243): se a seção estiver 0x0 no instante do disparo (layout tardio, ou vitrine
+  // escondida por já estar logado), tenta de novo por rAF (teto curto) em vez de
+  // desistir para sempre. `tentandoIniciar` é a única trava (substitui a antiga
+  // `rodando`, redundante com o disconnect do IO).
+  var io=null,tentandoIniciar=false;
+  function tocar(){
+    if(tentandoIniciar)return;
+    tentandoIniciar=true;
+    (function passo(tentativas){
+      if(medirGeometria()){
+        tentandoIniciar=false;
+        amostrarPontos();
+        sortearParticulas();
+        if(io)io.disconnect();
+        requestAnimationFrame(function(primeiroTs){t0=primeiroTs;lastTs=null;requestAnimationFrame(loop);});
+        return;
+      }
+      if(tentativas<=0){tentandoIniciar=false;return;} // desiste desta rodada; próxima interseção tenta de novo
+      requestAnimationFrame(function(){passo(tentativas-1);});
+    })(10);
+  }
+
+  atualizarCores();
+  var usaFallbackFinal=movimentoReduzido()||!('IntersectionObserver' in window);
+  var resolvidoFinal=false;
+  function tentarFinal(){
+    if(resolvidoFinal)return true;
+    if(!medirGeometria())return false;
+    resolvidoFinal=true;ultimoElapsed=SEQ_END;desenharFrame(SEQ_END);
+    return true;
+  }
+  // Entry mínima no motor único de cenas (_scrollCenas): reaproveita o loop de
+  // remedida que _scrollRecalibrarTudo já roda no resize, em vez de um hook global
+  // bespoke. cb vazio de propósito — não precisamos do progresso contínuo de scroll,
+  // só do .medir() barato a cada resize (achado do code-review, b243). No caminho
+  // reduced-motion/sem-IO, esta entry também é quem fecha a brecha se as 10
+  // tentativas de rAF abaixo esgotarem antes da seção ganhar layout (ex. vitrine
+  // escondida por já estar logado): todo resize seguinte tenta tentarFinal() de novo,
+  // nunca fica preso em opacity:0 (2º achado do code-review low, mesmo bloco).
+  _scrollCenas.push({el:secao,cb:function(){},docTop:0,docBottom:0,medir:function(){
+    medirGeometria();
+    if(usaFallbackFinal)tentarFinal();
+    else if(ultimoElapsed!==null&&ultimoElapsed>=SEQ_END)desenharFrame(SEQ_END);
+  }});
+  // Sem hook genérico de "tema mudou" no app hoje (conferido: aplicarTema() não tinha
+  // nenhum registro de cena antes desta feature) — mantém _a4Recolorir dedicado.
+  _a4Recolorir=function(){
+    atualizarCores();
+    if(ultimoElapsed!==null)desenharFrame(Math.min(ultimoElapsed,SEQ_END));
+  };
+
+  if(usaFallbackFinal){
+    (function passoFinal(tentativas){
+      if(tentarFinal())return;
+      if(tentativas<=0)return; // desiste desta rodada; a entry de _scrollCenas tenta nos próximos resizes
+      requestAnimationFrame(function(){passoFinal(tentativas-1);});
+    })(10);
+    return;
+  }
+  io=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){if(en.isIntersecting)tocar();});
+  },{threshold:0.35});
+  io.observe(secao);
 })();
 // PM1/M4 — A5: números contam de 0 até o valor real (que já está no HTML — SEO e
 // no-JS não perdem nada) quando a faixa entra na tela, uma vez só.
@@ -6362,7 +6572,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.339';
+const APP_VERSAO='v1.340';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
