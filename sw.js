@@ -51,7 +51,7 @@ self.addEventListener('notificationclick', (e) => {
   })());
 });
 
-const CACHE = 'ctsp-cache-v34';
+const CACHE = 'ctsp-cache-v35';
 const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
@@ -117,6 +117,9 @@ self.addEventListener('fetch', (e) => {
   // generaliza a regra que antes só cobria 'data.js?v=': ignoreSearch geral deixava o SW
   // servir uma versao antiga cacheada mesmo depois de um bump de cache-buster (?v=...) sem
   // bump de CACHE. Sem querystring, ignoreSearch:true (comportamento normal).
+  // Video: iPhone pede com Range; respondWith de cache/rede sem 206 quebra a reproducao.
+  if (req.headers.has('range') || /\.(mp4|webm)$/.test(url.pathname)) return;
+
   const temQuery = url.search !== '';
   e.respondWith(
     caches.match(req, { ignoreSearch: !temQuery }).then((cached) => {
