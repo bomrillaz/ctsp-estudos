@@ -1819,6 +1819,13 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .pm1-vitrine-escura .link-inline{color:var(--ember);}
 .pm1-vitrine-escura .lp-btn-linha{border-color:rgba(255,255,255,.32);color:var(--text);}
 .pm1-vitrine-escura .lp-btn-linha:hover{background:rgba(255,255,255,.08);}
+/* PV1/b240: .quiz-opt.errada/.correta (A2) herdam --text creme daqui, mas
+   --red-light/--green-light NÃO são redefinidos neste escopo — seguem o tema
+   claro/escuro do visitante e podem virar bem claros, quebrando o contraste do
+   texto creme por cima. Fundo translúcido fixo (mesma técnica do .planos-trial)
+   garante legibilidade nos dois temas. */
+.pm1-vitrine-escura .quiz-opt.errada{background:rgba(224,58,27,.14);border-color:var(--red);}
+.pm1-vitrine-escura .quiz-opt.correta{background:rgba(70,192,122,.14);border-color:var(--green);}
 
 /* ═══ PM1/M3 — A1 "a porta": celular real cresce no scroll até virar a tela ═══
    Dois atos separados (não um grid lado-a-lado): 1) título lido em paz, sem
@@ -1843,7 +1850,11 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 
 /* ═══ PM1/M3 — A2 "a questão que se resolve" ═══ */
 .lp-a2-track{position:relative;height:230vh;}
-.lp-a2-stage{position:sticky;top:0;height:100vh;min-height:560px;display:flex;align-items:center;justify-content:center;
+/* PV1/b240: 4 opções -> 5 (b3_14 real) deixou o cartão mais alto que 100vh em telas
+   curtas (celular retrato), e height:100vh fixo + overflow:hidden cortava o topo
+   (tag/César) e o rodapé (domínio) por igual, centralizados. min-height no lugar de
+   height deixa o stage crescer com o conteúdo sem cortar nada. */
+.lp-a2-stage{position:sticky;top:0;min-height:max(560px,100vh);display:flex;align-items:center;justify-content:center;
   overflow:hidden;padding:20px;background:radial-gradient(120% 90% at 50% 100%,rgba(240,136,60,.08),transparent 60%),var(--paper);}
 .lp-a2-card{position:relative;width:100%;max-width:520px;background:var(--surface);border:1px solid var(--line-soft);
   border-radius:20px;padding:22px 20px;box-shadow:var(--shadow-md);}
@@ -1860,24 +1871,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 @media(min-width:768px){.lp-a2-cesar{width:120px;height:120px;}}
 .lp-a2-cesar.mirror{transform:scaleX(-1);}
 .lp-a2-cesar.reage{transform:scale(1.16) rotate(-7deg);}
-.lp-a2-enun{font-size:16px;line-height:1.5;color:var(--text);font-weight:600;margin-bottom:16px;}
-.lp-a2-opts{display:flex;flex-direction:column;gap:9px;}
-.lp-a2-opt{position:relative;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.035);
-  border:1.5px solid var(--line-soft);border-radius:12px;padding:11px 13px;font-size:13.5px;line-height:1.4;color:var(--text2);}
-.lp-a2-opt-l{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--text2);
-  font-family:var(--font-display);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;}
-.lp-a2-opt-errada.acesa{border-color:rgba(240,136,60,.5);background:rgba(240,136,60,.07);}
-.lp-a2-brasa{position:absolute;right:12px;top:50%;width:18px;height:18px;border-radius:50%;
-  background:radial-gradient(circle at 40% 35%,#FFE1A8,var(--ember) 45%,var(--red) 85%);
-  box-shadow:0 0 14px 3px rgba(240,136,60,.55);opacity:0;transform:translateY(-50%) scale(0);
-  transition:opacity var(--dur-base) var(--ease-out),transform var(--dur-base) var(--ease-spring);}
-.lp-a2-brasa.show{opacity:1;transform:translateY(-50%) scale(1);}
-.lp-a2-brasa.apagada{opacity:0;transform:translateY(-50%) scale(.4);}
-.lp-a2-opt-certa{overflow:visible;}
-.lp-a2-opt-certa.circulada{border-color:rgba(240,136,60,.55);background:rgba(240,136,60,.06);}
-.lp-a2-caneta{position:absolute;inset:-10px -8px;width:calc(100% + 16px);height:calc(100% + 20px);
-  pointer-events:none;overflow:visible;}
-.lp-a2-caneta ellipse{fill:none;stroke:var(--ember);stroke-width:3;stroke-linecap:round;stroke-dasharray:400;stroke-dashoffset:400;}
+.lp-a2-enun{font-size:16px;line-height:1.5;color:var(--text);font-weight:600;margin-bottom:8px;}
+/* PV1/b240: opções passam a usar .quiz-opt/.quiz-opt-letter/.quiz-opt-text (mesmas
+   classes do Quiz real, index.html ~974-988) em vez de um visual próprio — brasa e
+   caneta (setas/animação de desenho) saíram, junto com .lp-a2-opt/.lp-a2-opt-l antigos. */
 .lp-a2-exp{margin-top:16px;padding:14px 15px;background:rgba(70,192,122,.08);border-left:3px solid var(--green);
   border-radius:0 12px 12px 0;font-size:13px;line-height:1.6;color:var(--text2);
   opacity:0;transform:translateY(8px);transition:opacity var(--dur-slow) var(--ease-out),transform var(--dur-slow) var(--ease-out);}
@@ -1888,8 +1885,13 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .lp-a2-dominio-track{flex:1;height:6px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;}
 .lp-a2-dominio-fill{height:100%;width:41%;border-radius:4px;background:var(--fire-line);transition:width var(--dur-slow) var(--ease-out);}
 .lp-a2-dominio-pct{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--ember);font-variant-numeric:tabular-nums;}
+/* PV1/b240: erro treme o CARTÃO inteiro (não só a alternativa clicada) — dispara uma
+   vez por passagem de scroll (guard em JS) e no clique errado. Curto e discreto. */
+.lp-a2-card.treme{animation:lpA2CardBalanco .4s ease;}
+@keyframes lpA2CardBalanco{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
 @media(prefers-reduced-motion:reduce){
-  .lp-a2-cesar,.lp-a2-brasa,.lp-a2-exp,.lp-a2-dominio-fill{transition:none;}
+  .lp-a2-cesar,.lp-a2-exp,.lp-a2-dominio-fill{transition:none;}
+  .lp-a2-card.treme{animation:none;}
 }
 
 /* ═══ PM1/M4 — A3 "a curva" ═══ */
@@ -1966,12 +1968,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 @media(prefers-reduced-motion:reduce){.lp-a7-sai{animation:none;}#login-view{transition:none;}}
 
 /* ═══ PM1/M6.5 — A2 jogável (toque/clique resolve na hora) ═══ */
-.lp-a2-opt.jog-errada{border-color:rgba(224,58,27,.6);background:rgba(224,58,27,.08);animation:lpA2Balanco .3s ease;}
-@keyframes lpA2Balanco{0%,100%{transform:translateX(0);}25%{transform:translateX(-4px);}75%{transform:translateX(4px);}}
 .lp-a2-dica{margin-top:10px;text-align:center;font-size:12px;font-weight:700;letter-spacing:.04em;
   text-transform:uppercase;color:var(--red);opacity:0;transition:opacity var(--dur-fast) var(--ease-out);}
 .lp-a2-dica.show{opacity:1;}
-@media(prefers-reduced-motion:reduce){.lp-a2-opt.jog-errada{animation:none;}}
 
 /* ═══ PM1/M6.5 — trio do celular: respingo d'água no toque (pointer:coarse) ═══ */
 .lp-agua-gota{position:fixed;z-index:9998;pointer-events:none;width:14px;height:14px;left:0;top:0;
@@ -2156,23 +2155,23 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <div class="lp-a2-stage">
         <div class="lp-a2-card">
           <div class="lp-a2-head">
-            <span class="lp-a2-tag">Exemplo · Suporte Básico de Vida</span>
+            <span class="lp-a2-tag">Exemplo real do banco · Ferimentos, Hemorragia e Queimaduras</span>
             <img class="lp-a2-cesar mirror" id="lp-a2-cesar" src="assets/cesar-aponta.png" data-pensa="assets/cesar-pensa.png" data-comemora="assets/cesar-coin-comemora.png" alt="" aria-hidden="true" onerror="this.onerror=null;this.src='assets/cesar-coin.png';this.classList.remove('mirror')">
           </div>
-          <p class="lp-a2-enun">Durante o atendimento a uma vítima consciente com sangramento intenso em membro superior, qual é a primeira conduta indicada?</p>
-          <div class="lp-a2-opts">
-            <div class="lp-a2-opt"><span class="lp-a2-opt-l">A</span><span>Elevar o membro e observar por alguns minutos antes de agir.</span></div>
-            <div class="lp-a2-opt lp-a2-opt-errada" id="lp-a2-errada"><span class="lp-a2-opt-l">B</span><span>Aplicar torniquete imediatamente, antes de qualquer outra medida.</span><span class="lp-a2-brasa" id="lp-a2-brasa" aria-hidden="true"></span></div>
-            <div class="lp-a2-opt lp-a2-opt-certa" id="lp-a2-certa"><span class="lp-a2-opt-l">C</span><span>Fazer compressão direta e firme sobre o ferimento.</span>
-              <svg class="lp-a2-caneta" id="lp-a2-caneta" viewBox="0 0 200 64" aria-hidden="true"><ellipse cx="100" cy="32" rx="92" ry="26"/></svg>
-            </div>
-            <div class="lp-a2-opt"><span class="lp-a2-opt-l">D</span><span>Aguardar a equipe de resgate sem intervir.</span></div>
+          <p class="lp-a2-enun">Sobre hemorragia externa grave no protocolo X do XABCDE, a conduta CORRETA é:</p>
+          <div class="quiz-doc">ITO 23 CBMMG (3ª ed./2021) — P508 Hemorragia</div>
+          <div class="quiz-opts">
+            <div class="quiz-opt"><span class="quiz-opt-letter">A</span><span class="quiz-opt-text">Aguardar a obtenção de acesso venoso periférico antes de qualquer intervenção no sangramento.</span></div>
+            <div class="quiz-opt" id="lp-a2-errada"><span class="quiz-opt-letter">B</span><span class="quiz-opt-text">Aplicar o torniquete imediatamente em qualquer hemorragia de membro, sem medidas prévias.</span></div>
+            <div class="quiz-opt" id="lp-a2-certa"><span class="quiz-opt-letter">C</span><span class="quiz-opt-text">Controle por pressão direta, curativo compressivo ou torniquete em hemorragias de membros com risco de morte.</span></div>
+            <div class="quiz-opt"><span class="quiz-opt-letter">D</span><span class="quiz-opt-text">Aplicar gelo sobre a lesão para provocar vasoconstrição antes da colocação do curativo.</span></div>
+            <div class="quiz-opt"><span class="quiz-opt-letter">E</span><span class="quiz-opt-text">Elevar o membro acometido e aguardar a hemostasia espontânea do vaso lesionado.</span></div>
           </div>
           <div class="lp-a2-exp" id="lp-a2-exp">
-            <b>Por quê:</b> a compressão direta controla a maioria das hemorragias externas sem os riscos do torniquete usado cedo demais (isquemia, dor, uso incorreto). Ele existe, mas é o último recurso, não o primeiro.
+            <b>Por quê:</b> X = controle de hemorragia exsanguinante: pressão direta → curativo compressivo → torniquete (em membros, quando necessário).
           </div>
           <div class="lp-a2-dominio">
-            <span>Domínio em Suporte Básico de Vida</span>
+            <span>Domínio em Ferimentos, Hemorragia e Queimaduras</span>
             <div class="lp-a2-dominio-track"><div class="lp-a2-dominio-fill" id="lp-a2-dominio-fill"></div></div>
             <span class="lp-a2-dominio-pct" id="lp-a2-dominio-pct">41%</span>
           </div>
@@ -5601,33 +5600,33 @@ function scrollProgress(el,cb,opts){
     shots.forEach(function(s){s.classList.toggle('active',s.dataset.shot===alvo);});
   });
 })();
-// PM1/M3 — A2: questão fixa (fora do banco) que se resolve sozinha no scroll —
-// brasa na errada, caneta circula a certa, explicação abre, domínio sobe. 4 janelas
-// de progresso sequenciais, sem sobreposição, para não competir a atenção.
+// PM1/M3 — A2: questão fixa (fora do banco, mas o TEXTO é a b3_14 real, copiada do
+// data.js por script — PV1/b240) que se resolve sozinha no scroll — a errada acende
+// vermelho (.errada, mesma classe do Quiz real), a certa acende verde (.correta),
+// explicação abre, domínio sobe. Janelas de progresso sequenciais, sem sobreposição.
 (function initA2Scene(){
   var track=document.getElementById('lp-a2-track');
   if(!track)return;
-  var brasa=document.getElementById('lp-a2-brasa'),
+  var card=document.querySelector('#lp-a2 .lp-a2-card'),
       errada=document.getElementById('lp-a2-errada'),
       certa=document.getElementById('lp-a2-certa'),
-      elipse=document.querySelector('#lp-a2-caneta ellipse'),
       cesar=document.getElementById('lp-a2-cesar'),
       exp=document.getElementById('lp-a2-exp'),
       fill=document.getElementById('lp-a2-dominio-fill'),
       pct=document.getElementById('lp-a2-dominio-pct'),
       dica=document.getElementById('lp-a2-dica');
-  if(!brasa||!elipse)return;
-  var DASH=400,DOM_INI=41,DOM_FIM=58;
+  if(!card||!errada||!certa)return;
+  var DOM_INI=41,DOM_FIM=58;
   // PM1/M6.5 — A2 jogável: quem toca/clica resolve na hora; quem não toca, o scroll
   // resolve sozinho como já fazia. resolvidoPeloToque trava o motor de scroll pra não
   // reescrever por cima do estado que a pessoa já viu (senão o próximo scroll "desfaz"
   // a resposta certa, porque o cálculo por progresso ainda não tinha chegado lá).
-  var resolvidoPeloToque=false,poseCesar='aponta';
+  var resolvidoPeloToque=false,poseCesar='aponta',jaTremeuNestaPassagem=false;
   // PM1/M6.5 — três poses (aponta/pensa/comemora), sempre a mesma dimensão (360x360
   // nos masters) pra troca não pular. poseCesar só evita recarregar a MESMA pose de
   // novo a cada tick de scroll — troca pra frente e pra trás segue o `p` atual, igual
-  // brasa/elipse/certa/exp (nenhum desses trava depois de tocado; nem por toque o
-  // usuário volta, mas resolvidoPeloToque já cuida disso separadamente).
+  // errada/certa/exp (nenhum desses trava depois de tocado; nem por toque o usuário
+  // volta, mas resolvidoPeloToque já cuida disso separadamente).
   // Pré-carrega antes de trocar pra nunca mostrar um <img> quebrado.
   function trocarCesarPose(pose){
     if(poseCesar===pose||!cesar||!cesar.dataset[pose])return;
@@ -5636,11 +5635,17 @@ function scrollProgress(el,cb,opts){
     teste.onload=function(){cesar.src=alt;cesar.classList.remove('mirror');};
     teste.src=alt;
   }
+  // PV1/b240: erro treme o CARTÃO inteiro (.lp-a2-card), não só a alternativa —
+  // dispara 1x por chamada; quem controla "uma vez por passagem" é o chamador.
+  // prefers-reduced-motion:reduce zera via CSS (@keyframes lpA2CardBalanco).
+  function tremerCard(){
+    card.classList.remove('treme');
+    void card.offsetWidth; // reflow: permite re-disparar a animação em passagens seguidas
+    card.classList.add('treme');
+  }
   function estadoFinal(){
-    brasa.classList.remove('show');brasa.classList.add('apagada');
-    errada.classList.remove('acesa');
-    elipse.style.strokeDashoffset='0';
-    certa.classList.add('circulada');
+    errada.classList.remove('errada');
+    certa.classList.add('correta');
     cesar.classList.add('reage');
     trocarCesarPose('comemora');
     exp.classList.add('show');
@@ -5648,13 +5653,14 @@ function scrollProgress(el,cb,opts){
     pct.textContent=DOM_FIM+'%';
   }
   function tentarDeNovo(opt){
-    opt.classList.add('jog-errada');
+    opt.classList.add('errada');
+    tremerCard();
     vibrarFeedback(false);
     trocarCesarPose('pensa');
     if(dica){dica.classList.add('show');clearTimeout(dica._t);dica._t=setTimeout(function(){dica.classList.remove('show');},1100);}
-    setTimeout(function(){opt.classList.remove('jog-errada');},700);
+    setTimeout(function(){opt.classList.remove('errada');},700);
   }
-  document.querySelectorAll('#lp-a2 .lp-a2-opt').forEach(function(opt){
+  document.querySelectorAll('#lp-a2 .quiz-opt').forEach(function(opt){
     opt.style.cursor='pointer';
     opt.addEventListener('click',function(){
       if(resolvidoPeloToque)return;
@@ -5664,16 +5670,17 @@ function scrollProgress(el,cb,opts){
   });
   scrollProgress(track,function(p){
     if(resolvidoPeloToque)return; // já resolvido por toque — scroll não reescreve
-    var brasaAcesa=p>=0.15&&p<0.55;
-    brasa.classList.toggle('show',p>=0.15);
-    brasa.classList.toggle('apagada',p>=0.55);
-    errada.classList.toggle('acesa',brasaAcesa);
-    var penP=Math.min(1,Math.max(0,(p-0.40)/0.28));
-    elipse.style.strokeDashoffset=String(DASH*(1-penP));
-    certa.classList.toggle('circulada',penP>0.05);
+    var faseErrada=p>=0.15&&p<0.55;
+    errada.classList.toggle('errada',faseErrada);
+    if(faseErrada){
+      if(!jaTremeuNestaPassagem){jaTremeuNestaPassagem=true;tremerCard();}
+    } else if(p<0.15){
+      jaTremeuNestaPassagem=false; // saiu da fase por cima — rearma pra próxima passagem
+    }
+    certa.classList.toggle('correta',p>=0.55);
     cesar.classList.toggle('reage',p>=0.55);
     if(p>=0.55)trocarCesarPose('comemora');
-    else if(brasaAcesa)trocarCesarPose('pensa');
+    else if(faseErrada)trocarCesarPose('pensa');
     exp.classList.toggle('show',p>=0.72);
     var domP=Math.min(1,Math.max(0,(p-0.70)/0.30));
     var domVal=Math.round(DOM_INI+(DOM_FIM-DOM_INI)*domP);
@@ -5729,7 +5736,8 @@ function scrollProgress(el,cb,opts){
 (function initToqueAgua(){
   document.addEventListener('pointerdown',function(e){
     if(e.pointerType!=='touch'||movimentoReduzido())return;
-    if(!e.target.closest('#landing-view,#login-view'))return;
+    var t=e.target;
+    if(!t||typeof t.closest!=='function'||!t.closest('#landing-view,#login-view'))return;
     var gota=document.createElement('div');
     gota.className='lp-agua-gota';
     gota.style.left=e.clientX+'px';
@@ -5745,7 +5753,8 @@ function scrollProgress(el,cb,opts){
   var ultimo=0;
   document.addEventListener('mousemove',function(e){
     if(movimentoReduzido())return;
-    if(!e.target.closest('#landing-view,#login-view'))return;
+    var t=e.target;
+    if(!t||typeof t.closest!=='function'||!t.closest('#landing-view,#login-view'))return;
     var agora=performance.now();
     if(agora-ultimo<70)return;
     ultimo=agora;
@@ -6255,7 +6264,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.334';
+const APP_VERSAO='v1.335';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
