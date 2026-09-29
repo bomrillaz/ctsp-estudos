@@ -5493,7 +5493,7 @@ function _scrollYReal(){
   // window.scrollY sozinho fica sempre 0 — precisa do maior entre os 3 candidatos.
   return Math.max(document.documentElement.scrollTop||0,document.body.scrollTop||0,scrollY||0);
 }
-var _scrollCenas=[],_scrollRaf=null;
+var _scrollCenas=[],_scrollRaf=null,_scrollRO=null;
 function _scrollFlush(){
   _scrollRaf=null;
   var vh=innerHeight,y=_scrollYReal(),i,s,total,p;
@@ -5506,6 +5506,14 @@ function _scrollFlush(){
   }
 }
 function _scrollAgendar(){if(_scrollRaf==null)_scrollRaf=requestAnimationFrame(_scrollFlush);}
+// b239 (review do Opus) — recalibra TODAS as cenas de uma vez (janela redimensionou, OU o
+// ResizeObserver da landing disparou porque o CONTEÚDO mudou de altura — fonte trocando por
+// swap, imagem lazy sem dimensão reservada, a2.show empurrando o que vem depois). Só lê
+// (medir), nunca escreve style/layout, então não tem risco de loop com o próprio RO.
+function _scrollRecalibrarTudo(){
+  for(var i=0;i<_scrollCenas.length;i++)_scrollCenas[i].medir();
+  _scrollAgendar();
+}
 // b238 (achado do Opus/review) — quem rola de verdade varia com largura/motor (mesma nota
 // de irAoTopoDoConteudo() em :3536): no dev dominante hoje é o <body> (overflow-x:hidden em
 // html,body força overflow-y:auto computado nos dois — CSS spec), e 'scroll' em elemento
@@ -5513,32 +5521,36 @@ function _scrollAgendar(){if(_scrollRaf==null)_scrollRaf=requestAnimationFrame(_
 // evento de QUALQUER scroller descendente (body, html, .app-content, etc.) porque a captura
 // desce a árvore até o alvo antes do bubble — não depende de qual é o scroller real.
 addEventListener('scroll',_scrollAgendar,{passive:true,capture:true});
-addEventListener('resize',_scrollAgendar,{passive:true});
+addEventListener('resize',_scrollRecalibrarTudo,{passive:true});
+// 1 ResizeObserver compartilhado na landing inteira (não por cena) — pega mudança de altura
+// do CONTEÚDO, não só da janela. Criado uma vez, na primeira cena registrada.
+function _scrollGarantirRO(){
+  if(_scrollRO||!('ResizeObserver' in window))return;
+  var landing=document.getElementById('landing-view');
+  if(!landing)return;
+  _scrollRO=new ResizeObserver(_scrollRecalibrarTudo);
+  _scrollRO.observe(landing);
+}
 function scrollProgress(el,cb,opts){
   opts=opts||{};
   if(!el||typeof cb!=='function')return function(){};
   if(movimentoReduzido()&&!opts.semReducedMotion){cb(1);return function(){};}
   var entry={el:el,cb:cb,docTop:0,docBottom:0};
-  _scrollCenas.push(entry);
   // docTop/docBottom = posição do track relativa ao DOCUMENTO (não ao viewport). Medido no
-  // registro e recalibrado em resize; landing não reflui sozinha fora desses dois momentos.
-  // Achado PM1/M6.5 (nota histórica): rect zerado = display:none/sem layout ainda (parse no
-  // meio, ou vitrine oculta por já estar logado) — guarda pra não cachear lixo; se já tinha
-  // uma medida boa de antes, mantém (ex.: resize com a vitrine oculta pós-login).
-  function medirRange(){
+  // registro e recalibrado por _scrollRecalibrarTudo (resize da janela OU do conteúdo, via
+  // _scrollRO acima). Achado PM1/M6.5 (nota histórica): rect zerado = display:none/sem layout
+  // ainda (parse no meio, ou vitrine oculta por já estar logado) — guarda pra não cachear
+  // lixo; se já tinha uma medida boa de antes, mantém (ex.: recalibração com a vitrine oculta
+  // pós-login — o resize síntetico de verLanding() cobre esse caso na volta).
+  entry.medir=function medirRange(){
     var r=el.getBoundingClientRect();
     if(r.width===0&&r.height===0)return;
     var y=_scrollYReal();
     entry.docTop=r.top+y;entry.docBottom=r.bottom+y;
-  }
-  medirRange();
-  addEventListener('resize',medirRange,{passive:true});
-  // Achado b239: medirRange() acima roda no parse (síncrono, antes do <script> soltar a
-  // thread) — se alguma imagem da landing ainda não tinha decodificado tamanho, o layout
-  // cacheado aqui fica maior que o real (sobrou ~270px no teste, escada parava em ~98% em
-  // vez de 100%). 'load' dispara só depois de TODAS as imagens carregarem — 1 recalibração
-  // aqui corrige sem custo nenhum no caminho quente do scroll.
-  if(document.readyState!=='complete')addEventListener('load',medirRange,{once:true});
+  };
+  entry.medir();
+  _scrollCenas.push(entry);
+  _scrollGarantirRO();
   (function calcInicial(){
     if(entry.docBottom<=0)return; // idem: sem medida boa ainda, não chama cb com lixo
     var vh=innerHeight,y=_scrollYReal(),total=(entry.docBottom-entry.docTop)-vh,p;
@@ -5546,7 +5558,6 @@ function scrollProgress(el,cb,opts){
     cb(p);
   })();
   return function destroy(){
-    removeEventListener('resize',medirRange);
     var idx=_scrollCenas.indexOf(entry);
     if(idx>=0)_scrollCenas.splice(idx,1);
   };
@@ -6236,7 +6247,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.332';
+const APP_VERSAO='v1.333';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
