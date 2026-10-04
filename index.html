@@ -217,6 +217,19 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
   font-family:var(--font-display);font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
   color:var(--red);border:2px solid var(--red);border-radius:6px;padding:3px 7px;background:rgba(255,255,255,.94);
   white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.18);}
+/* APP-D/b2: carimbo no ACERTO do Quiz. Base compartilhada (forma/tipografia do C2; cor por
+   --carimbo-cor). --certo pousa na borda da alternativa certa: absoluto, sem ocupar espaço nem
+   capturar clique. Escopado em #quiz-running-view: .quiz-opt também existe no Simulado e na
+   vitrine (lição do b241). .lp-c2-carimbo (voo do erro) segue independente. */
+.carimbo{font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;line-height:1;
+  color:var(--carimbo-cor,var(--red));border:2px solid var(--carimbo-cor,var(--red));border-radius:6px;padding:3px 7px;
+  background:var(--surface);white-space:nowrap;pointer-events:none;}
+#quiz-running-view .quiz-opt{position:relative;}
+.carimbo--certo{--carimbo-cor:var(--green);position:absolute;top:-12px;right:12px;transform:rotate(-4deg);
+  animation:carimboBate .44s var(--ease-out) both;}
+@keyframes carimboBate{0%{opacity:0;transform:scale(1.7) rotate(-12deg);}55%{opacity:1;}100%{opacity:1;transform:scale(1) rotate(-4deg);}}
+.carimbo--fixo{animation:none;}
+@media (prefers-reduced-motion:reduce){.carimbo--certo{animation:none;}}
 @keyframes lpC2Pulso{0%,100%{transform:scale(1);}50%{transform:scale(1.35);}}
 .lp-c2-pulso{animation:lpC2Pulso .35s var(--ease-spring);}
 /* AUTH */
@@ -6789,7 +6802,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.342';
+const APP_VERSAO='v1.343';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -8483,6 +8496,17 @@ function renderQuizQ(){
   document.getElementById('quiz-next-btn').classList.remove('show');
 }
 
+// APP-D/b2 — carimbo "Certo" na alternativa certa marcada. Dispara e esquece: não segura o
+// botão Próxima nem o clique. aria-hidden porque o título "Correto" do feedback já é anunciado.
+function carimbarAcerto(optEl){
+  if(!optEl||optEl.querySelector('.carimbo'))return;
+  const c=document.createElement('span');
+  c.className='carimbo carimbo--certo'+(movimentoReduzido()?' carimbo--fixo':'');
+  c.setAttribute('aria-hidden','true');
+  c.textContent='Certo';
+  optEl.appendChild(c);
+}
+
 async function responderQuiz(idx){
   if(quizAnswered)return;
   const q=quizQueue[quizIdx];
@@ -8512,6 +8536,7 @@ async function responderQuiz(idx){
     if(i===correta)o.classList.add('correta');
     if(i===idx&&!acertou){o.classList.add('errada');voarCarimboRevisao(o);} // PM1/M6 (C2)
   });
+  if(acertou)carimbarAcerto(opts[correta]); // APP-D/b2: só no acerto; nada no erro
   if(!acertou)tremerCartao(document.querySelector('#quiz-running-view .quiz-body')); // PV1/6
   quizSessao.t++;
   if(acertou){quizSessao.c++;userStats.correct=(userStats.correct||0)+1;}
