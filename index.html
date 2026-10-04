@@ -64,6 +64,7 @@
   --amber:#8A5410;--amber-light:#FAF1E3;
   --blue:#1F5C8B;--blue-light:#E9F1F7;
   --at1:#E03A1B;--at2:#E8820E;--at3:#1E7BC2;--at4:#C2375E;--at5:#5C9233;
+  --agua:#1FA2E8;
   --shadow:0 1px 2px rgba(16,27,61,.05),0 4px 14px rgba(16,27,61,.06);
   --shadow-md:0 2px 4px rgba(16,27,61,.06),0 10px 28px rgba(16,27,61,.10);
   --shadow-lg:0 8px 32px rgba(16,27,61,.18);
@@ -89,6 +90,7 @@ html[data-theme="dark"]{
   --blue:#5EA5DA;--blue-light:#13273D;
   --ember-text:#F0883C;
   --at1:#FF6B4A;--at2:#F0993B;--at3:#5FAAE0;--at4:#E8718F;--at5:#93C45F;
+  --agua:#7AD0FF;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.32);
   --shadow-md:0 2px 4px rgba(0,0,0,.34),0 10px 28px rgba(0,0,0,.42);
   --shadow-lg:0 8px 32px rgba(0,0,0,.55);
@@ -1987,14 +1989,14 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 }
 
 /* ═══ M1 — A4 "como o edital pesa" ═══
-   Substituiu a rota SVG/caminhão (PM1/M4 original): 5 barras horizontais que nascem
-   de partículas, cor pelas MESMAS --at1..--at5 do resto do app. Decisão e protótipo
+   Substituiu a rota SVG/caminhão (PM1/M4 original): 5 barras horizontais montadas pelo
+   mascote (5 jatos, a água enche cada barra), cor pelas MESMAS --at1..--at5 do resto do app. Decisão e protótipo
    aprovado em materiais/entregas/planos/PLANO_motion_e_bombeiro.md (M0/M1). Sem pin
    de scroll: a seção tem a altura do próprio conteúdo. */
 .lp-a4-inner{width:100%;max-width:640px;margin:0 auto;padding:0 20px;}
-.lp-a4-cena{position:relative;margin-top:16px;}
-.lp-a4-canvas{position:absolute;inset:0;width:100%;height:100%;}
-.lp-a4-lista{position:relative;display:flex;flex-direction:column;gap:22px;}
+.lp-a4-cena{position:relative;margin-top:16px;padding-left:clamp(64px,16vw,96px);} /* faixa à esquerda p/ o mascote da cena */
+.lp-a4-canvas{position:absolute;left:0;top:-70px;width:100%;pointer-events:none;z-index:0;} /* passa da cena (arco da água, pixels que escorrem); atrás do texto */
+.lp-a4-lista{position:relative;z-index:1;display:flex;flex-direction:column;gap:22px;}
 .lp-a4-linha-topo{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:7px;
   opacity:0;transform:translateY(6px);transition:opacity var(--dur-base) var(--ease-out),transform var(--dur-base) var(--ease-out);}
 .lp-a4-linha-topo.mostrar{opacity:1;transform:translateY(0);}
@@ -2007,6 +2009,31 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .lp-a4-fecho.mostrar{opacity:1;transform:translateY(0);}
 .lp-a4-fecho b{color:var(--ember-text);}
 @media(prefers-reduced-motion:reduce){.lp-a4-linha-topo,.lp-a4-fecho{transition:none;}}
+
+/* ═══ P2/b249 — mascote pixel (folha v4, quadro 64, 1x). Motor: materiais/marca/mascote-pixel/motor ═══ */
+:root{--mascote-escala:1;--mascote-q:64;--mascote-cols:8;--mascote-rows:11;--ml:0;--mq:0;--agua-l:128;--agua-a:96;--agua-esq:50}
+.mascote{
+  --mascote-px:calc(var(--mascote-escala)*1px);
+  position:fixed;left:0;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:25;
+  width:calc(var(--mascote-q)*var(--mascote-px));height:calc(var(--mascote-q)*var(--mascote-px));
+  pointer-events:none;
+  background-repeat:no-repeat;image-rendering:pixelated;
+  background-size:calc(var(--mascote-cols)*var(--mascote-q)*var(--mascote-px)) calc(var(--mascote-rows)*var(--mascote-q)*var(--mascote-px));
+  background-position:calc(var(--mq,0)*var(--mascote-q)*var(--mascote-px)*-1) calc(var(--ml,0)*var(--mascote-q)*var(--mascote-px)*-1);
+  will-change:transform;
+  transition:opacity .2s;
+}
+.mascote.mascote-oculto{opacity:0;visibility:hidden}
+
+.mascote-agua{
+  position:absolute;bottom:0;left:calc(var(--agua-esq)*var(--mascote-px));
+  width:calc(var(--agua-l)*var(--mascote-px));height:calc(var(--agua-a)*var(--mascote-px));
+  image-rendering:pixelated;pointer-events:none;
+}
+.mascote-cena{position:absolute;left:-12px;top:0;width:64px;height:64px;z-index:2;pointer-events:none;
+  background-repeat:no-repeat;background-size:512px 704px;image-rendering:pixelated;will-change:transform;}
+.mascote-cena.off{visibility:hidden;}
+@media(prefers-reduced-motion:reduce){.mascote{transition:none;}}
 
 /* ═══ M4 — A8 "faixa do edital" (substitui a A6) ═══
    3 faixas de texto puro CSS, sentidos opostos, conteúdo real (áreas via AI, fontes
@@ -2354,8 +2381,8 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <!-- ── A4 "como o edital pesa" (M1) ──
        5 barras, largura pela COTA real (14/8/14/12/12 = 60 questões da prova,
        CLAUDE.md §5) — não é decoração, é o mesmo número que "assunto novo por peso
-       do edital" no passo 3 usa de verdade. Barras nascem de partículas quando a
-       seção entra na tela (dispara uma vez, ver initA4Barras). Substituiu o
+       do edital" no passo 3 usa de verdade. O mascote monta as barras com 5 jatos de
+       água quando a seção entra na tela (loop, ver initA4Barras). Substituiu o
        caminhão/trajeto SVG: materiais/entregas/planos/PLANO_motion_e_bombeiro.md. -->
   <section class="lp-sec" id="lp-a4">
     <div class="lp-a4-inner">
@@ -5734,6 +5761,529 @@ function scrollProgress(el,cb,opts){
     if(idx>=0)_scrollCenas.splice(idx,1);
   };
 }
+// ═══ P2/b249 — MASCOTE PIXEL: motor (cópia de materiais/marca/mascote-pixel/motor/mascote_motor.js,
+// testado em materiais/entregas/testes/teste_mascote_motor.js) + driver da vitrine ═══
+/* Mascote pixel — motor (P1/b245, P2/b249: quadro 64, folha v4 de 11 linhas). Bloco autocontido, JS puro, colar no index.html.
+   Duas camadas:
+   - FUNÇÕES PURAS (sem DOM, testadas em Node): tabela, quadro por tempo, próxima ação,
+     avanço de posição, sorteio do piscar, partículas de água.
+   - MOTOR (DOM): Mascote.criar(opts) -> um div.mascote, UM laço rAF por timestamp que PARA com
+     o mascote oculto, fora da tela, aba oculta ou reduced-motion.
+   Não registra listener de scroll: quem anima por rolagem usa o motor único (scrollProgress)
+   e chama a API (andarAte/tocar/jatoEm). Resize e visibilitychange não são scroll. */
+var Mascote=(function(){
+'use strict';
+
+// Folha v4: cada linha uma ação, cada coluna um quadro de 64x64 (11 linhas, ordem = assets/mascote/folha_v4.png).
+// loopInicio: quadro onde o loop recomeça (entrada tocada 1x, resto em loop).
+// segurarMs: tempo parado no último quadro antes de a ação não-loop terminar.
+var MASCOTE_ANIM={
+  parado:     {linha:0, quadros:4,fps:4, loop:true},
+  piscar:     {linha:1, quadros:2,fps:10,loop:false},
+  andar:      {linha:2, quadros:8,fps:12,loop:true},
+  apontar:    {linha:3, quadros:3,fps:6, loop:false,segurarMs:1400},
+  jato:       {linha:4, quadros:5,fps:8, loop:true, loopInicio:1},
+  comemorar:  {linha:5, quadros:4,fps:6, loop:false,segurarMs:600},
+  sentar:     {linha:6, quadros:4,fps:5, loop:true, loopInicio:2},
+  cochilar:   {linha:7, quadros:3,fps:2, loop:true},
+  acenar:     {linha:8, quadros:8,fps:10,loop:true},   // de frente (era `frente`); quem chama passa duracaoMs
+  continencia:{linha:9, quadros:3,fps:6, loop:false,segurarMs:1200},
+  correr:     {linha:10,quadros:8,fps:14,loop:true}
+};
+var MASCOTE_QUADRO=64;        // px de um quadro na folha (padrão; criar({quadro:48}) troca). ÚNICA fonte do tamanho.
+var MASCOTE_VEL_PX_S=15;      // andar: px DA FOLHA por segundo para grade 32 (escala com quadro/32; no quadro 64 = 30 px/s)
+var MASCOTE_CORRER_X=2.4;     // correr anda MASCOTE_CORRER_X vezes mais rápido que andar
+// Ponta do esguicho por quadro do jato (px do quadro de 64, a partir do canto sup. esq.). Mesma fonte da arte (acoes.py).
+var MASCOTE_BICO=[[56,46],[56,44],[56,45],[56,44],[56,44]];
+var MASCOTE_PISCAR_MS=[3000,7000];
+var MASCOTE_JATO_MS=2200;
+
+// ---------- funções puras ----------
+
+// Quadro a mostrar na ação `acao`, `tMs` depois de ela começar.
+// reduzido -> sempre quadro 0 de `parado` (travado, nunca termina).
+function mascoteQuadro(tabela,acao,tMs,reduzido){
+  var p=tabela.parado;
+  if(reduzido)return {linha:p.linha,quadro:0,fim:false};
+  var a=tabela[acao];
+  if(!a)return {linha:p.linha,quadro:0,fim:false};
+  var t=tMs>0?tMs:0,n=Math.floor(t*a.fps/1000),q,ini=a.loopInicio||0;
+  if(a.loop){
+    q=n<a.quadros?n:ini+((n-ini)%(a.quadros-ini));
+    return {linha:a.linha,quadro:q,fim:false};
+  }
+  q=n<a.quadros?n:a.quadros-1;
+  return {linha:a.linha,quadro:q,fim:t>=a.quadros*1000/a.fps+(a.segurarMs||0)};
+}
+
+// Máquina mínima: o que toca depois de um evento.
+// {tipo:'tocar',acao} -> acao (se existir) | {tipo:'fim'} -> parado | {tipo:'reduzido'} -> parado
+function mascoteProximaAcao(acaoAtual,evento,tabela){
+  if(evento.tipo==='tocar')return tabela[evento.acao]?evento.acao:acaoAtual;
+  if(evento.tipo==='fim'||evento.tipo==='reduzido')return 'parado';
+  return acaoAtual;
+}
+
+// Intervalo sorteado do piscar (rand em [0,1)).
+function mascoteSortearPiscar(rand,faixa){
+  faixa=faixa||MASCOTE_PISCAR_MS;
+  return faixa[0]+rand*(faixa[1]-faixa[0]);
+}
+
+// Passo de caminhada em px CSS. Não passa do alvo.
+function mascoteAvancar(x,alvo,dtMs,velPxS){
+  var d=alvo-x,passo=velPxS*dtMs/1000;
+  if(Math.abs(d)<=passo)return {x:alvo,chegou:true,dir:d>=0?1:-1};
+  return {x:x+(d>0?passo:-passo),chegou:false,dir:d>0?1:-1};
+}
+
+// Vira para o alvo; dentro de 2 px mantém o lado atual (evita tremer no centro).
+function mascoteFlipPara(xCentro,xAlvo,flipAtual){
+  if(Math.abs(xAlvo-xCentro)<2)return flipAtual;
+  return xAlvo<xCentro;
+}
+
+// Água: partícula quadrada em px do canvas (1 px canvas = 1 px da folha).
+// ang em rad (0 = para frente, + = para cima); v em px/s.
+function mascoteAguaNova(rand,ang,v,origem){
+  var a=ang+(rand()-.5)*.12,vel=v*(.9+rand()*.2);
+  return {x:origem.x,y:origem.y,vx:Math.cos(a)*vel,vy:-Math.sin(a)*vel,vida:0,max:650+rand()*250,tom:rand()<.5?0:1};
+}
+function mascoteAguaPasso(parts,dtMs,larg,alt,grav){
+  var dt=dtMs/1000,out=[],i,p;
+  for(i=0;i<parts.length;i++){
+    p=parts[i];
+    p.vida+=dtMs;p.vy+=grav*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;
+    if(p.vida<p.max&&p.x>=0&&p.x<larg&&p.y>=0&&p.y<alt)out.push(p);
+  }
+  return out;
+}
+
+// Geometria derivada do tamanho do quadro `q` (px da folha) e da escala inteira. Tudo que
+// depende de tamanho sai daqui; os números base abaixo são medidos na grade de 32 e escalam com q/32.
+var GRADE_BASE=32;            // grade em que as medidas da água foram calibradas
+var AGUA_BASE={l:64,a:48,esq:26,origemX:4,origemY:35,bocalX:30,bocalY:13,grav:150,vMin:75,vMax:140};
+// aguaOv (opcional): {bocalX,bocalY,esq,origemX,origemY,bico} em px da folha DO QUADRO REAL `q`
+// (não da grade de 32), p/ casar a água com a ponta do esguicho de uma arte específica.
+// bico = [[x,y]...] por quadro do jato (y a partir do TOPO): a partícula nasce na ponta do quadro atual.
+// bocalX/bocalY = ponta do esguicho a partir do canto esq/inf do quadro; esq = onde o canvas
+// começa em x; origemX/Y = onde a partícula nasce NO canvas. Sem origemX/Y, derivam de
+// bocalX-esq e (altura do canvas)-bocalY, que é o que o AGUA_BASE já satisfaz.
+function mascoteGeometria(q,escala,tabela,aguaOv){
+  tabela=tabela||MASCOTE_ANIM;
+  aguaOv=aguaOv||{};
+  var k=q/GRADE_BASE,cols=0,rows=0,n;
+  for(n in tabela){cols=Math.max(cols,tabela[n].quadros);rows=Math.max(rows,tabela[n].linha+1);}
+  var r=function(v){return Math.round(v*k);};
+  return {
+    k:k,cols:cols,rows:rows,
+    larg:q*escala,                                   // px CSS do div (largura = altura)
+    folhaL:cols*q*escala,folhaA:rows*q*escala,       // background-size em px CSS
+    bg:function(linha,quadro){return {x:-quadro*q*escala,y:-linha*q*escala};}, // background-position
+    agua:(function(){
+      var l=r(AGUA_BASE.l),a=r(AGUA_BASE.a);
+      var bx=aguaOv.bocalX!=null?aguaOv.bocalX:r(AGUA_BASE.bocalX);
+      var by=aguaOv.bocalY!=null?aguaOv.bocalY:r(AGUA_BASE.bocalY);
+      var esq=aguaOv.esq!=null?aguaOv.esq:r(AGUA_BASE.esq);
+      var ox=aguaOv.origemX!=null?aguaOv.origemX:(aguaOv.bocalX!=null||aguaOv.esq!=null?bx-esq:r(AGUA_BASE.origemX));
+      var oy=aguaOv.origemY!=null?aguaOv.origemY:(aguaOv.bocalY!=null?a-by:r(AGUA_BASE.origemY));
+      return {l:l,a:a,esq:esq,origem:{x:ox,y:oy},bocalX:bx,bocalY:by,bico:aguaOv.bico||null,
+              grav:AGUA_BASE.grav*k,vMin:AGUA_BASE.vMin*k,vMax:AGUA_BASE.vMax*k};
+    })()
+  };
+}
+
+// ---------- motor (DOM) ----------
+
+var AGUA_CORES=['#7cc8f2','#e3f6ff'];
+
+function _reduzidoPadrao(){
+  if(typeof movimentoReduzido==='function')return movimentoReduzido();
+  return matchMedia('(prefers-reduced-motion:reduce)').matches||!!(navigator.connection&&navigator.connection.saveData);
+}
+
+// opts: {sprite (url/data URI), pai (default body), reduzido (fn), tabela, vel, quadro, agua (override, ver mascoteGeometria)}
+function criar(opts){
+  opts=opts||{};
+  var tabela=opts.tabela||MASCOTE_ANIM,reduzidoFn=opts.reduzido||_reduzidoPadrao;
+  var Q=opts.quadro||MASCOTE_QUADRO,G=mascoteGeometria(Q,2,tabela,opts.agua),vel=(opts.vel||MASCOTE_VEL_PX_S)*G.k;
+  var el=document.createElement('div');
+  el.className='mascote mascote-oculto';
+  el.setAttribute('aria-hidden','true');
+  if(opts.sprite)el.style.backgroundImage='url("'+opts.sprite+'")';
+  var cv=document.createElement('canvas');
+  cv.className='mascote-agua';cv.width=G.agua.l;cv.height=G.agua.a;
+  el.style.setProperty('--mascote-q',Q);el.style.setProperty('--mascote-cols',G.cols);el.style.setProperty('--mascote-rows',G.rows);
+  el.style.setProperty('--agua-l',G.agua.l);el.style.setProperty('--agua-a',G.agua.a);el.style.setProperty('--agua-esq',G.agua.esq);
+  var ctx=cv.getContext('2d');
+  el.appendChild(cv);
+  (opts.pai||document.body).appendChild(el);
+
+  var e={acao:'parado',t0:0,x:0,alvo:null,correr:false,aoChegar:null,aoTerminar:null,duracao:null,flip:false,
+         proxPiscar:0,agua:null,aguaAlvo:null,aguaSpawn:0,aguaAng:.3,aguaV:90,aguaMira:0};
+  var escala=2,vw=0,larg=Q*2;
+  var raf=null,ultimo=0,mostrando=false,naTela=true;
+  var qCache='',tCache='';
+
+  function agora(){return performance.now();}
+  function reduzido(){return !!reduzidoFn();}
+  function medir(){
+    var v=parseFloat(getComputedStyle(el).getPropertyValue('--mascote-escala'));
+    escala=v>0?v:2;G=mascoteGeometria(Q,escala,tabela,opts.agua);larg=G.larg;
+    vw=document.documentElement.clientWidth||innerWidth;
+    var max=Math.max(0,vw-larg);
+    if(e.x>max)e.x=max;
+    if(e.alvo!=null&&e.alvo>max)e.alvo=max;
+    qCache='';tCache='';
+    aplicar();
+  }
+  function snap(x){return Math.round(x/escala)*escala;}  // alinha ao pixel da folha
+  function limitar(x){return Math.min(Math.max(0,x),Math.max(0,vw-larg));}
+
+  function aplicar(){
+    var q;
+    if(reduzido())q=mascoteQuadro(tabela,'parado',0,true);
+    else q=mascoteQuadro(tabela,e.acao,agora()-e.t0,false);
+    var k=q.linha+':'+q.quadro;
+    if(k!==qCache){qCache=k;el.style.setProperty('--ml',q.linha);el.style.setProperty('--mq',q.quadro);}
+    var t='translate3d('+snap(e.x)+'px,0,0) scaleX('+(e.flip&&e.acao!=='acenar'?-1:1)+')';
+    if(t!==tCache){tCache=t;el.style.transform=t;}
+    return q;
+  }
+
+  function iniciar(acao,ts){
+    e.acao=acao;e.t0=ts;
+    if(acao==='parado')e.proxPiscar=ts+mascoteSortearPiscar(Math.random());
+  }
+  function terminar(ts){
+    var cb=e.aoTerminar;
+    e.aoTerminar=null;e.duracao=null;
+    if(e.acao==='jato')limparAgua();
+    iniciar(mascoteProximaAcao(e.acao,{tipo:'fim'},tabela),ts);
+    if(cb)cb();
+  }
+
+  function limparAgua(){
+    e.agua=null;e.aguaAlvo=null;
+    ctx.clearRect(0,0,G.agua.l,G.agua.a);
+  }
+  // mira no elemento: lê rect só durante o jato (nunca no scroll). Coordenadas locais ao
+  // mascote: +x para frente (o scaleX já espelha o canvas), +y para cima, em px da folha.
+  function mirar(){
+    var r=el.getBoundingClientRect(),a=e.aguaAlvo.getBoundingClientRect();
+    var bocalX=e.flip?r.right-G.agua.bocalX*escala:r.left+G.agua.bocalX*escala,bocalY=r.bottom-G.agua.bocalY*escala;
+    var dx=((a.left+a.width/2)-bocalX)*(e.flip?-1:1)/escala,dy=(bocalY-(a.top+a.height/2))/escala;
+    var ang=Math.atan2(dy,Math.max(dx,6*G.k));
+    e.aguaAng=Math.min(1.1,Math.max(-.1,ang));
+    e.aguaV=Math.min(G.agua.vMax,Math.max(G.agua.vMin,(60+Math.sqrt(dx*dx+dy*dy)*.9)*G.k));
+  }
+  function passoAgua(ts,dt){
+    if(!e.agua)return;
+    if(ts>=e.aguaMira){mirar();e.aguaMira=ts+150;}
+    var qj=e.acao==='jato'?mascoteQuadro(tabela,'jato',ts-e.t0,false).quadro:0;
+    if(e.acao==='jato'&&qj>=1&&ts>=e.aguaSpawn){
+      var org=G.agua.origem,bc=G.agua.bico;
+      if(bc){var b=bc[Math.min(qj,bc.length-1)];org={x:b[0]-G.agua.esq,y:G.agua.a-(Q-b[1])};}
+      e.agua.push(mascoteAguaNova(Math.random,e.aguaAng,e.aguaV,org));
+      e.aguaSpawn=ts+45;
+    }
+    e.agua=mascoteAguaPasso(e.agua,dt,G.agua.l,G.agua.a,G.agua.grav);
+    ctx.clearRect(0,0,G.agua.l,G.agua.a);
+    for(var i=0;i<e.agua.length;i++){
+      ctx.fillStyle=AGUA_CORES[e.agua[i].tom];
+      ctx.fillRect(Math.round(e.agua[i].x),Math.round(e.agua[i].y),1,1);
+    }
+  }
+
+  function passo(ts,dt){
+    var q=mascoteQuadro(tabela,e.acao,ts-e.t0,false);
+    if(q.fim||(e.duracao!=null&&ts-e.t0>=e.duracao))terminar(ts);
+    var cam=e.acao==='parado'||e.acao==='andar'||e.acao==='correr'||e.acao==='sentar'||e.acao==='cochilar';
+    if(cam){
+      var andando=e.acao==='andar'||e.acao==='correr';
+      if(e.alvo!=null&&Math.abs(e.alvo-e.x)>.5){
+        var nome=e.correr?'correr':'andar';
+        if(e.acao!==nome)iniciar(nome,ts);     // rolar levanta (sentar/cochilar) e troca andar<->correr
+        var r=mascoteAvancar(e.x,e.alvo,dt,vel*(e.correr?MASCOTE_CORRER_X:1)*escala);
+        e.x=r.x;e.flip=r.dir<0;
+        if(r.chegou){
+          var cb=e.aoChegar;
+          e.alvo=null;e.aoChegar=null;
+          iniciar('parado',ts);
+          if(cb)cb();
+        }
+      }else if(e.alvo!=null){          // já está lá
+        var cb2=e.aoChegar;e.x=e.alvo;e.alvo=null;e.aoChegar=null;
+        if(andando)iniciar('parado',ts);
+        if(cb2)cb2();
+      }else if(andando){
+        iniciar('parado',ts);
+      }
+    }
+    if(e.acao==='parado'&&ts>=e.proxPiscar){
+      iniciar('piscar',ts);
+    }
+    passoAgua(ts,dt);
+    aplicar();
+  }
+
+  function laco(ts){
+    raf=null;
+    if(!deveRodar())return;
+    var dt=ultimo?Math.min(100,ts-ultimo):0;
+    ultimo=ts;
+    passo(ts,dt);
+    raf=requestAnimationFrame(laco);
+  }
+  function deveRodar(){return mostrando&&naTela&&!document.hidden&&!reduzido();}
+  function atualizarLaco(){
+    if(deveRodar()){
+      if(raf==null){ultimo=0;raf=requestAnimationFrame(laco);}
+    }else{
+      if(raf!=null){cancelAnimationFrame(raf);raf=null;}
+      if(e.agua)limparAgua();
+      if(reduzido()){e.acao='parado';e.alvo=null;aplicar();}
+    }
+  }
+
+  // ---------- API ----------
+  var api={
+    el:el,
+    tocar:function(acao,o){
+      o=o||{};
+      if(!tabela[acao])return;
+      if(reduzido()){if(o.aoTerminar)o.aoTerminar();return;}
+      if(e.acao==='jato'&&acao!=='jato')limparAgua();
+      e.aoTerminar=o.aoTerminar||null;e.duracao=o.duracaoMs!=null?o.duracaoMs:null;
+      iniciar(mascoteProximaAcao(e.acao,{tipo:'tocar',acao:acao},tabela),agora());
+      atualizarLaco();
+    },
+    andarAte:function(xPx,o){
+      o=o||{};
+      var x=limitar(xPx);
+      if(reduzido()){e.x=x;e.alvo=null;aplicar();if(o.aoChegar)o.aoChegar();return;}
+      e.alvo=x;e.correr=!!o.correr;e.aoChegar=o.aoChegar||null;
+      atualizarLaco();
+    },
+    posicionar:function(xPx){e.x=limitar(xPx);e.alvo=null;aplicar();},   // põe no lugar sem andar
+    olharPara:function(alvoEl){
+      var a=alvoEl.getBoundingClientRect();
+      e.flip=mascoteFlipPara(e.x+larg/2,a.left+a.width/2,e.flip);
+      aplicar();
+    },
+    jatoEm:function(alvoEl,o){
+      o=o||{};
+      if(reduzido()){if(o.aoTerminar)o.aoTerminar();return;}
+      api.olharPara(alvoEl);
+      e.agua=[];e.aguaAlvo=alvoEl;e.aguaSpawn=0;e.aguaMira=0;
+      api.tocar('jato',{duracaoMs:o.duracaoMs||MASCOTE_JATO_MS,aoTerminar:o.aoTerminar});
+    },
+    mostrar:function(){
+      mostrando=true;el.classList.remove('mascote-oculto');
+      medir();atualizarLaco();
+    },
+    esconder:function(){
+      mostrando=false;el.classList.add('mascote-oculto');
+      atualizarLaco();
+    },
+    medir:medir,
+    x:function(){return e.x;},
+    largura:function(){return larg;},
+    escala:function(){return escala;},
+    quadro:function(){return Q;},
+    acao:function(){return e.acao;},
+    destruir:function(){
+      mostrando=false;atualizarLaco();
+      removeEventListener('resize',medir);
+      document.removeEventListener('visibilitychange',atualizarLaco);
+      if(io)io.disconnect();
+      if(mq&&mq.removeEventListener)mq.removeEventListener('change',atualizarLaco);
+      el.remove();
+    }
+  };
+
+  // visibilidade da aba / resize / reduced-motion mudando em runtime / fora da tela
+  addEventListener('resize',medir,{passive:true});
+  document.addEventListener('visibilitychange',atualizarLaco);
+  var mq=null,io=null;
+  if(window.matchMedia){
+    mq=matchMedia('(prefers-reduced-motion:reduce)');
+    if(mq.addEventListener)mq.addEventListener('change',atualizarLaco);
+  }
+  if('IntersectionObserver' in window){
+    io=new IntersectionObserver(function(es){
+      naTela=es[es.length-1].isIntersecting;
+      atualizarLaco();
+    });
+    io.observe(el);
+  }
+  iniciar('parado',agora());
+  medir();
+  return api;
+}
+
+return {
+  criar:criar,
+  MASCOTE_ANIM:MASCOTE_ANIM,
+  MASCOTE_QUADRO:MASCOTE_QUADRO,
+  MASCOTE_VEL_PX_S:MASCOTE_VEL_PX_S,
+  MASCOTE_CORRER_X:MASCOTE_CORRER_X,
+  MASCOTE_BICO:MASCOTE_BICO,
+  mascoteGeometria:mascoteGeometria,
+  mascoteQuadro:mascoteQuadro,
+  mascoteProximaAcao:mascoteProximaAcao,
+  mascoteSortearPiscar:mascoteSortearPiscar,
+  mascoteAvancar:mascoteAvancar,
+  mascoteFlipPara:mascoteFlipPara,
+  mascoteAguaNova:mascoteAguaNova,
+  mascoteAguaPasso:mascoteAguaPasso
+};
+})();
+
+// P2/b249 — mascote na vitrine (pré-login). Comportamento aprovado no b247: anda acompanhando a
+// rolagem (corre se a rolagem é rápida); parado respira e pisca a cada 3–7 s; 7 s parado senta,
+// 20 s cochila; rolar levanta e ele anda; toque acena de frente (sem aceno automático); entrando na
+// seção (40% visível, 1x por visita) faz o jato na curva (A3) e comemora nos planos. A A4 é a cena
+// da mangueira (initA4Barras), que esconde este mascote enquanto o dela está na cena.
+// Sem listener de scroll novo: a posição vem de scrollProgress(); seções por IntersectionObserver.
+// Pausa fora da tela e com aba oculta (laço do motor + checagens abaixo); reduced-motion = quadro
+// parado (o motor já faz). Cria o mascote só quando a vitrine aparece pela 1ª vez (logado nunca
+// baixa a folha). Nunca cobre botão nem cartão de plano: escondido enquanto um deles está na faixa de baixo da tela.
+var MascoteVitrine=(function initMascoteVitrine(){
+  var landing=document.getElementById('landing-view');
+  if(!landing||typeof Mascote==='undefined')return null;
+  var m=null,razoes={landing:true,cena:false,cta:false}; // true = esconde
+  var ultimoMov=0,vistas={},pendente=[],ctaNaBanda=0,ioBanda=null,tmCorrer=0;
+  var BANDA_PX=84,MARGEM=8,VEL_CORRER=45; // px/s do alvo acima dos quais ele corre (andar = 30 px/s)
+  var refX=null,refT=0,correrAte=0,ultAlvo=0,ultP=0;
+
+  function oculto(){return razoes.landing||razoes.cena||razoes.cta;}
+  function aplicarVis(){
+    if(!m)return;
+    if(oculto())m.esconder();else m.mostrar();
+  }
+  function razao(nome,v){
+    if(razoes[nome]===v)return;
+    razoes[nome]=v;aplicarVis();
+  }
+  function garantir(){
+    if(m)return;
+    m=Mascote.criar({
+      sprite:'assets/mascote/folha_v4.png',
+      // canvas da água: nasce na ponta do esguicho do quadro atual do jato (BICO), esquerda do canvas em x=50
+      agua:{bocalX:56,bocalY:18,esq:50,bico:Mascote.MASCOTE_BICO}
+    });
+    // toque = acena. O mascote é pointer-events:none (links/botões sob ele recebem o toque normalmente);
+    // o aceno só dispara se o clique cai no retângulo VISÍVEL dele e o alvo não é interativo.
+    document.addEventListener('click',aoClicar,true);
+    m.posicionar(xDe(ultP)); // já nasce no lugar certo (recarregou no meio da página)
+    aplicarVis();
+    // faixa de baixo da tela: se um CTA entra nela, o mascote some até ele sair
+    montarBanda();
+    setInterval(ocio,800);
+  }
+
+  var INTERATIVO='a,button,input,select,textarea,label,[role="button"],[tabindex]';
+  function aoClicar(ev){
+    if(!m||oculto())return;
+    var r=m.el.getBoundingClientRect();
+    if(ev.clientX<r.left||ev.clientX>r.right||ev.clientY<r.top||ev.clientY>r.bottom)return;
+    var t=ev.target;
+    if(t&&t.closest&&t.closest(INTERATIVO))return;
+    ultimoMov=performance.now();
+    m.tocar('acenar',{duracaoMs:1700});
+  }
+
+  // ---- banda de proteção dos CTAs (recriada no resize: o rootMargin é em px)
+  var alvosCta=[];
+  function montarBanda(){
+    if(ioBanda)ioBanda.disconnect();
+    ctaNaBanda=0;razao('cta',false);
+    if(!('IntersectionObserver' in window))return;
+    var topo=Math.max(0,innerHeight-BANDA_PX);
+    ioBanda=new IntersectionObserver(function(es){
+      es.forEach(function(en){
+        var k=alvosCta.indexOf(en.target);
+        if(k<0)return;
+        var dentro=en.isIntersecting;
+        if(en.target._mDentro===dentro)return;
+        en.target._mDentro=dentro;
+        ctaNaBanda+=dentro?1:-1;
+      });
+      razao('cta',ctaNaBanda>0);
+    },{rootMargin:'-'+topo+'px 0px 0px 0px'});
+    alvosCta=[].slice.call(landing.querySelectorAll('.lp-btn-cta,.lp-btn-linha,.plano-btn-cta,.plano-btn-weak,.plano-card'));
+    alvosCta.forEach(function(el){el._mDentro=false;ioBanda.observe(el);});
+  }
+  var tmRs=0;
+  addEventListener('resize',function(){
+    clearTimeout(tmRs);
+    tmRs=setTimeout(function(){if(m)montarBanda();},200);
+  },{passive:true});
+
+  // ---- vitrine visível? (display:none por login/logado -> some; IO cobre as duas coisas)
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(function(es){
+      var vis=es[es.length-1].isIntersecting;
+      if(vis)garantir();
+      razao('landing',!vis);
+    }).observe(landing);
+  }else{garantir();razao('landing',false);}
+
+  // ---- anda com a rolagem (scrollProgress = motor único, sem listener novo)
+  function larg(){return m?m.largura():64;}
+  function xDe(p){var vw=document.documentElement.clientWidth||innerWidth;return MARGEM+p*Math.max(0,vw-larg()-2*MARGEM);}
+  scrollProgress(landing,function(p){
+    ultP=p;
+    if(!m)return;
+    var agora=performance.now();
+    var x=xDe(p);
+    if(refX==null){refX=x;refT=agora;}
+    else if(agora-refT>150){ // velocidade do alvo numa janela de ~150 ms
+      if(Math.abs(x-refX)/(agora-refT)*1000>VEL_CORRER)correrAte=agora+500;
+      refX=x;refT=agora;
+    }
+    ultAlvo=x;ultimoMov=agora;
+    m.andarAte(x,{correr:agora<correrAte});
+    clearTimeout(tmCorrer);
+    if(agora<correrAte)tmCorrer=setTimeout(function(){if(m)m.andarAte(ultAlvo,{correr:false});},400); // rolagem parou: volta a andar
+  },{semReducedMotion:true});
+
+  // ---- ócio: 7 s parado senta, 20 s cochila (rolar levanta: o motor volta a andar)
+  function ocio(){
+    if(!m||document.hidden||oculto())return;
+    var agora=performance.now(),parado=agora-ultimoMov,a=m.acao();
+    if((a==='parado'||a==='piscar')&&!pendente.length){
+      if(parado>20000)m.tocar('cochilar');
+      else if(parado>7000)m.tocar('sentar');
+    }else if(a==='sentar'&&parado>20000)m.tocar('cochilar');
+    if(pendente.length&&(a==='parado'||a==='piscar')){
+      var c=pendente.shift();
+      // a cena só vale se a seção ainda está na tela (ele pode ter chegado tarde, andando atrás da rolagem)
+      var sec=document.getElementById(c==='a3'?'lp-a3':'planos'),rs=sec&&sec.getBoundingClientRect();
+      if(!rs||rs.bottom<=0||rs.top>=innerHeight){vistas[c]=0;return;}
+      ultimoMov=agora;
+      if(c==='a3'){var alvo=document.getElementById('lp-a3-cena');if(alvo)m.jatoEm(alvo,{duracaoMs:3000});}
+      else if(c==='planos')m.tocar('comemorar');
+    }
+  }
+
+  // ---- cenas por seção: 1x por visita, quando 40% da seção aparece (A3 = jato na curva, planos = comemora)
+  if('IntersectionObserver' in window){
+    var ioCena=new IntersectionObserver(function(es){
+      es.forEach(function(en){
+        var c=en.target.getAttribute('data-mascote-cena');
+        if(en.isIntersecting&&!vistas[c]){vistas[c]=1;pendente.push(c);}
+      });
+    },{threshold:.4});
+    [['lp-a3','a3'],['planos','planos']].forEach(function(par){
+      var el=document.getElementById(par[0]);
+      if(el){el.setAttribute('data-mascote-cena',par[1]);ioCena.observe(el);}
+    });
+  }
+  return {razao:razao};
+})();
+
 // PM1/6-D — fumaça das junções .lp-fumaca (landing). Só entra aqui (depois de
 // movimentoReduzido já definido) porque o script de reveal da landing (inline, mais
 // acima no HTML) roda ANTES deste bloco carregar — chamar a função lá de cima daria
@@ -5881,6 +6431,7 @@ function _pBezier(p0,c,p2,t){
   return{x:mt*mt*p0.x+2*mt*t*c.x+t*t*p2.x,y:mt*mt*p0.y+2*mt*t*c.y+t*t*p2.y};
 }
 function _cenaPorTempo(secao,c){
+  function fimDe(){return typeof c.fim==='function'?c.fim():c.fim;} // A3: número; A4: função (entrada do mascote depende da largura)
   var ultimo=null,io=null,ativo=false,visivel=false,tentando=false,resolvido=false,raf=0,tm=0,t=0,lastTs=null,fase=-1;
   var fallback=movimentoReduzido()||!('IntersectionObserver' in window);
   function quadro(e){c.desenhar(e);ultimo=e;}
@@ -5890,11 +6441,11 @@ function _cenaPorTempo(secao,c){
     if(document.hidden){lastTs=null;return;} // visibilitychange retoma
     if(lastTs===null){lastTs=ts;raf=requestAnimationFrame(loop);return;}
     t+=ts-lastTs;lastTs=ts;
-    var seg=c.fim+CENA_SEGURA_MS,des=seg+CENA_DESFAZ_MS,cic=des+CENA_PAUSA_MS;
+    var FIMc=fimDe(),seg=FIMc+CENA_SEGURA_MS,des=seg+CENA_DESFAZ_MS,cic=des+CENA_PAUSA_MS;
     if(t>=cic){t%=cic;fase=-1;c.preparar();} // módulo: timer suspenso em 2º plano pode devolver vários ciclos de uma vez
-    if(t<c.fim){quadro(t);fase=0;}
-    else if(t<seg){if(fase!==1){quadro(c.fim);fase=1;}}
-    else if(t<des){quadro(c.fim*(1-(t-seg)/CENA_DESFAZ_MS));fase=2;}
+    if(t<FIMc){quadro(t);fase=0;}
+    else if(t<seg){if(fase!==1){quadro(FIMc);fase=1;}}
+    else if(t<des){quadro(FIMc*(1-(t-seg)/CENA_DESFAZ_MS));fase=2;}
     else if(fase!==3){quadro(0);fase=3;}
     // segurar/pausa não pintam nada: dorme até o fim da fase em vez de acordar a 60Hz
     var espera=fase===1?seg-t:fase===3?cic-t:0;
@@ -5935,7 +6486,7 @@ function _cenaPorTempo(secao,c){
   function tentarFinal(){
     if(resolvido)return true;
     if(!c.medir())return false;
-    resolvido=true;quadro(c.fim);return true;
+    resolvido=true;quadro(fimDe());return true;
   }
   _scrollCenas.push({el:secao,cb:function(){},docTop:0,docBottom:0,medir:function(){
     c.medir();
@@ -6128,11 +6679,16 @@ function _cenaPorTempo(secao,c){
   if(!fill||!landing)return;
   scrollProgress(landing,function(p){fill.style.width=(p*100)+'%';},{semReducedMotion:true});
 })();
-// M1 — A4 vira 5 barras que nascem de partículas quando a seção entra na tela (uma
-// vez só, IntersectionObserver threshold 0.35 — mesmo padrão do initA5Contadores
-// abaixo, sem listener de scroll novo). Cor por --atN (mesma paleta do app); nome
-// vem de AI (fonte única, evita string nova/divergente). Substituiu o caminhão/rota
-// SVG: materiais/entregas/planos/PLANO_motion_e_bombeiro.md (M0/M1, aprovado pelo João).
+// M1 — A4 vira 5 barras (cotas do edital), agora montadas pelo MASCOTE (P2/b249, protótipo aprovado
+// em materiais/marca/mascote-pixel/prototipo_a4/a4_src.html). O mascote do rodapé some e ENTRA na
+// cena (corre no desktop, anda no 375), para no meio das barras e abre 5 jatos de uma vez, um por
+// barra. A água PERCORRE a barra: o ponto de impacto de cada jato é a frente do enchimento (mesma
+// velocidade nas 5; o jato corta quando a barra chega ao fim). A frente é azul-água pura (--agua),
+// com borda seca contra --atN; a água fica ATRÁS dos rótulos (canvas z-index 0, lista 1). O desfazer
+// ESCORRE: a barra vira pixels de 4 px que caem com gravidade. Disparo, loop (desenha, segura, desfaz,
+// pausa), retry e reduced-motion vêm de _cenaPorTempo (compartilhado com a A3). Reduced-motion:
+// barras prontas, mascote parado na cena. Antes: partículas vindas de todo lado
+// (PLANO_motion_e_bombeiro.md M0/M1, aprovado pelo João).
 (function initA4Barras(){
   var secao=document.getElementById('lp-a4'),
       cena=document.querySelector('#lp-a4 .lp-a4-cena'),
@@ -6141,7 +6697,8 @@ function _cenaPorTempo(secao,c){
   if(!secao||!cena||!lista||!canvas)return;
   var ctx=canvas.getContext('2d');
   if(!ctx)return;
-  var off=document.createElement('canvas'),octx=off.getContext('2d');
+  if(typeof Mascote==='undefined')return;
+  var off=document.createElement('canvas'),octx=off.getContext('2d',{willReadFrequently:true});
   var ORDEM=['AT1','AT2','AT3','AT4','AT5'];
   var linhas=ORDEM.map(function(k){return lista.querySelector('[data-area="'+k+'"]');});
   if(linhas.some(function(l){return !l;}))return;
@@ -6158,13 +6715,63 @@ function _cenaPorTempo(secao,c){
   });
   var MAX_N=Math.max.apply(null,ORDEM.map(function(k){return AI[k].n;}));
 
-  var W=0,H=0,dpr=Math.min(window.devicePixelRatio||1,2),N_POR_BARRA=100,sigGeom='',amostrado=false;
-  var barras=ORDEM.map(function(){return{x:0,y:0,w:0,h:0,pts:[],cor:'#fff'};});
+  // ---- mascote da cena: mesma folha/tabela do motor (uma fonte), posição absoluta na cena
+  var TAB=Mascote.MASCOTE_ANIM,BICO=Mascote.MASCOTE_BICO,QD=Mascote.MASCOTE_QUADRO;
+  var MX=-12; // left do mascote dentro da cena (a faixa à esquerda das barras)
+  var mel=document.createElement('div');
+  mel.className='mascote-cena off';mel.setAttribute('aria-hidden','true');
+  cena.insertBefore(mel,lista);
+  var mAnim='parado',mAuto=false,mT0=0,mSaida=null,mCarregou=false,mRaf=0;
+  function mDesenhar(a,ms){
+    var q=Mascote.mascoteQuadro(TAB,a,ms,movimentoReduzido());
+    mel.style.backgroundPosition=(-q.quadro*QD)+'px '+(-q.linha*QD)+'px';
+  }
+  function mMover(x,flip){mel.style.transform='translateX('+x+'px) scaleX('+(flip||1)+')';}
+  function mMostrar(v){
+    if(v&&!mCarregou){mCarregou=true;mel.style.backgroundImage='url("assets/mascote/folha_v4.png")';}
+    mel.classList.toggle('off',!v);
+  }
+  function mPose(a,ms){mAuto=false;mSaida=null;mAnim=a;mDesenhar(a,ms);}
+  function mRodar(a){ // animação por relógio (parado respirando, saída)
+    if(mAuto&&mAnim===a&&!mSaida)return;
+    mAuto=true;mSaida=null;mAnim=a;mT0=performance.now();mDesenhar(a,0);mLigar();
+  }
+  function mTick(now){
+    mRaf=0;
+    if(!mAuto||document.hidden||movimentoReduzido())return; // visibilitychange retoma
+    if(mSaida){
+      var p=Math.min(1,(now-mSaida.t0)/mSaida.dur);
+      mMover(-mSaida.dx*p,-1);
+      mDesenhar(mSaida.anim,now-mSaida.t0);
+      if(p>=1){mSaida=null;mAuto=false;mMostrar(false);rodapeCena(false);return;}
+    }else mDesenhar(mAnim,now-mT0);
+    mRaf=requestAnimationFrame(mTick);
+  }
+  function mLigar(){if(!mRaf&&mAuto&&!document.hidden&&!movimentoReduzido())mRaf=requestAnimationFrame(mTick);}
+  document.addEventListener('visibilitychange',mLigar);
+  // true = o mascote do rodapé fica escondido (a cena está com o dela)
+  function rodapeCena(esconde){if(window.MascoteVitrine)window.MascoteVitrine.razao('cena',esconde);}
 
+  var W=0,H=0,dpr=Math.min(window.devicePixelRatio||1,2),sigGeom='',amostrado=false;
+  var OY=70,BELOW=120; // folga do canvas acima (arco da água) e abaixo (pixels que escorrem) da cena
+  var barras=ORDEM.map(function(){return{x:0,y:0,w:0,h:0,pts:[],cor:[255,255,255],dl:[],vx:[]};});
+  var AGUA=[31,162,232],AGUA_STR='rgb(31,162,232)';
+  var my=0,WALK_MS=700,WALK_ANIM='andar',DX=100; // geometria do mascote (medir)
+
+  function rgbDe(s){
+    s=s.trim();
+    if(s.charAt(0)==='#'){
+      if(s.length===4)s='#'+s[1]+s[1]+s[2]+s[2]+s[3]+s[3];
+      return[parseInt(s.substr(1,2),16),parseInt(s.substr(3,2),16),parseInt(s.substr(5,2),16)];
+    }
+    var m=s.match(/[0-9]+/g);return m?[+m[0],+m[1],+m[2]]:[255,255,255];
+  }
+  function rgbStr(a){return'rgb('+a[0]+','+a[1]+','+a[2]+')';}
+  // --atN vem do tema (como a vitrine já fazia); --agua é o token novo (claro/escuro em :root)
   function atualizarCores(){
-    ORDEM.forEach(function(k,i){
-      barras[i].cor=getComputedStyle(document.documentElement).getPropertyValue('--at'+k.slice(2)).trim();
-    });
+    var cs=getComputedStyle(document.documentElement);
+    AGUA=rgbDe(cs.getPropertyValue('--agua'));AGUA_STR=rgbStr(AGUA);
+    ORDEM.forEach(function(k,i){barras[i].cor=rgbDe(cs.getPropertyValue('--at'+k.slice(2)));});
   }
   function roundRectPath(c,x,y,w,h,r){
     r=Math.max(0,Math.min(r,w/2,h/2));
@@ -6177,6 +6784,11 @@ function _cenaPorTempo(secao,c){
     c.closePath();
   }
   function easeOutCubic(t){return 1-Math.pow(1-t,3);}
+  function clamp01(v){return v<0?0:v>1?1:v;}
+  function smooth01(t){t=clamp01(t);return t*t*(3-2*t);}
+
+  // grade de 4 px dentro da barra: vira os "pixels" que escorrem no desfazer
+  var PASSO=4;
   function amostrarBarra(w,h){
     off.width=Math.max(1,Math.round(w));off.height=Math.max(1,Math.round(h));
     octx.clearRect(0,0,off.width,off.height);
@@ -6184,32 +6796,30 @@ function _cenaPorTempo(secao,c){
     roundRectPath(octx,0,0,off.width,off.height,off.height/2);
     octx.fill();
     var img=octx.getImageData(0,0,off.width,off.height).data,pts=[];
-    var passo=Math.max(2,Math.floor(Math.sqrt((off.width*off.height)/N_POR_BARRA)));
-    for(var y=0;y<off.height;y+=passo){
-      for(var x=0;x<off.width;x+=passo){
-        var idx=(y*off.width+x)*4;
+    for(var y=0;y<off.height;y+=PASSO){
+      for(var x=0;x<off.width;x+=PASSO){
+        var idx=((y+PASSO/2|0)*off.width+(x+PASSO/2|0))*4;
         if(img[idx+3]>128)pts.push({x:x,y:y});
       }
     }
     if(!pts.length){
       // guard (achado do code-review, b243): barra rasterizada estreita demais pro
       // passo de amostragem achar pixel de alpha>128 — distribui direto no
-      // retângulo em vez de colapsar as partículas todas num canto.
-      var gx=8,gy=2;
-      for(var iy=0;iy<gy;iy++)for(var ix=0;ix<gx;ix++)
-        pts.push({x:(ix+0.5)/gx*off.width,y:(iy+0.5)/gy*off.height});
+      // retângulo em vez de colapsar tudo num canto.
+      for(var iy=0;iy<2;iy++)for(var ix=0;ix<8;ix++)
+        pts.push({x:(ix+0.5)/8*off.width,y:(iy+0.5)/2*off.height});
     }
     return pts;
   }
-  // Geometria é barata (só getBoundingClientRect); a amostragem por pixel
-  // (getImageData) é cara e fica separada, chamada só quando vai animar de
-  // verdade — nunca em todo resize (achado do code-review, b243).
+  // Geometria é barata (só getBoundingClientRect); a amostragem por pixel (getImageData) é cara
+  // e fica separada, chamada só quando vai animar de verdade — nunca em todo resize.
   function medirGeometria(){
     var rCena=cena.getBoundingClientRect();
     if(rCena.width<2||rCena.height<2)return false;
     W=rCena.width;H=rCena.height;
-    canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
-    ctx.setTransform(dpr,0,0,dpr,0,0);
+    canvas.width=Math.round(W*dpr);canvas.height=Math.round((OY+H+BELOW)*dpr);
+    canvas.style.height=(OY+H+BELOW)+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,OY*dpr);
     ORDEM.forEach(function(k,i){
       var rWrap=wraps[i].getBoundingClientRect();
       barras[i].x=rWrap.left-rCena.left;
@@ -6217,7 +6827,17 @@ function _cenaPorTempo(secao,c){
       barras[i].w=rWrap.width*(AI[k].n/MAX_N);
       barras[i].h=rWrap.height;
     });
-    // assinatura da geometria: a amostragem (getImageData) só refaz se ela mudou, não a cada ciclo do loop
+    // mascote no MEIO das barras (o bico fica na altura do centro da lista)
+    var rL=lista.getBoundingClientRect(),listaTop=rL.top-rCena.top,listaH=rL.height;
+    my=listaTop+listaH/2-BICO[0][1];
+    mel.style.top=my+'px';
+    // entrada: de fora da tela até a posição; correndo no desktop (longe), andando no 375
+    DX=Math.max(80,rCena.left+80);
+    var vel=DX>170?0.14:0.07; // px/ms
+    WALK_ANIM=DX>170?'correr':'andar';
+    WALK_MS=Math.round(Math.min(1400,Math.max(500,DX/vel)));
+    calcularTempos();
+    // assinatura da geometria: a amostragem só refaz se ela mudou, não a cada ciclo do loop
     var sig=W+'|'+H+'|'+barras.map(function(b){return b.x+','+b.y+','+b.w+','+b.h;}).join('|');
     if(sig!==sigGeom){sigGeom=sig;amostrado=false;}
     return true;
@@ -6229,24 +6849,80 @@ function _cenaPorTempo(secao,c){
     });
   }
 
-  var CASCADE_STEP=160,DELAY_MAX=100,DUR_MIN=450,DUR_MAX=600,MERGE_FADE=250;
-  var MERGE_START=DELAY_MAX+DUR_MAX,BAR_WINDOW=MERGE_START+MERGE_FADE;
-  var TOTAL_INICIO=(ORDEM.length-1)*CASCADE_STEP+BAR_WINDOW+100;
-  var SEQ_END=TOTAL_INICIO+450+100;
+  /* tempos (ms): 5 jatos ao mesmo tempo, cada um na sua barra; a barra enche à mesma velocidade
+     nas 5 e o jato corta quando ela chega ao fim. O instante 0 da água é o começo do jato. */
+  var APONTAR_MS=500,IMPX=10,OPEN0=170,OPEN_MS=260,SPREAD_V=0.42,SPL_LIFE=280,DUR_J=70;
+  var FILL_T0=[0,0,0,0,0],FILL_F=[1,1,1,1,1],FILL_END=[0,0,0,0,0],JET_END=[0,0,0,0,0];
+  var START=[0,0,0,0,0],WIN=[0,0,0,0,0],LAUNCH_END=0,TOTAL_INICIO=0,SEQ_END=0;
+  function calcularTempos(){
+    var nz=bicoEm(0);
+    barras.forEach(function(b,i){
+      FILL_F[i]=(b.w-IMPX)/SPREAD_V;                          // espalha à mesma velocidade nas 5
+      var d=Math.hypot(b.x+IMPX-nz.x,(b.y+b.h/2)-nz.y);
+      var dur=Math.max(DUR_J,d*0.55);
+      FILL_T0[i]=OPEN0+dur;                                   // a primeira gota da barra pousa
+      FILL_END[i]=FILL_T0[i]+FILL_F[i];
+      START[i]=i*30;WIN[i]=FILL_END[i]-START[i]+80;
+      // a última gota voa até o fim da barra (voo mais longo): o jato corta a tempo de ela pousar no fim
+      var dEnd=Math.max(DUR_J,Math.hypot(b.x+b.w-nz.x,(b.y+b.h/2)-nz.y)*0.55);
+      JET_END[i]=FILL_END[i]-dEnd;
+    });
+    LAUNCH_END=Math.max.apply(null,JET_END)+20;
+    TOTAL_INICIO=Math.max.apply(null,FILL_END)+120;
+    SEQ_END=TOTAL_INICIO+450+100;
+  }
+  function PRE(){return WALK_MS+APONTAR_MS;}
+  function FIM(){return PRE()+SEQ_END;}
 
-  var particulasPorBarra=[];
+  function bicoEm(ms){ // ponta do esguicho, em coords da cena, no instante ms do jato
+    var q=Mascote.mascoteQuadro(TAB,'jato',ms,false).quadro,b=BICO[Math.min(q,BICO.length-1)];
+    return{x:MX+b[0],y:my+b[1]};
+  }
+  // control: o pico do arco fica `arco` acima do ponto mais alto (parábola de projétil, x linear em t)
+  function controleArco(a,b,arco){
+    var P=Math.min(a.y,b.y)-arco;
+    var c=P-Math.sqrt((a.y-P)*(b.y-P));
+    return{x:(a.x+b.x)/2,y:c};
+  }
+  // até onde a água já chegou na barra j no instante el (px a partir de b.x)
+  function frontPx(j,el){
+    var b=barras[j],pf=clamp01((el-FILL_T0[j])/FILL_F[j]);
+    var fw=IMPX*smooth01((el-FILL_T0[j])/120)+(b.w-IMPX)*(1-Math.pow(1-pf,1.6));
+    return fw>b.w?b.w:fw;
+  }
+  var jatoPts=[],splash=[];
   function sortearParticulas(){
-    particulasPorBarra=barras.map(function(b){
-      var lista=[];
-      for(var k=0;k<N_POR_BARRA;k++){
-        var margem=0.18;
-        var home={x:(-margem+Math.random()*(1+margem*2))*W,y:(-margem+Math.random()*(1+margem*2))*H};
-        var target=b.pts.length?b.pts[k%b.pts.length]:{x:b.x,y:b.y};
-        var curva=40+Math.random()*60;
-        var control={x:(home.x+target.x)/2+(Math.random()-0.5)*curva,y:(home.y+target.y)/2+(Math.random()-0.5)*curva};
-        lista.push({home:home,control:control,target:target,delay:Math.random()*DELAY_MAX,dur:DUR_MIN+Math.random()*(DUR_MAX-DUR_MIN)});
+    jatoPts=[];splash=[];
+    var m=barras[2],cx0=m.x+24,cy0=m.y+m.h/2;
+    barras.forEach(function(b,j){
+      var tEnd=JET_END[j]; // último disparo: a última gota pousa exatamente no fim do enchimento
+      var n=Math.max(60,Math.round(tEnd/1.5));
+      for(var q=0;q<n;q++){
+        var tau=(q+Math.random())/n*tEnd;
+        var o=smooth01((tau-30)/OPEN_MS); // o fio sai único e se abre em leque
+        var home=bicoEm(tau);
+        home={x:home.x+(Math.random()-0.5)*1.0,y:home.y+(Math.random()-0.5)*1.2};
+        var ty=b.y+2+Math.random()*(b.h-4),tx=b.x+IMPX;
+        // o impacto acompanha a frente do enchimento: mira onde a água VAI estar quando a gota chegar
+        var Lp=tau+DUR_J;
+        for(var it=0;it<3;it++){
+          tx=b.x+Math.max(IMPX,frontPx(j,Lp))+(Math.random()-0.5)*3;
+          Lp=tau+Math.max(DUR_J,Math.hypot(tx-home.x,ty-home.y)*0.55);
+        }
+        var X=cx0+(tx-cx0)*o,Y=cy0+(ty-cy0)*o;
+        var dist=Math.hypot(X-home.x,Y-home.y);
+        var control=controleArco(home,{x:X,y:Y},14+dist*0.07+Math.random()*5);
+        var dur=Math.max(DUR_J,dist*0.55);
+        jatoPts.push({home:home,control:control,target:{x:X,y:Y},delay:tau,dur:dur});
+        if(o>0.9&&Math.random()<0.4)
+          splash.push({t0:tau+dur,x:X,y:Y,vx:-0.05+Math.random()*0.16,vy:-(0.05+Math.random()*0.17),cut:FILL_END[j]});
       }
-      return lista;
+    });
+    jatoPts.sort(function(p,q){return p.delay-q.delay;});
+    splash.sort(function(p,q){return p.t0-q.t0;});
+    barras.forEach(function(b){ // desfazer: varre da esquerda p/ a direita com ruído
+      b.dl=b.pts.map(function(p){return(p.x-b.x)/Math.max(1,b.w)*240+Math.random()*160;});
+      b.vx=b.pts.map(function(){return(Math.random()-0.5)*0.04;});
     });
   }
 
@@ -6261,39 +6937,135 @@ function _cenaPorTempo(secao,c){
     if(tmTexto[i]){clearTimeout(tmTexto[i]);tmTexto[i]=0;}
     el.textContent=txt;
   }
-  function desenharFrame(elapsed){
-    ctx.clearRect(0,0,W,H);
+
+  /* mascote por instante e (ms do ciclo). Avançando é função pura de e; segurando/desfazendo roda
+     sozinho. Entrada (some o do rodapé) -> apontar -> jato até cortar -> parado; no desfazer sai de
+     costas (sprite espelhado) e o do rodapé volta. */
+  var lastE=-1,undo=false;
+  function iniciarSaida(){
+    mAuto=true;mAnim='andar';
+    mSaida={t0:performance.now(),dur:Math.min(900,WALK_MS),dx:DX,anim:'andar'};
+    mLigar();
+  }
+  function mascoteDe(e){
+    if(movimentoReduzido()){ // barras prontas; sem cena animada, fica só o mascote parado do rodapé
+      mMostrar(false);rodapeCena(false);return;
+    }
+    if(undo){
+      if(e<=0){if(!mSaida){mAuto=false;mMostrar(false);rodapeCena(false);}}
+      else if(!mSaida&&!mel.classList.contains('off'))iniciarSaida();
+      return;
+    }
+    if(e<=0){mMostrar(false);mMover(-DX,1);rodapeCena(false);return;}
+    mMostrar(true);rodapeCena(true);
+    var pre=PRE();
+    if(e<WALK_MS){mMover(-DX*(1-e/WALK_MS),1);mPose(WALK_ANIM,e);}
+    else{mMover(0,1);if(e<pre)mPose('apontar',e-WALK_MS);}
+    if(e>=pre){
+      var j=e-pre;
+      if(j<LAUNCH_END)mPose('jato',j);else mRodar('parado');
+    }
+  }
+
+  // enche a barra: frente com leve ondulação; ponta em azul-água PURA com borda seca; --atN atrás
+  function encherBarra(b,fw,el,leadAlpha){
+    if(fw<=0)return;
+    ctx.save();
+    roundRectPath(ctx,b.x,b.y,b.w,b.h,b.h/2);ctx.clip();
+    var xf=b.x+fw,amp=Math.min(2.4,fw/6);
+    ctx.beginPath();
+    ctx.moveTo(b.x-2,b.y-1);
+    for(var y=b.y-1;y<=b.y+b.h+1;y+=2)ctx.lineTo(xf+amp*Math.sin(y*0.75-el*0.014),y);
+    ctx.lineTo(b.x-2,b.y+b.h+1);ctx.closePath();
+    ctx.clip();
+    ctx.globalAlpha=1;ctx.fillStyle=rgbStr(b.cor);ctx.fillRect(b.x-2,b.y-1,fw+8,b.h+2);
+    var lead=Math.min(14,fw);
+    if(leadAlpha>0&&fw<b.w-1){
+      ctx.globalAlpha=leadAlpha;ctx.fillStyle=AGUA_STR;
+      ctx.fillRect(xf-lead,b.y-1,lead+6,b.h+2);
+    }
+    ctx.restore();
+  }
+  var voando=[];
+  function desenharFrame(e){
+    if(e<lastE)undo=true;else if(e>lastE)undo=false;
+    lastE=e;
+    mascoteDe(e);
+    var elapsed=e-PRE(); // tempo da água
+    var escorre=undo;
+    var u=escorre?(1-e/FIM())*CENA_DESFAZ_MS:0;
+    ctx.clearRect(0,-OY,W,OY+H+BELOW);
+
+    // gotas em voo (a frente de cada barra é analítica, ver frontPx)
+    voando.length=0;
+    if(!escorre&&elapsed>0){
+      for(var pi=0;pi<jatoPts.length;pi++){
+        var p=jatoPts[pi];
+        if(elapsed<p.delay)break; // ordenadas por delay
+        var t=(elapsed-p.delay)/p.dur;
+        if(t>=1)continue;
+        var pos=_pBezier(p.home,p.control,p.target,t);
+        voando.push(pos.x,pos.y);
+      }
+    }
+
     ORDEM.forEach(function(k,i){
-      var inicioBarra=i*CASCADE_STEP,local=elapsed-inicioBarra;
-      var b=barras[i],area=AI[k];
+      var local=elapsed-START[i],BW=WIN[i];
+      var b=barras[i],area=AI[k],cor=rgbStr(b.cor);
       // classe e número seguem o instante nos dois sentidos (nascer e desfazer do loop)
       topos[i].classList.toggle('mostrar',local>0);
       if(local<=0){textoReal(i,numEls[i],String(area.n));return;}
-      var contaFase=Math.min(1,local/BAR_WINDOW);
-      textoVivo(i,numEls[i],String(Math.round(easeOutCubic(contaFase)*area.n)));
-      if(local>=BAR_WINDOW){
-        ctx.globalAlpha=1;ctx.fillStyle=b.cor;
+      var fw=frontPx(i,elapsed);
+      if(escorre)textoVivo(i,numEls[i],String(Math.round(area.n*(1-clamp01(u/CENA_DESFAZ_MS)))));
+      else textoVivo(i,numEls[i],String(local>=BW?area.n:Math.round(fw/b.w*area.n)));
+      if(escorre){
+        // Escorre: a barra vira "pixels" de 4 px que caem como água (viram azul-água ao cair)
+        var sa=1-clamp01(u/120);
+        if(sa>0){ctx.globalAlpha=sa;ctx.fillStyle=cor;roundRectPath(ctx,b.x,b.y,b.w,b.h,b.h/2);ctx.fill();}
+        for(var q=0;q<b.pts.length;q++){
+          var pp=b.pts[q],tt=u-b.dl[q];
+          if(tt<=0){ctx.globalAlpha=1;ctx.fillStyle=cor;ctx.fillRect(pp.x,pp.y,PASSO,PASSO);continue;}
+          var al=1-clamp01((tt-120)/520);
+          if(al<=0)continue;
+          var sz=PASSO-2*clamp01(tt/520);
+          ctx.globalAlpha=al;
+          ctx.fillStyle=tt<70?cor:AGUA_STR;
+          ctx.fillRect(pp.x+b.vx[q]*tt,pp.y+0.5*0.0021*tt*tt,sz,sz);
+        }
+        ctx.globalAlpha=1;
+        return;
+      }
+      if(local>=BW){
+        ctx.globalAlpha=1;ctx.fillStyle=cor;
         roundRectPath(ctx,b.x,b.y,b.w,b.h,b.h/2);ctx.fill();
         return;
       }
-      if(local>=MERGE_START){
-        var fase=(local-MERGE_START)/MERGE_FADE;
-        ctx.globalAlpha=fase;ctx.fillStyle=b.cor;
-        roundRectPath(ctx,b.x,b.y,b.w,b.h,b.h/2);ctx.fill();
-        ctx.globalAlpha=1-fase;
-      }else{
-        ctx.globalAlpha=1;
-      }
-      ctx.fillStyle=b.cor;
-      var ps=particulasPorBarra[i]||[];
-      for(var pi=0;pi<ps.length;pi++){
-        var p=ps[pi];
-        if(local<p.delay)continue;
-        var t=Math.min(1,(local-p.delay)/p.dur);
-        var pos=_pBezier(p.home,p.control,p.target,_pEaseOutQuart(t));
-        ctx.beginPath();ctx.arc(pos.x,pos.y,1.7,0,Math.PI*2);ctx.fill();
+      encherBarra(b,fw,elapsed,1-clamp01((local-(BW-160))/160));
+      // gotinhas à frente da água que avança
+      if(fw>2&&fw<b.w-2){
+        ctx.fillStyle=AGUA_STR;
+        for(var gq=0;gq<5;gq++){
+          ctx.globalAlpha=0.35+Math.random()*0.5;
+          ctx.fillRect(b.x+fw+1+Math.random()*7,b.y+1+Math.random()*(b.h-3),1.4,1.4);
+        }
       }
     });
+
+    // respingo no ponto de impacto + gotas dos jatos, por cima das barras (e atrás do texto: canvas z 0)
+    if(!escorre){
+      ctx.fillStyle=AGUA_STR;
+      for(var si=0;si<splash.length;si++){
+        var s=splash[si],dt=elapsed-s.t0;
+        if(dt<0)break;
+        if(dt>=SPL_LIFE||elapsed>s.cut)continue; // o jato cortou: o respingo termina junto
+        ctx.globalAlpha=0.9*(1-dt/SPL_LIFE);
+        ctx.fillRect(s.x+s.vx*dt,s.y+s.vy*dt+0.5*0.0013*dt*dt,1.8,1.8);
+      }
+      ctx.globalAlpha=1;
+      for(var vi=0;vi<voando.length;vi+=2){
+        ctx.beginPath();ctx.arc(voando[vi],voando[vi+1],1.9,0,Math.PI*2);ctx.fill();
+      }
+    }
     ctx.globalAlpha=1;
     var fechoLocal=elapsed-TOTAL_INICIO;
     fecho.classList.toggle('mostrar',fechoLocal>0);
@@ -6309,7 +7081,7 @@ function _cenaPorTempo(secao,c){
     medir:medirGeometria,
     preparar:function(){if(!amostrado){amostrarPontos();amostrado=true;}sortearParticulas();},
     desenhar:desenharFrame,
-    fim:SEQ_END
+    fim:FIM
   });
   // Sem hook genérico de "tema mudou" no app hoje (conferido: aplicarTema() não tinha
   // nenhum registro de cena antes desta feature) — mantém _a4Recolorir dedicado.
@@ -6802,7 +7574,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.343';
+const APP_VERSAO='v1.344';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
