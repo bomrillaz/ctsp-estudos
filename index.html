@@ -1073,7 +1073,7 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
    var(--text) normal. Reduced-motion: mostrarFimSessao() zera animation-delay por
    elemento antes do replay (a regra global :207 só zera duration, nunca delay). */
 .fim-cascata{text-align:center;}
-.fim-cesar{width:84px;height:84px;object-fit:contain;margin:0 auto 12px;display:block;
+.fim-mascote{width:64px;height:64px;margin:0 auto 12px;display:block;
   opacity:0;transform:translateY(12px);animation:fimFade .28s var(--ease-out) forwards;}
 @keyframes fimFade{to{opacity:1;transform:translateY(0);}}
 .fim-stats{display:flex;gap:8px;margin:16px 0 18px;}
@@ -2044,6 +2044,11 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .mascote-cena{position:absolute;left:-12px;top:0;width:64px;height:64px;z-index:2;pointer-events:none;
   background-repeat:no-repeat;background-size:512px 768px;image-rendering:pixelated;will-change:transform;}
 .mascote-cena.off{visibility:hidden;}
+/* P3 (b250): mascote parado no app (Mascote.criarPose). Quadro 64 em escala 1, folha 8x12 quadros. */
+.mascote-pose{width:64px;height:64px;background-repeat:no-repeat;background-size:512px 768px;image-rendering:pixelated;pointer-events:none;}
+/* Home: sentado na borda de cima do card da meta, virado para dentro. Filho absoluto: não muda o rect
+   do #metas-card (alvo do tour, lição b156). */
+#metas-card>.mascote-pose{position:absolute;right:14px;bottom:100%;margin-bottom:-1px;transform:scaleX(-1);}
 @media(prefers-reduced-motion:reduce){.mascote,.mascote-escada{transition:none;}}
 
 /* ═══ M4 — A8 "faixa do edital" (substitui a A6) ═══
@@ -3480,7 +3485,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 
 <div class="modal-overlay hidden" id="modal-fim" onclick="fecharFim(event)">
   <div class="modal-box fim-cascata" onclick="event.stopPropagation()">
-    <img class="fim-cesar" id="fim-cesar" alt="" onerror="this.onerror=null;this.src='assets/cesar-coin.png';">
+    <div class="fim-mascote" id="fim-mascote"></div>
     <div class="modal-title fim-title" id="fim-title">Treino do dia concluído!</div>
     <div class="modal-sub fim-sub" id="fim-sub"></div>
     <div class="fim-stats">
@@ -3566,6 +3571,16 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="config-sub">Quantos a aba de Resumos oferece · não é meta do dia</div>
       </div>
       <input type="number" class="config-input" id="config-dose-resumos" min="1" max="70" placeholder="3">
+    </div>
+    <div class="config-row">
+      <div>
+        <div class="config-label">Mascote</div>
+        <div class="config-sub">Bombeiro no início e no fim da sessão</div>
+      </div>
+      <div class="theme-seg" id="mascote-seg">
+        <button type="button" data-m="1" onclick="setMascote(true)">Mostrar</button>
+        <button type="button" data-m="0" onclick="setMascote(false)">Ocultar</button>
+      </div>
     </div>
     <div class="config-row">
       <div>
@@ -5919,6 +5934,46 @@ function _reduzidoPadrao(){
   return matchMedia('(prefers-reduced-motion:reduce)').matches||!!(navigator.connection&&navigator.connection.saveData);
 }
 
+// P3 (b250): mascote PARADO num lugar fixo do app (borda do card da meta, fim de sessão). Sem andar,
+// sem água, sem escada: só troca de quadro. Posição/tamanho vêm do CSS do pai (.mascote-pose).
+// Laço rAF próprio, desligado fora da tela, com aba oculta e em reduced-motion (quadro 0 do parado).
+// tocar(acao, aoFim): ação não-loop chama aoFim ao terminar (sem aoFim, volta à ação `base`).
+function criarPose(pai,opts){
+  opts=opts||{};
+  var tabela=opts.tabela||MASCOTE_ANIM,Q=opts.quadro||MASCOTE_QUADRO,reduzidoFn=opts.reduzido||_reduzidoPadrao;
+  var el=document.createElement('div');
+  el.className='mascote-pose'+(opts.classe?' '+opts.classe:'');
+  el.setAttribute('aria-hidden','true');
+  if(opts.sprite)el.style.backgroundImage='url("'+opts.sprite+'")';
+  pai.appendChild(el);
+  var acao='parado',base='parado',t0=0,raf=0,naTela=true,proxPiscar=0,aoFim=null;
+  function desenhar(a,ms){
+    var q=mascoteQuadro(tabela,a,ms,!!reduzidoFn());
+    el.style.backgroundPosition=(-q.quadro*Q)+'px '+(-q.linha*Q)+'px';
+    return q;
+  }
+  function ligar(){if(!raf&&naTela&&!document.hidden&&!reduzidoFn())raf=requestAnimationFrame(tick);}
+  function tocar(a,cb){
+    acao=a;t0=performance.now();aoFim=cb||null;
+    if(a==='parado')proxPiscar=t0+mascoteSortearPiscar(Math.random());
+    desenhar(a,0);ligar();
+  }
+  function tick(now){
+    raf=0;
+    if(document.hidden||!naTela||reduzidoFn())return;
+    var q=desenhar(acao,now-t0);
+    if(q.fim){var cb=aoFim;aoFim=null;if(cb)cb();else tocar(base);}
+    else if(acao==='parado'&&now>=proxPiscar)tocar('piscar');
+    if(!raf)raf=requestAnimationFrame(tick); // tocar() acima pode já ter religado o laço: nunca dois
+  }
+  document.addEventListener('visibilitychange',ligar);
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(function(es){naTela=es[es.length-1].isIntersecting;ligar();}).observe(el);
+  }
+  desenhar('parado',0);
+  return {el:el,tocar:tocar,base:function(a){base=a;},acao:function(){return acao;}};
+}
+
 // opts: {sprite (url/data URI), pai (default body), reduzido (fn), tabela, vel, quadro, agua (override, ver mascoteGeometria),
 //   escada (url da arte da escada, assets/mascote/escada.png), aoPasso: function() a cada quadro do laço}
 function criar(opts){
@@ -6230,6 +6285,7 @@ function criar(opts){
 
 return {
   criar:criar,
+  criarPose:criarPose,
   MASCOTE_ANIM:MASCOTE_ANIM,
   MASCOTE_QUADRO:MASCOTE_QUADRO,
   MASCOTE_VEL_PX_S:MASCOTE_VEL_PX_S,
@@ -6245,6 +6301,62 @@ return {
   mascoteAguaPasso:mascoteAguaPasso
 };
 })();
+
+// P3 (b250) — mascote no app (pós-login): sentado no card da meta (Home) e no fim de sessão.
+// Liga/desliga em Configurações, gravado SÓ no localStorage do aparelho (nunca no RTDB: campo novo
+// num set() do usuário comum derruba o set inteiro). Desligar vale só para o app; a vitrine é peça de venda.
+var MASCOTE_APP_FOLHA='assets/mascote/folha_v4.png',MASCOTE_COCHILO_MS=20000;
+var _mascoteHomeP=null,_mascoteFimP=null,_mascoteCochiloTm=0;
+function mascoteLigado(){try{return localStorage.getItem('ctsp_mascote')!=='0';}catch(e){return true;}}
+function _marcarMascoteSeg(){
+  var on=mascoteLigado();
+  document.querySelectorAll('#mascote-seg button').forEach(function(b){b.classList.toggle('on',(b.dataset.m==='1')===on);});
+}
+function setMascote(on){
+  try{localStorage.setItem('ctsp_mascote',on?'1':'0');}catch(e){}
+  _marcarMascoteSeg();
+  mascoteHome(true);
+  showToast(on?'Mascote ativado':'Mascote oculto');
+}
+// Comemoração da meta: 1x por dia por aparelho. Pura para o teste (harness_p3_mascote_app.js).
+function mascoteDeveComemorar(completo,ultimoDia,hoje){return !!completo&&ultimoDia!==hoje;}
+// acordar=true: entrou na Home agora (navTo) -> senta de novo mesmo se estava cochilando.
+// Os outros renderDashboard() só criam/mantêm. Só comemora com a Home VISÍVEL (o render pós-quiz
+// roda com a tela do Quiz ativa; a comemoração tocaria escondida e o dia ficaria marcado).
+function mascoteHome(acordar){
+  var card=document.getElementById('metas-card');if(!card||typeof Mascote==='undefined')return;
+  if(!mascoteLigado()){clearTimeout(_mascoteCochiloTm);if(_mascoteHomeP)_mascoteHomeP.el.classList.add('hidden');return;}
+  var novo=!_mascoteHomeP;
+  if(novo)_mascoteHomeP=Mascote.criarPose(card,{sprite:MASCOTE_APP_FOLHA});
+  var p=_mascoteHomeP,estavaOculto=p.el.classList.contains('hidden');
+  p.el.classList.remove('hidden');
+  var sc=document.getElementById('screen-inicio'),naHome=!!(sc&&sc.classList.contains('active'));
+  var hoje=diaLocal(),ult='',chave='ctsp_mascote_meta_'+((typeof currentUser!=='undefined'&&currentUser&&currentUser.uid)||'');
+  try{ult=localStorage.getItem(chave)||'';}catch(e){}
+  function sentar(){
+    clearTimeout(_mascoteCochiloTm);
+    p.base('sentar');p.tocar('sentar');
+    _mascoteCochiloTm=setTimeout(function(){p.base('cochilar');p.tocar('cochilar');},MASCOTE_COCHILO_MS);
+  }
+  if(naHome&&mascoteDeveComemorar(diaCompleto(),ult,hoje)){
+    try{localStorage.setItem(chave,hoje);}catch(e){}
+    clearTimeout(_mascoteCochiloTm);
+    p.base('parado');p.tocar('comemorar',sentar);
+    return;
+  }
+  if(novo||acordar||estavaOculto){if(p.acao()!=='comemorar')sentar();}
+}
+// Fim de sessão: >=70% comemora, 50-69% continência, abaixo disso só parado (nunca triste).
+function mascoteFim(pct){
+  var slot=document.getElementById('fim-mascote');if(!slot)return;
+  var on=mascoteLigado()&&typeof Mascote!=='undefined';
+  slot.classList.toggle('hidden',!on);
+  if(!on)return;
+  if(!_mascoteFimP)_mascoteFimP=Mascote.criarPose(slot,{sprite:MASCOTE_APP_FOLHA});
+  var p=_mascoteFimP,acao=pct>=70?'comemorar':pct>=50?'continencia':null;
+  p.base('parado');p.tocar('parado');
+  if(acao)setTimeout(function(){if(p.acao()==='parado'||p.acao()==='piscar')p.tocar(acao);},400);
+}
 
 // P2/b249 — mascote na vitrine (pré-login). Comportamento aprovado no b247: anda acompanhando a
 // rolagem (corre se a rolagem é rápida); parado respira e pisca a cada 3–7 s; 7 s parado senta,
@@ -7724,7 +7836,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.345';
+const APP_VERSAO='v1.346';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -7962,7 +8074,7 @@ function _navToInner(s,skipStagger){
   // Voltar ao painel encerra o ciclo de foco — senão a barra flutuante ficaria
   // pendurada para sempre, já que só `sairDoFoco()` a limparia.
   if(s==='inicio')focoAtivo=null;
-  if(s==='inicio'){_fecharSessaoBkt();renderDashboard();atualizarCardTreino();}
+  if(s==='inicio'){_fecharSessaoBkt();renderDashboard();atualizarCardTreino();mascoteHome(true);}
   if(s==='quiz'){renderAreaList();renderQuizHeader();renderQuizHub();}
   if(s==='cards'){cardsModo='hub';renderCards();}
   if(s==='resumos'){resumosModo='hub';renderResumos();updateBadges();}
@@ -8164,6 +8276,7 @@ function renderDashboard(){
   // load terminar. NÃO usa `dataLoaded` direto — ver comentário de `cargaInicialTentada`
   // junto da declaração dela (S30 self-heal offline pode deixar dataLoaded false pra sempre).
   document.querySelectorAll('.dash-body').forEach(el=>el.classList.toggle('carregando',!cargaInicialTentada));
+  if(cargaInicialTentada)mascoteHome(false);
   // S59: atualiza o retrato da semana ANTES de desenhar, para a variação semanal já
   // sair correta nesta passada. A função se protege sozinha se `dataLoaded` for false.
   registrarRetratoSemanal();
@@ -9651,7 +9764,7 @@ function mostrarFimSessao(){
   const subBase=pct>=70?(cfg.diario?'Mandou bem. Objetivo do dia cumprido.':'Mandou bem.'):pct>=50?'Bom trabalho, o reforço fixa o resto.':'O que vale é a constância; o que você errou volta espaçado.';
   const md=tempoMedioQuestao();
   const ritmo=md?` Ritmo ${fmtRitmo(md)}/questão${md>TEMPO_PROVA_POR_Q?' (acima dos 3min da prova)':''}.`:'';
-  g('fim-cesar').src=pct>=70?'assets/cesar-coin-comemora.png':pct>=50?'assets/cesar-aponta.png':'assets/cesar-pensa.png';
+  mascoteFim(pct);
   g('fim-title').textContent=cfg.titulo;
   g('fim-sub').textContent=subBase+ritmo;
   window._fimSessaoFns=cfg.extras.map(x=>x.fn);
@@ -9671,7 +9784,7 @@ function mostrarFimSessao(){
   // na linha de cima). Count-up só dispara depois do fade do próprio bloco
   // (animationend), nunca antes do modal visível (já está, por causa do remove('hidden') acima).
   const armado=movimentoReduzido();
-  const coreografados=[g('fim-cesar'),g('fim-title'),g('fim-sub'),
+  const coreografados=[g('fim-mascote'),g('fim-title'),g('fim-sub'),
     ...document.querySelectorAll('#modal-fim .fim-stat'),g('fim-acoes')];
   coreografados.forEach(el=>{el.style.animationDelay=armado?'0s':'';});
   coreografados.forEach(el=>{el.style.animationName='none';void el.offsetWidth;el.style.animationName='';});
@@ -12740,6 +12853,7 @@ function abrirModalConfig(){
   const drInp=document.getElementById('config-dose-resumos');
   if(drInp)drInp.value=dose('resumos');
   atualizarBotaoNotif();
+  _marcarMascoteSeg();
   document.getElementById('modal-config').classList.remove('hidden');
   setTimeout(()=>{document.querySelector('#modal-config .modal-fechar')?.focus();},60);
 }
