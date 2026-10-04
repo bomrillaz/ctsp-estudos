@@ -1064,6 +1064,8 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
 .fim-inline{text-align:center;padding:40px 20px;}
 .fim-inline-icon{font-size:48px;margin-bottom:12px;color:var(--green);display:flex;justify-content:center;}
 .fim-inline-icon svg{width:52px;height:52px;}
+/* B4: mascote no lugar do ícone, só no fim dos Cards (slot recriado a cada render; a pose é movida para ele) */
+.fim-inline-mascote{width:64px;height:64px;margin:0 auto 12px;}
 .fim-inline-title{font-family:var(--font-display);font-size:24px;font-weight:700;margin-bottom:8px;}
 .fim-inline-sub{font-size:14px;color:var(--text2);}
 
@@ -6444,6 +6446,27 @@ function mascoteFim(pct){
   if(acao)setTimeout(function(){if(p.acao()==='parado'||p.acao()==='piscar')p.tocar(acao);},400);
 }
 
+// B4: fim dos flashcards (_estudoCards, única chamada de fimInlineHTML dos Cards). Meta de cards do dia
+// batida (flashcards avaliados hoje >= dose('cards'), a mesma regra do diaCompleto) -> comemora; senão continência
+// (nunca triste). Pura para o teste (teste_b4_mascote_cards.js).
+function mascoteFimCardsAcao(fcHoje,meta){return (fcHoje||0)>=meta?'comemorar':'continencia';}
+// O slot nasce de novo a cada render do fim (o RTDB de cards re-renderiza): UMA pose, movida para o slot novo,
+// em vez de criar uma por render (cada pose liga rAF + IntersectionObserver + listener). Mesmo padrão do
+// mascoteFim: parado, depois de 400 ms a reação. Reduced-motion: o motor desenha o quadro fixo sem depender de aoFim.
+var _mascoteCardsP=null,_mascoteCardsTm=0,_mascoteCardsChave='';
+// chave = dia + cards avaliados: re-render do listener (mesma contagem) não repete a reação; fim de sessão nova sim
+function mascoteFimCards(slot,acao,chave){
+  if(!slot||typeof Mascote==='undefined')return;
+  if(!_mascoteCardsP)_mascoteCardsP=Mascote.criarPose(slot,{sprite:MASCOTE_APP_FOLHA});
+  var p=_mascoteCardsP;
+  if(p.el.parentNode!==slot)slot.appendChild(p.el);
+  if(p.acao()===acao||(chave&&chave===_mascoteCardsChave))return; // re-render: não reinicia nem repete
+  _mascoteCardsChave=chave||'';
+  p.base('parado');p.tocar('parado');
+  clearTimeout(_mascoteCardsTm);
+  _mascoteCardsTm=setTimeout(function(){if(p.el.isConnected&&(p.acao()==='parado'||p.acao()==='piscar'))p.tocar(acao);},400);
+}
+
 // P2/b249 — mascote na vitrine (pré-login). Comportamento aprovado no b247: anda acompanhando a
 // rolagem (corre se a rolagem é rápida); parado respira e pisca a cada 3–7 s; 7 s parado senta,
 // 20 s cochila; rolar levanta e ele anda; toque acena de frente (sem aceno automático); entrando na
@@ -7922,7 +7945,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.347';
+const APP_VERSAO='v1.348';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -9975,9 +9998,10 @@ function doseCardsDoDia(){
 // com score próprio, mostrarFimSessao, e continua separado: unificar os três mudaria o
 // produto, não é refactor). icone é opcional (Resumos não usa). Vocabulário de botão igual
 // ao Quiz: primariaHTML leva btn-primary, o resto btn-weak btn-neutral.
-function fimInlineHTML({icone,titulo,sub,primariaHTML,extrasHTML,linksHTML}){
+// mascote (B4): true troca o ícone por um slot do mascote; só os Cards passam (Resumos nunca).
+function fimInlineHTML({icone,titulo,sub,primariaHTML,extrasHTML,linksHTML,mascote}){
   return `<div class="fim-inline">
-    ${icone?`<div class="fim-inline-icon">${icone}</div>`:''}
+    ${mascote?'<div class="fim-inline-mascote"></div>':icone?`<div class="fim-inline-icon">${icone}</div>`:''}
     <div class="fim-inline-title">${titulo}</div>
     <div class="fim-inline-sub">${sub}</div>
     ${primariaHTML||''}
@@ -10007,7 +10031,9 @@ function _estudoCards(){
     const veioDoFoco=origemReforco!=='quiz'&&origemFoco; if(veioDoFoco)origemFoco=false;
     const restam=acervo;
     const filtro=cardsFiltroTopico;
+    const mascoteOn=mascoteLigado()&&typeof Mascote!=='undefined'; // B4: desligado = volta o ícone de medalha
     body.innerHTML=fimInlineHTML({
+      mascote:mascoteOn,
       icone:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.5 13l1.5 8-5-3-5 3 1.5-8"/></svg>`,
       titulo: restam>0?'✓ Meta de flashcards concluída':'Revisão concluída!',
       sub: restam>0?`Memória ativada. Agora fixe respondendo: recuperar em prova consolida ainda mais.`:(filtro?'Todos os cards deste tópico foram revisados.':'Todos os cards revisados. Fixe com questões na Sessão do dia.'),
@@ -10019,6 +10045,8 @@ function _estudoCards(){
       extrasHTML: (restam>0&&origemReforco!=='quiz')?`<button class="btn-weak btn-neutral" style="margin-top:8px" onclick="maisCards()">Fazer mais ${Math.min(dose('cards'),restam)}</button>`:'',
       linksHTML: origemReforco!=='quiz'?`${filtro?`<button class="fim-inline-link" onclick="limparFiltroCards()">Ver todos os tópicos</button>`:''}<button class="fim-inline-link" onclick="voltarHubCards()">← Voltar aos flashcards</button>`:''
     });
+    if(mascoteOn){const fcHoje=((userStats.history||[]).find(h=>h.date===diaLocal())||{}).fc||0;
+      mascoteFimCards(body.querySelector('.fim-inline-mascote'),mascoteFimCardsAcao(fcHoje,dose('cards')),diaLocal()+':'+fcHoje);}
     return;
   }
   cardIdx=0;
