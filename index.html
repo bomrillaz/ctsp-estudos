@@ -2011,7 +2011,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 @media(prefers-reduced-motion:reduce){.lp-a4-linha-topo,.lp-a4-fecho{transition:none;}}
 
 /* ═══ P2/b249 — mascote pixel (folha v4, quadro 64, 1x). Motor: materiais/marca/mascote-pixel/motor ═══ */
-:root{--mascote-escala:1;--mascote-q:64;--mascote-cols:8;--mascote-rows:11;--ml:0;--mq:0;--agua-l:128;--agua-a:96;--agua-esq:50}
+:root{--mascote-escala:1;--mascote-q:64;--mascote-cols:8;--mascote-rows:12;--ml:0;--mq:0;--agua-l:128;--agua-a:96;--agua-esq:50}
 .mascote{
   --mascote-px:calc(var(--mascote-escala)*1px);
   position:fixed;left:0;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:25;
@@ -2030,10 +2030,21 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   width:calc(var(--agua-l)*var(--mascote-px));height:calc(var(--agua-a)*var(--mascote-px));
   image-rendering:pixelated;pointer-events:none;
 }
+/* escada da escalada (subirEscada): fixa no rodapé, atrás do mascote (z 24 < 25). Tamanho (largura/altura) vem do JS
+   (ESC_LARG/ESC_ALTURA x escala) e o x é gravado a cada escalada. O fundo (assets/mascote/escada.png) entra por
+   Mascote.criar({escada}), sem cor aqui: é PNG.
+   Desenrola de cima para baixo em passos (.on); .seco = some na hora (escalada abortada). */
+.mascote-escada{
+  position:fixed;left:0;bottom:calc(10px + env(safe-area-inset-bottom,0px));width:28px;height:96px;z-index:24;pointer-events:none;
+  background-repeat:no-repeat;background-size:100% 100%;image-rendering:pixelated;
+  clip-path:inset(0 0 100% 0);transition:clip-path .18s steps(6);
+}
+.mascote-escada.on{clip-path:inset(0 0 0 0)}
+.mascote-escada.seco{transition:none}
 .mascote-cena{position:absolute;left:-12px;top:0;width:64px;height:64px;z-index:2;pointer-events:none;
-  background-repeat:no-repeat;background-size:512px 704px;image-rendering:pixelated;will-change:transform;}
+  background-repeat:no-repeat;background-size:512px 768px;image-rendering:pixelated;will-change:transform;}
 .mascote-cena.off{visibility:hidden;}
-@media(prefers-reduced-motion:reduce){.mascote{transition:none;}}
+@media(prefers-reduced-motion:reduce){.mascote,.mascote-escada{transition:none;}}
 
 /* ═══ M4 — A8 "faixa do edital" (substitui a A6) ═══
    3 faixas de texto puro CSS, sentidos opostos, conteúdo real (áreas via AI, fontes
@@ -2283,7 +2294,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   <div class="lp-fumaca lp-fumaca-a" aria-hidden="true"></div>
 
   <!-- ── 01 · O QUE É ── -->
-  <section class="lp-sec">
+  <section class="lp-sec" id="lp-instrutor">
     <div class="lp-sec-in">
       <div class="lp-label">O que é</div>
       <h2 class="lp-h2">Um instrutor que não esquece o que você errou.</h2>
@@ -2357,7 +2368,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   </div>
 
   <!-- ── 03 · COMO FUNCIONA ── -->
-  <section class="lp-sec">
+  <section class="lp-sec" id="lp-passos">
     <div class="lp-sec-in">
       <div class="lp-label">Como funciona</div>
       <h2 class="lp-h2">Três passos, e o ciclo se fecha sozinho.</h2>
@@ -5763,18 +5774,18 @@ function scrollProgress(el,cb,opts){
 }
 // ═══ P2/b249 — MASCOTE PIXEL: motor (cópia de materiais/marca/mascote-pixel/motor/mascote_motor.js,
 // testado em materiais/entregas/testes/teste_mascote_motor.js) + driver da vitrine ═══
-/* Mascote pixel — motor (P1/b245, P2/b249: quadro 64, folha v4 de 11 linhas). Bloco autocontido, JS puro, colar no index.html.
+/* Mascote pixel — motor (P1/b245, P2/b249: quadro 64, folha v4 de 12 linhas; b249: escalada). Bloco autocontido, JS puro, colar no index.html.
    Duas camadas:
    - FUNÇÕES PURAS (sem DOM, testadas em Node): tabela, quadro por tempo, próxima ação,
      avanço de posição, sorteio do piscar, partículas de água.
    - MOTOR (DOM): Mascote.criar(opts) -> um div.mascote, UM laço rAF por timestamp que PARA com
      o mascote oculto, fora da tela, aba oculta ou reduced-motion.
    Não registra listener de scroll: quem anima por rolagem usa o motor único (scrollProgress)
-   e chama a API (andarAte/tocar/jatoEm). Resize e visibilitychange não são scroll. */
+   e chama a API (andarAte/tocar/jatoEm/subirEscada). Resize e visibilitychange não são scroll. */
 var Mascote=(function(){
 'use strict';
 
-// Folha v4: cada linha uma ação, cada coluna um quadro de 64x64 (11 linhas, ordem = assets/mascote/folha_v4.png).
+// Folha v4: cada linha uma ação, cada coluna um quadro de 64x64 (12 linhas, ordem = assets/mascote/folha_v4.png).
 // loopInicio: quadro onde o loop recomeça (entrada tocada 1x, resto em loop).
 // segurarMs: tempo parado no último quadro antes de a ação não-loop terminar.
 var MASCOTE_ANIM={
@@ -5788,7 +5799,9 @@ var MASCOTE_ANIM={
   cochilar:   {linha:7, quadros:3,fps:2, loop:true},
   acenar:     {linha:8, quadros:8,fps:10,loop:true},   // de frente (era `frente`); quem chama passa duracaoMs
   continencia:{linha:9, quadros:3,fps:6, loop:false,segurarMs:1200},
-  correr:     {linha:10,quadros:8,fps:14,loop:true}
+  correr:     {linha:10,quadros:8,fps:14,loop:true},
+  // b249: escalar = linha 11 (de costas, sem sombra); fps 10 = 2 quadros por degrau de 8 px na subida de 1 s
+  escalar:    {linha:11,quadros:4,fps:10,loop:true}
 };
 var MASCOTE_QUADRO=64;        // px de um quadro na folha (padrão; criar({quadro:48}) troca). ÚNICA fonte do tamanho.
 var MASCOTE_VEL_PX_S=15;      // andar: px DA FOLHA por segundo para grade 32 (escala com quadro/32; no quadro 64 = 30 px/s)
@@ -5797,6 +5810,10 @@ var MASCOTE_CORRER_X=2.4;     // correr anda MASCOTE_CORRER_X vezes mais rápido
 var MASCOTE_BICO=[[56,46],[56,44],[56,45],[56,44],[56,44]];
 var MASCOTE_PISCAR_MS=[3000,7000];
 var MASCOTE_JATO_MS=2200;
+// Escalada (subirEscada): tempos em ms; degrau = px que ele sobe por passo (a subida anda em degraus, pixel art).
+// ESC_LARG/ESC_ALTURA = tamanho de assets/mascote/escada.png em px (escala 1). A escada fica centrada no mascote:
+// (64-28)/2 = 18 = x das mãos do escalar (trilhos em 18-22 e 41-45 do quadro). Mudou a arte: conferir esse alinhamento.
+var ESC_DESENROLAR=180,ESC_SUBIR=1000,ESC_DESCER=800,ESC_RECOLHER=180,ESC_DEGRAU=8,ESC_ALTURA=96,ESC_GESTO_MS=1400,ESC_LARG=28;
 
 // ---------- funções puras ----------
 
@@ -5902,7 +5919,8 @@ function _reduzidoPadrao(){
   return matchMedia('(prefers-reduced-motion:reduce)').matches||!!(navigator.connection&&navigator.connection.saveData);
 }
 
-// opts: {sprite (url/data URI), pai (default body), reduzido (fn), tabela, vel, quadro, agua (override, ver mascoteGeometria)}
+// opts: {sprite (url/data URI), pai (default body), reduzido (fn), tabela, vel, quadro, agua (override, ver mascoteGeometria),
+//   escada (url da arte da escada, assets/mascote/escada.png), aoPasso: function() a cada quadro do laço}
 function criar(opts){
   opts=opts||{};
   var tabela=opts.tabela||MASCOTE_ANIM,reduzidoFn=opts.reduzido||_reduzidoPadrao;
@@ -5920,7 +5938,8 @@ function criar(opts){
   (opts.pai||document.body).appendChild(el);
 
   var e={acao:'parado',t0:0,x:0,alvo:null,correr:false,aoChegar:null,aoTerminar:null,duracao:null,flip:false,
-         proxPiscar:0,agua:null,aguaAlvo:null,aguaSpawn:0,aguaAng:.3,aguaV:90,aguaMira:0};
+         proxPiscar:0,agua:null,aguaAlvo:null,aguaSpawn:0,aguaAng:.3,aguaV:90,aguaMira:0,
+         y:0,esc:null}; // y = px acima do rodapé (só muda durante subirEscada); esc = estado da escalada
   var escala=2,vw=0,larg=Q*2;
   var raf=null,ultimo=0,mostrando=false,naTela=true;
   var qCache='',tCache='';
@@ -5946,8 +5965,9 @@ function criar(opts){
     else q=mascoteQuadro(tabela,e.acao,agora()-e.t0,false);
     var k=q.linha+':'+q.quadro;
     if(k!==qCache){qCache=k;el.style.setProperty('--ml',q.linha);el.style.setProperty('--mq',q.quadro);}
-    var t='translate3d('+snap(e.x)+'px,0,0) scaleX('+(e.flip&&e.acao!=='acenar'?-1:1)+')';
+    var t='translate3d('+snap(e.x)+'px,'+(-snap(e.y))+'px,0) scaleX('+(e.flip&&e.acao!=='acenar'?-1:1)+')';
     if(t!==tCache){tCache=t;el.style.transform=t;}
+    if(e.esc&&escEl)escEl.style.left=escadaX()+'px';   // acompanha o mascote (resize/rotação no meio da escalada)
     return q;
   }
 
@@ -5995,7 +6015,68 @@ function criar(opts){
     }
   }
 
+  // ---------- escalada: escada pequena, sobe, gesto, desce ----------
+  var escEl=null;
+  function escadaX(){return Math.round(snap(e.x)+(larg-ESC_LARG*escala)/2);}
+  function escadaCriar(){
+    escEl=document.createElement('div');
+    escEl.className='mascote-escada';
+    escEl.setAttribute('aria-hidden','true');
+    if(opts.escada)escEl.style.backgroundImage='url("'+opts.escada+'")';
+    (opts.pai||document.body).appendChild(escEl);
+  }
+  function escadaLigar(){
+    if(!escEl)escadaCriar();
+    escEl.style.width=(ESC_LARG*escala)+'px';
+    escEl.style.height=(ESC_ALTURA*escala)+'px';
+    escEl.style.left=escadaX()+'px';
+    escEl.classList.remove('seco');
+    void escEl.offsetWidth;                 // fixa o estado fechado antes de abrir (senão a transição não roda)
+    escEl.classList.add('on');
+  }
+  function escadaDesligar(imediato){
+    if(!escEl)return;
+    if(imediato)escEl.classList.add('seco');
+    escEl.classList.remove('on');
+  }
+  function degrau(v,max){return v>=max?max:(v<=0?0:Math.round(v/(ESC_DEGRAU*escala))*ESC_DEGRAU*escala);}
+  function faseEscada(nome,ts){
+    var s=e.esc;
+    s.fase=nome;s.t0=ts;
+    if(nome==='desenrolar'){iniciar('parado',ts);escadaLigar();}
+    else if(nome==='subir'||nome==='descer')iniciar('escalar',ts);
+    else if(nome==='gesto'){
+      e.flip=(e.x+larg/2)>vw/2;           // vira de perfil para dentro da tela (o conteúdo)
+      iniciar(s.gesto,ts);
+    }
+    else if(nome==='recolher'){iniciar('parado',ts);escadaDesligar(false);}
+  }
+  function encerrarEscada(abortou,ts){
+    var cb=e.esc&&e.esc.aoTerminar;
+    escadaDesligar(!!abortou);
+    e.esc=null;e.y=0;
+    iniciar('parado',ts!=null?ts:agora());
+    aplicar();
+    if(cb)cb(!!abortou);
+  }
+  function passoEscada(ts){
+    var s=e.esc,t=ts-s.t0,f;
+    if(s.fase==='desenrolar'){if(t>=ESC_DESENROLAR)faseEscada('subir',ts);}
+    else if(s.fase==='subir'){
+      f=Math.min(1,t/ESC_SUBIR);e.y=degrau(s.subida*f,s.subida);
+      if(f>=1)faseEscada('gesto',ts);
+    }
+    else if(s.fase==='gesto'){if(t>=s.gestoMs)faseEscada('descer',ts);}
+    else if(s.fase==='descer'){
+      f=Math.min(1,t/ESC_DESCER);e.y=degrau(s.subida*(1-f),s.subida);
+      if(f>=1){e.y=0;faseEscada('recolher',ts);}
+    }
+    else if(s.fase==='recolher'){if(t>=ESC_RECOLHER){encerrarEscada(false,ts);return;}}
+    aplicar();
+  }
+
   function passo(ts,dt){
+    if(e.esc){passoEscada(ts);if(opts.aoPasso)opts.aoPasso();return;}
     var q=mascoteQuadro(tabela,e.acao,ts-e.t0,false);
     if(q.fim||(e.duracao!=null&&ts-e.t0>=e.duracao))terminar(ts);
     var cam=e.acao==='parado'||e.acao==='andar'||e.acao==='correr'||e.acao==='sentar'||e.acao==='cochilar';
@@ -6025,6 +6106,7 @@ function criar(opts){
     }
     passoAgua(ts,dt);
     aplicar();
+    if(opts.aoPasso)opts.aoPasso();
   }
 
   function laco(ts){
@@ -6042,6 +6124,7 @@ function criar(opts){
     }else{
       if(raf!=null){cancelAnimationFrame(raf);raf=null;}
       if(e.agua)limparAgua();
+      if(e.esc&&reduzido())encerrarEscada(true);
       if(reduzido()){e.acao='parado';e.alvo=null;aplicar();}
     }
   }
@@ -6051,7 +6134,7 @@ function criar(opts){
     el:el,
     tocar:function(acao,o){
       o=o||{};
-      if(!tabela[acao])return;
+      if(!tabela[acao]||e.esc)return;
       if(reduzido()){if(o.aoTerminar)o.aoTerminar();return;}
       if(e.acao==='jato'&&acao!=='jato')limparAgua();
       e.aoTerminar=o.aoTerminar||null;e.duracao=o.duracaoMs!=null?o.duracaoMs:null;
@@ -6073,6 +6156,7 @@ function criar(opts){
     },
     jatoEm:function(alvoEl,o){
       o=o||{};
+      if(e.esc)return;
       if(reduzido()){if(o.aoTerminar)o.aoTerminar();return;}
       api.olharPara(alvoEl);
       e.agua=[];e.aguaAlvo=alvoEl;e.aguaSpawn=0;e.aguaMira=0;
@@ -6083,9 +6167,30 @@ function criar(opts){
       medir();atualizarLaco();
     },
     esconder:function(){
+      if(e.esc)encerrarEscada(true);
       mostrando=false;el.classList.add('mascote-oculto');
       atualizarLaco();
     },
+    // subirEscada({gesto:'continencia'(padrão)|'apontar'|..., gestoMs, alturaPx, subidaPx, aoTerminar(abortou)}):
+    // escada desenrola -> sobe em degraus -> gesto -> desce -> escada some. Segura o x durante a sequência.
+    // Devolve false se não começou (já em escalada, oculto, reduced-motion).
+    subirEscada:function(o){
+      o=o||{};
+      if(e.esc||!mostrando)return false;
+      if(reduzido()){if(o.aoTerminar)o.aoTerminar(true);return false;}
+      if(e.acao==='jato')return false;
+      var alt=o.alturaPx||ESC_ALTURA;
+      e.esc={fase:'',t0:0,gesto:tabela[o.gesto]?o.gesto:'continencia',gestoMs:o.gestoMs||ESC_GESTO_MS,
+             subida:o.subidaPx!=null?o.subidaPx:Math.round(alt*.42/ESC_DEGRAU)*ESC_DEGRAU*escala,aoTerminar:o.aoTerminar||null};
+      limparAgua();
+      faseEscada('desenrolar',agora());
+      atualizarLaco();
+      return true;
+    },
+    abortarEscada:function(){if(e.esc)encerrarEscada(true);},   // desce na hora, escada some sem animação
+    emEscada:function(){return !!e.esc;},
+    escadaRect:function(){return e.esc&&escEl?escEl.getBoundingClientRect():null;},
+    y:function(){return e.y;},
     medir:medir,
     x:function(){return e.x;},
     largura:function(){return larg;},
@@ -6096,6 +6201,7 @@ function criar(opts){
       mostrando=false;atualizarLaco();
       removeEventListener('resize',medir);
       document.removeEventListener('visibilitychange',atualizarLaco);
+      if(escEl)escEl.remove();
       if(io)io.disconnect();
       if(mq&&mq.removeEventListener)mq.removeEventListener('change',atualizarLaco);
       el.remove();
@@ -6143,7 +6249,9 @@ return {
 // P2/b249 — mascote na vitrine (pré-login). Comportamento aprovado no b247: anda acompanhando a
 // rolagem (corre se a rolagem é rápida); parado respira e pisca a cada 3–7 s; 7 s parado senta,
 // 20 s cochila; rolar levanta e ele anda; toque acena de frente (sem aceno automático); entrando na
-// seção (40% visível, 1x por visita) faz o jato na curva (A3) e comemora nos planos. A A4 é a cena
+// seção (40% visível, 1x por visita) faz o jato na curva (A3) e comemora nos planos. Em 3 seções sem evento próprio
+// (lp-instrutor, lp-passos, lp-instalar) ele sobe uma escada curta e bate continência (b249; toda vez que a seção
+// entra, no máx. 1 escalada a cada 15 s; CTA no caminho aborta). A A4 é a cena
 // da mangueira (initA4Barras), que esconde este mascote enquanto o dela está na cena.
 // Sem listener de scroll novo: a posição vem de scrollProgress(); seções por IntersectionObserver.
 // Pausa fora da tela e com aba oculta (laço do motor + checagens abaixo); reduced-motion = quadro
@@ -6156,6 +6264,7 @@ var MascoteVitrine=(function initMascoteVitrine(){
   var ultimoMov=0,vistas={},pendente=[],ctaNaBanda=0,ioBanda=null,tmCorrer=0;
   var BANDA_PX=84,MARGEM=8,VEL_CORRER=45; // px/s do alvo acima dos quais ele corre (andar = 30 px/s)
   var refX=null,refT=0,correrAte=0,ultAlvo=0,ultP=0;
+  var ESCADA_MIN_MS=15000,MARGEM_CTA=8,ultEscada=-1e9; // escalada: intervalo mínimo e folga do retângulo da escada/mascote até o CTA
 
   function oculto(){return razoes.landing||razoes.cena||razoes.cta;}
   function aplicarVis(){
@@ -6171,7 +6280,9 @@ var MascoteVitrine=(function initMascoteVitrine(){
     m=Mascote.criar({
       sprite:'assets/mascote/folha_v4.png',
       // canvas da água: nasce na ponta do esguicho do quadro atual do jato (BICO), esquerda do canvas em x=50
-      agua:{bocalX:56,bocalY:18,esq:50,bico:Mascote.MASCOTE_BICO}
+      agua:{bocalX:56,bocalY:18,esq:50,bico:Mascote.MASCOTE_BICO},
+      escada:'assets/mascote/escada.png',
+      aoPasso:protegerEscalada
     });
     // toque = acena. O mascote é pointer-events:none (links/botões sob ele recebem o toque normalmente);
     // o aceno só dispara se o clique cai no retângulo VISÍVEL dele e o alvo não é interativo.
@@ -6185,7 +6296,7 @@ var MascoteVitrine=(function initMascoteVitrine(){
 
   var INTERATIVO='a,button,input,select,textarea,label,[role="button"],[tabindex]';
   function aoClicar(ev){
-    if(!m||oculto())return;
+    if(!m||oculto()||m.emEscada())return;
     var r=m.el.getBoundingClientRect();
     if(ev.clientX<r.left||ev.clientX>r.right||ev.clientY<r.top||ev.clientY>r.bottom)return;
     var t=ev.target;
@@ -6221,6 +6332,31 @@ var MascoteVitrine=(function initMascoteVitrine(){
     tmRs=setTimeout(function(){if(m)montarBanda();},200);
   },{passive:true});
 
+  // ---- escalada (b249): CTA no retângulo do mascote OU da escada (+8 px) aborta; no caminho, nem começa
+  function inter(c,r,g){return c.width>0&&c.left<r.right+g&&c.right>r.left-g&&c.top<r.bottom+g&&c.bottom>r.top-g;}
+  function protegerEscalada(){
+    if(!m||!m.emEscada())return;
+    var rs=[m.el.getBoundingClientRect(),m.escadaRect()],i,j,c;
+    for(i=0;i<alvosCta.length;i++){
+      c=alvosCta[i].getBoundingClientRect();
+      for(j=0;j<rs.length;j++)if(rs[j]&&inter(c,rs[j],MARGEM_CTA)){m.abortarEscada();return;}
+    }
+  }
+  function ctaNoCaminho(){
+    var r=m.el.getBoundingClientRect(),cx={left:r.left,right:r.right,top:r.bottom-96,bottom:r.bottom},i; // 96 = altura da escada (ESC_ALTURA do motor)
+    for(i=0;i<alvosCta.length;i++)if(inter(alvosCta[i].getBoundingClientRect(),cx,MARGEM_CTA))return true;
+    return false;
+  }
+  function tentarEscada(){
+    var agora=performance.now();
+    if(!m||oculto()||m.emEscada()||agora-ultEscada<ESCADA_MIN_MS||ctaNoCaminho())return;
+    var ok=m.subirEscada({gesto:'continencia',aoTerminar:function(){
+      ultimoMov=performance.now();
+      if(m)m.andarAte(xDe(ultP),{correr:true}); // rolou durante a escalada: alcança o alvo correndo
+    }});
+    if(ok)ultEscada=agora;
+  }
+
   // ---- vitrine visível? (display:none por login/logado -> some; IO cobre as duas coisas)
   if('IntersectionObserver' in window){
     new IntersectionObserver(function(es){
@@ -6250,22 +6386,25 @@ var MascoteVitrine=(function initMascoteVitrine(){
   },{semReducedMotion:true});
 
   // ---- ócio: 7 s parado senta, 20 s cochila (rolar levanta: o motor volta a andar)
+  // fila `pendente`: 'a3' | 'planos' (1x por visita, só parado/piscar) | 'esc:<id>' (escada, toda vez; também andando)
   function ocio(){
-    if(!m||document.hidden||oculto())return;
+    if(!m||document.hidden||oculto()||m.emEscada())return;
     var agora=performance.now(),parado=agora-ultimoMov,a=m.acao();
     if((a==='parado'||a==='piscar')&&!pendente.length){
       if(parado>20000)m.tocar('cochilar');
       else if(parado>7000)m.tocar('sentar');
     }else if(a==='sentar'&&parado>20000)m.tocar('cochilar');
-    if(pendente.length&&(a==='parado'||a==='piscar')){
-      var c=pendente.shift();
-      // a cena só vale se a seção ainda está na tela (ele pode ter chegado tarde, andando atrás da rolagem)
-      var sec=document.getElementById(c==='a3'?'lp-a3':'planos'),rs=sec&&sec.getBoundingClientRect();
-      if(!rs||rs.bottom<=0||rs.top>=innerHeight){vistas[c]=0;return;}
-      ultimoMov=agora;
-      if(c==='a3'){var alvo=document.getElementById('lp-a3-cena');if(alvo)m.jatoEm(alvo,{duracaoMs:3000});}
-      else if(c==='planos')m.tocar('comemorar');
-    }
+    if(!pendente.length)return;
+    var c=pendente[0],ehEsc=c.indexOf('esc:')===0;
+    if(!(a==='parado'||a==='piscar'||(ehEsc&&a==='andar')))return;
+    pendente.shift();
+    // a cena só vale se a seção ainda está na tela (ele pode ter chegado tarde, andando atrás da rolagem)
+    var sec=document.getElementById(ehEsc?c.slice(4):(c==='a3'?'lp-a3':'planos')),rs=sec&&sec.getBoundingClientRect();
+    if(!rs||rs.bottom<=0||rs.top>=innerHeight){if(!ehEsc)vistas[c]=0;return;}
+    if(ehEsc){tentarEscada();return;}
+    ultimoMov=agora;
+    if(c==='a3'){var alvo=document.getElementById('lp-a3-cena');if(alvo)m.jatoEm(alvo,{duracaoMs:3000});}
+    else if(c==='planos')m.tocar('comemorar');
   }
 
   // ---- cenas por seção: 1x por visita, quando 40% da seção aparece (A3 = jato na curva, planos = comemora)
@@ -6279,6 +6418,17 @@ var MascoteVitrine=(function initMascoteVitrine(){
     [['lp-a3','a3'],['planos','planos']].forEach(function(par){
       var el=document.getElementById(par[0]);
       if(el){el.setAttribute('data-mascote-cena',par[1]);ioCena.observe(el);}
+    });
+    // pontos de escada: toda vez que a seção entra (40%); o intervalo de 15 s é checado em tentarEscada
+    var ioEsc=new IntersectionObserver(function(es){
+      es.forEach(function(en){
+        var k='esc:'+en.target.id;
+        if(en.isIntersecting&&pendente.indexOf(k)<0)pendente.push(k);
+      });
+    },{threshold:.4});
+    ['lp-instrutor','lp-passos','lp-instalar'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el)ioEsc.observe(el);
     });
   }
   return {razao:razao};
@@ -7574,7 +7724,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.344';
+const APP_VERSAO='v1.345';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
