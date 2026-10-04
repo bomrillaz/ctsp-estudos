@@ -1936,27 +1936,41 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   .treme-cartao{animation:none;}
 }
 
-/* ═══ PM1/M4 — A3 "a curva" ═══ */
-.lp-a3-curva-scene{position:relative;}
-.lp-a3-track{position:relative;height:170vh;}
-.lp-a3-stage{position:sticky;top:0;height:100vh;min-height:480px;display:flex;align-items:center;overflow:hidden;background:var(--paper);}
-.lp-a3-inner{width:100%;max-width:640px;margin:0 auto;padding:0 20px;text-align:center;}
-.lp-a3-svg{width:100%;height:auto;max-height:52vh;margin:20px 0 8px;overflow:visible;}
-/* PV1/b240: cena A3 sobrava vazio ~300px acima/abaixo em telas altas (conteúdo curto
-   centralizado num stage de 100vh) e a seção seguinte nascia com padding próprio,
-   separando "Três achados..." do título acima. SVG maior preenche o stage; padding-top
-   reduzido só nesta transição aproxima sem mexer no .lp-a3-track (170vh, lido por
-   scrollProgress — reduzir quebraria a duração do desenho da curva). */
-.lp-a3-curva-scene + .lp-sec-papel2{padding-top:16px;}
-.lp-a3-guia{fill:none;stroke:var(--line-soft);stroke-width:2;}
-.lp-a3-path{fill:none;stroke:var(--ember);stroke-width:3;stroke-linecap:round;}
-.lp-a3-dot{fill:var(--paper);stroke:var(--ember);stroke-width:2;opacity:.4;transition:opacity var(--dur-base) var(--ease-out),fill var(--dur-base) var(--ease-out);}
-.lp-a3-dot.atingido{fill:var(--ember);opacity:1;}
-.lp-a3-caption{font-size:13px;color:var(--text2);margin-top:4px;}
+/* ═══ M2 — A3 "a curva do esquecimento" ═══
+   Substituiu a cena pinada (170vh sticky + stroke-dashoffset por scroll): duas curvas
+   (sem revisão cinza, com revisão laranja) traçadas por partículas, disparo por TEMPO
+   quando a seção fica ~35% visível (initA3Curva + _cenaPorTempo). É ILUSTRAÇÃO do
+   modelo, não dado medido: sem percentual, legenda "Ilustrativo". Sem JS/reduced-motion
+   o markup já é o estado final; .lp-a3-pre/.lp-a3-run só existem enquanto anima. */
+.lp-a3-inner{width:100%;max-width:640px;margin:0 auto;padding:0 20px;}
+.lp-a3-cena{position:relative;margin-top:22px;padding-top:22px;}
+.lp-a3-eixo-y{position:absolute;top:0;left:0;font-size:12px;color:var(--text3);}
+.lp-a3-svg{display:block;width:100%;height:auto;overflow:visible;}
+.lp-a3-canvas{position:absolute;left:0;bottom:0;width:100%;pointer-events:none;}
+.lp-a3-base{stroke:var(--line-soft);stroke-width:1.5;fill:none;}
+.lp-a3-sem{fill:none;stroke:var(--text3);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+.lp-a3-com{fill:none;stroke:var(--ember);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
+.lp-a3-mk{fill:var(--paper);stroke:var(--ember);stroke-width:3;}
+.lp-a3-anel{fill:none;stroke:var(--ember);stroke-width:2;opacity:0;transform-box:fill-box;transform-origin:center;}
+.lp-a3-mk.on+.lp-a3-anel{animation:a3Pulso .9s var(--ease-out) 1;}
+@keyframes a3Pulso{0%{opacity:.8;transform:scale(1);}100%{opacity:0;transform:scale(3.2);}}
+.lp-a3-rot{position:absolute;right:0;font-size:13px;font-weight:600;line-height:1.2;white-space:nowrap;transition:opacity var(--dur-slow) var(--ease-out);}
+.lp-a3-rot-sem{color:var(--text2);top:66%;}
+.lp-a3-rot-com{color:var(--ember);top:47%;}
+.lp-a3-ticks{position:relative;height:20px;margin-top:8px;font-size:12px;color:var(--text3);}
+.lp-a3-ticks span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;}
+.lp-a3-ticks span:first-child{transform:none;}
+.lp-a3-nota{margin-top:16px;font-size:13px;line-height:1.45;color:var(--text2);}
+.lp-a3-nota b{color:var(--ember);font-weight:600;}
+.lp-a3-pre .lp-a3-sem,.lp-a3-pre .lp-a3-com,.lp-a3-pre .lp-a3-mk,.lp-a3-pre .lp-a3-area,.lp-a3-pre .lp-a3-rot{opacity:0;}
+.lp-a3-run .lp-a3-mk,.lp-a3-run .lp-a3-area,.lp-a3-run .lp-a3-rot{opacity:0;}
+.lp-a3-run .lp-a3-mk.on,.lp-a3-run .lp-a3-rot.on{opacity:1;}
+.lp-a3-run .lp-a3-mk{transition:opacity var(--dur-base) var(--ease-out);}
 .lp-stagger{opacity:0;transform:translateY(14px);transition:opacity var(--dur-slow) var(--ease-out),transform var(--dur-slow) var(--ease-out);}
 .lp-stagger.lp-in{opacity:1;transform:translateY(0);}
 @media(prefers-reduced-motion:reduce){
-  .lp-a3-dot,.lp-stagger{transition:none;}
+  .lp-stagger,.lp-a3-rot,.lp-a3-run .lp-a3-mk{transition:none;}
+  .lp-a3-mk.on+.lp-a3-anel{animation:none;}
 }
 
 /* ═══ M1 — A4 "como o edital pesa" ═══
@@ -2363,29 +2377,45 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
   </section>
 
-  <!-- ── A3 "a curva" (PM1/M4) ──
-       Curva de Ebbinghaus desenhada no scroll (stroke-dashoffset): decai, cada
-       revisão levanta e ACHATA a decadência seguinte (3 ciclos, cada um mais lento
-       que o anterior). É a tese do produto, não enfeite — ver PLANO_apresentacao_e_
-       movimento.md §0.3. Os 3 cards da base científica ficam na seção normal logo
-       abaixo, com stagger de entrada (zona B: só opacity/transform, sem duplicar a
-       cena pinada nelas — testado em grid único no A1 e descartado por overflow). -->
-  <section class="lp-a3-curva-scene" id="lp-a3">
-    <div class="lp-a3-track" id="lp-a3-track">
-      <div class="lp-a3-stage">
-        <div class="lp-a3-inner">
-          <div class="lp-label">A base científica</div>
-          <h2 class="lp-h2">Não é opinião sobre como estudar. É o que a pesquisa já mostrou.</h2>
-          <svg class="lp-a3-svg" viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true">
-            <path class="lp-a3-guia" d="M0,20 C60,25 110,90 150,170 L150,50 C220,60 280,110 320,140 L320,35 C400,45 480,75 550,100 L550,25 C570,30 585,40 600,55"/>
-            <path class="lp-a3-path" id="lp-a3-path" d="M0,20 C60,25 110,90 150,170 L150,50 C220,60 280,110 320,140 L320,35 C400,45 480,75 550,100 L550,25 C570,30 585,40 600,55"/>
-            <circle class="lp-a3-dot" id="lp-a3-dot1" cx="150" cy="170" r="5"/>
-            <circle class="lp-a3-dot" id="lp-a3-dot2" cx="320" cy="140" r="5"/>
-            <circle class="lp-a3-dot" id="lp-a3-dot3" cx="550" cy="100" r="5"/>
-          </svg>
-          <div class="lp-a3-caption">Cada revisão levanta a curva. A queda seguinte é mais lenta que a anterior.</div>
-        </div>
+  <!-- ── A3 "a curva do esquecimento" (M2) ──
+       Duas curvas: sem revisão (cinza, cai e achata) e com revisão (laranja, 4 revisões
+       em 1, 3, 7 e 21 dias, cada queda seguinte mais lenta). ILUSTRAÇÃO do modelo de
+       Ebbinghaus, não dado medido: sem percentual, nota "Ilustrativo" visível. As
+       partículas traçam as linhas quando a seção entra na tela (ver initA3Curva); o
+       markup já é o estado final (sem JS / reduced-motion). Geometria: R(x)=0.15+0.85
+       e^(-dx/tau) por trecho, em viewBox 600x280. Os 3 cards da base científica ficam
+       na seção normal logo abaixo, com stagger de entrada (zona B: só opacity/transform). -->
+  <section class="lp-sec" id="lp-a3">
+    <div class="lp-a3-inner">
+      <div class="lp-label">A base científica</div>
+      <h2 class="lp-h2">Não é opinião sobre como estudar. É o que a pesquisa já mostrou.</h2>
+      <div class="lp-a3-cena" id="lp-a3-cena">
+        <div class="lp-a3-eixo-y">Quanto você lembra</div>
+        <svg class="lp-a3-svg" id="lp-a3-svg" viewBox="0 0 600 280" aria-hidden="true">
+          <defs>
+            <linearGradient id="a3grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" style="stop-color:var(--ember);stop-opacity:.28"/>
+              <stop offset="1" style="stop-color:var(--ember);stop-opacity:0"/>
+            </linearGradient>
+            <clipPath id="a3clip"><rect id="lp-a3-clip" x="0" y="0" width="600" height="290"/></clipPath>
+          </defs>
+          <line class="lp-a3-base" x1="0" y1="270" x2="600" y2="270"/>
+          <path class="lp-a3-area" id="lp-a3-area" clip-path="url(#a3clip)" style="fill:url(#a3grad)" d="M0,20 L5,28 L10,35.7 L15,43.2 L20,50.3 L25,57.2 L30,63.8 L35,70.2 L40,76.3 L45,82.2 L50,87.8 L55,93.3 L60,98.6 L65,103.6 L70,108.5 L75,113.2 L80,117.7 L85,122 L90,126.2 L90,20 L95,25 L100,29.9 L105,34.6 L110,39.3 L115,43.8 L120,48.3 L125,52.6 L130,56.9 L135,61 L140,65 L145,69 L150,72.8 L155,76.6 L160,80.2 L165,83.8 L170,87.3 L175,90.7 L180,94.1 L185,97.3 L190,100.5 L195,103.6 L200,106.6 L200,20 L205,23.2 L210,26.3 L215,29.4 L220,32.5 L225,35.5 L230,38.5 L235,41.4 L240,44.3 L245,47.1 L250,49.9 L255,52.6 L260,55.3 L265,58 L270,60.6 L275,63.2 L280,65.7 L285,68.3 L290,70.7 L295,73.2 L300,75.6 L305,77.9 L310,80.2 L315,82.5 L320,84.8 L325,87 L330,89.2 L330,20 L335,22 L340,24 L345,26 L350,28 L355,30 L360,31.9 L365,33.8 L370,35.7 L375,37.6 L380,39.5 L385,41.3 L390,43.2 L395,45 L400,46.8 L405,48.5 L410,50.3 L415,52 L420,53.8 L425,55.5 L430,57.2 L435,58.9 L440,60.5 L445,62.2 L450,63.8 L455,65.4 L460,67 L465,68.6 L470,70.2 L475,71.7 L480,73.2 L485,74.8 L490,76.3 L495,77.8 L500,79.3 L505,80.7 L510,82.2 L515,83.6 L520,85 L520,20 L525,21.2 L530,22.3 L535,23.5 L540,24.7 L545,25.8 L550,27 L555,28.1 L560,29.2 L565,30.4 L570,31.5 L575,32.6 L580,33.7 L585,34.8 L590,35.9 L595,37 L600,38.1 L600,270 L0,270 Z"/>
+          <path class="lp-a3-sem" id="lp-a3-sem" d="M0,20 L5,28 L10,35.7 L15,43.2 L20,50.3 L25,57.2 L30,63.8 L35,70.2 L40,76.3 L45,82.2 L50,87.8 L55,93.3 L60,98.6 L65,103.6 L70,108.5 L75,113.2 L80,117.7 L85,122 L90,126.2 L95,130.2 L100,134 L105,137.7 L110,141.3 L115,144.8 L120,148.1 L125,151.3 L130,154.3 L135,157.3 L140,160.1 L145,162.8 L150,165.5 L155,168 L160,170.4 L165,172.8 L170,175 L175,177.2 L180,179.3 L185,181.3 L190,183.2 L195,185.1 L200,186.9 L205,188.6 L210,190.3 L215,191.8 L220,193.4 L225,194.9 L230,196.3 L235,197.6 L240,199 L245,200.2 L250,201.4 L255,202.6 L260,203.7 L265,204.8 L270,205.9 L275,206.9 L280,207.8 L285,208.8 L290,209.7 L295,210.5 L300,211.4 L305,212.2 L310,212.9 L315,213.7 L320,214.4 L325,215.1 L330,215.7 L335,216.3 L340,217 L345,217.5 L350,218.1 L355,218.7 L360,219.2 L365,219.7 L370,220.2 L375,220.6 L380,221.1 L385,221.5 L390,221.9 L395,222.3 L400,222.7 L405,223.1 L410,223.4 L415,223.8 L420,224.1 L425,224.4 L430,224.7 L435,225 L440,225.3 L445,225.6 L450,225.8 L455,226.1 L460,226.3 L465,226.6 L470,226.8 L475,227 L480,227.2 L485,227.4 L490,227.6 L495,227.8 L500,228 L505,228.1 L510,228.3 L515,228.5 L520,228.6 L525,228.8 L530,228.9 L535,229 L540,229.2 L545,229.3 L550,229.4 L555,229.5 L560,229.6 L565,229.7 L570,229.9 L575,230 L580,230 L585,230.1 L590,230.2 L595,230.3 L600,230.4"/>
+          <path class="lp-a3-com" id="lp-a3-com" d="M0,20 L5,28 L10,35.7 L15,43.2 L20,50.3 L25,57.2 L30,63.8 L35,70.2 L40,76.3 L45,82.2 L50,87.8 L55,93.3 L60,98.6 L65,103.6 L70,108.5 L75,113.2 L80,117.7 L85,122 L90,126.2 L90,20 L95,25 L100,29.9 L105,34.6 L110,39.3 L115,43.8 L120,48.3 L125,52.6 L130,56.9 L135,61 L140,65 L145,69 L150,72.8 L155,76.6 L160,80.2 L165,83.8 L170,87.3 L175,90.7 L180,94.1 L185,97.3 L190,100.5 L195,103.6 L200,106.6 L200,20 L205,23.2 L210,26.3 L215,29.4 L220,32.5 L225,35.5 L230,38.5 L235,41.4 L240,44.3 L245,47.1 L250,49.9 L255,52.6 L260,55.3 L265,58 L270,60.6 L275,63.2 L280,65.7 L285,68.3 L290,70.7 L295,73.2 L300,75.6 L305,77.9 L310,80.2 L315,82.5 L320,84.8 L325,87 L330,89.2 L330,20 L335,22 L340,24 L345,26 L350,28 L355,30 L360,31.9 L365,33.8 L370,35.7 L375,37.6 L380,39.5 L385,41.3 L390,43.2 L395,45 L400,46.8 L405,48.5 L410,50.3 L415,52 L420,53.8 L425,55.5 L430,57.2 L435,58.9 L440,60.5 L445,62.2 L450,63.8 L455,65.4 L460,67 L465,68.6 L470,70.2 L475,71.7 L480,73.2 L485,74.8 L490,76.3 L495,77.8 L500,79.3 L505,80.7 L510,82.2 L515,83.6 L520,85 L520,20 L525,21.2 L530,22.3 L535,23.5 L540,24.7 L545,25.8 L550,27 L555,28.1 L560,29.2 L565,30.4 L570,31.5 L575,32.6 L580,33.7 L585,34.8 L590,35.9 L595,37 L600,38.1"/>
+          <circle class="lp-a3-mk" cx="90" cy="126.2" r="6"/><circle class="lp-a3-anel" cx="90" cy="126.2" r="6"/>
+          <circle class="lp-a3-mk" cx="200" cy="106.6" r="6"/><circle class="lp-a3-anel" cx="200" cy="106.6" r="6"/>
+          <circle class="lp-a3-mk" cx="330" cy="89.2" r="6"/><circle class="lp-a3-anel" cx="330" cy="89.2" r="6"/>
+          <circle class="lp-a3-mk" cx="520" cy="85" r="6"/><circle class="lp-a3-anel" cx="520" cy="85" r="6"/>
+        </svg>
+        <canvas class="lp-a3-canvas" id="lp-a3-canvas" aria-hidden="true"></canvas>
+        <span class="lp-a3-rot lp-a3-rot-sem" id="lp-a3-rot-sem">Sem revisão</span>
+        <span class="lp-a3-rot lp-a3-rot-com" id="lp-a3-rot-com">Com revisão</span>
       </div>
+      <div class="lp-a3-ticks" aria-hidden="true">
+        <span style="left:0%">hoje</span><span style="left:15%">1 dia</span><span style="left:33.3%">3 dias</span><span style="left:55%">7 dias</span><span style="left:86.7%">21 dias</span>
+      </div>
+      <p class="lp-a3-nota"><b>Ilustrativo.</b> Desenho do modelo da curva do esquecimento, não é dado medido. Cada revisão levanta a curva, e a queda seguinte é mais lenta que a anterior.</p>
     </div>
   </section>
 
@@ -5813,25 +5843,208 @@ function scrollProgress(el,cb,opts){
     pct.textContent=domVal+'%';
   });
 })();
-// PM1/M4 — A3: a curva de esquecimento se desenha no scroll (stroke-dashoffset medido
-// via getTotalLength(), não chutado). Cada "revisão" (ponto) acende quando o traço a
-// alcança. Os 3 cards da base científica entram com stagger (função seguinte) na seção
-// normal abaixo — juntar as duas coisas na MESMA cena pinada reproduziria o overflow
-// do grid único do A1 (texto+conteúdo não cabem em 100vh no celular, achado do M3).
-(function initA3Scene(){
-  var track=document.getElementById('lp-a3-track'),path=document.getElementById('lp-a3-path');
-  if(!track||!path)return;
-  var len=path.getTotalLength();
-  path.style.strokeDasharray=String(len);
-  var dots=[
-    {el:document.getElementById('lp-a3-dot1'),p:0.32},
-    {el:document.getElementById('lp-a3-dot2'),p:0.62},
-    {el:document.getElementById('lp-a3-dot3'),p:0.88}
-  ];
-  scrollProgress(track,function(p){
-    path.style.strokeDashoffset=String(len*(1-p));
-    dots.forEach(function(d){if(d.el)d.el.classList.toggle('atingido',p>=d.p);});
-  });
+// M2 — driver único das cenas de partículas (A4 do M1, A3 do M2). Nunca scrub de scroll:
+// seção curta vai de 0 a 1 numa rolada e a animação "surge do nada" (vault,
+// licoes/animacao-scrubbed-em-secao-curta-parece-surgir-do-nada). Disparo por TEMPO.
+// Ciclo em LOOP enquanto a seção estiver visível (pedido do João, M2):
+//   desenha (c.fim ms) → segura o estado final (CENA_SEGURA_MS, tempo de leitura) →
+//   desfaz (CENA_DESFAZ_MS, o nascimento em marcha a ré: partículas se desprendem, nunca
+//   corte seco) → pausa em branco (CENA_PAUSA_MS) → redesenha com partículas novas.
+// Sair da tela cancela o rAF e zera a cena (em branco, sem corte visível); voltar a entrar
+// (rolando para cima ou para baixo) recomeça o ciclo do início. Aba oculta só pausa.
+// Ajuste de tempos: SÓ nestas constantes.
+var CENA_SEGURA_MS=3500,CENA_DESFAZ_MS=1000,CENA_PAUSA_MS=400;
+var CENA_LIMIAR=0.34; // fração visível que dispara (o pedido é ~35%; a folga cobre ratio reportado logo abaixo do limiar)
+var CENA_LIMIARES=[0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.5,0.6,0.7,0.8,0.9,1];
+// c = { medir():bool (geometria barata, também a cada resize), preparar() (a cada ciclo: sorteio
+// novo; o que for caro deve se cachear sozinho), desenhar(ms) (função pura do instante, 0 =
+// em branco, c.fim = pronto), fim:ms de desenho }. O desfazer é desenhar(c.fim*(1-f)).
+// reduced-motion/sem IntersectionObserver: só desenhar(c.fim), sem preparar() nem loop.
+// Entra no motor único _scrollCenas com cb vazio só pra receber o medir() a cada resize.
+// Devolve {redesenhar()} (ex.: recolorir, repinta o último quadro).
+function _pEaseOutQuart(t){return 1-Math.pow(1-t,4);}
+function _pBezier(p0,c,p2,t){
+  var mt=1-t;
+  return{x:mt*mt*p0.x+2*mt*t*c.x+t*t*p2.x,y:mt*mt*p0.y+2*mt*t*c.y+t*t*p2.y};
+}
+function _cenaPorTempo(secao,c){
+  var ultimo=null,io=null,ativo=false,visivel=false,tentando=false,resolvido=false,raf=0,tm=0,t=0,lastTs=null,fase=-1;
+  var fallback=movimentoReduzido()||!('IntersectionObserver' in window);
+  function quadro(e){c.desenhar(e);ultimo=e;}
+  function loop(ts){
+    raf=0;
+    if(!ativo)return;
+    if(document.hidden){lastTs=null;return;} // visibilitychange retoma
+    if(lastTs===null){lastTs=ts;raf=requestAnimationFrame(loop);return;}
+    t+=ts-lastTs;lastTs=ts;
+    var seg=c.fim+CENA_SEGURA_MS,des=seg+CENA_DESFAZ_MS,cic=des+CENA_PAUSA_MS;
+    if(t>=cic){t%=cic;fase=-1;c.preparar();} // módulo: timer suspenso em 2º plano pode devolver vários ciclos de uma vez
+    if(t<c.fim){quadro(t);fase=0;}
+    else if(t<seg){if(fase!==1){quadro(c.fim);fase=1;}}
+    else if(t<des){quadro(c.fim*(1-(t-seg)/CENA_DESFAZ_MS));fase=2;}
+    else if(fase!==3){quadro(0);fase=3;}
+    // segurar/pausa não pintam nada: dorme até o fim da fase em vez de acordar a 60Hz
+    var espera=fase===1?seg-t:fase===3?cic-t:0;
+    if(espera>50){
+      var dormiu=Date.now();lastTs=null;
+      tm=setTimeout(function(){
+        tm=0;if(!ativo)return;
+        t+=Date.now()-dormiu;
+        if(!raf)raf=requestAnimationFrame(loop);
+      },espera);
+      return;
+    }
+    raf=requestAnimationFrame(loop);
+  }
+  function iniciar(){
+    ativo=true;t=0;lastTs=null;fase=-1;
+    c.preparar();
+    if(!raf)raf=requestAnimationFrame(loop);
+  }
+  function parar(){
+    ativo=false;
+    if(raf){cancelAnimationFrame(raf);raf=0;}
+    if(tm){clearTimeout(tm);tm=0;}
+    quadro(0);
+  }
+  // Seção 0x0 no instante do disparo (layout tardio, vitrine escondida por já estar logado)
+  // tenta de novo por rAF (teto curto); se desistir, a próxima interseção tenta de novo.
+  function tocar(){
+    if(tentando||ativo)return;
+    tentando=true;
+    (function passo(n){
+      if(!visivel){tentando=false;return;} // saiu da tela durante o retry: não liga o loop fora dela
+      if(c.medir()){tentando=false;iniciar();return;}
+      if(n<=0){tentando=false;return;}
+      requestAnimationFrame(function(){passo(n-1);});
+    })(10);
+  }
+  function tentarFinal(){
+    if(resolvido)return true;
+    if(!c.medir())return false;
+    resolvido=true;quadro(c.fim);return true;
+  }
+  _scrollCenas.push({el:secao,cb:function(){},docTop:0,docBottom:0,medir:function(){
+    c.medir();
+    if(fallback)tentarFinal();
+    else if(ultimo!==null)c.desenhar(ultimo); // redimensionar limpa o canvas: repinta o quadro atual
+  }});
+  if(fallback){
+    (function passoFinal(n){
+      if(tentarFinal()||n<=0)return; // desiste; o medir() do próximo resize tenta de novo
+      requestAnimationFrame(function(){passoFinal(n-1);});
+    })(10);
+  }else{
+    document.addEventListener('visibilitychange',function(){
+      if(!document.hidden&&ativo&&!raf&&!tm){lastTs=null;raf=requestAnimationFrame(loop);}
+    });
+    io=new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        visivel=en.isIntersecting;
+        if(!visivel){if(ativo)parar();return;}
+        // seção mais alta que ~3 telas nunca chega a CENA_LIMIAR: cobrir 60% da tela também dispara
+        if(!ativo&&(en.intersectionRatio>=CENA_LIMIAR||en.intersectionRect.height>=innerHeight*0.6))tocar();
+      });
+    },{threshold:CENA_LIMIARES});
+    io.observe(secao);
+  }
+  return{redesenhar:function(){if(ultimo!==null)c.desenhar(ultimo);}};
+}
+// M2 — A3: duas curvas traçadas por partículas (motivo aprovado no M0, igual às barras da
+// A4): cada partícula vem de longe em arco, pousa na linha e o traço sólido vem logo atrás
+// (stroke-dashoffset); degradê (clipPath), marcadores e rótulos seguem a frente da curva
+// laranja. Alvos guardados em unidades do viewBox e escalados por K a cada frame, então
+// um resize no meio da animação não desalinha. Em LOOP (ver _cenaPorTempo); desenhar(e) é
+// função pura do instante e e=0 é o quadro em branco, então o desfazer é a mesma função em
+// marcha a ré. Sem JS/reduced-motion o markup já é o estado final.
+(function initA3Curva(){
+  var secao=document.getElementById('lp-a3'),cena=document.getElementById('lp-a3-cena'),
+      svg=document.getElementById('lp-a3-svg'),canvas=document.getElementById('lp-a3-canvas'),
+      sem=document.getElementById('lp-a3-sem'),com=document.getElementById('lp-a3-com'),
+      clip=document.getElementById('lp-a3-clip'),area=document.getElementById('lp-a3-area'),
+      rotSem=document.getElementById('lp-a3-rot-sem'),rotCom=document.getElementById('lp-a3-rot-com');
+  if(!secao||!cena||!svg||!canvas||!sem||!com||!clip||!area||!rotSem||!rotCom)return;
+  if(movimentoReduzido()||!('IntersectionObserver' in window))return;
+  var ctx=canvas.getContext('2d');
+  if(!ctx)return;
+  var mks=[].slice.call(cena.querySelectorAll('.lp-a3-mk'));
+  var VB_W=600,W=0,H=0,K=1,dpr=Math.min(window.devicePixelRatio||1,2);
+  var curvas=[{el:sem,n:110,ini:0,span:900,ps:[],len:0},{el:com,n:200,ini:450,span:1500,ps:[],len:0}];
+  var DUR_MIN=450,DUR_MAX=650,FADE=300;
+  var FIM=curvas[1].ini+curvas[1].span+DUR_MAX+FADE;
+  var cor='#F0883C',corSem='#8890AC',marcaFrac=null;
+  cena.classList.add('lp-a3-pre');
+
+  function medir(){
+    var r=svg.getBoundingClientRect();
+    if(r.width<2||r.height<2)return false;
+    W=r.width;H=r.height;K=W/VB_W;
+    canvas.style.height=H+'px';canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    return true;
+  }
+  function preparar(){
+    var cs=getComputedStyle(cena);
+    cor=cs.getPropertyValue('--ember').trim()||cor;
+    corSem=cs.getPropertyValue('--text3').trim()||corSem;
+    curvas.forEach(function(c){
+      if(!c.alvos){ // amostra o path uma vez; os ciclos seguintes só re-sorteiam
+        c.len=c.el.getTotalLength();c.alvos=[];
+        for(var i=0;i<c.n;i++){
+          var s=i/(c.n-1),p=c.el.getPointAtLength(s*c.len);
+          c.alvos.push({tx:p.x,ty:p.y,s:s});
+        }
+      }
+      c.el.style.strokeDasharray=String(c.len);c.el.style.strokeDashoffset=String(c.len);c.el.style.opacity='0';
+      c.ps=c.alvos.map(function(a){
+        var cu=40+Math.random()*60;
+        return{tx:a.tx,ty:a.ty,s:a.s,hx:-0.2+Math.random()*1.4,hy:-0.5+Math.random()*2,
+          ox:(Math.random()-0.5)*cu,oy:(Math.random()-0.5)*cu,
+          delay:a.s*c.span,dur:DUR_MIN+Math.random()*(DUR_MAX-DUR_MIN)};
+      });
+    });
+    // fração do comprimento da curva laranja em que cada marcador é alcançado (vértice
+    // do caminho exatamente em cx,cy: ponto mais próximo ao varrer o comprimento). Só depende
+    // do viewBox, então mede uma vez e reaproveita nos ciclos seguintes.
+    var L=curvas[1].len;
+    if(!marcaFrac)marcaFrac=mks.map(function(m){
+      var cx=+m.getAttribute('cx'),cy=+m.getAttribute('cy'),best=0,bd=1e9;
+      for(var l=0;l<=L;l+=2){var p=com.getPointAtLength(l),d=Math.abs(p.x-cx)+Math.abs(p.y-cy);if(d<bd){bd=d;best=l;}}
+      return best/L;
+    });
+    cena.classList.remove('lp-a3-pre');cena.classList.add('lp-a3-run');
+  }
+  function desenhar(e){
+    ctx.clearRect(0,0,W,H);
+    var fracCom=0;
+    curvas.forEach(function(c,ci){
+      var local=e-c.ini;
+      // frente do traço sólido: onde as últimas partículas já pousaram
+      var rev=Math.max(0,Math.min(1,(local-DUR_MIN*0.6)/c.span));
+      c.el.style.strokeDashoffset=String(c.len*(1-rev));
+      // opacity:0 enquanto nada foi traçado: dash de comprimento zero com cap redondo pinta um ponto
+      c.el.style.opacity=rev>0?'':'0';
+      if(ci===1)fracCom=rev;
+      if(local<0)return;
+      ctx.fillStyle=ci===0?corSem:cor;
+      for(var i=0;i<c.ps.length;i++){
+        var p=c.ps[i];
+        if(local<p.delay)continue;
+        var t=Math.min(1,(local-p.delay)/p.dur);
+        if(t>=1&&p.s<=rev)continue; // já coberta pelo traço sólido
+        var home={x:p.hx*W,y:p.hy*H},tg={x:p.tx*K,y:p.ty*K};
+        var pos=_pBezier(home,{x:(home.x+tg.x)/2+p.ox,y:(home.y+tg.y)/2+p.oy},tg,_pEaseOutQuart(t));
+        ctx.beginPath();ctx.arc(pos.x,pos.y,1.8,0,Math.PI*2);ctx.fill();
+      }
+    });
+    var pf=com.getPointAtLength(fracCom*curvas[1].len);
+    clip.setAttribute('width',String(fracCom>=1?VB_W:pf.x));
+    area.style.opacity=fracCom>0?'1':'0';
+    marcaFrac.forEach(function(f,i){mks[i].classList.toggle('on',fracCom>0&&fracCom>=f);});
+    rotSem.classList.toggle('on',e>=curvas[0].ini+curvas[0].span*0.8);
+    rotCom.classList.toggle('on',fracCom>=0.9);
+  }
+  _cenaPorTempo(secao,{medir:medir,preparar:preparar,desenhar:desenhar,fim:FIM});
 })();
 // PM1/M4 — stagger de entrada dos cards da base científica (zona B: só opacity/
 // transform, reaproveita o mesmo padrão de reveal por IntersectionObserver já usado
@@ -5932,7 +6145,7 @@ function scrollProgress(el,cb,opts){
   });
   var MAX_N=Math.max.apply(null,ORDEM.map(function(k){return AI[k].n;}));
 
-  var W=0,H=0,dpr=Math.min(window.devicePixelRatio||1,2),N_POR_BARRA=100;
+  var W=0,H=0,dpr=Math.min(window.devicePixelRatio||1,2),N_POR_BARRA=100,sigGeom='',amostrado=false;
   var barras=ORDEM.map(function(){return{x:0,y:0,w:0,h:0,pts:[],cor:'#fff'};});
 
   function atualizarCores(){
@@ -5950,12 +6163,7 @@ function scrollProgress(el,cb,opts){
     c.arcTo(x,y,x+w,y,r);
     c.closePath();
   }
-  function easeOutQuart(t){return 1-Math.pow(1-t,4);}
   function easeOutCubic(t){return 1-Math.pow(1-t,3);}
-  function bezierPt(p0,c,p2,t){
-    var mt=1-t;
-    return{x:mt*mt*p0.x+2*mt*t*c.x+t*t*p2.x,y:mt*mt*p0.y+2*mt*t*c.y+t*t*p2.y};
-  }
   function amostrarBarra(w,h){
     off.width=Math.max(1,Math.round(w));off.height=Math.max(1,Math.round(h));
     octx.clearRect(0,0,off.width,off.height);
@@ -5996,6 +6204,9 @@ function scrollProgress(el,cb,opts){
       barras[i].w=rWrap.width*(AI[k].n/MAX_N);
       barras[i].h=rWrap.height;
     });
+    // assinatura da geometria: a amostragem (getImageData) só refaz se ela mudou, não a cada ciclo do loop
+    var sig=W+'|'+H+'|'+barras.map(function(b){return b.x+','+b.y+','+b.w+','+b.h;}).join('|');
+    if(sig!==sigGeom){sigGeom=sig;amostrado=false;}
     return true;
   }
   function amostrarPontos(){
@@ -6026,16 +6237,27 @@ function scrollProgress(el,cb,opts){
     });
   }
 
-  var ultimoElapsed=null;
+  // Nas fases em branco o texto volta ao valor real (leitor de tela/Ctrl+F não veem 0), mas só
+  // DEPOIS do fade-out do rótulo (transição CSS de .5s), senão o valor final pisca enquanto some.
+  var tmTexto=[],TEXTO_REAL_ATRASO_MS=600;
+  function textoReal(i,el,txt){
+    if(tmTexto[i])return;
+    tmTexto[i]=setTimeout(function(){tmTexto[i]=0;el.textContent=txt;},TEXTO_REAL_ATRASO_MS);
+  }
+  function textoVivo(i,el,txt){
+    if(tmTexto[i]){clearTimeout(tmTexto[i]);tmTexto[i]=0;}
+    el.textContent=txt;
+  }
   function desenharFrame(elapsed){
     ctx.clearRect(0,0,W,H);
     ORDEM.forEach(function(k,i){
       var inicioBarra=i*CASCADE_STEP,local=elapsed-inicioBarra;
-      if(local<0)return;
       var b=barras[i],area=AI[k];
-      topos[i].classList.add('mostrar');
+      // classe e número seguem o instante nos dois sentidos (nascer e desfazer do loop)
+      topos[i].classList.toggle('mostrar',local>0);
+      if(local<=0){textoReal(i,numEls[i],String(area.n));return;}
       var contaFase=Math.min(1,local/BAR_WINDOW);
-      numEls[i].textContent=String(Math.round(easeOutCubic(contaFase)*area.n));
+      textoVivo(i,numEls[i],String(Math.round(easeOutCubic(contaFase)*area.n)));
       if(local>=BAR_WINDOW){
         ctx.globalAlpha=1;ctx.fillStyle=b.cor;
         roundRectPath(ctx,b.x,b.y,b.w,b.h,b.h/2);ctx.fill();
@@ -6055,92 +6277,33 @@ function scrollProgress(el,cb,opts){
         var p=ps[pi];
         if(local<p.delay)continue;
         var t=Math.min(1,(local-p.delay)/p.dur);
-        var pos=bezierPt(p.home,p.control,p.target,easeOutQuart(t));
+        var pos=_pBezier(p.home,p.control,p.target,_pEaseOutQuart(t));
         ctx.beginPath();ctx.arc(pos.x,pos.y,1.7,0,Math.PI*2);ctx.fill();
       }
     });
     ctx.globalAlpha=1;
     var fechoLocal=elapsed-TOTAL_INICIO;
-    if(fechoLocal>=0){
-      fecho.classList.add('mostrar');
-      fechoNum.textContent=String(Math.round(easeOutCubic(Math.min(1,fechoLocal/450))*60));
-    }
-    ultimoElapsed=elapsed;
-  }
-
-  var t0=null,lastTs=null;
-  function loop(ts){
-    if(document.hidden){requestAnimationFrame(loop);return;}
-    if(lastTs===null){lastTs=ts;requestAnimationFrame(loop);return;}
-    lastTs=ts;
-    var elapsed=ts-t0;
-    desenharFrame(Math.min(elapsed,SEQ_END));
-    if(elapsed<SEQ_END)requestAnimationFrame(loop);
-  }
-  // Só desconecta o IO quando a medida realmente deu certo (achado do code-review,
-  // b243): se a seção estiver 0x0 no instante do disparo (layout tardio, ou vitrine
-  // escondida por já estar logado), tenta de novo por rAF (teto curto) em vez de
-  // desistir para sempre. `tentandoIniciar` é a única trava (substitui a antiga
-  // `rodando`, redundante com o disconnect do IO).
-  var io=null,tentandoIniciar=false;
-  function tocar(){
-    if(tentandoIniciar)return;
-    tentandoIniciar=true;
-    (function passo(tentativas){
-      if(medirGeometria()){
-        tentandoIniciar=false;
-        amostrarPontos();
-        sortearParticulas();
-        if(io)io.disconnect();
-        requestAnimationFrame(function(primeiroTs){t0=primeiroTs;lastTs=null;requestAnimationFrame(loop);});
-        return;
-      }
-      if(tentativas<=0){tentandoIniciar=false;return;} // desiste desta rodada; próxima interseção tenta de novo
-      requestAnimationFrame(function(){passo(tentativas-1);});
-    })(10);
+    fecho.classList.toggle('mostrar',fechoLocal>0);
+    if(fechoLocal>0)textoVivo(5,fechoNum,String(Math.round(easeOutCubic(Math.min(1,fechoLocal/450))*60)));
+    else textoReal(5,fechoNum,'60');
   }
 
   atualizarCores();
-  var usaFallbackFinal=movimentoReduzido()||!('IntersectionObserver' in window);
-  var resolvidoFinal=false;
-  function tentarFinal(){
-    if(resolvidoFinal)return true;
-    if(!medirGeometria())return false;
-    resolvidoFinal=true;ultimoElapsed=SEQ_END;desenharFrame(SEQ_END);
-    return true;
-  }
-  // Entry mínima no motor único de cenas (_scrollCenas): reaproveita o loop de
-  // remedida que _scrollRecalibrarTudo já roda no resize, em vez de um hook global
-  // bespoke. cb vazio de propósito — não precisamos do progresso contínuo de scroll,
-  // só do .medir() barato a cada resize (achado do code-review, b243). No caminho
-  // reduced-motion/sem-IO, esta entry também é quem fecha a brecha se as 10
-  // tentativas de rAF abaixo esgotarem antes da seção ganhar layout (ex. vitrine
-  // escondida por já estar logado): todo resize seguinte tenta tentarFinal() de novo,
-  // nunca fica preso em opacity:0 (2º achado do code-review low, mesmo bloco).
-  _scrollCenas.push({el:secao,cb:function(){},docTop:0,docBottom:0,medir:function(){
-    medirGeometria();
-    if(usaFallbackFinal)tentarFinal();
-    else if(ultimoElapsed!==null&&ultimoElapsed>=SEQ_END)desenharFrame(SEQ_END);
-  }});
+  // Loop, disparo, retry de medida, pausa, reduced-motion e a entry em _scrollCenas vivem
+  // em _cenaPorTempo (compartilhado com a A3). preparar roda a cada ciclo: sorteio novo de
+  // partículas, amostragem só se a geometria mudou.
+  var cena_=_cenaPorTempo(secao,{
+    medir:medirGeometria,
+    preparar:function(){if(!amostrado){amostrarPontos();amostrado=true;}sortearParticulas();},
+    desenhar:desenharFrame,
+    fim:SEQ_END
+  });
   // Sem hook genérico de "tema mudou" no app hoje (conferido: aplicarTema() não tinha
   // nenhum registro de cena antes desta feature) — mantém _a4Recolorir dedicado.
   _a4Recolorir=function(){
     atualizarCores();
-    if(ultimoElapsed!==null)desenharFrame(Math.min(ultimoElapsed,SEQ_END));
+    cena_.redesenhar();
   };
-
-  if(usaFallbackFinal){
-    (function passoFinal(tentativas){
-      if(tentarFinal())return;
-      if(tentativas<=0)return; // desiste desta rodada; a entry de _scrollCenas tenta nos próximos resizes
-      requestAnimationFrame(function(){passoFinal(tentativas-1);});
-    })(10);
-    return;
-  }
-  io=new IntersectionObserver(function(entries){
-    entries.forEach(function(en){if(en.isIntersecting)tocar();});
-  },{threshold:0.35});
-  io.observe(secao);
 })();
 // PM1/M4 — A5: números contam de 0 até o valor real (que já está no HTML — SEO e
 // no-JS não perdem nada) quando a faixa entra na tela, uma vez só.
@@ -6626,7 +6789,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.341';
+const APP_VERSAO='v1.342';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
