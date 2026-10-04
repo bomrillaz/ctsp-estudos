@@ -2011,7 +2011,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 @media(prefers-reduced-motion:reduce){.lp-a4-linha-topo,.lp-a4-fecho{transition:none;}}
 
 /* ═══ P2/b249 — mascote pixel (folha v4, quadro 64, 1x). Motor: materiais/marca/mascote-pixel/motor ═══ */
-:root{--mascote-escala:1;--mascote-q:64;--mascote-cols:8;--mascote-rows:12;--ml:0;--mq:0;--agua-l:128;--agua-a:96;--agua-esq:50}
+:root{--mascote-escala:1;--mascote-q:64;--mascote-cols:8;--mascote-rows:16;--ml:0;--mq:0;--agua-l:128;--agua-a:96;--agua-esq:50}
 .mascote{
   --mascote-px:calc(var(--mascote-escala)*1px);
   position:fixed;left:0;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:25;
@@ -2042,13 +2042,16 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .mascote-escada.on{clip-path:inset(0 0 0 0)}
 .mascote-escada.seco{transition:none}
 .mascote-cena{position:absolute;left:-12px;top:0;width:64px;height:64px;z-index:2;pointer-events:none;
-  background-repeat:no-repeat;background-size:512px 768px;image-rendering:pixelated;will-change:transform;}
+  background-repeat:no-repeat;background-size:512px 1024px;image-rendering:pixelated;will-change:transform;}
 .mascote-cena.off{visibility:hidden;}
-/* P3 (b250): mascote parado no app (Mascote.criarPose). Quadro 64 em escala 1, folha 8x12 quadros. */
-.mascote-pose{width:64px;height:64px;background-repeat:no-repeat;background-size:512px 768px;image-rendering:pixelated;pointer-events:none;}
+/* P3 (b250): mascote parado no app (Mascote.criarPose). Quadro 64 em escala 1, folha 8x16 quadros. */
+.mascote-pose{width:64px;height:64px;background-repeat:no-repeat;background-size:512px 1024px;image-rendering:pixelated;pointer-events:none;}
 /* Home: sentado na borda de cima do card da meta, virado para dentro. Filho absoluto: não muda o rect
    do #metas-card (alvo do tour, lição b156). */
-#metas-card>.mascote-pose{position:absolute;right:14px;bottom:100%;margin-bottom:-1px;transform:scaleX(-1);}
+/* --mascote-oy: o motor (criarPose) seta por ação; na borda (pernas penduradas) o assento y47 desce até a borda do card. Não é transform: este já é o scaleX(-1). */
+#metas-card>.mascote-pose{position:absolute;right:14px;bottom:100%;margin-bottom:calc(-1px - var(--mascote-oy,0px));transform:scaleX(-1);}
+/* P3b/B1: o aceno é de frente (a arte não espelha, igual à vitrine) */
+#metas-card>.mascote-pose.de-frente{transform:none;}
 @media(prefers-reduced-motion:reduce){.mascote,.mascote-escada{transition:none;}}
 
 /* ═══ M4 — A8 "faixa do edital" (substitui a A6) ═══
@@ -5789,7 +5792,7 @@ function scrollProgress(el,cb,opts){
 }
 // ═══ P2/b249 — MASCOTE PIXEL: motor (cópia de materiais/marca/mascote-pixel/motor/mascote_motor.js,
 // testado em materiais/entregas/testes/teste_mascote_motor.js) + driver da vitrine ═══
-/* Mascote pixel — motor (P1/b245, P2/b249: quadro 64, folha v4 de 12 linhas; b249: escalada). Bloco autocontido, JS puro, colar no index.html.
+/* Mascote pixel — motor (P1/b245, P2/b249: quadro 64, folha v4 de 16 linhas; b249: escalada). Bloco autocontido, JS puro, colar no index.html.
    Duas camadas:
    - FUNÇÕES PURAS (sem DOM, testadas em Node): tabela, quadro por tempo, próxima ação,
      avanço de posição, sorteio do piscar, partículas de água.
@@ -5800,7 +5803,7 @@ function scrollProgress(el,cb,opts){
 var Mascote=(function(){
 'use strict';
 
-// Folha v4: cada linha uma ação, cada coluna um quadro de 64x64 (12 linhas, ordem = assets/mascote/folha_v4.png).
+// Folha v4: cada linha uma ação, cada coluna um quadro de 64x64 (16 linhas, ordem = assets/mascote/folha_v4.png).
 // loopInicio: quadro onde o loop recomeça (entrada tocada 1x, resto em loop).
 // segurarMs: tempo parado no último quadro antes de a ação não-loop terminar.
 var MASCOTE_ANIM={
@@ -5816,7 +5819,13 @@ var MASCOTE_ANIM={
   continencia:{linha:9, quadros:3,fps:6, loop:false,segurarMs:1200},
   correr:     {linha:10,quadros:8,fps:14,loop:true},
   // b249: escalar = linha 11 (de costas, sem sombra); fps 10 = 2 quadros por degrau de 8 px na subida de 1 s
-  escalar:    {linha:11,quadros:4,fps:10,loop:true}
+  escalar:    {linha:11,quadros:4,fps:10,loop:true},
+  // P3b: poses sentado na BORDA do card da Home (pernas penduradas). oy = px que a pose desce enquanto a ação toca
+  // (o assento y47 do quadro tem de cair na borda); criarPose publica em --mascote-oy. levantar/sentar_borda: de pé.
+  levantar:       {linha:12,quadros:4,fps:6,loop:false,segurarMs:300},
+  borda:          {linha:13,quadros:6,fps:5,loop:true, loopInicio:1,oy:13},
+  cochilar_borda: {linha:14,quadros:3,fps:2,loop:true, oy:13},
+  sentar_borda:   {linha:15,quadros:3,fps:6,loop:false,segurarMs:150}
 };
 var MASCOTE_QUADRO=64;        // px de um quadro na folha (padrão; criar({quadro:48}) troca). ÚNICA fonte do tamanho.
 var MASCOTE_VEL_PX_S=15;      // andar: px DA FOLHA por segundo para grade 32 (escala com quadro/32; no quadro 64 = 30 px/s)
@@ -5950,6 +5959,8 @@ function criarPose(pai,opts){
   function desenhar(a,ms){
     var q=mascoteQuadro(tabela,a,ms,!!reduzidoFn());
     el.style.backgroundPosition=(-q.quadro*Q)+'px '+(-q.linha*Q)+'px';
+    // reduced-motion desenha sempre o quadro 0 do parado (de pé): sem oy, senão ele afunda no card
+    el.style.setProperty('--mascote-oy',((!reduzidoFn()&&tabela[a]&&tabela[a].oy)||0)+'px');
     return q;
   }
   function ligar(){if(!raf&&naTela&&!document.hidden&&!reduzidoFn())raf=requestAnimationFrame(tick);}
@@ -6320,31 +6331,106 @@ function setMascote(on){
 }
 // Comemoração da meta: 1x por dia por aparelho. Pura para o teste (harness_p3_mascote_app.js).
 function mascoteDeveComemorar(completo,ultimoDia,hoje){return !!completo&&ultimoDia!==hoje;}
+// P3b/B3: marcos da sequência (dias seguidos) que rendem continência, 1x por marco.
+var MASCOTE_MARCOS=[7,30,60,100],MASCOTE_ACENO_MS=1600;
+// P3b: reação da Home ao abrir. Prioridade meta > marco > aceno (1 reação por abertura). Pura para o teste
+// (teste_p3b_mascote_reacoes.js). o: {completo,ultMeta,hoje,streak,ultMarco,ultAceno,visivel}. Retorna
+// {acao,marco?} ou null. A meta ignora `visivel` (o chamador já exige a Home ativa); marco e aceno não
+// tocam com a aba oculta (senão a marca do dia queimava sem ninguém ver).
+function mascoteReacaoHome(o){
+  if(mascoteDeveComemorar(o.completo,o.ultMeta,o.hoje))return {acao:'comemorar'};
+  if(!o.visivel)return null;
+  var m=0;
+  for(var i=0;i<MASCOTE_MARCOS.length;i++)if((o.streak||0)>=MASCOTE_MARCOS[i])m=MASCOTE_MARCOS[i];
+  if(m>(o.ultMarco||0))return {acao:'continencia',marco:m};
+  if(o.ultAceno!==o.hoje)return {acao:'acenar'};
+  return null;
+}
+function _mascoteChave(nome){return 'ctsp_mascote_'+nome+'_'+((typeof currentUser!=='undefined'&&currentUser&&currentUser.uid)||'');}
+function _mascoteLer(nome){try{return localStorage.getItem(_mascoteChave(nome))||'';}catch(e){return '';}}
+function _mascoteGravar(nome,v){try{localStorage.setItem(_mascoteChave(nome),v);}catch(e){}}
+var _mascoteSeqTm=0,_mascoteSeqId=0,_mascoteSeqAtiva=false;
+function _mascoteReduzido(){return typeof movimentoReduzido==='function'?movimentoReduzido():matchMedia('(prefers-reduced-motion:reduce)').matches;}
+function _mascoteSentada(p){var a=p.acao();return a==='borda'||a==='cochilar_borda';}
+function _mascoteAgendarCochilo(p){
+  clearTimeout(_mascoteCochiloTm);
+  _mascoteCochiloTm=setTimeout(function(){p.base('cochilar_borda');p.tocar('cochilar_borda');},MASCOTE_COCHILO_MS);
+}
+function _mascoteHomeBorda(p){
+  p.el.classList.remove('de-frente');
+  p.base('borda');p.tocar('borda');
+  _mascoteAgendarCochilo(p);
+}
+// Sequência de poses da Home. passos: [[acao,msLaco?]...]. Não-loop encadeia pelo aoFim; ação em laço
+// (acenar) termina pelo timer msLaco. No fim cai sempre sentado na borda. Nunca pula da borda direto para pé:
+// quem está sentado passa por `levantar` antes (_mascoteHomeReagir) e volta por `sentar_borda`.
+function _mascoteHomeSeq(p,passos){
+  clearTimeout(_mascoteCochiloTm);clearTimeout(_mascoteSeqTm);
+  var id=++_mascoteSeqId,i=0;
+  _mascoteSeqAtiva=true;
+  (function prox(){
+    if(id!==_mascoteSeqId)return;
+    if(i>=passos.length){_mascoteSeqAtiva=false;_mascoteHomeBorda(p);return;}
+    var pa=passos[i++];
+    p.el.classList.toggle('de-frente',pa[0]==='acenar'); // aceno de frente: a arte não espelha (igual à vitrine)
+    p.base('parado');
+    if(pa[1]){p.tocar(pa[0]);_mascoteSeqTm=setTimeout(prox,pa[1]);}
+    else p.tocar(pa[0],prox);
+  })();
+}
+function _mascoteHomeCancelar(){clearTimeout(_mascoteCochiloTm);clearTimeout(_mascoteSeqTm);_mascoteSeqId++;_mascoteSeqAtiva=false;}
+function _mascoteHomeReagir(p,acao){
+  var s=[];
+  if(_mascoteSentada(p))s.push(['levantar']);
+  s.push(acao==='acenar'?['acenar',MASCOTE_ACENO_MS]:[acao]);
+  s.push(['sentar_borda']);
+  _mascoteHomeSeq(p,s);
+}
+function _mascoteHomeAssentar(p){
+  var a=p.acao();
+  if(_mascoteReduzido())_mascoteHomeBorda(p); // sem rAF o aoFim não vem: sem sequência, só o quadro fixo
+  else if(a==='borda')_mascoteAgendarCochilo(p);
+  else if(a==='cochilar_borda')_mascoteHomeBorda(p);
+  else _mascoteHomeSeq(p,[['sentar_borda']]);
+}
+// B2: toque no mascote acena. Pose é pointer-events:none (nunca bloqueia nada); o aceno só dispara se o
+// clique cai no retângulo visível dele, dentro da Home (modal por cima não conta) e o alvo não é interativo.
+var _MASCOTE_INTERATIVO='a,button,input,select,textarea,label,[role="button"],[tabindex]';
+function _mascoteHomeClique(ev){
+  var p=_mascoteHomeP,sc=document.getElementById('screen-inicio');
+  if(!p||_mascoteSeqAtiva||!mascoteLigado()||_mascoteReduzido()||p.el.classList.contains('hidden'))return;
+  if(!sc||!sc.classList.contains('active')||!sc.contains(ev.target))return;
+  var r=p.el.getBoundingClientRect();
+  if(ev.clientX<r.left||ev.clientX>r.right||ev.clientY<r.top||ev.clientY>r.bottom)return;
+  if(ev.target.closest&&ev.target.closest(_MASCOTE_INTERATIVO))return;
+  _mascoteHomeReagir(p,'acenar');
+}
 // acordar=true: entrou na Home agora (navTo) -> senta de novo mesmo se estava cochilando.
-// Os outros renderDashboard() só criam/mantêm. Só comemora com a Home VISÍVEL (o render pós-quiz
-// roda com a tela do Quiz ativa; a comemoração tocaria escondida e o dia ficaria marcado).
+// Os outros renderDashboard() só criam/mantêm. Só reage com a Home VISÍVEL (o render pós-quiz
+// roda com a tela do Quiz ativa; a reação tocaria escondida e a marca do dia ficaria gasta) e sem
+// reduced-motion (o quadro é fixo: não há o que mostrar e o aoFim nunca vem, a marca seria gasta à toa).
 function mascoteHome(acordar){
   var card=document.getElementById('metas-card');if(!card||typeof Mascote==='undefined')return;
-  if(!mascoteLigado()){clearTimeout(_mascoteCochiloTm);if(_mascoteHomeP)_mascoteHomeP.el.classList.add('hidden');return;}
+  if(!mascoteLigado()){_mascoteHomeCancelar();if(_mascoteHomeP)_mascoteHomeP.el.classList.add('hidden');return;}
   var novo=!_mascoteHomeP;
-  if(novo)_mascoteHomeP=Mascote.criarPose(card,{sprite:MASCOTE_APP_FOLHA});
+  if(novo){
+    _mascoteHomeP=Mascote.criarPose(card,{sprite:MASCOTE_APP_FOLHA});
+    document.addEventListener('click',_mascoteHomeClique,true);
+  }
   var p=_mascoteHomeP,estavaOculto=p.el.classList.contains('hidden');
   p.el.classList.remove('hidden');
   var sc=document.getElementById('screen-inicio'),naHome=!!(sc&&sc.classList.contains('active'));
-  var hoje=diaLocal(),ult='',chave='ctsp_mascote_meta_'+((typeof currentUser!=='undefined'&&currentUser&&currentUser.uid)||'');
-  try{ult=localStorage.getItem(chave)||'';}catch(e){}
-  function sentar(){
-    clearTimeout(_mascoteCochiloTm);
-    p.base('sentar');p.tocar('sentar');
-    _mascoteCochiloTm=setTimeout(function(){p.base('cochilar');p.tocar('cochilar');},MASCOTE_COCHILO_MS);
-  }
-  if(naHome&&mascoteDeveComemorar(diaCompleto(),ult,hoje)){
-    try{localStorage.setItem(chave,hoje);}catch(e){}
-    clearTimeout(_mascoteCochiloTm);
-    p.base('parado');p.tocar('comemorar',sentar);
+  var hoje=diaLocal();
+  var r=(naHome&&!_mascoteReduzido())?mascoteReacaoHome({completo:diaCompleto(),ultMeta:_mascoteLer('meta'),hoje:hoje,
+    streak:userStats.streak,ultMarco:parseInt(_mascoteLer('marco'),10)||0,ultAceno:_mascoteLer('aceno'),
+    visivel:!document.hidden}):null;
+  if(r){
+    _mascoteGravar('aceno',hoje); // qualquer reação gasta o aceno do dia (meta/marco tomam o lugar dele)
+    if(r.acao==='comemorar')_mascoteGravar('meta',hoje);else if(r.marco)_mascoteGravar('marco',String(r.marco));
+    _mascoteHomeReagir(p,r.acao);
     return;
   }
-  if(novo||acordar||estavaOculto){if(p.acao()!=='comemorar')sentar();}
+  if((novo||acordar||estavaOculto)&&!_mascoteSeqAtiva)_mascoteHomeAssentar(p);
 }
 // Fim de sessão: >=70% comemora, 50-69% continência, abaixo disso só parado (nunca triste).
 function mascoteFim(pct){
@@ -7836,7 +7922,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.346';
+const APP_VERSAO='v1.347';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
