@@ -1995,7 +1995,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 @media(prefers-reduced-motion:reduce){.lp-a4-linha-topo,.lp-a4-fecho{transition:none;}}
 
 /* ═══ P2/b249 — mascote pixel (folha v4, quadro 64, 1x). Motor: materiais/marca/mascote-pixel/motor ═══ */
-:root{--mascote-escala:1;--mascote-q:64;--mascote-cols:8;--mascote-rows:16;--ml:0;--mq:0;--agua-l:128;--agua-a:96;--agua-esq:50}
+:root{--mascote-escala:1;--mascote-q:64;--mascote-cols:8;--mascote-rows:18;--ml:0;--mq:0;--agua-l:128;--agua-a:96;--agua-esq:50}
 .mascote{
   --mascote-px:calc(var(--mascote-escala)*1px);
   position:fixed;left:0;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:25;
@@ -2026,10 +2026,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .mascote-escada.on{clip-path:inset(0 0 0 0)}
 .mascote-escada.seco{transition:none}
 .mascote-cena{position:absolute;left:-12px;top:0;width:64px;height:64px;z-index:2;pointer-events:none;
-  background-repeat:no-repeat;background-size:512px 1024px;image-rendering:pixelated;will-change:transform;}
+  background-repeat:no-repeat;background-size:512px 1152px;image-rendering:pixelated;will-change:transform;}
 .mascote-cena.off{visibility:hidden;}
 /* P3 (b250): mascote parado no app (Mascote.criarPose). Quadro 64 em escala 1, folha 8x16 quadros. */
-.mascote-pose{width:64px;height:64px;background-repeat:no-repeat;background-size:512px 1024px;image-rendering:pixelated;pointer-events:none;}
+.mascote-pose{width:64px;height:64px;background-repeat:no-repeat;background-size:512px 1152px;image-rendering:pixelated;pointer-events:none;}
 /* Home: sentado na borda de cima do card da meta, virado para dentro. Filho absoluto: não muda o rect
    do #metas-card (alvo do tour, lição b156). */
 /* --mascote-oy: o motor (criarPose) seta por ação; na borda (pernas penduradas) o assento y47 desce até a borda do card. Não é transform: este já é o scaleX(-1). */
@@ -5763,7 +5763,7 @@ function scrollProgress(el,cb,opts){
 var Mascote=(function(){
 'use strict';
 
-// Folha v4: cada linha uma ação, cada coluna um quadro de 64x64 (16 linhas, ordem = assets/mascote/folha_v4.png).
+// Folha v5: cada linha uma ação, cada coluna um quadro de 64x64 (18 linhas, ordem = assets/mascote/folha_v5.png; linhas 0..15 = v4).
 // loopInicio: quadro onde o loop recomeça (entrada tocada 1x, resto em loop).
 // segurarMs: tempo parado no último quadro antes de a ação não-loop terminar.
 var MASCOTE_ANIM={
@@ -5785,7 +5785,12 @@ var MASCOTE_ANIM={
   levantar:       {linha:12,quadros:4,fps:6,loop:false,segurarMs:300},
   borda:          {linha:13,quadros:6,fps:5,loop:true, loopInicio:1,oy:13},
   cochilar_borda: {linha:14,quadros:3,fps:2,loop:true, oy:13},
-  sentar_borda:   {linha:15,quadros:3,fps:6,loop:false,segurarMs:150}
+  sentar_borda:   {linha:15,quadros:3,fps:6,loop:false,segurarMs:150},
+  // b253/MV2 (espiar atrás do card): o motor RECORTA o quadro na borda do card (clip-path), ver espiar().
+  // espiar_cima: recorte = tudo abaixo de y=34 do quadro (BORDA_Y). espiar_lado: tocada ESPELHADA (olhando p/ a
+  // esquerda), recorte = x<40 do quadro ANTES do espelho (BORDA_X). Último quadro = "aberto", fica seguro.
+  espiar_cima:    {linha:16,quadros:5,fps:6,loop:false},
+  espiar_lado:    {linha:17,quadros:4,fps:5,loop:false,segurarMs:500}
 };
 var MASCOTE_QUADRO=64;        // px de um quadro na folha (padrão; criar({quadro:48}) troca). ÚNICA fonte do tamanho.
 var MASCOTE_VEL_PX_S=15;      // andar: px DA FOLHA por segundo para grade 32 (escala com quadro/32; no quadro 64 = 30 px/s)
@@ -5798,6 +5803,9 @@ var MASCOTE_JATO_MS=2200;
 // Escalada (subirEscada): tempos em ms; degrau = px que ele sobe por passo (a subida anda em degraus, pixel art).
 // ESC_LARG/ESC_ALTURA = tamanho de assets/mascote/escada.png em px (escala 1). A escada fica centrada no mascote:
 // (64-28)/2 = 18 = x das mãos do escalar (trilhos em 18-22 e 41-45 do quadro). Mudou a arte: conferir esse alinhamento.
+// Espiar (b253/MV2): tempos em ms. Medidas de arte (BORDA_X/Y) em px do quadro de 64; escalam com quadro/64 x escala.
+var ESP_BORDA_Y=34,ESP_BORDA_X=40,ESP_ESCONDE=14;   // ESP_ESCONDE = px do quadro que ficam de fora quando ele "some" andando (só margem vazia)
+var ESP_OCULTO_MS=1000,ESP_PULA_MS=160,ESP_ABAIXA_MS=380,ESP_OLHAR_MS=650,ESP_RAPIDO_MS=180,ESP_ESCONDIDO_MS=450,ESP_SOBE_MS=260,ESP_PULO_PX=8;
 var ESC_DESENROLAR=180,ESC_SUBIR=1000,ESC_DESCER=800,ESC_RECOLHER=180,ESC_DEGRAU=8,ESC_ALTURA=96,ESC_GESTO_MS=1400,ESC_LARG=28;
 
 // ---------- funções puras ----------
@@ -5969,10 +5977,10 @@ function criar(opts){
 
   var e={acao:'parado',t0:0,x:0,alvo:null,correr:false,aoChegar:null,aoTerminar:null,duracao:null,flip:false,
          proxPiscar:0,agua:null,aguaAlvo:null,aguaSpawn:0,aguaAng:.3,aguaV:90,aguaMira:0,
-         y:0,esc:null,chegouT:-1e9}; // y = px acima do rodapé (só muda durante subirEscada); esc = estado da escalada
+         y:0,esc:null,chegouT:-1e9,esp:null,clip:null}; // y = px acima do rodapé (muda em subirEscada/espiar); esc = escalada; esp = espiar; clip = recorte
   var escala=2,vw=0,larg=Q*2;
   var raf=null,ultimo=0,mostrando=false,naTela=true;
-  var qCache='',tCache='';
+  var qCache='',tCache='',cCache='';
 
   function agora(){return performance.now();}
   function reduzido(){return !!reduzidoFn();}
@@ -5983,10 +5991,30 @@ function criar(opts){
     var max=Math.max(0,vw-larg);
     if(e.x>max)e.x=max;
     if(e.alvo!=null&&e.alvo>max)e.alvo=max;
-    qCache='';tCache='';
+    qCache='';tCache='';cCache='';
     aplicar();
   }
+  function aoResize(){if(e.esp)encerrarEsp(true);medir();}
   function snap(x){return Math.round(x/escala)*escala;}  // alinha ao pixel da folha
+  // Recorte (clip-path inset) em coordenadas LOCAIS do div, que é o que o CSS aplica ANTES do scaleX do flip:
+  // por isso as bordas de TELA (tipo 'x') trocam esquerda/direita quando ele está espelhado, e as de arte
+  // (tipo 'local': x0 = esconde x<x0, y0 = esconde y>=y0) valem como desenhadas, espelhadas junto com o quadro.
+  function pxClip(v){return Math.round(Math.min(Math.max(v,0),larg));}
+  function clipStr(){
+    var c=e.clip,t=0,r=0,b=0,l=0,L,sL,sR;
+    if(!c)return '';
+    if(c.tipo==='x'){                                  // esconde o que passa da borda de tela do card ('dir' = card à direita)
+      L=snap(e.x);sL=0;sR=0;
+      if(c.lado==='dir')sR=L+larg-c.borda;else sL=c.borda-L;
+      if(e.flip){l=sR;r=sL;}else{l=sL;r=sR;}
+    }else if(c.tipo==='y'){                            // esconde o que fica abaixo da borda de cima do card (topo medido com y=0)
+      b=c.topo-snap(e.y)+larg-c.borda;
+    }else{
+      if(c.x0!=null)l=c.x0;
+      if(c.y0!=null)b=larg-c.y0;
+    }
+    return 'inset('+pxClip(t)+'px '+pxClip(r)+'px '+pxClip(b)+'px '+pxClip(l)+'px)';
+  }
   function limitar(x){return Math.min(Math.max(0,x),Math.max(0,vw-larg));}
 
   function aplicar(){
@@ -5997,6 +6025,8 @@ function criar(opts){
     if(k!==qCache){qCache=k;el.style.setProperty('--ml',q.linha);el.style.setProperty('--mq',q.quadro);}
     var t='translate3d('+snap(e.x)+'px,'+(-snap(e.y))+'px,0) scaleX('+(e.flip&&e.acao!=='acenar'?-1:1)+')';
     if(t!==tCache){tCache=t;el.style.transform=t;}
+    var c=clipStr();
+    if(c!==cCache){cCache=c;el.style.clipPath=c;}
     if(e.esc&&escEl)escEl.style.left=escadaX()+'px';   // acompanha o mascote (resize/rotação no meio da escalada)
     return q;
   }
@@ -6107,7 +6137,80 @@ function criar(opts){
     aplicar();
   }
 
+  // ---------- espiar atrás do card (b253/MV2): a variante 'lado' (A, ≥768 px) entra andando pela lateral do card, some,
+  // vira e espia; a 'cima' (B) pula, passa para trás da borda de cima, abaixa, espia, olha para os lados e volta.
+  // "Atrás" = recorte na borda (nada muda de z-index). Qualquer rolagem (andarAte), resize, esconder, aba oculta cancela:
+  // sem recorte, inteiro na hora (aoTerminar(true)). Layout medido UMA vez, na chamada (o driver chama estacionado).
+  function eas(f){return f<.5?2*f*f:1-Math.pow(-2*f+2,2)/2;}
+  function animMs(n){var a=tabela[n];return a.quadros*1000/a.fps+(a.segurarMs||0);}
+  function espUn(){return Q/64*escala;}   // px CSS por px de arte (a arte é de 64)
+  function faseEsp(nome,ts){
+    var s=e.esp,u=espUn(),dir=s.lado==='dir';
+    s.fase=nome;s.t0=ts;s.ult=ts;
+    if(s.tipo==='lado'){
+      if(nome==='entrar'){
+        iniciar('andar',ts);e.flip=!dir;e.clip={tipo:'x',lado:s.lado,borda:s.borda};
+        s.xAlvo=dir?s.borda-ESP_ESCONDE*u:s.borda-larg+ESP_ESCONDE*u;
+      }else if(nome==='oculto'){iniciar('parado',ts);e.flip=!dir;}
+      else if(nome==='espiar'){
+        iniciar('espiar_lado',ts);e.flip=dir;                     // card à direita: espelhado (olha p/ a esquerda); à esquerda: como desenhado
+        e.x=dir?s.borda-larg+ESP_BORDA_X*u:s.borda-ESP_BORDA_X*u;  // x40 do quadro (antes do espelho) alinhado com a borda do card
+        e.clip={tipo:'local',x0:Math.round(ESP_BORDA_X*u)};
+      }else if(nome==='sair'){
+        iniciar('andar',ts);e.flip=dir;e.clip={tipo:'x',lado:s.lado,borda:s.borda};s.xAlvo=s.x0;
+      }
+    }else{
+      var yO=s.topo-s.borda,yP=s.topo-(s.borda-ESP_BORDA_Y*u);    // yO: tudo abaixo da borda (sumiu); yP: y34 do quadro na borda (espiando)
+      s.yO=yO;s.yP=yP;
+      if(nome==='pula'){iniciar('parado',ts);e.clip=null;}
+      else if(nome==='desce'){e.clip={tipo:'y',topo:s.topo,borda:s.borda};}
+      else if(nome==='oculto'){iniciar('parado',ts);}
+      else if(nome==='espiar'){iniciar('espiar_cima',ts);e.y=yP;e.clip={tipo:'local',y0:Math.round(ESP_BORDA_Y*u)};}
+      else if(nome==='olhar1'){e.flip=true;}
+      else if(nome==='olhar2'){e.flip=false;}
+      else if(nome==='baixa'){e.clip={tipo:'y',topo:s.topo,borda:s.borda};}   // mesmo recorte, agora preso à borda de tela
+      else if(nome==='escondido'){iniciar('parado',ts);}
+      else if(nome==='volta'){e.clip=null;}
+      // 'sobe' não precisa de preparo: segue com o recorte de tela e a pose de pé
+    }
+  }
+  function encerrarEsp(abortou,ts){
+    var s=e.esp,cb=s&&s.aoTerminar;
+    if(!s)return;
+    e.esp=null;e.clip=null;e.y=0;
+    if(!abortou&&s.tipo==='lado')e.x=s.x0;
+    iniciar('parado',ts!=null?ts:agora());
+    aplicar();
+    if(cb)cb(!!abortou);
+  }
+  function passoEspiar(ts){
+    var s=e.esp,t=ts-s.t0,f,P=ESP_PULO_PX*escala,r,dt=Math.min(100,ts-s.ult);
+    s.ult=ts;
+    if(s.tipo==='lado'){
+      if(s.fase==='entrar'||s.fase==='sair'){
+        r=mascoteAvancar(e.x,s.xAlvo,dt,vel*escala);e.x=r.x;
+        if(r.chegou){if(s.fase==='sair'){encerrarEsp(false,ts);return;}faseEsp('oculto',ts);}
+      }
+      else if(s.fase==='oculto'){if(t>=ESP_OCULTO_MS)faseEsp('espiar',ts);}
+      else if(s.fase==='espiar'){if(t>=animMs('espiar_lado'))faseEsp('sair',ts);}
+    }else{
+      if(s.fase==='pula'){f=Math.min(1,t/ESP_PULA_MS);e.y=P*f;if(f>=1)faseEsp('desce',ts);}
+      else if(s.fase==='desce'){f=Math.min(1,t/ESP_PULA_MS);e.y=P*(1-f);if(f>=1)faseEsp('abaixa',ts);}
+      else if(s.fase==='abaixa'){f=Math.min(1,t/ESP_ABAIXA_MS);e.y=s.yO*eas(f);if(f>=1)faseEsp('oculto',ts);}
+      else if(s.fase==='oculto'){if(t>=ESP_OCULTO_MS)faseEsp('espiar',ts);}
+      else if(s.fase==='espiar'){if(t>=animMs('espiar_cima'))faseEsp('olhar1',ts);}
+      else if(s.fase==='olhar1'){if(t>=ESP_OLHAR_MS)faseEsp('olhar2',ts);}
+      else if(s.fase==='olhar2'){if(t>=ESP_OLHAR_MS)faseEsp('baixa',ts);}
+      else if(s.fase==='baixa'){f=Math.min(1,t/ESP_RAPIDO_MS);e.y=s.yP+(s.yO-s.yP)*f;if(f>=1)faseEsp('escondido',ts);}
+      else if(s.fase==='escondido'){if(t>=ESP_ESCONDIDO_MS)faseEsp('sobe',ts);}
+      else if(s.fase==='sobe'){f=Math.min(1,t/ESP_SOBE_MS);e.y=s.yO+(P-s.yO)*eas(f);if(f>=1)faseEsp('volta',ts);}
+      else if(s.fase==='volta'){f=Math.min(1,t/ESP_PULA_MS);e.y=P*(1-f);if(f>=1){encerrarEsp(false,ts);return;}}
+    }
+    aplicar();
+  }
+
   function passo(ts,dt){
+    if(e.esp){passoEspiar(ts);if(opts.aoPasso)opts.aoPasso();return;}
     if(e.esc){passoEscada(ts);if(opts.aoPasso)opts.aoPasso();return;}
     var q=mascoteQuadro(tabela,e.acao,ts-e.t0,false);
     if(q.fim||(e.duracao!=null&&ts-e.t0>=e.duracao))terminar(ts);
@@ -6157,6 +6260,7 @@ function criar(opts){
       if(raf!=null){cancelAnimationFrame(raf);raf=null;}
       if(e.agua)limparAgua();
       if(e.esc&&reduzido())encerrarEscada(true);
+      if(e.esp)encerrarEsp(true);   // fora de cena (oculto, aba oculta, reduced, fora da tela): sem recorte, inteiro
       if(reduzido()){e.acao='parado';e.alvo=null;aplicar();}
     }
   }
@@ -6166,7 +6270,7 @@ function criar(opts){
     el:el,
     tocar:function(acao,o){
       o=o||{};
-      if(!tabela[acao]||e.esc)return;
+      if(!tabela[acao]||e.esc||e.esp)return;
       if(reduzido()){if(o.aoTerminar)o.aoTerminar();return;}
       if(e.acao==='jato'&&acao!=='jato')limparAgua();
       e.aoTerminar=o.aoTerminar||null;e.duracao=o.duracaoMs!=null?o.duracaoMs:null;
@@ -6175,6 +6279,7 @@ function criar(opts){
     },
     andarAte:function(xPx,o){
       o=o||{};
+      if(e.esp)encerrarEsp(true);   // rolar cancela o espiar (andarAte é o que a rolagem chama)
       var x=limitar(xPx);
       if(reduzido()){e.x=x;e.alvo=null;aplicar();if(o.aoChegar)o.aoChegar();return;}
       e.alvo=x;e.correr=!!o.correr;e.aoChegar=o.aoChegar||null;
@@ -6188,7 +6293,7 @@ function criar(opts){
     },
     jatoEm:function(alvoEl,o){
       o=o||{};
-      if(e.esc)return;
+      if(e.esc||e.esp)return;
       if(reduzido()){if(o.aoTerminar)o.aoTerminar();return;}
       api.olharPara(alvoEl);
       e.agua=[];e.aguaAlvo=alvoEl;e.aguaSpawn=0;e.aguaMira=0;
@@ -6200,6 +6305,7 @@ function criar(opts){
     },
     esconder:function(){
       if(e.esc)encerrarEscada(true);
+      if(e.esp)encerrarEsp(true);
       mostrando=false;el.classList.add('mascote-oculto');
       atualizarLaco();
     },
@@ -6208,7 +6314,7 @@ function criar(opts){
     // Devolve false se não começou (já em escalada, oculto, reduced-motion).
     subirEscada:function(o){
       o=o||{};
-      if(e.esc||!mostrando)return false;
+      if(e.esc||e.esp||!mostrando)return false;
       if(reduzido()){if(o.aoTerminar)o.aoTerminar(true);return false;}
       if(e.acao==='jato')return false;
       var alt=o.alturaPx||ESC_ALTURA;
@@ -6220,6 +6326,21 @@ function criar(opts){
       return true;
     },
     abortarEscada:function(){if(e.esc)encerrarEscada(true);},   // desce na hora, escada some sem animação
+    // espiar({tipo:'lado'|'cima', lado:'dir'|'esq' (onde está o card; só 'lado'), borda: px de TELA da borda do card
+    // (lado: x da quina voltada para ele; cima: y da borda de cima), aoTerminar(abortou)}). Chamar com ele estacionado
+    // (parado/piscando): mede o próprio retângulo uma vez. Devolve false se não começou (já ocupado, oculto, reduced-motion).
+    espiar:function(o){
+      o=o||{};
+      if(e.esp||e.esc||!mostrando||reduzido()||(o.tipo!=='lado'&&o.tipo!=='cima'))return false;
+      var r=el.getBoundingClientRect();
+      limparAgua();e.alvo=null;e.aoChegar=null;e.aoTerminar=null;e.duracao=null;
+      e.esp={tipo:o.tipo,lado:o.lado==='esq'?'esq':'dir',borda:o.borda,x0:e.x,topo:r.top+snap(e.y),aoTerminar:o.aoTerminar||null,fase:'',t0:0,ult:0};
+      faseEsp(o.tipo==='lado'?'entrar':'pula',agora());
+      atualizarLaco();
+      return true;
+    },
+    cancelarEspiar:function(){if(e.esp)encerrarEsp(true);},    // tira o recorte e ele aparece inteiro na hora
+    emEspiar:function(){return !!e.esp;},
     emEscada:function(){return !!e.esc;},
     escadaRect:function(){return e.esc&&escEl?escEl.getBoundingClientRect():null;},
     y:function(){return e.y;},
@@ -6231,7 +6352,7 @@ function criar(opts){
     acao:function(){return e.acao;},
     destruir:function(){
       mostrando=false;atualizarLaco();
-      removeEventListener('resize',medir);
+      removeEventListener('resize',aoResize);
       document.removeEventListener('visibilitychange',atualizarLaco);
       if(escEl)escEl.remove();
       if(io)io.disconnect();
@@ -6241,7 +6362,7 @@ function criar(opts){
   };
 
   // visibilidade da aba / resize / reduced-motion mudando em runtime / fora da tela
-  addEventListener('resize',medir,{passive:true});
+  addEventListener('resize',aoResize,{passive:true});
   document.addEventListener('visibilitychange',atualizarLaco);
   var mq=null,io=null;
   if(window.matchMedia){
@@ -6283,7 +6404,7 @@ return {
 // P3 (b250) — mascote no app (pós-login): sentado no card da meta (Home) e no fim de sessão.
 // Liga/desliga em Configurações, gravado SÓ no localStorage do aparelho (nunca no RTDB: campo novo
 // num set() do usuário comum derruba o set inteiro). Desligar vale só para o app; a vitrine é peça de venda.
-var MASCOTE_APP_FOLHA='assets/mascote/folha_v4.png',MASCOTE_COCHILO_MS=20000;
+var MASCOTE_APP_FOLHA='assets/mascote/folha_v5.png',MASCOTE_COCHILO_MS=20000;
 var _mascoteHomeP=null,_mascoteFimP=null,_mascoteCochiloTm=0;
 function mascoteLigado(){try{return localStorage.getItem('ctsp_mascote')!=='0';}catch(e){return true;}}
 function _marcarMascoteSeg(){
@@ -6468,6 +6589,7 @@ var MascoteVitrine=(function initMascoteVitrine(){
   var ESCADA_MIN_MS=15000,MARGEM_CTA=8,ultEscada=-1e9; // escalada: intervalo mínimo e folga do retângulo da escada/mascote até o CTA
 
   function oculto(){return razoes.landing||razoes.cena||razoes.cta;}
+  function ocupado(){return m.emEscada()||m.emEspiar();} // escada e espiar seguram o x e a pose: nada começa por cima
   function aplicarVis(){
     if(!m)return;
     if(oculto()){acaoAtiva=null;estac=false;m.esconder();}else{m.mostrar();agendarParar(600);}
@@ -6479,7 +6601,7 @@ var MascoteVitrine=(function initMascoteVitrine(){
   function garantir(){
     if(m)return;
     m=Mascote.criar({
-      sprite:'assets/mascote/folha_v4.png',
+      sprite:'assets/mascote/folha_v5.png',
       // canvas da água: nasce na ponta do esguicho do quadro atual do jato (BICO), esquerda do canvas em x=50
       agua:{bocalX:56,bocalY:18,esq:50,bico:Mascote.MASCOTE_BICO},
       escada:'assets/mascote/escada.png',
@@ -6497,7 +6619,7 @@ var MascoteVitrine=(function initMascoteVitrine(){
 
   var INTERATIVO='a,button,input,select,textarea,label,[role="button"],[tabindex]';
   function aoClicar(ev){
-    if(!m||oculto()||m.emEscada())return;
+    if(!m||oculto()||ocupado())return;
     var r=m.el.getBoundingClientRect();
     if(ev.clientX<r.left||ev.clientX>r.right||ev.clientY<r.top||ev.clientY>r.bottom)return;
     var t=ev.target;
@@ -6550,7 +6672,7 @@ var MascoteVitrine=(function initMascoteVitrine(){
   }
   function tentarEscada(eu){
     var agora=performance.now();
-    if(!m||oculto()||m.emEscada()||agora-ultEscada<ESCADA_MIN_MS||ctaNoCaminho())return false;
+    if(!m||oculto()||ocupado()||agora-ultEscada<ESCADA_MIN_MS||ctaNoCaminho())return false;
     var ok=m.subirEscada({gesto:'continencia',aoTerminar:function(){
       if(eu&&acaoAtiva===eu)acaoAtiva=null;
       ultimoMov=performance.now();
@@ -6618,12 +6740,12 @@ var MascoteVitrine=(function initMascoteVitrine(){
     return true;
   }
   function parar(){
-    if(!m||document.hidden||oculto()||m.emEscada()||typeof document.elementsFromPoint!=='function')return;
+    if(!m||document.hidden||oculto()||ocupado()||typeof document.elementsFromPoint!=='function')return;
     var r=m.el.getBoundingClientRect(),vw=document.documentElement.clientWidth||innerWidth;
     if(!(r.bottom>r.top))return;
     var x=mascoteXParada(r.left,vw,larg(),function(x){return livreEm(x,r,vw);},destino!=null?destino:xDe(ultP)); // lado = onde ele está agora
     destino=x;ultimoMov=performance.now();estac=false; // o ócio só conta depois que ele chega
-    m.andarAte(x,{correr:true,aoChegar:function(){ultimoMov=performance.now();estac=true;tentarAcao();}}); // b253: corre até a borda; só estacionado começa ação
+    m.andarAte(x,{correr:true,aoChegar:function(){ultimoMov=performance.now();estac=true;espiarVez=true;tentarAcao();}}); // b253: corre até a borda; só estacionado começa ação
   }
 
   // ---- ações x posição da página (b253, item 4). Sem fila: `visto[chave]` = instante em que a seção passou de 40%
@@ -6631,15 +6753,16 @@ var MascoteVitrine=(function initMascoteVitrine(){
   // Conta como vista com >=1 s contínuo. A ação só começa quando ele ESTACIONA (aoChegar do parar()), UMA por
   // parada, na ordem de ORDEM; as outras seções qualificadas naquele instante são descartadas.
   // Seção saiu com a ação em curso: o jato aborta; comemorar/continência/escada terminam.
-  // Item 2 (espiar): acrescentar a chave no FIM de ORDEM + um ramo em iniciarAcao() (prioridade mais baixa).
+  // Espiar atrás do card (item 2) é a de prioridade MAIS BAIXA: só tenta se nenhuma seção está pendente (vista e ainda sem ação)
+  // e nenhuma ação desta parada começou; ver tentarEspiar().
   var VISTO_MS=1000,ORDEM=['a3','planos','esc:lp-instrutor','esc:lp-passos','esc:lp-instalar'];
-  var visto={},acaoAtiva=null,estac=false;
+  var visto={},acaoAtiva=null,estac=false,espiarVez=false; // espiarVez: 1 tentativa de espiar por parada (mede layout)
   function fimDe(eu){return function(){if(acaoAtiva===eu)acaoAtiva=null;};}
   // o motor TROCA o aoTerminar quando outra ação entra por cima (toque/aceno, reagirA2: tocar() sobrescreve), e aí fimDe
   // nunca roda. Fonte da verdade = o estado do motor: se ele já não está na ação esperada, a ação ativa acabou.
   function ativa(){
     if(!acaoAtiva)return false;
-    if(m&&(acaoAtiva.acao==='escada'?m.emEscada():m.acao()===acaoAtiva.acao))return true;
+    if(m&&(acaoAtiva.acao==='escada'?m.emEscada():(acaoAtiva.acao==='espiar'?m.emEspiar():m.acao()===acaoAtiva.acao)))return true;
     acaoAtiva=null;return false;
   }
   function marcarSecao(k,dentro){
@@ -6664,24 +6787,63 @@ var MascoteVitrine=(function initMascoteVitrine(){
     return true;
   }
   function tentarAcao(){
-    if(!estac||ativa()||!m||document.hidden||oculto()||m.emEscada())return false;
+    if(!estac||ativa()||!m||document.hidden||oculto()||ocupado())return false;
     var a=m.acao();
     if(a!=='parado'&&a!=='piscar')return false;
     var agora=performance.now(),cands=ORDEM.filter(function(k){return visto[k]>=0&&agora-visto[k]>=VISTO_MS&&!vistas[k];}),i,eu=null;
-    if(!cands.length)return false;
     for(i=0;i<cands.length&&!eu;i++){
       var t={k:cands[i],acao:cands[i]==='a3'?'jato':(cands[i]==='planos'?'comemorar':'escada'),abortavel:false};
       acaoAtiva=t;
       if(iniciarAcao(cands[i],t))eu=t;else if(acaoAtiva===t)acaoAtiva=null;
     }
     cands.forEach(function(k){visto[k]=-1;}); // uma ação por parada: as demais (e a que não pôde começar) são descartadas
-    if(eu)estac=false;
-    return !!eu;
+    if(eu){estac=false;return true;}
+    return tentarEspiar();
+  }
+
+  // ---- espiar atrás do card (b253/MV2 item 2). Candidatos medidos SÓ aqui (parada), 1x por card por visita
+  // (`_mEsp` no card; sai da tela = nova visita). Nunca .plano-card nem CTA.
+  //  A (lateral, só >=768 px): card inteiro ao lado dele (borda a <=120 px) cobrindo a faixa vertical dele.
+  //  B (borda de cima, qualquer largura): borda de cima do card 24..44 px acima do pé, cobrindo o corpo dele.
+  //  No PC, B só quando A não tem candidato.
+  var ESP_DIST=120,ESP_CIMA_MIN=24,ESP_CIMA_MAX=44,CTA_SEL='.lp-btn-cta,.lp-btn-linha,.plano-btn-cta,.plano-btn-weak,.plano-card';
+  function acharEspiar(){
+    var r=m.el.getBoundingClientRect(),vw=document.documentElement.clientWidth||innerWidth,u=larg()/64,cards=landing.querySelectorAll('.lp-card'),
+        i,c,rc,d,melhorA=null,melhorB=null,dA=1e9,dB=1e9;
+    for(i=0;i<cards.length;i++){
+      c=cards[i];
+      if(c._mEsp||(c.closest&&c.closest(CTA_SEL))||(c.matches&&c.matches(CTA_SEL)))continue;
+      rc=c.getBoundingClientRect();
+      if(!(rc.width>=larg())||!(rc.height>0))continue;
+      if(vw>=768&&rc.top<=r.top+2*u&&rc.bottom>=r.bottom-2*u){
+        d=rc.left-r.right;
+        if(d>=-16*u&&d<=ESP_DIST*u&&rc.left>r.left&&d<dA){dA=d;melhorA={card:c,tipo:'lado',lado:'dir',borda:rc.left};}
+        d=r.left-rc.right;
+        if(d>=-16*u&&d<=ESP_DIST*u&&rc.right<r.right&&d<dA){dA=d;melhorA={card:c,tipo:'lado',lado:'esq',borda:rc.right};}
+      }
+      d=r.bottom-rc.top;
+      if(rc.left<=r.left+16*u&&rc.right>=r.right-16*u&&rc.bottom>=r.bottom&&d>=ESP_CIMA_MIN*u&&d<=ESP_CIMA_MAX*u&&Math.abs(d-34*u)<dB){
+        dB=Math.abs(d-34*u);melhorB={card:c,tipo:'cima',borda:rc.top};
+      }
+    }
+    return melhorA||melhorB;
+  }
+  function tentarEspiar(){
+    if(!espiarVez)return false;
+    if(ORDEM.some(function(k){return visto[k]>=0&&!vistas[k];}))return false; // ainda há seção pendente: ela tem prioridade
+    espiarVez=false;
+    var c=acharEspiar();
+    if(!c)return false;
+    var t={k:'espiar',acao:'espiar',abortavel:false};
+    acaoAtiva=t;
+    if(!m.espiar({tipo:c.tipo,lado:c.lado,borda:c.borda,aoTerminar:fimDe(t)})){if(acaoAtiva===t)acaoAtiva=null;return false;}
+    c.card._mEsp=1;estac=false;ultimoMov=performance.now();
+    return true;
   }
 
   // ---- ócio: 7 s parado senta, 20 s cochila (rolar levanta: o motor volta a andar)
   function ocio(){
-    if(!m||document.hidden||oculto()||m.emEscada())return;
+    if(!m||document.hidden||oculto()||ocupado())return;
     if(tentarAcao())return;
     var agora=performance.now(),parado=agora-ultimoMov,a=m.acao();
     if(a==='parado'||a==='piscar'){
@@ -6708,10 +6870,16 @@ var MascoteVitrine=(function initMascoteVitrine(){
       var el=document.getElementById(id);
       if(el)ioEsc.observe(el);
     });
+    // espiar: card que sai da tela encerra a "visita" (vale de novo quando voltar)
+    var ioCard=new IntersectionObserver(function(es){
+      es.forEach(function(en){if(!en.isIntersecting)en.target._mEsp=0;});
+    });
+    [].forEach.call(landing.querySelectorAll('.lp-card'),function(c){ioCard.observe(c);});
   }
   // b252: resposta TOCADA na A2. Imediata (não entra na fila `pendente`: reação atrasada perde o sentido).
   // Acertou = comemora; errou = olha para o cartão e aponta ("tenta de novo").
   function reagirA2(acertou,card){
+    if(m&&m.emEspiar())m.cancelarEspiar(); // tocar a resposta tem prioridade: ele aparece inteiro e reage
     if(!m||oculto()||m.emEscada())return;
     ultimoMov=performance.now();
     if(acertou)m.tocar('comemorar');
@@ -7146,7 +7314,7 @@ function _cenaPorTempo(secao,c){
   }
   function mMover(x,flip){mel.style.transform='translateX('+x+'px) scaleX('+(flip||1)+')';}
   function mMostrar(v){
-    if(v&&!mCarregou){mCarregou=true;mel.style.backgroundImage='url("assets/mascote/folha_v4.png")';}
+    if(v&&!mCarregou){mCarregou=true;mel.style.backgroundImage='url("assets/mascote/folha_v5.png")';}
     mel.classList.toggle('off',!v);
   }
   function mPose(a,ms){mAuto=false;mSaida=null;mAnim=a;mDesenhar(a,ms);}
@@ -7992,7 +8160,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.352';
+const APP_VERSAO='v1.353';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
