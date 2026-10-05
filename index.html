@@ -5789,6 +5789,7 @@ var MASCOTE_ANIM={
 };
 var MASCOTE_QUADRO=64;        // px de um quadro na folha (padrão; criar({quadro:48}) troca). ÚNICA fonte do tamanho.
 var MASCOTE_VEL_PX_S=15;      // andar: px DA FOLHA por segundo para grade 32 (escala com quadro/32; no quadro 64 = 30 px/s)
+var MASCOTE_ANDAR_SOBRA_MS=400; // b253: seguindo a rolagem, ao alcançar o alvo móvel ele segue com o quadro de andar por este tempo antes de ficar parado (senão alterna parado<->andar a cada quadro = piscar)
 var MASCOTE_CORRER_X=2.4;     // correr anda MASCOTE_CORRER_X vezes mais rápido que andar
 // Ponta do esguicho por quadro do jato (px do quadro de 64, a partir do canto sup. esq.). Mesma fonte da arte (acoes.py).
 var MASCOTE_BICO=[[56,46],[56,44],[56,45],[56,44],[56,44]];
@@ -5843,6 +5844,9 @@ function mascoteFlipPara(xCentro,xAlvo,flipAtual){
   if(Math.abs(xAlvo-xCentro)<2)return flipAtual;
   return xAlvo<xCentro;
 }
+// b253-MV2: parado, sentado ou cochilando ele olha para DENTRO da tela (metade esquerda -> direita, direita -> esquerda;
+// no meio exato mantém o lado). Ação dirigida (jato, apontar) usa olharPara e prevalece até terminar.
+function mascoteFlipParado(xCentro,vw,flipAtual){return mascoteFlipPara(xCentro,vw/2,flipAtual);}
 
 // Água: partícula quadrada em px do canvas (1 px canvas = 1 px da folha).
 // ang em rad (0 = para frente, + = para cima); v em px/s.
@@ -5965,7 +5969,7 @@ function criar(opts){
 
   var e={acao:'parado',t0:0,x:0,alvo:null,correr:false,aoChegar:null,aoTerminar:null,duracao:null,flip:false,
          proxPiscar:0,agua:null,aguaAlvo:null,aguaSpawn:0,aguaAng:.3,aguaV:90,aguaMira:0,
-         y:0,esc:null}; // y = px acima do rodapé (só muda durante subirEscada); esc = estado da escalada
+         y:0,esc:null,chegouT:-1e9}; // y = px acima do rodapé (só muda durante subirEscada); esc = estado da escalada
   var escala=2,vw=0,larg=Q*2;
   var raf=null,ultimo=0,mostrando=false,naTela=true;
   var qCache='',tCache='';
@@ -5997,8 +6001,10 @@ function criar(opts){
     return q;
   }
 
+  function viraParaDentro(){e.flip=mascoteFlipParado(e.x+larg/2,vw,e.flip);}
   function iniciar(acao,ts){
     e.acao=acao;e.t0=ts;
+    if(vw>0&&(acao==='parado'||acao==='sentar'||acao==='cochilar'))viraParaDentro();   // vw=0 = ainda não mediu (criar)
     if(acao==='parado')e.proxPiscar=ts+mascoteSortearPiscar(Math.random());
   }
   function terminar(ts){
@@ -6116,15 +6122,15 @@ function criar(opts){
         if(r.chegou){
           var cb=e.aoChegar;
           e.alvo=null;e.aoChegar=null;
-          iniciar('parado',ts);
+          if(cb)iniciar('parado',ts);else e.chegouT=ts;   // sem aviso de chegada = seguindo alvo móvel: segue andando um instante
           if(cb)cb();
         }
       }else if(e.alvo!=null){          // já está lá
         var cb2=e.aoChegar;e.x=e.alvo;e.alvo=null;e.aoChegar=null;
-        if(andando)iniciar('parado',ts);
+        if(andando){if(cb2)iniciar('parado',ts);else e.chegouT=ts;}
         if(cb2)cb2();
       }else if(andando){
-        iniciar('parado',ts);
+        if(ts-e.chegouT>=MASCOTE_ANDAR_SOBRA_MS)iniciar('parado',ts);
       }
     }
     if(e.acao==='parado'&&ts>=e.proxPiscar){
@@ -6174,7 +6180,7 @@ function criar(opts){
       e.alvo=x;e.correr=!!o.correr;e.aoChegar=o.aoChegar||null;
       atualizarLaco();
     },
-    posicionar:function(xPx){e.x=limitar(xPx);e.alvo=null;aplicar();},   // põe no lugar sem andar
+    posicionar:function(xPx){e.x=limitar(xPx);e.alvo=null;if(vw>0&&(e.acao==='parado'||e.acao==='sentar'||e.acao==='cochilar'))viraParaDentro();aplicar();},   // põe no lugar sem andar
     olharPara:function(alvoEl){
       var a=alvoEl.getBoundingClientRect();
       e.flip=mascoteFlipPara(e.x+larg/2,a.left+a.width/2,e.flip);
@@ -6268,6 +6274,7 @@ return {
   mascoteSortearPiscar:mascoteSortearPiscar,
   mascoteAvancar:mascoteAvancar,
   mascoteFlipPara:mascoteFlipPara,
+  mascoteFlipParado:mascoteFlipParado,
   mascoteAguaNova:mascoteAguaNova,
   mascoteAguaPasso:mascoteAguaPasso
 };
@@ -6614,7 +6621,7 @@ var MascoteVitrine=(function initMascoteVitrine(){
     if(!(r.bottom>r.top))return;
     var x=mascoteXParada(r.left,vw,larg(),function(x){return livreEm(x,r,vw);},destino!=null?destino:xDe(ultP)); // lado = onde ele está agora
     destino=x;ultimoMov=performance.now(); // o ócio só conta depois que ele chega
-    m.andarAte(x,{correr:false,aoChegar:function(){ultimoMov=performance.now();}});
+    m.andarAte(x,{correr:true,aoChegar:function(){ultimoMov=performance.now();}}); // b253: corre até a borda
   }
 
   // ---- ócio: 7 s parado senta, 20 s cochila (rolar levanta: o motor volta a andar)
@@ -7946,7 +7953,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.350';
+const APP_VERSAO='v1.351';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
