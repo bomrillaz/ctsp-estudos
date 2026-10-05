@@ -6425,6 +6425,21 @@ function mascoteFimCards(slot,acao,chave){
   _mascoteCardsTm=setTimeout(function(){if(p.el.isConnected&&(p.acao()==='parado'||p.acao()==='piscar'))p.tocar(acao);},400);
 }
 
+// b252-MV1 — onde o mascote da vitrine PARA (rolagem quieta). Pura: livre(x) diz se o retângulo dele em x
+// não cobre texto/card. Fica SÓ do lado em que já está (centro < metade = esquerda; exatamente no meio vale o
+// lado do alvo xAlvo) e nunca atravessa a tela: esquerda = centro em [0,25%], direita = [75%,100%]. Entre os x
+// livres, o mais perto de xAtual (leve preferência pela borda); nenhum livre = a borda DESSE lado.
+function mascoteXParada(xAtual,vw,larg,livre,xAlvo){
+  var M=8,PASSO=8,xmin=M,xmax=Math.max(M,vw-larg-M),xs=[],x,cx=xAtual+larg/2;
+  var esq=cx<vw/2||(cx===vw/2&&(xAlvo==null||xAlvo+larg/2<=vw/2));
+  function lado(x){var c=x+larg/2;return esq?c<=vw*.25:c>=vw*.75;}
+  function custo(x){return Math.abs(x-xAtual)+.5*Math.min(x-xmin,xmax-x);}
+  for(x=xmin;x<xmax;x+=PASSO)xs.push(x);
+  xs.push(xmax,Math.min(xmax,Math.max(xmin,xAtual)));
+  xs=xs.filter(lado).sort(function(a,b){return custo(a)-custo(b);});
+  for(x=0;x<xs.length;x++)if(livre(xs[x]))return xs[x];
+  return esq?xmin:xmax;
+}
 // P2/b249 — mascote na vitrine (pré-login). Comportamento aprovado no b247: anda acompanhando a
 // rolagem (corre se a rolagem é rápida); parado respira e pisca a cada 3–7 s; 7 s parado senta,
 // 20 s cochila; rolar levanta e ele anda; toque acena de frente (sem aceno automático); entrando na
@@ -6442,13 +6457,13 @@ var MascoteVitrine=(function initMascoteVitrine(){
   var m=null,razoes={landing:true,cena:false,cta:false}; // true = esconde
   var ultimoMov=0,vistas={},pendente=[],ctaNaBanda=0,ioBanda=null,tmCorrer=0;
   var BANDA_PX=84,MARGEM=8,VEL_CORRER=45; // px/s do alvo acima dos quais ele corre (andar = 30 px/s)
-  var refX=null,refT=0,correrAte=0,ultAlvo=0,ultP=0;
+  var refX=null,refT=0,correrAte=0,ultAlvo=0,ultP=0,destino=null,tmParada=0; // destino = x que ele segue (progresso) ou onde estacionou
   var ESCADA_MIN_MS=15000,MARGEM_CTA=8,ultEscada=-1e9; // escalada: intervalo mínimo e folga do retângulo da escada/mascote até o CTA
 
   function oculto(){return razoes.landing||razoes.cena||razoes.cta;}
   function aplicarVis(){
     if(!m)return;
-    if(oculto())m.esconder();else m.mostrar();
+    if(oculto())m.esconder();else{m.mostrar();agendarParar(600);}
   }
   function razao(nome,v){
     if(razoes[nome]===v)return;
@@ -6508,7 +6523,7 @@ var MascoteVitrine=(function initMascoteVitrine(){
   var tmRs=0;
   addEventListener('resize',function(){
     clearTimeout(tmRs);
-    tmRs=setTimeout(function(){if(m)montarBanda();},200);
+    tmRs=setTimeout(function(){if(m){montarBanda();agendarParar(300);}},200);
   },{passive:true});
 
   // ---- escalada (b249): CTA no retângulo do mascote OU da escada (+8 px) aborta; no caminho, nem começa
@@ -6531,7 +6546,7 @@ var MascoteVitrine=(function initMascoteVitrine(){
     if(!m||oculto()||m.emEscada()||agora-ultEscada<ESCADA_MIN_MS||ctaNoCaminho())return;
     var ok=m.subirEscada({gesto:'continencia',aoTerminar:function(){
       ultimoMov=performance.now();
-      if(m)m.andarAte(xDe(ultP),{correr:true}); // rolou durante a escalada: alcança o alvo correndo
+      if(m){m.andarAte(destino!=null?destino:xDe(ultP),{correr:true});agendarParar(900);} // alcança o alvo correndo e depois estaciona
     }});
     if(ok)ultEscada=agora;
   }
@@ -6558,11 +6573,49 @@ var MascoteVitrine=(function initMascoteVitrine(){
       if(Math.abs(x-refX)/(agora-refT)*1000>VEL_CORRER)correrAte=agora+500;
       refX=x;refT=agora;
     }
-    ultAlvo=x;ultimoMov=agora;
+    ultAlvo=x;destino=x;ultimoMov=agora;
     m.andarAte(x,{correr:agora<correrAte});
+    agendarParar(500); // rolagem quieta ~500 ms: estaciona fora do centro e sem cobrir texto/card
     clearTimeout(tmCorrer);
     if(agora<correrAte)tmCorrer=setTimeout(function(){if(m)m.andarAte(ultAlvo,{correr:false});},400); // rolagem parou: volta a andar
   },{semReducedMotion:true});
+
+  // ---- parada (b252): medição de layout SÓ aqui (nunca por quadro). Andar passa por cima de tudo; parar, não.
+  function agendarParar(ms){clearTimeout(tmParada);tmParada=setTimeout(parar,ms);}
+  var MIDIA=/^(IMG|CANVAS|VIDEO|PICTURE|BUTTON|INPUT|SELECT|TEXTAREA)$/;
+  function temTexto(el){
+    for(var n=el.firstChild;n;n=n.nextSibling)if(n.nodeType===3&&/\S/.test(n.nodeValue))return true;
+    return false;
+  }
+  // texto, mídia ou caixa visível (fundo/borda/sombra) que NÃO seja faixa de fundo de seção (largura total)
+  function ocupa(el,vw){
+    if(el===landing||el===document.documentElement||el===document.body||m.el.contains(el))return false;
+    if(el.closest&&el.closest('.mascote-escada'))return false;
+    if(MIDIA.test(el.tagName)||(el.closest&&el.closest('svg'))||temTexto(el))return true;
+    var cs=getComputedStyle(el);
+    var caixa=(cs.backgroundColor!=='rgba(0, 0, 0, 0)'&&cs.backgroundColor!=='transparent')||cs.backgroundImage!=='none'||
+      (parseFloat(cs.borderTopWidth)>0&&cs.borderTopStyle!=='none')||cs.boxShadow!=='none';
+    return caixa&&el.getBoundingClientRect().width<vw-1;
+  }
+  function livreEm(x,r,vw){
+    // grade ~16 x 8 px: uma linha de texto ou chip de 20 px não escorrega entre duas amostras
+    var xs=[],ys=[],i,j,k,pilha;
+    for(i=x+4;i<x+larg();i+=16)xs.push(i);xs.push(x+larg()-4);
+    for(j=r.top+4;j<r.bottom;j+=8)ys.push(j);ys.push(r.bottom-4);
+    for(i=0;i<xs.length;i++)for(j=0;j<ys.length;j++){
+      pilha=document.elementsFromPoint(xs[i],ys[j]);
+      for(k=0;k<pilha.length;k++)if(ocupa(pilha[k],vw))return false;
+    }
+    return true;
+  }
+  function parar(){
+    if(!m||document.hidden||oculto()||m.emEscada()||typeof document.elementsFromPoint!=='function')return;
+    var r=m.el.getBoundingClientRect(),vw=document.documentElement.clientWidth||innerWidth;
+    if(!(r.bottom>r.top))return;
+    var x=mascoteXParada(r.left,vw,larg(),function(x){return livreEm(x,r,vw);},destino!=null?destino:xDe(ultP)); // lado = onde ele está agora
+    destino=x;ultimoMov=performance.now(); // o ócio só conta depois que ele chega
+    m.andarAte(x,{correr:false,aoChegar:function(){ultimoMov=performance.now();}});
+  }
 
   // ---- ócio: 7 s parado senta, 20 s cochila (rolar levanta: o motor volta a andar)
   // fila `pendente`: 'a3' | 'planos' (1x por visita, só parado/piscar) | 'esc:<id>' (escada, toda vez; também andando)
@@ -7893,7 +7946,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.349';
+const APP_VERSAO='v1.350';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
