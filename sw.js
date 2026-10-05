@@ -51,11 +51,11 @@ self.addEventListener('notificationclick', (e) => {
   })());
 });
 
-const CACHE = 'ctsp-cache-v40';
+const CACHE = 'ctsp-cache-v41';
 const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
-  'assets/cesar-coin.png', 'assets/cesar-aponta.png', 'assets/cesar-pensa.png', 'assets/cesar-coin-comemora.png',
+  'assets/cesar-coin.png',
   'assets/loading.mp4', 'assets/loading-poster.jpg',
   'assets/mascote/folha_v4.png', 'assets/mascote/escada.png'
 ];
@@ -119,7 +119,7 @@ self.addEventListener('fetch', (e) => {
   // servir uma versao antiga cacheada mesmo depois de um bump de cache-buster (?v=...) sem
   // bump de CACHE. Sem querystring, ignoreSearch:true (comportamento normal).
   // Video: iPhone pede com Range; respondWith de cache/rede sem 206 quebra a reproducao.
-  if (req.headers.has('range') || /\/assets\/landing\/.+\.(mp4|webm)$/.test(url.pathname)) return;
+  if (req.headers.has('range')) return; // b252: video do estribo (assets/landing) saiu; loading.mp4 segue coberto pelo Range
 
   const temQuery = url.search !== '';
   e.respondWith(

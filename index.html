@@ -366,12 +366,6 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .lp-lista-quem li{position:relative;padding-left:26px;margin-bottom:16px;font-size:14.5px;line-height:1.65;color:rgba(255,255,255,.78);}
 .lp-lista-quem li::before{content:'';position:absolute;left:0;top:9px;width:13px;height:2px;background:var(--ember);}
 .lp-lista-quem b{color:#fff;}
-.lp-quem-cesar{width:min(78%,320px);margin:8px auto 0;}
-.lp-cesar-vid{display:block;width:100%;height:auto;aspect-ratio:560/500;object-fit:contain;}
-/* PV2 (review do Opus): a mascara so serve pro MP4 com fundo assado (WebM ja tem alpha
-   real, mascara nele so cortava o teto do caminhao e a roda esquerda, que encostam nos
-   cantos do quadro). Borda fina retangular (~5%) nos 4 lados, nao radial. */
-.lp-cesar-vid.fundo-assado{-webkit-mask-image:linear-gradient(to right,transparent,#000 5%,#000 95%,transparent),linear-gradient(to bottom,transparent,#000 5%,#000 95%,transparent);-webkit-mask-composite:source-in;mask-image:linear-gradient(to right,transparent,#000 5%,#000 95%,transparent),linear-gradient(to bottom,transparent,#000 5%,#000 95%,transparent);mask-composite:intersect;}
 
 /* Passos */
 .lp-passos{list-style:none;margin:22px 0 0;padding:0;counter-reset:p;}
@@ -1069,7 +1063,7 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
 .fim-inline-title{font-family:var(--font-display);font-size:24px;font-weight:700;margin-bottom:8px;}
 .fim-inline-sub{font-size:14px;color:var(--text2);}
 
-/* APP-D bloco 1 (b242): cascata do fim de sessão (#modal-fim, só Quiz) — César por
+/* APP-D bloco 1 (b242): cascata do fim de sessão (#modal-fim, só Quiz) — mascote por
    desempenho + 3 blocos com count-up. animation-fill-mode:both segura o estado final;
    nunca punitivo — só a pose muda com desempenho baixo, o número do bloco continua
    var(--text) normal. Reduced-motion: mostrarFimSessao() zera animation-delay por
@@ -1737,8 +1731,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   .lp-hero-fita b{font-size:30px;}
   .lp-sec{padding:72px 0;}
   .lp-sec-compacta{padding:56px 0;}
-  .lp-quem-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:48px;align-items:center;}
-  .lp-quem-cesar{width:100%;max-width:420px;margin:0 0 0 auto;}
+  .lp-quem-txt{max-width:720px;}
   .lp-sec-espacosa{padding:96px 0;}
   .lp-cards3{grid-template-columns:1.6fr 1fr;grid-template-rows:repeat(2,1fr);gap:16px;}
   .lp-cards3 .lp-card:first-child{grid-column:1;grid-row:1/3;display:flex;flex-direction:column;justify-content:center;padding:30px 26px;}
@@ -1910,7 +1903,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .lp-a2-track{position:relative;height:230vh;}
 /* PV1/b240: 4 opções -> 5 (b3_14 real) deixou o cartão mais alto que 100vh em telas
    curtas (celular retrato), e height:100vh fixo + overflow:hidden cortava o topo
-   (tag/César) e o rodapé (domínio) por igual, centralizados. min-height no lugar de
+   (tag) e o rodapé (domínio) por igual, centralizados. min-height no lugar de
    height deixa o stage crescer com o conteúdo sem cortar nada. */
 .lp-a2-stage{position:sticky;top:0;min-height:max(560px,100vh);display:flex;align-items:center;justify-content:center;
   overflow:hidden;padding:20px;background:radial-gradient(120% 90% at 50% 100%,rgba(240,136,60,.08),transparent 60%),var(--paper);}
@@ -1918,17 +1911,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   border-radius:20px;padding:22px 20px;box-shadow:var(--shadow-md);}
 .lp-a2-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .lp-a2-tag{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ember);}
-/* PM1/M6.5 — César instrutor do A2 (bulk uncoreado, fundo transparente): sem recorte
-   circular (a arte já é de meio corpo, cover cortava o gesto). object-fit:contain pra
-   nunca esticar. .mirror só na pose "aponta" (ela aponta pra direita no master; o
-   personagem fica à direita do card, então espelhar faz o dedo apontar PRA DENTRO,
-   pro enunciado) — nunca no comemora/pensa, cujos masters já ficam de frente. */
-.lp-a2-cesar{width:88px;height:88px;flex-shrink:0;object-fit:contain;
-  filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));
-  transition:transform var(--dur-base) var(--ease-spring);}
-@media(min-width:768px){.lp-a2-cesar{width:120px;height:120px;}}
-.lp-a2-cesar.mirror{transform:scaleX(-1);}
-.lp-a2-cesar.reage{transform:scale(1.16) rotate(-7deg);}
 .lp-a2-enun{font-size:16px;line-height:1.5;color:var(--text);font-weight:600;margin-bottom:8px;}
 /* PV1/b240: opções passam a usar .quiz-opt/.quiz-opt-letter/.quiz-opt-text (mesmas
    classes do Quiz real, index.html ~974-988) em vez de um visual próprio — brasa e
@@ -1949,7 +1931,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .treme-cartao{animation:tremerCartaoKf .4s ease;}
 @keyframes tremerCartaoKf{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
 @media(prefers-reduced-motion:reduce){
-  .lp-a2-cesar,.lp-a2-exp,.lp-a2-dominio-fill{transition:none;}
+  .lp-a2-exp,.lp-a2-dominio-fill{transition:none;}
   .treme-cartao{animation:none;}
 }
 
@@ -2276,7 +2258,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="lp-a2-card">
           <div class="lp-a2-head">
             <span class="lp-a2-tag">Exemplo real do banco · Ferimentos, Hemorragia e Queimaduras</span>
-            <img class="lp-a2-cesar mirror" id="lp-a2-cesar" src="assets/cesar-aponta.png" data-pensa="assets/cesar-pensa.png" data-comemora="assets/cesar-coin-comemora.png" alt="" aria-hidden="true" onerror="this.onerror=null;this.src='assets/cesar-coin.png';this.classList.remove('mirror')">
           </div>
           <p class="lp-a2-enun">Sobre hemorragia externa grave no protocolo X do XABCDE, a conduta CORRETA é:</p>
           <div class="quiz-doc">ITO 23 CBMMG (3ª ed./2021) — P508 Hemorragia</div>
@@ -2337,9 +2318,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <li><b>Escala, família, cansaço.</b> Vinte minutos bem direcionados rendem mais do que três horas gastas relendo o que você já sabe.</li>
         <li><b>É concurso interno.</b> Todo mundo teve acesso ao mesmo manual. A diferença não está em quem leu. Está em quem retém.</li>
       </ul>
-      </div>
-      <div class="lp-quem-cesar" aria-hidden="true">
-        <video class="lp-cesar-vid" muted loop playsinline preload="none" poster="assets/landing/cesar-estribo.webp"></video>
       </div>
     </div>
   </section>
@@ -2732,26 +2710,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 })();
 </script>
 
-<script>
-// César do estribo: WebM alpha (Chrome/Edge/Firefox) ou MP4 com fundo (WebKit não renderiza alpha do VP9).
-(function(){
-  var v=document.querySelector('.lp-cesar-vid');
-  if(!v||matchMedia('(prefers-reduced-motion:reduce)').matches||!('IntersectionObserver' in window))return;
-  var ua=navigator.userAgent;
-  var webkit=/iPhone|iPad|iPod/.test(ua)||(/Safari/.test(ua)&&!/Chrome|Chromium|CriOS|Edg|Firefox|FxiOS|Android/.test(ua));
-  var b='assets/landing/cesar-estribo.';
-  var ext=(!webkit&&v.canPlayType('video/webm; codecs="vp9"'))?'webm':'mp4';
-  if(ext==='mp4')v.classList.add('fundo-assado'); // MP4 tem fundo assado: borda esfumada esconde diferença de cor
-  new IntersectionObserver(function(es){
-    es.forEach(function(e){
-      if(e.isIntersecting){
-        if(!v.getAttribute('src'))v.src=b+ext;
-        var p=v.play();if(p&&p.catch)p.catch(function(){});
-      }else v.pause();
-    });
-  },{rootMargin:'200px 0px'}).observe(v);
-})();
-</script>
 
 <div id="login-view" class="hidden pm1-vitrine-escura">
   <picture>
@@ -6652,7 +6610,15 @@ var MascoteVitrine=(function initMascoteVitrine(){
       if(el)ioEsc.observe(el);
     });
   }
-  return {razao:razao};
+  // b252: resposta TOCADA na A2. Imediata (não entra na fila `pendente`: reação atrasada perde o sentido).
+  // Acertou = comemora; errou = olha para o cartão e aponta ("tenta de novo").
+  function reagirA2(acertou,card){
+    if(!m||oculto()||m.emEscada())return;
+    ultimoMov=performance.now();
+    if(acertou)m.tocar('comemorar');
+    else{if(card)m.olharPara(card);m.tocar('apontar');}
+  }
+  return {razao:razao,reagirA2:reagirA2};
 })();
 
 // PM1/6-D — fumaça das junções .lp-fumaca (landing). Só entra aqui (depois de
@@ -6696,7 +6662,6 @@ var MascoteVitrine=(function initMascoteVitrine(){
   var card=document.querySelector('#lp-a2 .lp-a2-card'),
       errada=document.getElementById('lp-a2-errada'),
       certa=document.getElementById('lp-a2-certa'),
-      cesar=document.getElementById('lp-a2-cesar'),
       exp=document.getElementById('lp-a2-exp'),
       fill=document.getElementById('lp-a2-dominio-fill'),
       pct=document.getElementById('lp-a2-dominio-pct'),
@@ -6707,20 +6672,7 @@ var MascoteVitrine=(function initMascoteVitrine(){
   // resolve sozinho como já fazia. resolvidoPeloToque trava o motor de scroll pra não
   // reescrever por cima do estado que a pessoa já viu (senão o próximo scroll "desfaz"
   // a resposta certa, porque o cálculo por progresso ainda não tinha chegado lá).
-  var resolvidoPeloToque=false,poseCesar='aponta',jaTremeuNestaPassagem=false;
-  // PM1/M6.5 — três poses (aponta/pensa/comemora), sempre a mesma dimensão (360x360
-  // nos masters) pra troca não pular. poseCesar só evita recarregar a MESMA pose de
-  // novo a cada tick de scroll — troca pra frente e pra trás segue o `p` atual, igual
-  // errada/certa/exp (nenhum desses trava depois de tocado; nem por toque o usuário
-  // volta, mas resolvidoPeloToque já cuida disso separadamente).
-  // Pré-carrega antes de trocar pra nunca mostrar um <img> quebrado.
-  function trocarCesarPose(pose){
-    if(poseCesar===pose||!cesar||!cesar.dataset[pose])return;
-    poseCesar=pose;
-    var alt=cesar.dataset[pose],teste=new Image();
-    teste.onload=function(){cesar.src=alt;cesar.classList.remove('mirror');};
-    teste.src=alt;
-  }
+  var resolvidoPeloToque=false,jaTremeuNestaPassagem=false;
   // PV1/b240: erro treme o CARTÃO inteiro (.lp-a2-card), não só a alternativa —
   // dispara 1x por chamada; quem controla "uma vez por passagem" é o chamador.
   // prefers-reduced-motion:reduce zera via CSS (@keyframes tremerCartaoKf).
@@ -6731,8 +6683,6 @@ var MascoteVitrine=(function initMascoteVitrine(){
   function estadoFinal(){
     errada.classList.remove('errada');
     certa.classList.add('correta');
-    cesar.classList.add('reage');
-    trocarCesarPose('comemora');
     exp.classList.add('show');
     fill.style.width=DOM_FIM+'%';
     pct.textContent=DOM_FIM+'%';
@@ -6741,7 +6691,6 @@ var MascoteVitrine=(function initMascoteVitrine(){
     opt.classList.add('errada');
     tremerCard();
     vibrarFeedback(false);
-    trocarCesarPose('pensa');
     if(dica){dica.classList.add('show');clearTimeout(dica._t);dica._t=setTimeout(function(){dica.classList.remove('show');},1100);}
     setTimeout(function(){opt.classList.remove('errada');},700);
   }
@@ -6749,8 +6698,10 @@ var MascoteVitrine=(function initMascoteVitrine(){
     opt.style.cursor='pointer';
     opt.addEventListener('click',function(){
       if(resolvidoPeloToque)return;
-      if(opt===certa){resolvidoPeloToque=true;vibrarFeedback(true);estadoFinal();}
+      var acertou=opt===certa;
+      if(acertou){resolvidoPeloToque=true;vibrarFeedback(true);estadoFinal();}
       else tentarDeNovo(opt);
+      if(MascoteVitrine)MascoteVitrine.reagirA2(acertou,card);
     });
   });
   scrollProgress(track,function(p){
@@ -6767,9 +6718,6 @@ var MascoteVitrine=(function initMascoteVitrine(){
       jaTremeuNestaPassagem=false;
     }
     certa.classList.toggle('correta',p>=0.55);
-    cesar.classList.toggle('reage',p>=0.55);
-    if(p>=0.55)trocarCesarPose('comemora');
-    else if(faseErrada)trocarCesarPose('pensa');
     exp.classList.toggle('show',p>=0.72);
     var domP=Math.min(1,Math.max(0,(p-0.70)/0.30));
     var domVal=Math.round(DOM_INI+(DOM_FIM-DOM_INI)*domP);
@@ -7945,7 +7893,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.348';
+const APP_VERSAO='v1.349';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -9885,7 +9833,7 @@ function mostrarFimSessao(){
     <button class="btn-weak btn-neutral" onclick="fecharFim()">Voltar ao início</button>`;
   g('modal-fim').classList.remove('hidden');
 
-  // APP-D bloco 1 (b242): coreografia do César + 3 blocos (.fim-stat), achados do
+  // APP-D bloco 1 (b242): coreografia do mascote (era o César até a v1.345) + 3 blocos (.fim-stat), achados do
   // protótipo em .tmp/appd_fim/. Reduced-motion: a regra global :207 zera duration
   // mas NUNCA animation-delay — zera o delay por elemento antes do replay, senão os
   // blocos ficam invisíveis até o delay original passar. O replay troca só
