@@ -492,7 +492,7 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .notif-item{padding:12px 0;border-bottom:1px solid var(--border);}
 .notif-item:last-child{border-bottom:none;}
 .notif-item-titulo{font-weight:700;font-size:13px;color:var(--text);}
-.notif-item-corpo{font-size:13px;color:var(--text2);margin-top:3px;line-height:1.5;}
+.notif-item-corpo{font-size:13px;color:var(--text2);margin-top:3px;line-height:1.5;white-space:pre-line;}
 .notif-item-data{font-size:11px;color:var(--text3);margin-top:5px;}
 
 /* CONTENT */
@@ -6805,11 +6805,13 @@ var MascoteVitrine=(function initMascoteVitrine(){
   // (`_mEsp` no card; sai da tela = nova visita). Nunca .plano-card nem CTA.
   //  A (lateral, só >=768 px): card inteiro ao lado dele (borda a <=120 px) cobrindo a faixa vertical dele.
   //  B (borda de cima, qualquer largura): borda de cima do card 24..44 px acima do pé, cobrindo o corpo dele.
+  //  <768 px a faixa abre para 4..56 (pé até perto da cabeça): medido b254, 375x812, a de 24..44 caía em 0-1 de ~100 paradas e nunca espiava. O motor corta em rc.top real e serve qualquer d dentro do corpo.
   //  No PC, B só quando A não tem candidato.
-  var ESP_DIST=120,ESP_CIMA_MIN=24,ESP_CIMA_MAX=44,CTA_SEL='.lp-btn-cta,.lp-btn-linha,.plano-btn-cta,.plano-btn-weak,.plano-card';
+  var ESP_DIST=120,ESP_CIMA_MIN=24,ESP_CIMA_MAX=44,ESP_CIMA_MIN_M=4,ESP_CIMA_MAX_M=56,CTA_SEL='.lp-btn-cta,.lp-btn-linha,.plano-btn-cta,.plano-btn-weak,.plano-card';
   function acharEspiar(){
     var r=m.el.getBoundingClientRect(),vw=document.documentElement.clientWidth||innerWidth,u=larg()/64,cards=landing.querySelectorAll('.lp-card'),
         i,c,rc,d,melhorA=null,melhorB=null,dA=1e9,dB=1e9;
+    var cMin=(vw<768?ESP_CIMA_MIN_M:ESP_CIMA_MIN)*u,cMax=(vw<768?ESP_CIMA_MAX_M:ESP_CIMA_MAX)*u;
     for(i=0;i<cards.length;i++){
       c=cards[i];
       if(c._mEsp||(c.closest&&c.closest(CTA_SEL))||(c.matches&&c.matches(CTA_SEL)))continue;
@@ -6822,7 +6824,7 @@ var MascoteVitrine=(function initMascoteVitrine(){
         if(d>=-16*u&&d<=ESP_DIST*u&&rc.right<r.right&&d<dA){dA=d;melhorA={card:c,tipo:'lado',lado:'esq',borda:rc.right};}
       }
       d=r.bottom-rc.top;
-      if(rc.left<=r.left+16*u&&rc.right>=r.right-16*u&&rc.bottom>=r.bottom&&d>=ESP_CIMA_MIN*u&&d<=ESP_CIMA_MAX*u&&Math.abs(d-34*u)<dB){
+      if(rc.left<=r.left+16*u&&rc.right>=r.right-16*u&&rc.bottom>=r.bottom&&d>=cMin&&d<=cMax&&Math.abs(d-34*u)<dB){
         dB=Math.abs(d-34*u);melhorB={card:c,tipo:'cima',borda:rc.top};
       }
     }
@@ -7091,9 +7093,11 @@ function _cenaPorTempo(secao,c){
     io=new IntersectionObserver(function(entries){
       entries.forEach(function(en){
         visivel=en.isIntersecting;
-        if(!visivel){if(ativo)parar();return;}
         // seção mais alta que ~3 telas nunca chega a CENA_LIMIAR: cobrir 60% da tela também dispara
-        if(!ativo&&(en.intersectionRatio>=CENA_LIMIAR||en.intersectionRect.height>=innerHeight*0.6))tocar();
+        var bastante=visivel&&(en.intersectionRatio>=CENA_LIMIAR||en.intersectionRect.height>=innerHeight*0.6);
+        if(c.bastante)c.bastante(bastante); // A4: só segura o mascote do rodapé enquanto a cena é a coisa em tela
+        if(!visivel){if(ativo)parar();return;}
+        if(!ativo&&bastante)tocar();
       });
     },{threshold:CENA_LIMIARES});
     io.observe(secao);
@@ -7527,7 +7531,7 @@ function _cenaPorTempo(secao,c){
   /* mascote por instante e (ms do ciclo). Avançando é função pura de e; segurando/desfazendo roda
      sozinho. Entrada (some o do rodapé) -> apontar -> jato até cortar -> parado; no desfazer sai de
      costas (sprite espelhado) e o do rodapé volta. */
-  var lastE=-1,undo=false;
+  var lastE=-1,undo=false,bastante=true; // bastante: A4 com >=34% na tela (mesmo limiar do disparo); abaixo disso o rodapé volta (jato da A3)
   function iniciarSaida(){
     mAuto=true;mAnim='andar';
     mSaida={t0:performance.now(),dur:Math.min(900,WALK_MS),dx:DX,anim:'andar'};
@@ -7537,6 +7541,7 @@ function _cenaPorTempo(secao,c){
     if(movimentoReduzido()){ // barras prontas; sem cena animada, fica só o mascote parado do rodapé
       mMostrar(false);rodapeCena(false);return;
     }
+    if(!bastante){mMostrar(false);rodapeCena(false);return;}
     if(undo){
       if(e<=0){if(!mSaida){mAuto=false;mMostrar(false);rodapeCena(false);}}
       else if(!mSaida&&!mel.classList.contains('off'))iniciarSaida();
@@ -7667,7 +7672,12 @@ function _cenaPorTempo(secao,c){
     medir:medirGeometria,
     preparar:function(){if(!amostrado){amostrarPontos();amostrado=true;}sortearParticulas();},
     desenhar:desenharFrame,
-    fim:FIM
+    fim:FIM,
+    bastante:function(v){
+      if(v===bastante)return;
+      bastante=v;
+      if(lastE>=0)mascoteDe(lastE); // reaplica no mesmo instante: some/volta sem esperar o próximo quadro
+    }
   });
   // Sem hook genérico de "tema mudou" no app hoje (conferido: aplicarTema() não tinha
   // nenhum registro de cena antes desta feature) — mantém _a4Recolorir dedicado.
@@ -8160,7 +8170,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.353';
+const APP_VERSAO='v1.354';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
