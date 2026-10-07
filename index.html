@@ -5806,6 +5806,9 @@ var MASCOTE_JATO_MS=2200;
 // Espiar (b253/MV2): tempos em ms. Medidas de arte (BORDA_X/Y) em px do quadro de 64; escalam com quadro/64 x escala.
 var ESP_BORDA_Y=34,ESP_BORDA_X=40,ESP_ESCONDE=14;   // ESP_ESCONDE = px do quadro que ficam de fora quando ele "some" andando (só margem vazia)
 var ESP_OCULTO_MS=1000,ESP_PULA_MS=160,ESP_ABAIXA_MS=380,ESP_OLHAR_MS=650,ESP_RAPIDO_MS=180,ESP_ESCONDIDO_MS=450,ESP_SOBE_MS=260,ESP_PULO_PX=8;
+// b255/MV3 (estadia atrás do card): mínimo/teto em ms (seguir:true), pausa ao reaparecer, afundar/emergir pelo rodapé, volta ao chão
+var ESP_MIN_MS=4000,ESP_MAX_MS=12000,ESP_ACENO_MS=1600,ESP_REOCULTO_MS=450,ESP_AFUNDA_MS=380,ESP_EMERGE_MS=380,ESP_VOLTA_MS=300;
+var ESP_POOL={cima:['olhar','acenar','continencia','comemorar','reespiar','trocar'],lado:['reespiar','outro']};   // sorteio sem repetir a anterior
 var ESC_DESENROLAR=180,ESC_SUBIR=1000,ESC_DESCER=800,ESC_RECOLHER=180,ESC_DEGRAU=8,ESC_ALTURA=96,ESC_GESTO_MS=1400,ESC_LARG=28;
 
 // ---------- funções puras ----------
@@ -5979,7 +5982,7 @@ function criar(opts){
          proxPiscar:0,agua:null,aguaAlvo:null,aguaSpawn:0,aguaAng:.3,aguaV:90,aguaMira:0,
          y:0,esc:null,chegouT:-1e9,esp:null,clip:null}; // y = px acima do rodapé (muda em subirEscada/espiar); esc = escalada; esp = espiar; clip = recorte
   var escala=2,vw=0,larg=Q*2;
-  var raf=null,ultimo=0,mostrando=false,naTela=true;
+  var raf=null,ultimo=0,mostrando=false,naTela=true,rnd=opts.rand||Math.random;
   var qCache='',tCache='',cCache='';
 
   function agora(){return performance.now();}
@@ -6137,40 +6140,92 @@ function criar(opts){
     aplicar();
   }
 
-  // ---------- espiar atrás do card (b253/MV2): a variante 'lado' (A, ≥768 px) entra andando pela lateral do card, some,
-  // vira e espia; a 'cima' (B) pula, passa para trás da borda de cima, abaixa, espia, olha para os lados e volta.
-  // "Atrás" = recorte na borda (nada muda de z-index). Qualquer rolagem (andarAte), resize, esconder, aba oculta cancela:
-  // sem recorte, inteiro na hora (aoTerminar(true)). Layout medido UMA vez, na chamada (o driver chama estacionado).
+  // ---------- espiar atrás do card (b253/MV2, b255/MV3): a variante 'lado' (≥768 px) entra andando pela lateral do card, some,
+  // vira e espia; a 'cima' pula, passa para trás da borda de cima, abaixa, espia, olha para os lados e volta; 'cima' remoto
+  // (card fora de alcance, qualquer largura) afunda pelo rodapé da tela, reaparece já recortado atrás da borda e volta por baixo.
+  // "Atrás" = recorte na borda (nada muda de z-index). Resize, esconder, aba oculta cancelam: sem recorte, inteiro na hora
+  // (aoTerminar(true)). Roteiro antigo (sem `seguir`): layout medido UMA vez, uma interação, rolagem cancela.
+  // b255 `seguir:true` + `card`: ESTADIA. Fica atrás pelo menos ESP_MIN_MS e, passado o mínimo, até a rolagem (ou ESP_MAX_MS).
+  // Rolar NÃO cancela (andarAte só marca `rolou`). GRUDADO NO CARD: 1 leitura de rect por quadro, só enquanto e.esp existe;
+  // a borda/posição do card recalcula y (cima) ou o desvio vertical (lado), então o recorte acompanha a rolagem.
+  // Entre as interações (sorteadas, sem repetir a anterior) ele espia, olha, acena, bate continência, comemora,
+  // some e reaparece no mesmo ponto/noutro ponto da borda (cima) ou do outro lado do card (lado). Só poses da folha v5.
   function eas(f){return f<.5?2*f*f:1-Math.pow(-2*f+2,2)/2;}
   function animMs(n){var a=tabela[n];return a.quadros*1000/a.fps+(a.segurarMs||0);}
   function espUn(){return Q/64*escala;}   // px CSS por px de arte (a arte é de 64)
+  function altTela(){return (typeof innerHeight==='number'&&innerHeight)||document.documentElement.clientHeight||0;}
+  function limitesTroca(s){                // faixa de x (canto esq. do quadro) onde ele pode ficar na borda de cima do card
+    var rc=s.rc;
+    return [Math.max(8,rc?rc.left:0),Math.min(vw-larg-8,rc?rc.right-larg:vw)];
+  }
+  function podeTrocar(s){var l=limitesTroca(s);return !!s.card&&l[1]-l[0]>=2*larg;}
+  function sortearEsp(s){
+    var p=ESP_POOL[s.tipo].filter(function(n){return n!==s.ultI&&(n!=='trocar'||podeTrocar(s))&&(n!=='outro'||s.outro);});
+    return p[Math.min(p.length-1,Math.floor(rnd()*p.length))];
+  }
+  function xOcultoLado(s,u){return s.lado==='dir'?s.borda-ESP_ESCONDE*u:s.borda-larg+ESP_ESCONDE*u;}
+  function trocarLado(s,u){                // escondido: passa para o outro lado do mesmo card
+    var rc=s.rc,paraEsq=s.lado==='dir';
+    s.lado=paraEsq?'esq':'dir';s.borda=paraEsq?rc.right:rc.left;
+    s.x0=Math.min(Math.max(8,paraEsq?s.borda+8*u:s.borda-larg-8*u),Math.max(8,vw-larg-8));
+    e.clip={tipo:'x',lado:s.lado,borda:s.borda};
+    e.x=xOcultoLado(s,u);e.flip=s.lado!=='dir';
+  }
+  function deveSairEsp(s,ts){
+    if(!s.seguir)return s.tipo==='lado'||s.n>=1;      // roteiro antigo: lado espia 1x; cima espia e olha 1x
+    var t=ts-s.tStay;
+    return t>=ESP_MAX_MS||(t>=ESP_MIN_MS&&s.rolou);
+  }
+  function proxEsp(s,ts){
+    if(deveSairEsp(s,ts)){faseEsp(s.tipo==='lado'?'sair':'baixa',ts);return;}
+    var k=s.seguir?sortearEsp(s):'olhar';
+    s.ultI=k;s.n++;
+    if(s.tipo==='lado'){s.trocaLado=(k==='outro');faseEsp('entrar',ts);return;}
+    if(k==='olhar')faseEsp('olhar1',ts);
+    else if(k==='reespiar'||k==='trocar'){s.reentra=true;s.troca=(k==='trocar');faseEsp('baixa',ts);}
+    else{s.gesto=k;faseEsp('gesto',ts);}
+  }
   function faseEsp(nome,ts){
     var s=e.esp,u=espUn(),dir=s.lado==='dir';
     s.fase=nome;s.t0=ts;s.ult=ts;
     if(s.tipo==='lado'){
       if(nome==='entrar'){
         iniciar('andar',ts);e.flip=!dir;e.clip={tipo:'x',lado:s.lado,borda:s.borda};
-        s.xAlvo=dir?s.borda-ESP_ESCONDE*u:s.borda-larg+ESP_ESCONDE*u;
-      }else if(nome==='oculto'){iniciar('parado',ts);e.flip=!dir;}
+        s.xAlvo=xOcultoLado(s,u);
+      }else if(nome==='oculto'){
+        iniciar('parado',ts);
+        if(s.trocaLado){s.trocaLado=false;trocarLado(s,u);dir=s.lado==='dir';}
+        e.flip=!dir;
+        s.ocultoMs=s.vez?ESP_REOCULTO_MS:ESP_OCULTO_MS;
+        if(s.tStay==null)s.tStay=ts;
+      }
       else if(nome==='espiar'){
+        s.vez++;
         iniciar('espiar_lado',ts);e.flip=dir;                     // card à direita: espelhado (olha p/ a esquerda); à esquerda: como desenhado
         e.x=dir?s.borda-larg+ESP_BORDA_X*u:s.borda-ESP_BORDA_X*u;  // x40 do quadro (antes do espelho) alinhado com a borda do card
         e.clip={tipo:'local',x0:Math.round(ESP_BORDA_X*u)};
       }else if(nome==='sair'){
         iniciar('andar',ts);e.flip=dir;e.clip={tipo:'x',lado:s.lado,borda:s.borda};s.xAlvo=s.x0;
-      }
+      }else if(nome==='volta'){e.clip=null;iniciar('parado',ts);s.yIni=e.y;}
+      else if(nome==='emerge'){iniciar('parado',ts);e.clip=null;e.x=s.x0;s.yOff=-((altTela()-s.topo)+2);e.y=s.yOff;}
     }else{
       var yO=s.topo-s.borda,yP=s.topo-(s.borda-ESP_BORDA_Y*u);    // yO: tudo abaixo da borda (sumiu); yP: y34 do quadro na borda (espiando)
       s.yO=yO;s.yP=yP;
-      if(nome==='pula'){iniciar('parado',ts);e.clip=null;}
+      if(nome==='afunda'){iniciar('parado',ts);e.clip=null;s.yOff=-((altTela()-s.topo)+2);}
+      else if(nome==='pula'){iniciar('parado',ts);e.clip=null;}
       else if(nome==='desce'){e.clip={tipo:'y',topo:s.topo,borda:s.borda};}
-      else if(nome==='oculto'){iniciar('parado',ts);}
-      else if(nome==='espiar'){iniciar('espiar_cima',ts);e.y=yP;e.clip={tipo:'local',y0:Math.round(ESP_BORDA_Y*u)};}
+      else if(nome==='oculto'){iniciar('parado',ts);s.ocultoMs=s.vez?ESP_REOCULTO_MS:ESP_OCULTO_MS;if(s.tStay==null)s.tStay=ts;}
+      else if(nome==='espiar'){s.vez++;iniciar('espiar_cima',ts);e.y=yP;e.clip={tipo:'local',y0:Math.round(ESP_BORDA_Y*u)};}
+      else if(nome==='gesto'){
+        iniciar(s.gesto,ts);e.y=yP;e.clip={tipo:'local',y0:Math.round(ESP_BORDA_Y*u)};
+        s.gMs=s.gesto==='acenar'?ESP_ACENO_MS:animMs(s.gesto);
+      }
       else if(nome==='olhar1'){e.flip=true;}
       else if(nome==='olhar2'){e.flip=false;}
       else if(nome==='baixa'){e.clip={tipo:'y',topo:s.topo,borda:s.borda};}   // mesmo recorte, agora preso à borda de tela
-      else if(nome==='escondido'){iniciar('parado',ts);}
-      else if(nome==='volta'){e.clip=null;}
+      else if(nome==='escondido'){iniciar('parado',ts);e.x=s.x0;}              // escondido: volta ao x de origem sem ninguém ver
+      else if(nome==='volta'){e.clip=null;s.yIni=e.y;}
+      else if(nome==='emerge'){iniciar('parado',ts);e.clip=null;e.x=s.x0;s.yOff=-((altTela()-s.topo)+2);e.y=s.yOff;}   // some atrás do recorte e sobe do rodapé
       // 'sobe' não precisa de preparo: segue com o recorte de tela e a pose de pé
     }
   }
@@ -6181,30 +6236,68 @@ function criar(opts){
     if(!abortou&&s.tipo==='lado')e.x=s.x0;
     iniciar('parado',ts!=null?ts:agora());
     aplicar();
-    if(cb)cb(!!abortou);
+    if(cb)cb(!!abortou,!!s.rolou);   // 2º arg: rolou durante a estadia (seguir)
+  }
+  // grudado: relê o card (1 rect por quadro) e recalcula o que depende dele. false = card (ou ele) saiu da tela.
+  function ancorarEsp(s){
+    var rc=s.card.getBoundingClientRect(),vh=altTela(),u=espUn();
+    s.rc=rc;
+    if(s.tipo==='cima'){
+      s.borda=rc.top;s.yO=s.topo-s.borda;s.yP=s.topo-(s.borda-ESP_BORDA_Y*u);
+      if(e.clip&&e.clip.tipo==='y')e.clip.borda=s.borda;
+      return !(vh>0&&(rc.top<ESP_BORDA_Y*u*.5||rc.top>vh));
+    }
+    s.dy=s.cardTop0-rc.top;
+    return !(vh>0&&(rc.bottom<0||rc.top>vh||s.topo-s.dy+larg<0||s.topo-s.dy>vh));
   }
   function passoEspiar(ts){
-    var s=e.esp,t=ts-s.t0,f,P=ESP_PULO_PX*escala,r,dt=Math.min(100,ts-s.ult);
+    var s=e.esp,t=ts-s.t0,f,P=ESP_PULO_PX*escala,r,dt=Math.min(100,ts-s.ult),l;
     s.ult=ts;
+    if(s.card&&s.fase!=='emerge'&&!ancorarEsp(s)){faseEsp('emerge',ts);aplicar();return;}   // card saiu da tela: volta por baixo
     if(s.tipo==='lado'){
+      if(s.fase!=='volta'&&s.fase!=='emerge')e.y=s.dy||0;                              // sobe e desce com o card
       if(s.fase==='entrar'||s.fase==='sair'){
         r=mascoteAvancar(e.x,s.xAlvo,dt,vel*escala);e.x=r.x;
-        if(r.chegou){if(s.fase==='sair'){encerrarEsp(false,ts);return;}faseEsp('oculto',ts);}
+        if(r.chegou){
+          if(s.fase==='sair'){if(s.seguir&&Math.abs(e.y)>.5)faseEsp('volta',ts);else{encerrarEsp(false,ts);return;}}
+          else faseEsp('oculto',ts);
+        }
       }
-      else if(s.fase==='oculto'){if(t>=ESP_OCULTO_MS)faseEsp('espiar',ts);}
-      else if(s.fase==='espiar'){if(t>=animMs('espiar_lado'))faseEsp('sair',ts);}
+      else if(s.fase==='oculto'){if(t>=s.ocultoMs)faseEsp('espiar',ts);}
+      else if(s.fase==='espiar'){if(t>=animMs('espiar_lado'))proxEsp(s,ts);}
+      else if(s.fase==='volta'){f=Math.min(1,t/ESP_VOLTA_MS);e.y=s.yIni*(1-eas(f));if(f>=1){encerrarEsp(false,ts);return;}}
+      else if(s.fase==='emerge'){f=Math.min(1,t/ESP_EMERGE_MS);e.y=s.yOff*(1-eas(f));if(f>=1){encerrarEsp(false,ts);return;}}
     }else{
-      if(s.fase==='pula'){f=Math.min(1,t/ESP_PULA_MS);e.y=P*f;if(f>=1)faseEsp('desce',ts);}
+      if(s.fase==='afunda'){
+        f=Math.min(1,t/ESP_AFUNDA_MS);e.y=s.yOff*eas(f);
+        if(f>=1){                                   // fora da tela: teleporta para trás da borda do card (100% recortado)
+          l=limitesTroca(s);e.x=Math.min(Math.max(s.x0,l[0]),Math.max(l[0],l[1]));
+          e.clip={tipo:'y',topo:s.topo,borda:s.borda};e.y=s.yO;
+          faseEsp('oculto',ts);
+        }
+      }
+      else if(s.fase==='pula'){f=Math.min(1,t/ESP_PULA_MS);e.y=P*f;if(f>=1)faseEsp('desce',ts);}
       else if(s.fase==='desce'){f=Math.min(1,t/ESP_PULA_MS);e.y=P*(1-f);if(f>=1)faseEsp('abaixa',ts);}
       else if(s.fase==='abaixa'){f=Math.min(1,t/ESP_ABAIXA_MS);e.y=s.yO*eas(f);if(f>=1)faseEsp('oculto',ts);}
-      else if(s.fase==='oculto'){if(t>=ESP_OCULTO_MS)faseEsp('espiar',ts);}
-      else if(s.fase==='espiar'){if(t>=animMs('espiar_cima'))faseEsp('olhar1',ts);}
-      else if(s.fase==='olhar1'){if(t>=ESP_OLHAR_MS)faseEsp('olhar2',ts);}
-      else if(s.fase==='olhar2'){if(t>=ESP_OLHAR_MS)faseEsp('baixa',ts);}
-      else if(s.fase==='baixa'){f=Math.min(1,t/ESP_RAPIDO_MS);e.y=s.yP+(s.yO-s.yP)*f;if(f>=1)faseEsp('escondido',ts);}
-      else if(s.fase==='escondido'){if(t>=ESP_ESCONDIDO_MS)faseEsp('sobe',ts);}
-      else if(s.fase==='sobe'){f=Math.min(1,t/ESP_SOBE_MS);e.y=s.yO+(P-s.yO)*eas(f);if(f>=1)faseEsp('volta',ts);}
-      else if(s.fase==='volta'){f=Math.min(1,t/ESP_PULA_MS);e.y=P*(1-f);if(f>=1){encerrarEsp(false,ts);return;}}
+      else if(s.fase==='oculto'){e.y=s.yO;if(t>=s.ocultoMs)faseEsp('espiar',ts);}
+      else if(s.fase==='espiar'){e.y=s.yP;if(t>=animMs('espiar_cima'))proxEsp(s,ts);}
+      else if(s.fase==='gesto'){e.y=s.yP;if(t>=s.gMs)faseEsp('espiar',ts);}
+      else if(s.fase==='olhar1'){e.y=s.yP;if(t>=ESP_OLHAR_MS)faseEsp('olhar2',ts);}
+      else if(s.fase==='olhar2'){e.y=s.yP;if(t>=ESP_OLHAR_MS)proxEsp(s,ts);}
+      else if(s.fase==='baixa'){
+        f=Math.min(1,t/ESP_RAPIDO_MS);e.y=s.yP+(s.yO-s.yP)*f;
+        if(f>=1){
+          if(s.reentra){                            // some e reaparece: no mesmo ponto ou noutro da borda de cima
+            s.reentra=false;
+            if(s.troca){l=limitesTroca(s);for(f=0;f<8;f++){r=l[0]+rnd()*(l[1]-l[0]);if(Math.abs(r-e.x)>=larg)break;}e.x=Math.min(Math.max(r,l[0]),Math.max(l[0],l[1]));s.troca=false;}
+            faseEsp('oculto',ts);
+          }else faseEsp('escondido',ts);
+        }
+      }
+      else if(s.fase==='escondido'){e.y=s.yO;if(t>=ESP_ESCONDIDO_MS)faseEsp(s.remoto?'emerge':'sobe',ts);}
+      else if(s.fase==='sobe'){f=Math.min(1,t/ESP_SOBE_MS);e.y=s.yO+((s.seguir?s.yO+larg:P)-s.yO)*eas(f);if(f>=1)faseEsp('volta',ts);}
+      else if(s.fase==='volta'){f=Math.min(1,t/ESP_PULA_MS);e.y=s.yIni*(1-f);if(f>=1){encerrarEsp(false,ts);return;}}
+      else if(s.fase==='emerge'){f=Math.min(1,t/ESP_EMERGE_MS);e.y=s.yOff*(1-eas(f));if(f>=1){encerrarEsp(false,ts);return;}}
     }
     aplicar();
   }
@@ -6252,7 +6345,7 @@ function criar(opts){
     passo(ts,dt);
     raf=requestAnimationFrame(laco);
   }
-  function deveRodar(){return mostrando&&naTela&&!document.hidden&&!reduzido();}
+  function deveRodar(){return mostrando&&(naTela||!!e.esp)&&!document.hidden&&!reduzido();}   // espiar remoto afunda para fora da tela de propósito: o laço segue
   function atualizarLaco(){
     if(deveRodar()){
       if(raf==null){ultimo=0;raf=requestAnimationFrame(laco);}
@@ -6279,7 +6372,10 @@ function criar(opts){
     },
     andarAte:function(xPx,o){
       o=o||{};
-      if(e.esp)encerrarEsp(true);   // rolar cancela o espiar (andarAte é o que a rolagem chama)
+      if(e.esp){                    // rolar cancela o espiar (andarAte é o que a rolagem chama); na estadia (seguir) só marca
+        if(e.esp.seguir){e.esp.rolou=true;return;}
+        encerrarEsp(true);
+      }
       var x=limitar(xPx);
       if(reduzido()){e.x=x;e.alvo=null;aplicar();if(o.aoChegar)o.aoChegar();return;}
       e.alvo=x;e.correr=!!o.correr;e.aoChegar=o.aoChegar||null;
@@ -6334,8 +6430,11 @@ function criar(opts){
       if(e.esp||e.esc||!mostrando||reduzido()||(o.tipo!=='lado'&&o.tipo!=='cima'))return false;
       var r=el.getBoundingClientRect();
       limparAgua();e.alvo=null;e.aoChegar=null;e.aoTerminar=null;e.duracao=null;
-      e.esp={tipo:o.tipo,lado:o.lado==='esq'?'esq':'dir',borda:o.borda,x0:e.x,topo:r.top+snap(e.y),aoTerminar:o.aoTerminar||null,fase:'',t0:0,ult:0};
-      faseEsp(o.tipo==='lado'?'entrar':'pula',agora());
+      var rc=o.card?o.card.getBoundingClientRect():null;
+      e.esp={tipo:o.tipo,lado:o.lado==='esq'?'esq':'dir',borda:o.borda,x0:e.x,topo:r.top+snap(e.y),aoTerminar:o.aoTerminar||null,fase:'',t0:0,ult:0,
+             card:rc?o.card:null,rc:rc,cardTop0:rc?rc.top:0,seguir:!!(rc&&o.seguir),remoto:!!(rc&&o.remoto&&o.tipo==='cima'),outro:!!o.outro,
+             rolou:false,n:0,vez:0,tStay:null,ultI:'',dy:0,reentra:false,troca:false,trocaLado:false};
+      faseEsp(o.tipo==='lado'?'entrar':(e.esp.remoto?'afunda':'pula'),agora());
       atualizarLaco();
       return true;
     },
@@ -6744,6 +6843,9 @@ var MascoteVitrine=(function initMascoteVitrine(){
     var r=m.el.getBoundingClientRect(),vw=document.documentElement.clientWidth||innerWidth;
     if(!(r.bottom>r.top))return;
     var x=mascoteXParada(r.left,vw,larg(),function(x){return livreEm(x,r,vw);},destino!=null?destino:xDe(ultP)); // lado = onde ele está agora
+    // b255/MV3: se há card ao alcance (lateral mais perto que a borda, topo na faixa ou topo remoto) o destino é o card; sem seção pendente e sem reduced-motion
+    var c=(!pendente()&&!movimentoReduzido())?acharCard(r,vw,Math.abs(x-r.left)):null;
+    if(c&&c.tipo==='lado')x=c.x; // lateral: anda até a quina do card; topo (cima/remoto): vai ao x livre de sempre e espia dali (volta a ele, sem cobrir texto)
     destino=x;ultimoMov=performance.now();estac=false; // o ócio só conta depois que ele chega
     m.andarAte(x,{correr:true,aoChegar:function(){ultimoMov=performance.now();estac=true;espiarVez=true;tentarAcao();}}); // b253: corre até a borda; só estacionado começa ação
   }
@@ -6801,46 +6903,71 @@ var MascoteVitrine=(function initMascoteVitrine(){
     return tentarEspiar();
   }
 
-  // ---- espiar atrás do card (b253/MV2 item 2). Candidatos medidos SÓ aqui (parada), 1x por card por visita
-  // (`_mEsp` no card; sai da tela = nova visita). Nunca .plano-card nem CTA.
-  //  A (lateral, só >=768 px): card inteiro ao lado dele (borda a <=120 px) cobrindo a faixa vertical dele.
-  //  B (borda de cima, qualquer largura): borda de cima do card 24..44 px acima do pé, cobrindo o corpo dele.
-  //  <768 px a faixa abre para 4..56 (pé até perto da cabeça): medido b254, 375x812, a de 24..44 caía em 0-1 de ~100 paradas e nunca espiava. O motor corta em rc.top real e serve qualquer d dentro do corpo.
-  //  No PC, B só quando A não tem candidato.
-  var ESP_DIST=120,ESP_CIMA_MIN=24,ESP_CIMA_MAX=44,ESP_CIMA_MIN_M=4,ESP_CIMA_MAX_M=56,CTA_SEL='.lp-btn-cta,.lp-btn-linha,.plano-btn-cta,.plano-btn-weak,.plano-card';
-  function acharEspiar(){
-    var r=m.el.getBoundingClientRect(),vw=document.documentElement.clientWidth||innerWidth,u=larg()/64,cards=landing.querySelectorAll('.lp-card'),
-        i,c,rc,d,melhorA=null,melhorB=null,dA=1e9,dB=1e9;
-    var cMin=(vw<768?ESP_CIMA_MIN_M:ESP_CIMA_MIN)*u,cMax=(vw<768?ESP_CIMA_MAX_M:ESP_CIMA_MAX)*u;
+  // ---- espiar atrás do card (b253/MV2 item 2, b255/MV3). Candidatos medidos SÓ na parada (parar() e na chegada),
+  // 1x por card por visita (`_mEsp` no card; sai da tela = nova visita). Nunca .plano-card nem CTA (e a caixa de espiar
+  // nunca toca um CTA). LP_CARDS = todo card da vitrine; 13 hoje (11 .lp-card + .lp-video-card + .lp-a2-card).
+  // Prioridade (menor classe ganha; dentro dela, o mais perto):
+  //  0 lateral (>=768 px): card ao lado cobrindo a faixa vertical dele, lateral externa livre; só se custo (px a andar) < custo da borda
+  //  1 topo na faixa do corpo: borda de cima do card 24..44 px acima do pé (4..56 em <768, b254) cobrindo o corpo -> 'pula'
+  //  2 topo remoto (qualquer largura): borda de cima visível (>=ESP_TOPO_MIN do alto) fora da faixa -> ele afunda pelo rodapé e
+  //    reaparece recortado atrás dela (o motor teleporta enquanto 100% escondido). É o que faz o celular não depender da rolagem.
+  var ESP_DIST=120,ESP_CIMA_MIN=24,ESP_CIMA_MAX=44,ESP_CIMA_MIN_M=4,ESP_CIMA_MAX_M=56,ESP_TOPO_MIN=72,
+      LP_CARDS='.lp-card,.lp-video-card,.lp-a2-card',CTA_SEL='.lp-btn-cta,.lp-btn-linha,.plano-btn-cta,.plano-btn-weak,.plano-card';
+  function pendente(){return ORDEM.some(function(k){return visto[k]>=0&&!vistas[k];});} // há seção vista e ainda sem ação: ela tem prioridade
+  // r = retângulo do mascote; maxCusto = px que ele aceita andar até a lateral de um card (parar(): o custo da borda)
+  function acharCard(r,vw,maxCusto){
+    var u=larg()/64,vh=(typeof innerHeight==='number'&&innerHeight)||document.documentElement.clientHeight,cards=landing.querySelectorAll(LP_CARDS),
+        ctas=[].map.call(landing.querySelectorAll(CTA_SEL),function(c){return c.getBoundingClientRect();}),
+        cMin=(vw<768?ESP_CIMA_MIN_M:ESP_CIMA_MIN)*u,cMax=(vw<768?ESP_CIMA_MAX_M:ESP_CIMA_MAX)*u,
+        melhor=null,mc=9,md=1e9,i,c,rc,d,x,x2,custo,cls,lado;
+    function toca(xx,top,bottom){ // a caixa de espiar (do topo da cabeça até a borda) encosta num CTA?
+      return ctas.some(function(q){return q.width>0&&q.left<xx+larg()&&q.right>xx&&q.top<bottom&&q.bottom>top;});
+    }
+    function cand(k,dist,o){if(k<mc||(k===mc&&dist<md)){mc=k;md=dist;melhor=o;}}
     for(i=0;i<cards.length;i++){
       c=cards[i];
       if(c._mEsp||(c.closest&&c.closest(CTA_SEL))||(c.matches&&c.matches(CTA_SEL)))continue;
       rc=c.getBoundingClientRect();
-      if(!(rc.width>=larg())||!(rc.height>0))continue;
+      if(!(rc.width>=larg())||!(rc.height>0)||rc.bottom<=0||rc.top>=vh)continue;
       if(vw>=768&&rc.top<=r.top+2*u&&rc.bottom>=r.bottom-2*u){
-        d=rc.left-r.right;
-        if(d>=-16*u&&d<=ESP_DIST*u&&rc.left>r.left&&d<dA){dA=d;melhorA={card:c,tipo:'lado',lado:'dir',borda:rc.left};}
-        d=r.left-rc.right;
-        if(d>=-16*u&&d<=ESP_DIST*u&&rc.right<r.right&&d<dA){dA=d;melhorA={card:c,tipo:'lado',lado:'esq',borda:rc.right};}
+        [['dir',rc.left-larg()-8*u,rc.right+8*u,rc.left],['esq',rc.right+8*u,rc.left-larg()-8*u,rc.right]].forEach(function(l){
+          x=l[1];custo=Math.abs(x-r.left);
+          if(x<8||x>vw-larg()-8||custo>=maxCusto||(l[0]==='dir'?rc.left<=r.left:rc.right>=r.right)||!livreEm(x,r,vw)||toca(x,r.top,r.bottom))return;
+          x2=l[2];
+          cand(0,custo,{card:c,tipo:'lado',lado:l[0],borda:l[3],x:x,remoto:false,outro:x2>=8&&x2<=vw-larg()-8&&livreEm(x2,r,vw)});
+        });
       }
+      if(rc.top<ESP_TOPO_MIN||rc.top>vh-8)continue;
       d=r.bottom-rc.top;
-      if(rc.left<=r.left+16*u&&rc.right>=r.right-16*u&&rc.bottom>=r.bottom&&d>=cMin&&d<=cMax&&Math.abs(d-34*u)<dB){
-        dB=Math.abs(d-34*u);melhorB={card:c,tipo:'cima',borda:rc.top};
-      }
+      x=Math.min(Math.max(r.left,rc.left),Math.max(rc.left,rc.right-larg()));
+      if(toca(x,rc.top-34*u-4,rc.top+4))continue;
+      if(d>=cMin&&d<=cMax&&rc.left<=r.left+16*u&&rc.right>=r.right-16*u&&rc.bottom>=r.bottom)cand(1,Math.abs(d-34*u),{card:c,tipo:'cima',borda:rc.top,x:r.left,remoto:false,outro:false});
+      else cand(2,Math.abs(d),{card:c,tipo:'cima',borda:rc.top,x:r.left,remoto:true,outro:false}); // x = onde está: o motor teleporta escondido
     }
-    return melhorA||melhorB;
+    return melhor;
   }
   function tentarEspiar(){
     if(!espiarVez)return false;
-    if(ORDEM.some(function(k){return visto[k]>=0&&!vistas[k];}))return false; // ainda há seção pendente: ela tem prioridade
+    if(pendente())return false; // ainda há seção pendente: ela tem prioridade
     espiarVez=false;
-    var c=acharEspiar();
+    var r=m.el.getBoundingClientRect(),vw=document.documentElement.clientWidth||innerWidth,c=acharCard(r,vw,ESP_DIST*larg()/64);
     if(!c)return false;
     var t={k:'espiar',acao:'espiar',abortavel:false};
     acaoAtiva=t;
-    if(!m.espiar({tipo:c.tipo,lado:c.lado,borda:c.borda,aoTerminar:fimDe(t)})){if(acaoAtiva===t)acaoAtiva=null;return false;}
+    if(!m.espiar({tipo:c.tipo,lado:c.lado,borda:c.borda,card:c.card,seguir:true,remoto:c.remoto,outro:c.outro,aoTerminar:fimEspiar(t)})){if(acaoAtiva===t)acaoAtiva=null;return false;}
     c.card._mEsp=1;estac=false;ultimoMov=performance.now();
     return true;
+  }
+  // fim da estadia: sem aborto, rolou -> volta a acompanhar a rolagem e re-agenda a parada; quieto -> estaciona e libera a fila
+  function fimEspiar(eu){
+    var fim=fimDe(eu);
+    return function(abortou,rolou){
+      fim();
+      if(abortou||!m)return;
+      ultimoMov=performance.now();
+      if(rolou){m.andarAte(ultAlvo,{correr:false});agendarParar(900);}
+      else{estac=true;tentarAcao();}
+    };
   }
 
   // ---- ócio: 7 s parado senta, 20 s cochila (rolar levanta: o motor volta a andar)
@@ -6876,7 +7003,7 @@ var MascoteVitrine=(function initMascoteVitrine(){
     var ioCard=new IntersectionObserver(function(es){
       es.forEach(function(en){if(!en.isIntersecting)en.target._mEsp=0;});
     });
-    [].forEach.call(landing.querySelectorAll('.lp-card'),function(c){ioCard.observe(c);});
+    [].forEach.call(landing.querySelectorAll(LP_CARDS),function(c){ioCard.observe(c);});
   }
   // b252: resposta TOCADA na A2. Imediata (não entra na fila `pendente`: reação atrasada perde o sentido).
   // Acertou = comemora; errou = olha para o cartão e aponta ("tenta de novo").
@@ -8170,7 +8297,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.354';
+const APP_VERSAO='v1.355';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
