@@ -2034,6 +2034,8 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
    do #metas-card (alvo do tour, lição b156). */
 /* --mascote-oy: o motor (criarPose) seta por ação; na borda (pernas penduradas) o assento y47 desce até a borda do card. Não é transform: este já é o scaleX(-1). */
 #metas-card>.mascote-pose{position:absolute;right:14px;bottom:100%;margin-bottom:calc(-1px - var(--mascote-oy,0px));transform:scaleX(-1);}
+/* b256: caminhada até o botão da Sessão do dia: a pose vira position:fixed (JS, _mascoteMover) para sair do overflow do .dash-hero; filho do card, não muda o rect dele. .indo = por cima do botão */
+#metas-card>.mascote-pose.indo{z-index:2;}
 /* P3b/B1: o aceno é de frente (a arte não espelha, igual à vitrine) */
 #metas-card>.mascote-pose.de-frente{transform:none;}
 @media(prefers-reduced-motion:reduce){.mascote,.mascote-escada{transition:none;}}
@@ -6519,18 +6521,24 @@ function setMascote(on){
 // Comemoração da meta: 1x por dia por aparelho. Pura para o teste (harness_p3_mascote_app.js).
 function mascoteDeveComemorar(completo,ultimoDia,hoje){return !!completo&&ultimoDia!==hoje;}
 // P3b/B3: marcos da sequência (dias seguidos) que rendem continência, 1x por marco.
-var MASCOTE_MARCOS=[7,30,60,100],MASCOTE_ACENO_MS=1600;
-// P3b: reação da Home ao abrir. Prioridade meta > marco > aceno (1 reação por abertura). Pura para o teste
-// (teste_p3b_mascote_reacoes.js). o: {completo,ultMeta,hoje,streak,ultMarco,ultAceno,visivel}. Retorna
-// {acao,marco?} ou null. A meta ignora `visivel` (o chamador já exige a Home ativa); marco e aceno não
-// tocam com a aba oculta (senão a marca do dia queimava sem ninguém ver).
+var MASCOTE_MARCOS=[7,30,60,100],MASCOTE_ACENO_MS=1600,MASCOTE_AUSENCIA_DIAS=2;
+// P3b: reação da Home ao abrir. Prioridade (1 reação por abertura): meta > marco > volta de ausência >
+// revisão vencida > aceno do dia. Pura para o teste (teste_p3b_mascote_reacoes.js).
+// o: {completo,ultMeta,hoje,streak,ultMarco,ultAceno,visivel, ausDias,lastStudy,ultVolta, vencidas,sessaoFeita}.
+// Retorna {acao,marco?,volta?} ou null. A meta ignora `visivel` (o chamador já exige a Home ativa); o resto
+// não toca com a aba oculta (senão a marca do dia queimava sem ninguém ver).
+// b256: volta = >=MASCOTE_AUSENCIA_DIAS dias (locais) sem estudar, 1x por volta (a marca é o lastStudyDate que
+// originou a ausência: estudar de novo muda o valor e a próxima ausência vale de novo). revisão = há questão JÁ
+// VISTA vencida (o chamador conta; nunca vista não conta) e a Sessão do dia não foi feita; 1x por dia pela
+// marca do aceno (toda reação a gasta). Sem texto, sem pose triste: nada punitivo.
 function mascoteReacaoHome(o){
   if(mascoteDeveComemorar(o.completo,o.ultMeta,o.hoje))return {acao:'comemorar'};
   if(!o.visivel)return null;
   var m=0;
   for(var i=0;i<MASCOTE_MARCOS.length;i++)if((o.streak||0)>=MASCOTE_MARCOS[i])m=MASCOTE_MARCOS[i];
   if(m>(o.ultMarco||0))return {acao:'continencia',marco:m};
-  if(o.ultAceno!==o.hoje)return {acao:'acenar'};
+  if(o.lastStudy&&(o.ausDias||0)>=MASCOTE_AUSENCIA_DIAS&&o.ultVolta!==o.lastStudy)return {acao:'volta',volta:o.lastStudy};
+  if(o.ultAceno!==o.hoje)return {acao:(o.vencidas||0)>0&&!o.sessaoFeita?'revisao':'acenar'};
   return null;
 }
 function _mascoteChave(nome){return 'ctsp_mascote_'+nome+'_'+((typeof currentUser!=='undefined'&&currentUser&&currentUser.uid)||'');}
@@ -6543,33 +6551,127 @@ function _mascoteAgendarCochilo(p){
   clearTimeout(_mascoteCochiloTm);
   _mascoteCochiloTm=setTimeout(function(){p.base('cochilar_borda');p.tocar('cochilar_borda');},MASCOTE_COCHILO_MS);
 }
+// b256: volta o mascote ao lugar de base (borda do card); vale ao fim, ao cancelar e ao interromper.
+var _mascoteMovRaf=0;
+function _mascoteHomeSoltar(p){
+  var s=p.el.style;
+  cancelAnimationFrame(_mascoteMovRaf);_mascoteMovRaf=0;
+  s.position='';s.left='';s.top='';s.right='';s.bottom='';s.margin='';
+  p.el.classList.remove('indo');
+  document.removeEventListener('scroll',_mascoteHomeRolou,true);
+}
+// b256: o .dash-hero tem overflow:hidden e o botão da Sessão do dia fica fora dele; para andar até lá a pose vira
+// position:fixed no mesmo ponto (fixed não é cortado pelo overflow do ancestral). Fixo não acompanha a rolagem:
+// rolar durante a caminhada interrompe e ele volta sentado na borda.
+function _mascoteHomeFixar(p){
+  var r=p.el.getBoundingClientRect(),s=p.el.style;
+  s.position='fixed';s.left=r.left+'px';s.top=r.top+'px';s.right='auto';s.bottom='auto';s.margin='0';
+  p.el.classList.add('indo');
+  document.addEventListener('scroll',_mascoteHomeRolou,true);
+}
+// Só a rolagem da Home aborta (o scroller é o .app-content; no PC/Safari pode ser o próprio documento). Scroll de carrossel,
+// lista interna ou textarea é de outro elemento e não mexe na posição do botão em relação à pose.
+function _mascoteHomeRolou(ev){
+  var t=ev&&ev.target,p=_mascoteHomeP;
+  if(!p||(t&&t!==document&&t!==document.scrollingElement&&!(t.classList&&t.classList.contains('app-content'))))return;
+  _mascoteHomeCancelar();_mascoteHomeBorda(p);
+}
+// Uma perna da caminhada, quadro a quadro (linear): da posição `de()` até `para()`, ambas lidas AO VIVO ({x,y} de
+// tela do canto da pose) — a Home ainda pode se reorganizar (faixas que entram depois) e o destino acompanha.
+// Chegou: continua colado em para() a cada quadro até a próxima perna ou o Soltar. Devolve a duração (ms).
+var MASCOTE_IR_PX_S=100; // caminhada: px de tela por segundo
+function _mascoteMover(p,de,para){
+  cancelAnimationFrame(_mascoteMovRaf);
+  var a=de(),b0=para(),d=Math.sqrt(Math.pow(b0.x-a.x,2)+Math.pow(b0.y-a.y,2));
+  var ms=Math.max(500,Math.min(2600,d/MASCOTE_IR_PX_S*1000)),t0=performance.now(),s=p.el.style;
+  (function f(now){
+    var k=Math.max(0,Math.min(1,(now-t0)/ms)),b=para(),q=p.el.getBoundingClientRect();
+    // um ancestral com transform (o #screen-inicio, animado ao entrar) vira o bloco de contenção do fixed: a diferença
+    // entre onde a pose está e o left/top escrito é a origem dele, lida a cada quadro (a animação de entrada ainda mexe nela)
+    var ox=q.left-parseFloat(s.left),oy=q.top-parseFloat(s.top);
+    s.left=(a.x+(b.x-a.x)*k-ox)+'px';s.top=(a.y+(b.y-a.y)*k-oy)+'px';
+    _mascoteMovRaf=requestAnimationFrame(f);
+  })(t0);
+  return ms;
+}
 function _mascoteHomeBorda(p){
+  _mascoteHomeSoltar(p);
   p.el.classList.remove('de-frente');
   p.base('borda');p.tocar('borda');
   _mascoteAgendarCochilo(p);
 }
-// Sequência de poses da Home. passos: [[acao,msLaco?]...]. Não-loop encadeia pelo aoFim; ação em laço
-// (acenar) termina pelo timer msLaco. No fim cai sempre sentado na borda. Nunca pula da borda direto para pé:
+// Sequência de poses da Home. passos: [[acao,msLaco?,fn?]...]. Não-loop encadeia pelo aoFim; ação em laço
+// (acenar, correr) termina pelo timer msLaco. No fim cai sempre sentado na borda. Nunca pula da borda direto para pé:
 // quem está sentado passa por `levantar` antes (_mascoteHomeReagir) e volta por `sentar_borda`.
+// fn(p) (b256) roda no início do passo, já depois do espelhamento; devolver número = vale como msLaco, false = pula o passo.
 function _mascoteHomeSeq(p,passos){
   clearTimeout(_mascoteCochiloTm);clearTimeout(_mascoteSeqTm);
+  _mascoteHomeSoltar(p); // interrompeu uma caminhada: volta ao card antes da próxima sequência
   var id=++_mascoteSeqId,i=0;
   _mascoteSeqAtiva=true;
   (function prox(){
     if(id!==_mascoteSeqId)return;
     if(i>=passos.length){_mascoteSeqAtiva=false;_mascoteHomeBorda(p);return;}
-    var pa=passos[i++];
+    var pa=passos[i++],ms=pa[1];
     p.el.classList.toggle('de-frente',pa[0]==='acenar'); // aceno de frente: a arte não espelha (igual à vitrine)
     p.base('parado');
-    if(pa[1]){p.tocar(pa[0]);_mascoteSeqTm=setTimeout(prox,pa[1]);}
+    if(pa[2]){var rv=pa[2](p);if(rv===false){prox();return;}if(typeof rv==='number')ms=rv;}
+    if(ms){p.tocar(pa[0]);_mascoteSeqTm=setTimeout(prox,ms);}
     else p.tocar(pa[0],prox);
   })();
 }
-function _mascoteHomeCancelar(){clearTimeout(_mascoteCochiloTm);clearTimeout(_mascoteSeqTm);_mascoteSeqId++;_mascoteSeqAtiva=false;}
+function _mascoteHomeCancelar(){
+  clearTimeout(_mascoteCochiloTm);clearTimeout(_mascoteSeqTm);_mascoteSeqId++;_mascoteSeqAtiva=false;
+  if(_mascoteHomeP)_mascoteHomeSoltar(_mascoteHomeP);
+}
+// b256: apontar a Sessão do dia. A arte só aponta na horizontal e o botão fica abaixo do card, então o gesto é
+// "de pé em cima da borda do botão, braço ao longo dele". Anda até lá só se o botão inteiro cabe na tela sem
+// rolar (entre o cabeçalho e a barra inferior); senão aponta do card mesmo, virado para o lado dele.
+// Decide e mede no início de cada passo (a Home pode ter rolado/reorganizado desde que a reação foi decidida).
+function _mascoteBotaoSessao(){return document.querySelector('#screen-inicio .adapt-btn.rec');}
+function _mascoteBotaoVisivel(b){
+  if(!b)return false;
+  var r=b.getBoundingClientRect(),hd=document.getElementById('app-header'),nv=document.getElementById('bottom-nav');
+  var topo=hd?hd.getBoundingClientRect().bottom:0,base=innerHeight;
+  if(nv){var nr=nv.getBoundingClientRect();if(nr.top>innerHeight/2)base=nr.top;} // barra inferior (no PC é lateral)
+  return r.width>0&&r.height>0&&r.top-64>=topo&&r.bottom<=base;
+}
+function _mascoteApontarSessao(){
+  var anda=false,home=null; // home = deslocamento da pose em relação ao canto do card (a base dela)
+  function virar(p,dx){p.el.classList.toggle('de-frente',dx>4);} // arte nativa olha para a direita; o CSS espelha para a esquerda
+  var ult={x:0,y:0};
+  function noBotao(){var b=_mascoteBotaoSessao();if(!b)return ult;var r=b.getBoundingClientRect();return (ult={x:r.right-14-64,y:r.top+1-64});} // pé na borda de cima, canto direito
+  function naBase(){var c=document.getElementById('metas-card').getBoundingClientRect();return {x:c.left+home.x,y:c.top+home.y};}
+  return [
+    ['correr',1,function(p){ // já de pé na base (levantou antes)
+      anda=_mascoteBotaoVisivel(_mascoteBotaoSessao());
+      if(!anda)return false;
+      var pr=p.el.getBoundingClientRect(),c=document.getElementById('metas-card').getBoundingClientRect();
+      home={x:pr.left-c.left,y:pr.top-c.top};
+      var alvo=noBotao();virar(p,alvo.x-pr.left);_mascoteHomeFixar(p);
+      return _mascoteMover(p,function(){return {x:pr.left,y:pr.top};},noBotao);
+    }],
+    ['apontar',0,function(p){
+      var b=_mascoteBotaoSessao();if(!b)return;
+      // na borda do botão aponta para dentro dele (esquerda); do card, para o lado onde o botão está
+      var r=b.getBoundingClientRect(),pr=p.el.getBoundingClientRect();
+      virar(p,anda?-1:(r.left+r.width/2)-(pr.left+pr.width/2));
+    }],
+    ['correr',1,function(p){
+      if(!anda)return false;
+      var a=noBotao(),h=naBase();virar(p,h.x-a.x);
+      return _mascoteMover(p,noBotao,naBase);
+    }]
+  ];
+}
 function _mascoteHomeReagir(p,acao){
   var s=[];
   if(_mascoteSentada(p))s.push(['levantar']);
-  s.push(acao==='acenar'?['acenar',MASCOTE_ACENO_MS]:[acao]);
+  if(acao==='volta'||acao==='revisao'){
+    if(acao==='volta')s.push(['acenar',MASCOTE_ACENO_MS]);
+    else s.push(['parado',350]); // respiro: a reação nasce no topo do renderDashboard, antes de a Home terminar de se desenhar; a medida do botão vem depois dele
+    s=s.concat(_mascoteApontarSessao());
+  }else s.push(acao==='acenar'?['acenar',MASCOTE_ACENO_MS]:[acao]);
   s.push(['sentar_borda']);
   _mascoteHomeSeq(p,s);
 }
@@ -6592,6 +6694,13 @@ function _mascoteHomeClique(ev){
   if(ev.target.closest&&ev.target.closest(_MASCOTE_INTERATIVO))return;
   _mascoteHomeReagir(p,'acenar');
 }
+// b256: progresso lido (ou espelho local offline) E banco de questões populado. cargaInicialTentada sozinho não basta: vira
+// true no fim do loadUserData, antes do loadQuestoes, e também no fallback sem leitura.
+function _mascoteDadosProntos(){
+  if(!cargaInicialTentada||!(dataLoaded||progressoLocalOk))return false;
+  for(var k in allQuestoes)return true;
+  return false;
+}
 // acordar=true: entrou na Home agora (navTo) -> senta de novo mesmo se estava cochilando.
 // Os outros renderDashboard() só criam/mantêm. Só reage com a Home VISÍVEL (o render pós-quiz
 // roda com a tela do Quiz ativa; a reação tocaria escondida e a marca do dia ficaria gasta) e sem
@@ -6608,12 +6717,18 @@ function mascoteHome(acordar){
   p.el.classList.remove('hidden');
   var sc=document.getElementById('screen-inicio'),naHome=!!(sc&&sc.classList.contains('active'));
   var hoje=diaLocal();
-  var r=(naHome&&!_mascoteReduzido())?mascoteReacaoHome({completo:diaCompleto(),ultMeta:_mascoteLer('meta'),hoje:hoje,
-    streak:userStats.streak,ultMarco:parseInt(_mascoteLer('marco'),10)||0,ultAceno:_mascoteLer('aceno'),
-    visivel:!document.hidden}):null;
+  // b256: sem a 1ª carga do progresso e do banco não há ausência nem vencidas para ler; reagir agora gastaria a marca do dia
+  // com um aceno (o renderDashboard() do fim do initApp reavalia quando a carga termina). As contas só rodam enquanto a marca do dia está livre (a vencida varre o banco, 1x por dia).
+  var pronto=naHome&&!_mascoteReduzido()&&_mascoteDadosProntos(),ultAceno=_mascoteLer('aceno'),last=userStats.lastStudyDate||'';
+  var feita=treinoFeitoHoje(),livre=pronto&&!document.hidden&&ultAceno!==hoje;
+  var r=pronto?mascoteReacaoHome({completo:diaCompleto(),ultMeta:_mascoteLer('meta'),hoje:hoje,
+    streak:userStats.streak,ultMarco:parseInt(_mascoteLer('marco'),10)||0,ultAceno:ultAceno,
+    visivel:!document.hidden,lastStudy:last,ausDias:last?diffDias(last,hoje):0,ultVolta:_mascoteLer('volta'),
+    sessaoFeita:feita,vencidas:(livre&&!feita)?questoesDueHoje().length:0}):null;
   if(r){
-    _mascoteGravar('aceno',hoje); // qualquer reação gasta o aceno do dia (meta/marco tomam o lugar dele)
+    _mascoteGravar('aceno',hoje); // qualquer reação gasta o aceno do dia (meta/marco/volta tomam o lugar dele)
     if(r.acao==='comemorar')_mascoteGravar('meta',hoje);else if(r.marco)_mascoteGravar('marco',String(r.marco));
+    else if(r.volta)_mascoteGravar('volta',r.volta);
     _mascoteHomeReagir(p,r.acao);
     return;
   }
@@ -8297,7 +8412,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.355';
+const APP_VERSAO='v1.356';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
