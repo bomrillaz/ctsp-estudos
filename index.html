@@ -1032,7 +1032,7 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
 .tela-h-title{font-family:var(--font-display);font-size:24px;font-weight:700;letter-spacing:.02em;line-height:1.05;}
 .tela-h-sub{font-size:12.5px;color:rgba(255,255,255,.62);margin-top:3px;}
 /* Hub de estudo (Cards/Resumos): tela de entrada antes do modo imersivo */
-.hub-inicio{margin-bottom:16px;}
+.hub-inicio{margin-bottom:16px;position:relative;}
 .hub-hint{font-size:12px;color:var(--text3);text-align:center;margin-top:8px;line-height:1.45;}
 .hub-ok{font-size:15px;font-weight:800;color:var(--green);text-align:center;margin-bottom:8px;}
 .cards-body{padding:14px;}
@@ -2038,6 +2038,11 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 #metas-card>.mascote-pose.indo{z-index:2;}
 /* P3b/B1: o aceno é de frente (a arte não espelha, igual à vitrine) */
 #metas-card>.mascote-pose.de-frente{transform:none;}
+/* b257 (MA1): mascote nos hubs de Quiz, Cards e Resumos. Mesmo assento da Home: sentado na borda de cima do .hub-inicio (filho absoluto: o rect do bloco nao muda). Entrada = so um fade; reduced-motion sem fade. */
+.hub-inicio>.mascote-pose{position:absolute;right:14px;bottom:100%;margin-bottom:calc(-1px - var(--mascote-oy,0px));transform:scaleX(-1);}
+.hub-inicio>.mascote-pose.entra{animation:mascoteHubEntra .35s ease-out both;}
+@keyframes mascoteHubEntra{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.hub-inicio>.mascote-pose.entra{animation:none;}}
 @media(prefers-reduced-motion:reduce){.mascote,.mascote-escada{transition:none;}}
 
 /* ═══ M4 — A8 "faixa do edital" (substitui a A6) ═══
@@ -6516,6 +6521,7 @@ function setMascote(on){
   try{localStorage.setItem('ctsp_mascote',on?'1':'0');}catch(e){}
   _marcarMascoteSeg();
   mascoteHome(true);
+  mascoteTela();
   showToast(on?'Mascote ativado':'Mascote oculto');
 }
 // Comemoração da meta: 1x por dia por aparelho. Pura para o teste (harness_p3_mascote_app.js).
@@ -6719,7 +6725,7 @@ function mascoteHome(acordar){
   var hoje=diaLocal();
   // b256: sem a 1ª carga do progresso e do banco não há ausência nem vencidas para ler; reagir agora gastaria a marca do dia
   // com um aceno (o renderDashboard() do fim do initApp reavalia quando a carga termina). As contas só rodam enquanto a marca do dia está livre (a vencida varre o banco, 1x por dia).
-  var pronto=naHome&&!_mascoteReduzido()&&_mascoteDadosProntos(),ultAceno=_mascoteLer('aceno'),last=userStats.lastStudyDate||'';
+  var pronto=naHome&&!_tutorialBloqueiaMascote()&&!_mascoteReduzido()&&_mascoteDadosProntos(),ultAceno=_mascoteLer('aceno'),last=userStats.lastStudyDate||'';
   var feita=treinoFeitoHoje(),livre=pronto&&!document.hidden&&ultAceno!==hoje;
   var r=pronto?mascoteReacaoHome({completo:diaCompleto(),ultMeta:_mascoteLer('meta'),hoje:hoje,
     streak:userStats.streak,ultMarco:parseInt(_mascoteLer('marco'),10)||0,ultAceno:ultAceno,
@@ -6744,6 +6750,77 @@ function mascoteFim(pct){
   var p=_mascoteFimP,acao=pct>=70?'comemorar':pct>=50?'continencia':null;
   p.base('parado');p.tocar('parado');
   if(acao)setTimeout(function(){if(p.acao()==='parado'||p.acao()==='piscar')p.tocar(acao);},400);
+}
+
+// b257 (MA1) — mascote nos HUBS de Quiz, Cards e Resumos. NUNCA na questao, no card virando nem no resumo aberto: nessas telas
+// o proprio render do estudo apaga o .hub-inicio (e a pose junto) e o runner do Quiz esconde o #quiz-home-view; a pose so volta
+// quando o hub renderiza de novo. UMA pose, movida de hub em hub. Entra ~1,5 s depois de a tela abrir (sem atrasar o navTo, que
+// segue sincrono); trocar de tela antes disso cancela a entrada. Reduced-motion: sem espera e sem sequencia (quadro fixo).
+var MASCOTE_HUB_MS=1500,_mascoteHubP=null,_mascoteHubTm=0,_mascoteHubCochiloTm=0,_mascoteHubTela='',_mascoteHubPend='',_mascoteHubSeq=0;
+// Ancora por tela: devolve o .hub-inicio SE a tela esta no hub (ou null). Tela fora da tabela = sem mascote.
+var MASCOTE_HUB={
+  quiz:function(){var v=document.getElementById('quiz-home-view');return v&&!v.classList.contains('hidden')?document.getElementById('quiz-meta-cta'):null;},
+  cards:function(){return cardsModo==='hub'?document.querySelector('#cards-body>.hub-inicio'):null;},
+  resumos:function(){return resumosModo==='hub'?document.querySelector('#resumos-content>.hub-inicio'):null;}
+};
+// Tour aberto, ou agendado (1º acesso: o tour abre ~600 ms depois do primeiro render da Home): mascote quieto e sem reacao do dia.
+// O agendamento e um PRAZO (ms epoch), nao um booleano: se o initApp lancar ou o setTimeout do tour nunca rodar, o prazo vence sozinho
+// em ~5 s e o mascote volta a reagir (um flag solto ficaria preso a sessao inteira).
+var _tutorialAgendadoAte=0,TUTORIAL_AGENDA_TETO_MS=5000;
+function _tutorialBloqueiaMascote(){var m=document.getElementById('modal-tutorial');return Date.now()<_tutorialAgendadoAte||!!(m&&!m.classList.contains('hidden'));}
+function _mascoteHubAncora(tela){
+  var f=MASCOTE_HUB[tela],sc=document.getElementById('screen-'+tela);
+  if(!f||!sc||!sc.classList.contains('active')||!mascoteLigado()||_tutorialBloqueiaMascote())return null;
+  return f();
+}
+function _mascoteHubOcultar(){
+  clearTimeout(_mascoteHubTm);clearTimeout(_mascoteHubCochiloTm);_mascoteHubSeq++;_mascoteHubTela='';_mascoteHubPend='';
+  if(_mascoteHubP)_mascoteHubP.el.classList.add('hidden');
+}
+function _mascoteHubBorda(p,id){
+  if(id!==_mascoteHubSeq)return;
+  p.base('borda');p.tocar('borda');
+  _mascoteHubCochiloTm=setTimeout(function(){p.base('cochilar_borda');p.tocar('cochilar_borda');},MASCOTE_COCHILO_MS);
+}
+function _mascoteHubEntrar(tela,id){
+  _mascoteHubPend='';
+  var a=_mascoteHubAncora(tela);if(!a)return;
+  if(!_mascoteHubP)_mascoteHubP=Mascote.criarPose(a,{sprite:MASCOTE_APP_FOLHA});
+  var p=_mascoteHubP;
+  if(p.el.parentNode!==a)a.appendChild(p.el);
+  _mascoteHubTela=tela;
+  p.el.classList.remove('hidden');
+  if(_mascoteReduzido()){p.base('borda');p.tocar('borda');return;}
+  p.el.classList.add('entra');
+  p.el.addEventListener('animationend',function(){p.el.classList.remove('entra');},{once:true});
+  p.base('parado');
+  p.tocar('sentar_borda',function(){_mascoteHubBorda(p,id);});
+}
+function _mascoteHubAgendar(tela){
+  if(!MASCOTE_HUB[tela]||typeof Mascote==='undefined'||_mascoteHubPend===tela||!_mascoteHubAncora(tela))return;
+  clearTimeout(_mascoteHubTm);
+  _mascoteHubPend=tela;
+  var id=++_mascoteHubSeq;
+  if(_mascoteReduzido())_mascoteHubEntrar(tela,id);
+  else _mascoteHubTm=setTimeout(function(){_mascoteHubEntrar(tela,id);},MASCOTE_HUB_MS);
+}
+// Fim do _navToInner (e setMascote/fecharTutorial): esconde a pose da tela anterior e agenda a entrada na nova (s omitido = tela ativa).
+function mascoteTela(s){
+  if(s==null){var ac=document.querySelector('.screen.active');s=ac?ac.id.replace('screen-',''):'';}
+  _mascoteHubOcultar();
+  _mascoteHubAgendar(s);
+}
+// A pose esta de fato visivel neste hub? (consultar ANTES do render do hub: o render apaga o .hub-inicio e a pose vai junto)
+function _mascoteHubViva(tela){var p=_mascoteHubP;return !!p&&_mascoteHubTela===tela&&p.el.isConnected&&!p.el.closest('.hidden');}
+// Fim do render do hub (renderQuizHub/_hubCards/_hubResumos): pose viva = re-ancora no .hub-inicio novo (re-render por listener
+// do RTDB nao pode derrubar nem reiniciar o mascote); sem pose viva (voltou do estudo, ou 1ª vez) = agenda a entrada.
+function mascoteHubRender(tela,viva){
+  if(viva){
+    var a=_mascoteHubAncora(tela);
+    if(a&&_mascoteHubP.el.parentNode!==a)a.appendChild(_mascoteHubP.el);
+    return;
+  }
+  _mascoteHubAgendar(tela);
 }
 
 // B4: fim dos flashcards (_estudoCards, única chamada de fimInlineHTML dos Cards). Meta de cards do dia
@@ -8096,6 +8173,7 @@ async function initApp(){
   }
   clearTimeout(_skeletonTeto);
   updateStreak();
+  try{if(!localStorage.getItem('tutorialVisto'))_tutorialAgendadoAte=Date.now()+TUTORIAL_AGENDA_TETO_MS;}catch(_){} // b257: 1o acesso, o tour abre ~600 ms depois; a reacao do dia espera por ele (com prazo)
   renderDashboard();
   renderAreaList();
   renderCards();
@@ -8119,7 +8197,7 @@ async function initApp(){
     let viu=false;try{viu=!!localStorage.getItem('tutorialVisto');}catch(_){viu=true;}
     if(!viu)talvezIniciarTutorial(600);   // 1º acesso: tour puro, SEM splash na frente
     else mostrarSplash();
-  }
+  }else if(_tutorialAgendadoAte){_tutorialAgendadoAte=0;mascoteHome(false);}   // deep link: sem tour, a reacao adiada roda agora
 }
 
 // ═══════════════════════════════
@@ -8412,7 +8490,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.356';
+const APP_VERSAO='v1.357';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -8669,6 +8747,7 @@ function _navToInner(s,skipStagger){
   // BLOCO 34: a barra de retorno ao foco depende da tela ATUAL, então é atualizada
   // aqui, depois do troca-de-classe — em qualquer navegação, não só nas do foco.
   atualizarBarraFoco();
+  mascoteTela(s);
 }
 
 // ── Barra: marca o item ativo, desliza a pílula e realça o item no painel "Mais" ──
@@ -9824,6 +9903,7 @@ function _ctaSessaoDoDia(classeBtn){
     : `<div class="hub-ok">✓ Sessão do dia concluída</div><button class="btn-weak" style="width:100%" onclick="abrirIntro('meta',1)">Responder mais assim mesmo</button>`;
 }
 function renderQuizHub(){
+  const mh=_mascoteHubViva('quiz');
   sincronizarDiagCard();   // FEAT-01 · b173: card de nivelamento, agora morador desta tela
   const cta=document.getElementById('quiz-meta-cta');
   if(!cta)return;
@@ -9835,6 +9915,7 @@ function renderQuizHub(){
        <div class="hub-hint">${restam} ${restam===1?'item restante':'itens restantes'}.</div>
        <div style="margin-top:10px">${_ctaSessaoDoDia('btn-weak')}</div>`;
     _setHubModosAberto(false);
+    mascoteHubRender('quiz',mh);
     return;
   }
   cta.innerHTML = _ctaSessaoDoDia('btn-primary');
@@ -9843,6 +9924,7 @@ function renderQuizHub(){
   // render, de propósito — sem persistir escolha manual (upgrade, se pedido: flag em
   // memória, nunca em RTDB, §2 do CLAUDE.md).
   _setHubModosAberto(treinoFeitoHoje());
+  mascoteHubRender('quiz',mh);
 }
 function _setHubModosAberto(aberto){
   const row=document.getElementById('hub-modos');
@@ -10436,6 +10518,7 @@ function renderCards(){
 }
 // Hub: tela de entrada (meta do dia + índice). Não joga o usuário direto no conteúdo.
 function _hubCards(){
+  const mh=_mascoteHubViva('cards');
   updateBadges();
   const hj=entradaHoje();
   const acervo=cardsPendentes(null).todos.length;
@@ -10449,6 +10532,7 @@ function _hubCards(){
        <div class="hub-hint">${resta>0?resta+' card'+(resta!==1?'s':'')+' ainda hoje. Ou toque':'Toque'} um card abaixo para estudar avulso.</div>`
     : `<div class="hub-ok">✓ Sessão do dia concluída</div>${acervo>0?`<button class="btn-weak" style="width:100%" onclick="iniciarMetaCards()">Revisar mais assim mesmo</button>`:`<div class="hub-hint">Tudo revisado. Fixe com questões na Sessão do dia.</div>`}`;
   body.innerHTML=`<div class="hub-inicio" role="status">${cta}</div>`+renderCardLista();
+  mascoteHubRender('cards',mh);
 }
 function iniciarMetaCards(){cardsModo='estudo';cardsUnico=false;cardsFiltroTopico=null;cardsFiltroSt=null;_estudoCards();irAoTopoDoConteudo();}
 function voltarHubCards(){cardsModo='hub';cardsUnico=false;renderCards();irAoTopoDoConteudo();}
@@ -10978,6 +11062,7 @@ function renderResumos(){
 // resumir/reler tem utilidade baixa). Continua acessível como consulta; a CTA daqui vira
 // prática secundária ("ler pendentes"), nunca o botão primário de estilo meta/quota.
 function _hubResumos(){
+  const mh=_mascoteHubViva('resumos');
   updateBadges();
   const acervo=resumosPendentes().length;
   const fila=resumosDose();
@@ -10990,6 +11075,7 @@ function _hubResumos(){
         ? `<div class="hub-ok">✓ Resumos em dia</div><button class="btn-weak" style="width:100%" onclick="iniciarMetaResumos()">Ler mais assim mesmo</button>`
         : `<div class="hub-ok">✓ Resumos em dia</div><div class="hub-hint">Próximas revisões já agendadas. Fixe com questões na Sessão do dia.</div>`);
   content.innerHTML=`<div class="hub-inicio" role="status">${cta}</div>`+renderResumoLista();
+  mascoteHubRender('resumos',mh);
 }
 function iniciarMetaResumos(){resumosModo='estudo';resumosUnico=false;_estudoResumos();irAoTopoDoConteudo();}
 function voltarHubResumos(){_resumoSeq=null;resumosModo='hub';resumosUnico=false;renderResumos();irAoTopoDoConteudo();}
@@ -13392,6 +13478,7 @@ function fecharTutorial(e){
   try{localStorage.setItem('tutorialVisto','1');}catch(_){}
   if(_tourFocoAnterior&&_tourFocoAnterior.focus){try{_tourFocoAnterior.focus();}catch(_){}}
   _tourFocoAnterior=null;
+  mascoteHome(false);mascoteTela();                // b257: com o tour fechado, a reacao do dia (Home) e a pose do hub voltam
 }
 
 // Gatilho automatico do 1o acesso. Chamada de DOIS pontos de entrada distintos --
@@ -13399,14 +13486,20 @@ function fecharTutorial(e){
 // Deep link (#p=T1.1) de proposito NAO dispara: o usuario veio com intencao propria.
 function talvezIniciarTutorial(ms){
   try{if(localStorage.getItem('tutorialVisto'))return;}catch(_){return;}
+  _tutorialAgendadoAte=Date.now()+(ms||300)+TUTORIAL_AGENDA_TETO_MS;   // b257: ate abrir (ou desistir), o mascote da Home nao reage por tras do tour
   setTimeout(()=>{
-    try{if(localStorage.getItem('tutorialVisto'))return;}catch(_){return;}
-    if(document.querySelector('.modal-overlay:not(.hidden), .rep-overlay.show'))return;   // outro modal ou folha de pagamento na frente (b123)
-    const g=document.getElementById('onboard-gate');
-    if(g&&g.classList.contains('active'))return;
-    const sp=document.getElementById('splash-screen');
-    if(sp&&sp.classList.contains('active'))return;
-    iniciarTutorial();
+    try{
+      try{if(localStorage.getItem('tutorialVisto'))return;}catch(_){return;}
+      if(document.querySelector('.modal-overlay:not(.hidden), .rep-overlay.show'))return;   // outro modal ou folha de pagamento na frente (b123)
+      const g=document.getElementById('onboard-gate');
+      if(g&&g.classList.contains('active'))return;
+      const sp=document.getElementById('splash-screen');
+      if(sp&&sp.classList.contains('active'))return;
+      iniciarTutorial();
+    }finally{
+      _tutorialAgendadoAte=0;
+      mascoteHome(false); // desistiu: a reacao adiada roda agora; abriu: o gate do tour segura
+    }
   },ms||300);
 }
 
