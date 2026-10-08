@@ -961,6 +961,10 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
    Encurtar a caixa faz ela voltar a caber embaixo; so o texto rola (flex-column
    acima), entao Pular/Avancar continuam visiveis. */
 @media (max-height:480px){.tour-box{max-height:min(40vh,calc(100vh - 32px));}}
+/* b259: mascote do tour. Pose unica, fixed, depois do .tour-spot (acima da sombra) e sem receber toque. Arte olha para a direita; .espelha vira para a esquerda. Troca de passo = so fade de opacity. */
+.mascote-pose.tour-mascote{position:fixed;top:0;left:0;z-index:1;opacity:1;transition:opacity .15s ease-out;}
+.mascote-pose.tour-mascote.espelha{transform:scaleX(-1);}
+.mascote-pose.tour-mascote.apagado{opacity:0;}
 .modal-box{background:var(--surface);border-radius:24px 24px 0 0;padding:28px 22px 40px;width:100%;max-width:480px;position:relative;max-height:90vh;overflow-y:auto;overflow-x:hidden;}
 .modal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--fire-line);}
 /* b190: alvo de toque WCAG 2.5.5/HIG (min 44px) só nos botões do confirmarAcao — .btn-weak
@@ -6744,6 +6748,7 @@ function mascoteHome(acordar){
     document.addEventListener('click',_mascoteHomeClique,true);
   }
   var p=_mascoteHomeP,estavaOculto=p.el.classList.contains('hidden');
+  if(_tourAberto()){p.el.classList.add('hidden');return;} // b259: com o tour aberto o mascote do tour e o unico; a classe hidden nao muda o rect do #metas-card (alvo do 1o passo)
   p.el.classList.remove('hidden');
   var sc=document.getElementById('screen-inicio'),naHome=!!(sc&&sc.classList.contains('active'));
   var hoje=diaLocal();
@@ -6797,7 +6802,8 @@ var MASCOTE_HUB={
 // O agendamento e um PRAZO (ms epoch), nao um booleano: se o initApp lancar ou o setTimeout do tour nunca rodar, o prazo vence sozinho
 // em ~5 s e o mascote volta a reagir (um flag solto ficaria preso a sessao inteira).
 var _tutorialAgendadoAte=0,TUTORIAL_AGENDA_TETO_MS=5000;
-function _tutorialBloqueiaMascote(){var m=document.getElementById('modal-tutorial');return Date.now()<_tutorialAgendadoAte||!!(m&&!m.classList.contains('hidden'));}
+function _tourAberto(){var m=document.getElementById('modal-tutorial');return !!(m&&!m.classList.contains('hidden'));}
+function _tutorialBloqueiaMascote(){return Date.now()<_tutorialAgendadoAte||_tourAberto();}
 function _mascoteHubAncora(tela){
   var f=MASCOTE_HUB[tela],sc=document.getElementById('screen-'+tela);
   if(!f||!sc||!sc.classList.contains('active')||!mascoteLigado()||_tutorialBloqueiaMascote())return null;
@@ -8544,7 +8550,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.359';
+const APP_VERSAO='v1.360';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -13356,6 +13362,8 @@ const TOUR_PASSOS=[
 ];
 
 let _tourIdx=0,_tourLista=[],_tourRAF=0,_tourFocoAnterior=null,_tourReMedir=0;
+// b259: mascote do tour (pose unica, criada 1x). _tourMTm = fade da troca de passo; _tourMAtivo = ja revelado neste passo; _tourMLugar = {x,y,espelha} do ultimo _tourPosicionar (null = sem lugar).
+let _tourMP=null,_tourMTm=0,_tourMAtivo=false,_tourMLugar=null,_tourMPasso=null;   // _tourMPasso = passo em que o mascote ja entrou (remontagem por resize no mesmo passo so reposiciona)
 // Veredito de visibilidade por passo, guardado para o resize nao apagar passo de
 // tela que nao esta ativa (la todo alvo mede 0x0). WeakMap: a chave e o objeto do
 // passo, que vive em TOUR_PASSOS enquanto a pagina existir.
@@ -13417,6 +13425,7 @@ function _tourPosicionar(){
   const bw=box.offsetWidth,bh=box.offsetHeight;
   const vw=window.innerWidth,vh=window.innerHeight;
   let top=u.bottom+pad+marg;                       // padrao: abaixo do alvo
+  if(_tourMascoteAtivo()&&u.bottom+pad<=66&&top<66)top=66;   // b259: alvo no cabecalho: o balao desce ate 66 px para sobrar a faixa 0..64 ao lado do alvo (so com mascote; desligado = igual a hoje)
   let left=u.left+u.width/2-bw/2;
   if(top+bh>vh-8){                                 // nao coube embaixo
     const acima=u.top-pad-marg-bh;
@@ -13435,6 +13444,68 @@ function _tourPosicionar(){
   left=Math.max(8,Math.min(left,vw-bw-8));         // clamp horizontal na viewport
   box.style.top=top+'px';
   box.style.left=left+'px';
+  _tourMascotePosicionar(u,pad,{l:left,t:top,r:left+bw,b:top+bh},vw,vh);
+}
+
+// b259: o mascote so APONTA o alvo (sinal, nao enfeite). Ordem: ao lado do alvo (centrado, virado para ele) -> de pe na borda de
+// cima do spotlight, perto de um canto, apontando para dentro (alvo de largura cheia: sem folga lateral) -> embaixo -> sem lugar
+// (some neste passo). Todo candidato e testado contra o retangulo do balao: nunca fica sobre o texto. Pura (so numeros).
+function _tourMascoteLugar(u,pad,bx,vw,vh){
+  const Q=64,m=4,mb=2,L=u.left-pad,R=u.right+pad,T=u.top-pad,B=u.bottom+pad;   // m = folga ao lado do alvo; mb = folga do balao (alvo no cabecalho deixa so ~2 px)
+  const livre=(x,y)=>x>=0&&y>=0&&x+Q<=vw&&y+Q<=vh&&(x>=bx.r+mb||x+Q<=bx.l-mb||y>=bx.b+mb||y+Q<=bx.t-mb);
+  const cy=Math.max(0,Math.min((u.top+u.bottom)/2-Q/2,vh-Q));
+  const c=[
+    {x:L-Q-m,y:cy,espelha:false},                 // a esquerda do alvo, olhando para a direita (arte nativa)
+    {x:R+m,y:cy,espelha:true},                    // a direita do alvo
+    {x:R-14-Q,y:T+1-Q,espelha:true},              // de pe na borda de cima, canto direito, apontando para dentro (como o b256)
+    {x:L+14,y:T+1-Q,espelha:false},               // idem, canto esquerdo
+    {x:R-14-Q,y:B-1,espelha:true},                // embaixo
+    {x:L+14,y:B-1,espelha:false}
+  ];
+  for(const k of c)if(livre(k.x,k.y))return k;
+  return null;
+}
+function _tourMascoteAtivo(){return typeof Mascote!=='undefined'&&mascoteLigado()&&!_mascoteReduzido();}
+function _tourMascoteAplicar(){
+  const p=_tourMP;if(!p)return;
+  if(!_tourMLugar){p.el.classList.add('apagado');return;}
+  p.el.style.left=_tourMLugar.x+'px';p.el.style.top=_tourMLugar.y+'px';
+  p.el.classList.toggle('espelha',_tourMLugar.espelha);
+  p.el.classList.remove('apagado');               // so chega aqui revelado (_tourMAtivo)
+}
+function _tourMascotePosicionar(u,pad,bx,vw,vh){
+  if(!_tourMP)return;
+  _tourMLugar=_tourMascoteLugar(u,pad,bx,vw,vh);
+  if(_tourMAtivo)_tourMascoteAplicar();           // ja revelado: so acompanha (scroll/resize/re-medir), sem repetir o gesto
+}
+// Passo novo: apaga (fade), e so depois reposiciona e revela tocando apontar (ultimo passo: continencia).
+function _tourMascoteTrocar(){
+  const passo=_tourLista[_tourIdx];
+  if(_tourMP&&passo===_tourMPasso&&_tourMascoteAtivo())return;   // mesmo passo (remontagem por resize): _tourPosicionar so acompanha, sem fade nem novo apontar
+  _tourMPasso=passo;
+  if(_tourMTm){clearTimeout(_tourMTm);_tourMTm=0;}
+  _tourMAtivo=false;_tourMLugar=null;
+  if(!_tourMascoteAtivo()){if(_tourMP)_tourMP.el.classList.add('apagado');return;}
+  const m=document.getElementById('modal-tutorial'),box=document.getElementById('tour-box');
+  if(!_tourMP){
+    _tourMP=Mascote.criarPose(m,{sprite:MASCOTE_APP_FOLHA,classe:'tour-mascote apagado'});
+    if(box)m.insertBefore(_tourMP.el,box);        // depois do #tour-spot, antes do balao
+    _tourMP.base('parado');
+  }
+  const p=_tourMP;p.el.classList.add('apagado');
+  const ultimo=_tourIdx===_tourLista.length-1;
+  _tourMTm=setTimeout(function(){
+    _tourMTm=0;
+    if(!_tourAberto())return;
+    _tourMAtivo=true;_tourMascoteAplicar();
+    if(!_tourMLugar)return;                       // sem lugar neste passo: fica apagado; um resize pode abrir lugar
+    p.tocar(ultimo?'continencia':'apontar');
+  },150);
+}
+function _tourMascoteFim(){
+  if(_tourMTm){clearTimeout(_tourMTm);_tourMTm=0;}
+  _tourMAtivo=false;_tourMLugar=null;_tourMPasso=null;
+  if(_tourMP)_tourMP.el.classList.add('apagado');
 }
 
 // b126: o banner de instalação só pode aparecer NO passo dedicado. Esconder com
@@ -13467,6 +13538,7 @@ function _tourRender(){
     _tourLista.splice(_tourIdx,1);
     _tourRender();return;
   }
+  _tourMascoteTrocar();                            // b259: depois do filtro, passo descartado nao mexe no mascote
   const prog=document.getElementById('tour-progress'),tit=document.getElementById('tour-title'),
         txt=document.getElementById('tour-text'),bv=document.getElementById('tour-voltar'),
         ba=document.getElementById('tour-avancar');
@@ -13521,6 +13593,8 @@ function iniciarTutorial(){
   // #metas-card (A1 Parte 2 do b155), que morreu junto com a saída do #diag-card do
   // painel. _navToInner('inicio') logo acima já renderiza o painel.
   const m=document.getElementById('modal-tutorial');if(m)m.classList.remove('hidden');
+  // b259: mascote da Home e do hub saem de cena (hidden, nunca display no card); fecharTutorial devolve as duas
+  _mascoteHomeCancelar();if(_mascoteHomeP)_mascoteHomeP.el.classList.add('hidden');_mascoteHubOcultar();
   // b123: o banner precisa EXISTIR e ser mensurável antes do filtro, senão o passo
   // "Instalar e ser avisado" nem entra na lista — avaliarConviteInstalar() já garante
   // display:'' nas plataformas elegíveis. simplify: o class-add manual de tour-ativo/
@@ -13553,6 +13627,7 @@ function fecharTutorial(e){
   if(_tourReMedir){clearTimeout(_tourReMedir);_tourReMedir=0;}
   const m=document.getElementById('modal-tutorial');if(m)m.classList.add('hidden');
   _tourLiberarBanner();                            // b126
+  _tourMascoteFim();                               // b259
   try{localStorage.setItem('tutorialVisto','1');}catch(_){}
   if(_tourFocoAnterior&&_tourFocoAnterior.focus){try{_tourFocoAnterior.focus();}catch(_){}}
   _tourFocoAnterior=null;
