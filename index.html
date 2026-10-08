@@ -1484,12 +1484,12 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .pg-porque-frase{font-size:13px;color:var(--text2);line-height:1.4;margin-top:8px;}
 
 /* F2a — estado vazio: calcProntidao()===null (nenhuma resposta ainda). */
-.pg-vazio-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:22px 18px;box-shadow:var(--shadow);text-align:center;}
+.pg-vazio-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:22px 18px;box-shadow:var(--shadow);text-align:center;position:relative;margin-top:56px;}
 .pg-vazio-title{font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--text);}
 .pg-vazio-txt{font-size:12px;color:var(--text2);line-height:1.5;margin-top:8px;}
 
 /* F2a — "E agora?": fecho em ação. */
-.pg-agora-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:16px;box-shadow:var(--shadow);margin:16px 0;}
+.pg-agora-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:16px;box-shadow:var(--shadow);margin:16px 0;position:relative;}
 .pg-agora-card:empty{display:none;}
 .pg-agora-txt{font-size:12.5px;color:var(--text2);line-height:1.4;}
 
@@ -2048,10 +2048,13 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 /* P3b/B1: o aceno é de frente (a arte não espelha, igual à vitrine) */
 #metas-card>.mascote-pose.de-frente{transform:none;}
 /* b257 (MA1): mascote nos hubs de Quiz, Cards e Resumos. Mesmo assento da Home: sentado na borda de cima do .hub-inicio (filho absoluto: o rect do bloco nao muda). Entrada = so um fade; reduced-motion sem fade. */
-.hub-inicio>.mascote-pose{position:absolute;right:14px;bottom:100%;margin-bottom:calc(-1px - var(--mascote-oy,0px));transform:scaleX(-1);}
-.hub-inicio>.mascote-pose.entra{animation:mascoteHubEntra .35s ease-out both;}
+.hub-inicio>.mascote-pose,#pg-agora>.mascote-pose,#pg-vazio>.mascote-pose{position:absolute;right:14px;bottom:100%;margin-bottom:calc(-1px - var(--mascote-oy,0px));transform:scaleX(-1);}
+.hub-inicio>.mascote-pose.entra,#pg-agora>.mascote-pose.entra,#pg-vazio>.mascote-pose.entra{animation:mascoteHubEntra .35s ease-out both;}
+/* b258 (PG2): Meu progresso senta na borda do card do "E agora?" (ou do estado vazio); filho absoluto, o rect do card nao muda. Apontar = .indo/.de-frente como na Home. */
+#pg-agora>.mascote-pose.indo,#pg-vazio>.mascote-pose.indo{z-index:2;}
+#pg-agora>.mascote-pose.de-frente,#pg-vazio>.mascote-pose.de-frente{transform:none;}
 @keyframes mascoteHubEntra{from{opacity:0}to{opacity:1}}
-@media(prefers-reduced-motion:reduce){.hub-inicio>.mascote-pose.entra{animation:none;}}
+@media(prefers-reduced-motion:reduce){.hub-inicio>.mascote-pose.entra,#pg-agora>.mascote-pose.entra,#pg-vazio>.mascote-pose.entra{animation:none;}}
 @media(prefers-reduced-motion:reduce){.mascote,.mascote-escada{transition:none;}}
 
 /* ═══ M4 — A8 "faixa do edital" (substitui a A6) ═══
@@ -6564,7 +6567,7 @@ function mascoteReacaoHome(o){
 function _mascoteChave(nome){return 'ctsp_mascote_'+nome+'_'+((typeof currentUser!=='undefined'&&currentUser&&currentUser.uid)||'');}
 function _mascoteLer(nome){try{return localStorage.getItem(_mascoteChave(nome))||'';}catch(e){return '';}}
 function _mascoteGravar(nome,v){try{localStorage.setItem(_mascoteChave(nome),v);}catch(e){}}
-var _mascoteSeqTm=0,_mascoteSeqId=0,_mascoteSeqAtiva=false;
+var _mascoteSeqTm=0,_mascoteSeqId=0,_mascoteSeqAtiva=false,_mascoteSeqP=null; // _mascoteSeqP = a pose que a sequência está conduzindo (Home ou hub)
 function _mascoteReduzido(){return typeof movimentoReduzido==='function'?movimentoReduzido():matchMedia('(prefers-reduced-motion:reduce)').matches;}
 function _mascoteSentada(p){var a=p.acao();return a==='borda'||a==='cochilar_borda';}
 function _mascoteAgendarCochilo(p){
@@ -6592,7 +6595,7 @@ function _mascoteHomeFixar(p){
 // Só a rolagem da Home aborta (o scroller é o .app-content; no PC/Safari pode ser o próprio documento). Scroll de carrossel,
 // lista interna ou textarea é de outro elemento e não mexe na posição do botão em relação à pose.
 function _mascoteHomeRolou(ev){
-  var t=ev&&ev.target,p=_mascoteHomeP;
+  var t=ev&&ev.target,p=_mascoteSeqP||_mascoteHomeP;
   if(!p||(t&&t!==document&&t!==document.scrollingElement&&!(t.classList&&t.classList.contains('app-content'))))return;
   _mascoteHomeCancelar();_mascoteHomeBorda(p);
 }
@@ -6626,12 +6629,14 @@ function _mascoteHomeBorda(p){
 // fn(p) (b256) roda no início do passo, já depois do espelhamento; devolver número = vale como msLaco, false = pula o passo.
 function _mascoteHomeSeq(p,passos){
   clearTimeout(_mascoteCochiloTm);clearTimeout(_mascoteSeqTm);
+  if(_mascoteSeqP&&_mascoteSeqP!==p)_mascoteHomeSoltar(_mascoteSeqP); // b258: a sequência anterior era de outra pose (Home x Progresso)
+  _mascoteSeqP=p;
   _mascoteHomeSoltar(p); // interrompeu uma caminhada: volta ao card antes da próxima sequência
   var id=++_mascoteSeqId,i=0;
   _mascoteSeqAtiva=true;
   (function prox(){
     if(id!==_mascoteSeqId)return;
-    if(i>=passos.length){_mascoteSeqAtiva=false;_mascoteHomeBorda(p);return;}
+    if(i>=passos.length){_mascoteSeqAtiva=false;_mascoteSeqP=null;_mascoteHomeBorda(p);return;}
     var pa=passos[i++],ms=pa[1];
     p.el.classList.toggle('de-frente',pa[0]==='acenar'); // aceno de frente: a arte não espelha (igual à vitrine)
     p.base('parado');
@@ -6643,6 +6648,8 @@ function _mascoteHomeSeq(p,passos){
 function _mascoteHomeCancelar(){
   clearTimeout(_mascoteCochiloTm);clearTimeout(_mascoteSeqTm);_mascoteSeqId++;_mascoteSeqAtiva=false;
   if(_mascoteHomeP)_mascoteHomeSoltar(_mascoteHomeP);
+  if(_mascoteSeqP&&_mascoteSeqP!==_mascoteHomeP)_mascoteHomeSoltar(_mascoteSeqP);
+  _mascoteSeqP=null;
 }
 // b256: apontar a Sessão do dia. A arte só aponta na horizontal e o botão fica abaixo do card, então o gesto é
 // "de pé em cima da borda do botão, braço ao longo dele". Anda até lá só se o botão inteiro cabe na tela sem
@@ -6656,23 +6663,26 @@ function _mascoteBotaoVisivel(b){
   if(nv){var nr=nv.getBoundingClientRect();if(nr.top>innerHeight/2)base=nr.top;} // barra inferior (no PC é lateral)
   return r.width>0&&r.height>0&&r.top-64>=topo&&r.bottom<=base;
 }
-function _mascoteApontarSessao(){
+function _mascoteApontarSessao(){return _mascoteApontar(_mascoteBotaoSessao,function(){return document.getElementById('metas-card');});}
+// b258 (PG2): o gesto serve a qualquer tela. getBotao() = o alvo; getBase() = o elemento em cujo canto a pose volta
+// (Home: #metas-card; Meu progresso: o card em que ela está sentada).
+function _mascoteApontar(getBotao,getBase){
   var anda=false,home=null; // home = deslocamento da pose em relação ao canto do card (a base dela)
   function virar(p,dx){p.el.classList.toggle('de-frente',dx>4);} // arte nativa olha para a direita; o CSS espelha para a esquerda
   var ult={x:0,y:0};
-  function noBotao(){var b=_mascoteBotaoSessao();if(!b)return ult;var r=b.getBoundingClientRect();return (ult={x:r.right-14-64,y:r.top+1-64});} // pé na borda de cima, canto direito
-  function naBase(){var c=document.getElementById('metas-card').getBoundingClientRect();return {x:c.left+home.x,y:c.top+home.y};}
+  function noBotao(){var b=getBotao();if(!b)return ult;var r=b.getBoundingClientRect();return (ult={x:r.right-14-64,y:r.top+1-64});} // pé na borda de cima, canto direito
+  function naBase(){var e=getBase();if(!e)return ult;var c=e.getBoundingClientRect();return {x:c.left+home.x,y:c.top+home.y};}
   return [
     ['correr',1,function(p){ // já de pé na base (levantou antes)
-      anda=_mascoteBotaoVisivel(_mascoteBotaoSessao());
+      anda=_mascoteBotaoVisivel(getBotao());
       if(!anda)return false;
-      var pr=p.el.getBoundingClientRect(),c=document.getElementById('metas-card').getBoundingClientRect();
+      var pr=p.el.getBoundingClientRect(),c=getBase().getBoundingClientRect();
       home={x:pr.left-c.left,y:pr.top-c.top};
       var alvo=noBotao();virar(p,alvo.x-pr.left);_mascoteHomeFixar(p);
       return _mascoteMover(p,function(){return {x:pr.left,y:pr.top};},noBotao);
     }],
     ['apontar',0,function(p){
-      var b=_mascoteBotaoSessao();if(!b)return;
+      var b=getBotao();if(!b)return;
       // na borda do botão aponta para dentro dele (esquerda); do card, para o lado onde o botão está
       var r=b.getBoundingClientRect(),pr=p.el.getBoundingClientRect();
       virar(p,anda?-1:(r.left+r.width/2)-(pr.left+pr.width/2));
@@ -6752,7 +6762,7 @@ function mascoteHome(acordar){
     _mascoteHomeReagir(p,r.acao);
     return;
   }
-  if((novo||acordar||estavaOculto)&&!_mascoteSeqAtiva)_mascoteHomeAssentar(p);
+  if((novo||acordar||estavaOculto)&&!(_mascoteSeqAtiva&&_mascoteSeqP===p))_mascoteHomeAssentar(p); // sequência do hub (Progresso) em curso não conta: o navTo roda isto antes do mascoteTela que a cancela
 }
 // Fim de sessão: >=70% comemora, 50-69% continência, abaixo disso só parado (nunca triste).
 function mascoteFim(pct){
@@ -6770,12 +6780,18 @@ function mascoteFim(pct){
 // o proprio render do estudo apaga o .hub-inicio (e a pose junto) e o runner do Quiz esconde o #quiz-home-view; a pose so volta
 // quando o hub renderiza de novo. UMA pose, movida de hub em hub. Entra ~1,5 s depois de a tela abrir (sem atrasar o navTo, que
 // segue sincrono); trocar de tela antes disso cancela a entrada. Reduced-motion: sem espera e sem sequencia (quadro fixo).
-var MASCOTE_HUB_MS=1500,_mascoteHubP=null,_mascoteHubTm=0,_mascoteHubCochiloTm=0,_mascoteHubTela='',_mascoteHubPend='',_mascoteHubSeq=0;
+var MASCOTE_HUB_MS=1500,MASCOTE_HUB_REACAO_MS=600,_mascoteHubP=null,_mascoteHubTm=0,_mascoteHubCochiloTm=0,_mascoteHubReacaoTm=0,_mascoteHubTela='',_mascoteHubPend='',_mascoteHubSeq=0;
 // Ancora por tela: devolve o .hub-inicio SE a tela esta no hub (ou null). Tela fora da tabela = sem mascote.
 var MASCOTE_HUB={
   quiz:function(){var v=document.getElementById('quiz-home-view');return v&&!v.classList.contains('hidden')?document.getElementById('quiz-meta-cta'):null;},
   cards:function(){return cardsModo==='hub'?document.querySelector('#cards-body>.hub-inicio'):null;},
-  resumos:function(){return resumosModo==='hub'?document.querySelector('#resumos-content>.hub-inicio'):null;}
+  resumos:function(){return resumosModo==='hub'?document.querySelector('#resumos-content>.hub-inicio'):null;},
+  // b258 (PG2): Meu progresso senta no card do "E agora?" (só com conteúdo: o card vazio é display:none via :empty e uma pose o
+  // faria aparecer em branco) ou, sem nenhuma resposta, no card do estado vazio.
+  progresso:function(){
+    var v=document.getElementById('pg-vazio');if(v&&!v.classList.contains('hidden'))return v;
+    var a=document.getElementById('pg-agora');return a&&a.querySelector('.pg-agora-body')?a:null;
+  }
 };
 // Tour aberto, ou agendado (1º acesso: o tour abre ~600 ms depois do primeiro render da Home): mascote quieto e sem reacao do dia.
 // O agendamento e um PRAZO (ms epoch), nao um booleano: se o initApp lancar ou o setTimeout do tour nunca rodar, o prazo vence sozinho
@@ -6788,13 +6804,16 @@ function _mascoteHubAncora(tela){
   return f();
 }
 function _mascoteHubOcultar(){
-  clearTimeout(_mascoteHubTm);clearTimeout(_mascoteHubCochiloTm);_mascoteHubSeq++;_mascoteHubTela='';_mascoteHubPend='';
+  clearTimeout(_mascoteHubTm);clearTimeout(_mascoteHubCochiloTm);clearTimeout(_mascoteHubReacaoTm);_mascoteHubSeq++;_mascoteHubTela='';_mascoteHubPend='';
+  if(_mascoteSeqP&&_mascoteSeqP===_mascoteHubP)_mascoteHomeCancelar(); // reação do Progresso no meio: larga a pose (fixed/.indo) antes de esconder
+  if(_mascoteHubP)_mascoteHubP.el.classList.remove('de-frente');
   if(_mascoteHubP)_mascoteHubP.el.classList.add('hidden');
 }
 function _mascoteHubBorda(p,id){
   if(id!==_mascoteHubSeq)return;
   p.base('borda');p.tocar('borda');
   _mascoteHubCochiloTm=setTimeout(function(){p.base('cochilar_borda');p.tocar('cochilar_borda');},MASCOTE_COCHILO_MS);
+  if(_mascoteHubTela==='progresso')_mascoteHubReacaoTm=setTimeout(function(){_mascoteProgressoReagir(p,id);},MASCOTE_HUB_REACAO_MS);
 }
 function _mascoteHubEntrar(tela,id){
   _mascoteHubPend='';
@@ -6835,6 +6854,27 @@ function mascoteHubRender(tela,viva){
     return;
   }
   _mascoteHubAgendar(tela);
+}
+
+// b258 (PG2) — Meu progresso. 1x por dia (chave propria 'progresso', por uid), ja sentado, o mascote levanta e aponta o botao do
+// "E agora?" (sem nenhuma resposta: "Fazer o nivelamento"). Reusa o gesto de apontar da Home (_mascoteApontar). Sem texto novo: o texto
+// ja esta no card. Aborta pela rolagem do .app-content (so enquanto anda, igual a Home). Reduced-motion nunca chega aqui (sem sequencia).
+function _mascoteBotaoProgresso(){
+  return document.querySelector('#pg-vazio:not(.hidden) .btn-primary')||document.querySelector('#pg-agora .btn-primary');
+}
+function _mascoteProgressoReagir(p,id){
+  var hoje=diaLocal();
+  if(id!==_mascoteHubSeq||_mascoteHubTela!=='progresso'||_mascoteReduzido()||document.hidden||_tutorialBloqueiaMascote()||!_mascoteDadosProntos()||_mascoteLer('progresso')===hoje)return;
+  if(!_mascoteBotaoProgresso()||!_mascoteHubViva('progresso'))return;
+  _mascoteGravar('progresso',hoje);
+  clearTimeout(_mascoteHubCochiloTm);
+  var s=_mascoteSentada(p)?[['levantar']]:[];
+  _mascoteHomeSeq(p,s.concat(_mascoteApontar(_mascoteBotaoProgresso,function(){return p.el.parentNode;}),[['sentar_borda']]));
+}
+// Fim do renderDominio (os dois ramos). `viva` foi lida ANTES do render: o renderAgora reescreve o #pg-agora e leva a pose junto.
+function mascoteProgressoRender(viva){
+  if(!_mascoteHubAncora('progresso')){if(viva)_mascoteHubOcultar();return;}
+  mascoteHubRender('progresso',viva);
 }
 
 // B4: fim dos flashcards (_estudoCards, única chamada de fimInlineHTML dos Cards). Meta de cards do dia
@@ -8504,7 +8544,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.358';
+const APP_VERSAO='v1.359';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -12721,6 +12761,7 @@ function respondeuNaSemanaAtual(k){
   return h.some(x=>x.s===s&&x.areas&&x.areas[k]);
 }
 function renderDominio(){
+  const mascViva=_mascoteHubViva('progresso'); // antes de alternar o vazio e de o renderAgora reescrever o card
   // F2a — estado vazio: sem NENHUMA resposta ainda (calcProntidao()===null) não é
   // "domínio 0%", é "nada pra medir". Antes disso a tela mostrava cinco barras cinzas.
   const prontoNulo=calcProntidao()===null;
@@ -12731,6 +12772,7 @@ function renderDominio(){
   if(prontoNulo){
     const qEl=document.getElementById('pg-vazio-qtd');
     if(qEl)qEl.textContent=Object.keys(allQuestoes).length+' questões · '+Object.keys(allFlashcards).length+' flashcards · '+RESUMOS_BANCO.length+' resumos esperando';
+    mascoteProgressoRender(mascViva);
     return;
   }
   const dom=calcDominio(); // sobrevive pela cobertura e pelo "por quê" (quiz/cards/resumos) — não pelo campo dominio
@@ -12792,6 +12834,7 @@ function renderDominio(){
   renderVereditos();
   renderAgora();
   renderEvolucaoGeral();
+  mascoteProgressoRender(mascViva);
 }
 
 // PG1 (b258): cada número do placar de "Meu progresso" aponta UMA ação de estudo (feed forward,
