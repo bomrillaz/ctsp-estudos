@@ -2039,10 +2039,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .mascote-escada.on{clip-path:inset(0 0 0 0)}
 .mascote-escada.seco{transition:none}
 .mascote-cena{position:absolute;left:-12px;top:0;width:64px;height:64px;z-index:2;pointer-events:none;
-  background-repeat:no-repeat;background-size:512px 1152px;image-rendering:pixelated;will-change:transform;}
+  background-repeat:no-repeat;background-size:512px 1280px;image-rendering:pixelated;will-change:transform;}
 .mascote-cena.off{visibility:hidden;}
 /* P3 (b250): mascote parado no app (Mascote.criarPose). Quadro 64 em escala 1, folha 8x16 quadros. */
-.mascote-pose{width:64px;height:64px;background-repeat:no-repeat;background-size:512px 1152px;image-rendering:pixelated;pointer-events:none;}
+.mascote-pose{width:64px;height:64px;background-repeat:no-repeat;background-size:512px 1280px;image-rendering:pixelated;pointer-events:none;}
 /* Home: sentado na borda de cima do card da meta, virado para dentro. Filho absoluto: não muda o rect
    do #metas-card (alvo do tour, lição b156). */
 /* --mascote-oy: o motor (criarPose) seta por ação; na borda (pernas penduradas) o assento y47 desce até a borda do card. Não é transform: este já é o scaleX(-1). */
@@ -2056,7 +2056,11 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 /* b258 (PG2): Meu progresso senta na borda do card do "E agora?" (ou do estado vazio); filho absoluto, o rect do card nao muda. Apontar = .indo/.de-frente como na Home. */
 #pg-agora>.mascote-pose.indo,#pg-vazio>.mascote-pose.indo,.pg-hero-card>.mascote-pose.indo{z-index:2;}
 #pg-agora>.mascote-pose.de-frente,#pg-vazio>.mascote-pose.de-frente,.pg-hero-card>.mascote-pose.de-frente{transform:none;}
-@media(prefers-reduced-motion:reduce){.mascote,.mascote-escada{transition:none;}}
+/* b261 (frente 4): marco de dias seguidos. O mascote comemora e bate continência; no mesmo instante o selo da sequência (#hdr-streak, o único
+   contador de dias da Home) dá um pulso curto de brilho. Quem "fala" é a UI; sem confete. Reduced-motion: sem pulso (o JS nem põe a classe). */
+@keyframes streakPulso{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(240,136,60,.6);}45%{transform:scale(1.14);box-shadow:0 0 0 8px rgba(240,136,60,0);}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(240,136,60,0);}}
+.streak-badge.pulso{animation:streakPulso .85s ease-out 2;}
+@media(prefers-reduced-motion:reduce){.mascote,.mascote-escada{transition:none;}.streak-badge.pulso{animation:none;}}
 
 /* ═══ M4 — A8 "faixa do edital" (substitui a A6) ═══
    3 faixas de texto puro CSS, sentidos opostos, conteúdo real (áreas via AI, fontes
@@ -5788,7 +5792,7 @@ function scrollProgress(el,cb,opts){
 var Mascote=(function(){
 'use strict';
 
-// Folha v5: cada linha uma ação, cada coluna um quadro de 64x64 (18 linhas, ordem = assets/mascote/folha_v5.png; linhas 0..15 = v4).
+// Folha v7: cada linha uma ação, cada coluna um quadro de 64x64 (20 linhas, ordem = assets/mascote/folha_v7.png; linhas 0..15 = v4, 16..17 = espiar v5, 18..19 = tonto).
 // loopInicio: quadro onde o loop recomeça (entrada tocada 1x, resto em loop).
 // segurarMs: tempo parado no último quadro antes de a ação não-loop terminar.
 var MASCOTE_ANIM={
@@ -5815,7 +5819,11 @@ var MASCOTE_ANIM={
   // espiar_cima: recorte = tudo abaixo de y=34 do quadro (BORDA_Y). espiar_lado: tocada ESPELHADA (olhando p/ a
   // esquerda), recorte = x<40 do quadro ANTES do espelho (BORDA_X). Último quadro = "aberto", fica seguro.
   espiar_cima:    {linha:16,quadros:5,fps:6,loop:false},
-  espiar_lado:    {linha:17,quadros:4,fps:5,loop:false,segurarMs:500}
+  espiar_lado:    {linha:17,quadros:4,fps:5,loop:false,segurarMs:500},
+  // b261 (frente 3): TONTO com rolagem muito rápida. tonto = cabeça balançando, olhos X, estrelinhas (loop; quem chama passa duracaoMs ~1,5 s);
+  // tonto_fim = se recompõe; o último quadro é a pose parado (volta ao que fazia sem salto).
+  tonto:          {linha:18,quadros:8,fps:10,loop:true},
+  tonto_fim:      {linha:19,quadros:8,fps:8, loop:false,segurarMs:150}
 };
 var MASCOTE_QUADRO=64;        // px de um quadro na folha (padrão; criar({quadro:48}) troca). ÚNICA fonte do tamanho.
 var MASCOTE_VEL_PX_S=15;      // andar: px DA FOLHA por segundo para grade 32 (escala com quadro/32; no quadro 64 = 30 px/s)
@@ -5834,6 +5842,12 @@ var ESP_OCULTO_MS=1000,ESP_PULA_MS=160,ESP_ABAIXA_MS=380,ESP_OLHAR_MS=650,ESP_RA
 // b255/MV3 (estadia atrás do card): mínimo/teto em ms (seguir:true), pausa ao reaparecer, afundar/emergir pelo rodapé, volta ao chão
 var ESP_MIN_MS=4000,ESP_MAX_MS=12000,ESP_ACENO_MS=1600,ESP_REOCULTO_MS=450,ESP_AFUNDA_MS=380,ESP_EMERGE_MS=380,ESP_VOLTA_MS=300;
 var ESP_POOL={cima:['olhar','acenar','continencia','comemorar','reespiar','trocar'],lado:['reespiar','outro']};   // sorteio sem repetir a anterior
+// b261 (frente 5): "acenar" no espiar fica raro: no máximo 1x por carga da página e nunca o 1º gesto da estadia (n = gestos já feitos nela;
+// acenou = já acenou nesta carga). Pura (testada em teste_mascote_motor.js). r em [0,1).
+function mascoteGestoEspiar(pool,ultI,n,acenou,podeTrocar,temOutro,r){
+  var p=pool.filter(function(g){return g!==ultI&&(g!=='trocar'||podeTrocar)&&(g!=='outro'||temOutro)&&(g!=='acenar'||(!acenou&&n>=1));});
+  return p[Math.min(p.length-1,Math.floor(r*p.length))];
+}
 var ESC_DESENROLAR=180,ESC_SUBIR=1000,ESC_DESCER=800,ESC_RECOLHER=180,ESC_DEGRAU=8,ESC_ALTURA=96,ESC_GESTO_MS=1400,ESC_LARG=28;
 
 // ---------- funções puras ----------
@@ -6184,9 +6198,11 @@ function criar(opts){
     return [Math.max(8,rc?rc.left:0),Math.min(vw-larg-8,rc?rc.right-larg:vw)];
   }
   function podeTrocar(s){var l=limitesTroca(s);return !!s.card&&l[1]-l[0]>=2*larg;}
+  var acenouEsp=false; // b261: já acenou (espiar) nesta carga? ver mascoteGestoEspiar
   function sortearEsp(s){
-    var p=ESP_POOL[s.tipo].filter(function(n){return n!==s.ultI&&(n!=='trocar'||podeTrocar(s))&&(n!=='outro'||s.outro);});
-    return p[Math.min(p.length-1,Math.floor(rnd()*p.length))];
+    var k=mascoteGestoEspiar(ESP_POOL[s.tipo],s.ultI,s.n,acenouEsp,podeTrocar(s),!!s.outro,rnd());
+    if(k==='acenar')acenouEsp=true;
+    return k;
   }
   function xOcultoLado(s,u){return s.lado==='dir'?s.borda-ESP_ESCONDE*u:s.borda-larg+ESP_ESCONDE*u;}
   function trocarLado(s,u){                // escondido: passa para o outro lado do mesmo card
@@ -6517,6 +6533,7 @@ return {
   mascoteQuadro:mascoteQuadro,
   mascoteProximaAcao:mascoteProximaAcao,
   mascoteSortearPiscar:mascoteSortearPiscar,
+  mascoteGestoEspiar:mascoteGestoEspiar,
   mascoteAvancar:mascoteAvancar,
   mascoteFlipPara:mascoteFlipPara,
   mascoteFlipParado:mascoteFlipParado,
@@ -6528,8 +6545,18 @@ return {
 // P3 (b250) — mascote no app (pós-login): sentado no card da meta (Home) e no fim de sessão.
 // Liga/desliga em Configurações, gravado SÓ no localStorage do aparelho (nunca no RTDB: campo novo
 // num set() do usuário comum derruba o set inteiro). Desligar vale só para o app; a vitrine é peça de venda.
-var MASCOTE_APP_FOLHA='assets/mascote/folha_v5.png',MASCOTE_COCHILO_MS=20000;
+var MASCOTE_APP_FOLHA='assets/mascote/folha_v7.png',MASCOTE_COCHILO_MS=20000;
 var _mascoteHomeP=null,_mascoteFimP=null,_mascoteCochiloTm=0;
+// b261 (frente 3): TONTO com rolagem muito rápida. Limiar em px/s de ROLAGEM da página, medido numa janela de ~150 ms (função pura
+// mascoteVelRolagem, testada). Medido no Chromium: roda de mouse normal ~550, rápida 1,4-1,7 mil, girada sem parar 2,4 mil, 300 px por quadro
+// (absurda) 4,9 mil px/s; o gesto de toque sintético do headless dá só ~1/4 da velocidade do dedo, então o fling de aparelho real NÃO foi
+// calibrado: o limiar de 6000 fica acima de tudo que a roda produz e só um fling forte alcança; ajustar aqui depois de testar no celular.
+var MASCOTE_TONTO_VEL=6000,MASCOTE_TONTO_JANELA_MS=150,MASCOTE_TONTO_MS=1500,MASCOTE_TONTO_INTERVALO_MS=45000,MASCOTE_TONTO_PARADA_MS=200;
+var _tontoUlt=-1e9,_tontoVitrineFeito=false,_tontoTelaFeito=false,_tontoPico=false,_tontoTm=0,_tontoAm=[];
+function mascoteVelRolagem(am,agora,y,janela){ // am: [[t,y],...] crescente; px/s entre a amostra mais antiga dentro da janela e (agora,y); 0 sem base de >=janela/2
+  for(var i=0;i<am.length;i++)if(agora-am[i][0]<=janela){var dt=agora-am[i][0];return dt>=janela/2?Math.abs(y-am[i][1])/dt*1000:0;}
+  return 0;
+}
 function mascoteLigado(){try{return localStorage.getItem('ctsp_mascote')!=='0';}catch(e){return true;}}
 function _marcarMascoteSeg(){
   var on=mascoteLigado();
@@ -6721,7 +6748,14 @@ function _mascoteEntradaPassos(){
     ['parado',1,function(p){_mascoteHomeSoltar(p);p.el.classList.remove('de-frente');}]
   ];
 }
-function _mascoteHomeReagir(p,acao,entra){
+// b261 (frente 4): pulso no selo da sequência junto do marco. Reduced-motion: nada (a classe nem entra).
+function _streakPulso(){
+  var b=document.getElementById('hdr-streak');
+  if(!b||_mascoteReduzido())return;
+  b.classList.remove('pulso');void b.offsetWidth;b.classList.add('pulso'); // reinicia a animação se já estava rodando
+  b.addEventListener('animationend',function(){b.classList.remove('pulso');},{once:true});
+}
+function _mascoteHomeReagir(p,acao,entra,marco){
   var s=[];
   if(entra)s=_mascoteEntradaPassos(); // vem de fora: nunca está sentado
   else if(_mascoteSentada(p))s.push(['levantar']);
@@ -6729,7 +6763,8 @@ function _mascoteHomeReagir(p,acao,entra){
     if(acao==='volta')s.push(['acenar',MASCOTE_ACENO_MS]);
     else s.push(['parado',350]); // respiro: a reação nasce no topo do renderDashboard, antes de a Home terminar de se desenhar; a medida do botão vem depois dele
     s=s.concat(_mascoteApontarSessao());
-  }else s.push(acao==='acenar'?['acenar',MASCOTE_ACENO_MS]:[acao]);
+  }else if(marco)s.push(['comemorar',0,_streakPulso],['continencia']); // marco de dias seguidos: comemora e bate continência; o pulso do selo sai junto do comemorar
+  else s.push(acao==='acenar'?['acenar',MASCOTE_ACENO_MS]:[acao]);
   s.push(['sentar_borda']);
   _mascoteHomeSeq(p,s);
 }
@@ -6791,10 +6826,28 @@ function mascoteHome(acordar){
     _mascoteGravar('aceno',hoje); // qualquer reação gasta o aceno do dia (meta/marco/volta tomam o lugar dele)
     if(r.acao==='comemorar')_mascoteGravar('meta',hoje);else if(r.marco)_mascoteGravar('marco',String(r.marco));
     else if(r.volta)_mascoteGravar('volta',r.volta);
-    _mascoteHomeReagir(p,r.acao,entra);
+    _mascoteHomeReagir(p,r.acao,entra,!!r.marco);
     return;
   }
   if((novo||acordar||estavaOculto)&&!(_mascoteSeqAtiva&&_mascoteSeqP===p))_mascoteHomeAssentar(p,entra); // sequência do hub (Progresso) em curso não conta: o navTo roda isto antes do mascoteTela que a cancela
+}
+// b261: tonto no app. Só com a pose SENTADA e à vista (borda/cochilo), na Home ou num hub vivo (a pose some no estudo: questão, card
+// aberto e resumo aberto não têm pose), sem sequência em curso (entrada, reação, descida do Progresso têm prioridade) e sem tour.
+// levantar -> tonto -> tonto_fim -> sentar_borda; no hub volta pelo fecho do hub (cochilo próprio, sem reação nem vigia do Progresso).
+function mascoteTontoApp(){
+  if(!mascoteLigado()||_mascoteReduzido()||document.hidden||_tutorialBloqueiaMascote()||_mascoteSeqAtiva||typeof Mascote==='undefined')return false;
+  var sc=document.querySelector('.screen.active'),tela=sc?sc.id.replace('screen-',''):'',p=null,fim=null;
+  if(tela==='inicio'){p=_mascoteHomeP;if(p&&p.el.classList.contains('hidden'))p=null;}
+  else if(_mascoteHubViva(tela)){
+    p=_mascoteHubP;var id=_mascoteHubSeq;
+    fim=function(){_mascoteHomeSoltar(p);p.el.classList.remove('de-frente');_mascoteHubBorda(p,id,true);};
+  }
+  if(!p||(p.acao()!=='borda'&&p.acao()!=='cochilar_borda'))return false;
+  var r=p.el.getBoundingClientRect(),hd=document.getElementById('app-header'),topo=hd?hd.getBoundingClientRect().bottom:0;
+  if(!(r.width>0&&r.bottom>topo&&r.top<innerHeight))return false; // fora da tela o motor nem anima (o aoFim não vem): só com ele à vista
+  clearTimeout(_mascoteHubCochiloTm);
+  _mascoteHomeSeq(p,[['levantar'],['tonto',MASCOTE_TONTO_MS],['tonto_fim'],['sentar_borda']],fim);
+  return true;
 }
 // Fim de sessão: >=70% comemora, 50-69% continência, abaixo disso só parado (nunca triste).
 // Padrão do fim de sessão (modal-fim e fim dos Cards): parado agora e, 400 ms depois, a reação, se ainda estiver parado e o slot na página.
@@ -6888,6 +6941,7 @@ function _mascoteHubAgendar(tela){
 // Fim do _navToInner (e setMascote/fecharTutorial): esconde a pose da tela anterior e agenda a entrada na nova (s omitido = tela ativa).
 function mascoteTela(s){
   if(s==null){var ac=document.querySelector('.screen.active');s=ac?ac.id.replace('screen-',''):'';}
+  _tontoTelaFeito=false;_tontoPico=false; // b261: cada navTo é uma visita nova para o tonto
   _mascoteHubOcultar();
   if(s!=='inicio'&&_mascoteHomeP&&_mascoteSeqP===_mascoteHomeP){_mascoteHomeCancelar();_mascoteHomeBorda(_mascoteHomeP);} // b260: saiu da Home no meio da entrada/reação: larga o fixed e volta ao assento (a tela está escondida; sem pose órfã rodando)
   _mascoteHubAgendar(s);
@@ -6914,6 +6968,7 @@ function _mascoteBotaoProgresso(){
 function _mascoteProgressoReagir(p,id){
   var hoje=diaLocal();
   if(id!==_mascoteHubSeq||_mascoteHubTela!=='progresso'||_mascoteReduzido()||document.hidden||_tutorialBloqueiaMascote()||!_mascoteDadosProntos()||_mascoteLer('progresso')===hoje)return;
+  if(_mascoteSeqAtiva)return; // b261: outra sequência em curso (ex.: o tonto) tem a vez; a marca do dia não é gasta e ele só aponta na próxima visita
   if(!_mascoteBotaoProgresso()||!_mascoteHubViva('progresso'))return;
   _mascoteGravar('progresso',hoje);
   clearTimeout(_mascoteHubCochiloTm);
@@ -7067,7 +7122,7 @@ var MascoteVitrine=(function initMascoteVitrine(){
   function garantir(){
     if(m)return;
     m=Mascote.criar({
-      sprite:'assets/mascote/folha_v5.png',
+      sprite:'assets/mascote/folha_v7.png',
       // canvas da água: nasce na ponta do esguicho do quadro atual do jato (BICO), esquerda do canvas em x=50
       agua:{bocalX:56,bocalY:18,esq:50,bico:Mascote.MASCOTE_BICO},
       escada:'assets/mascote/escada.png',
@@ -7396,8 +7451,57 @@ var MascoteVitrine=(function initMascoteVitrine(){
     if(acertou)m.tocar('comemorar');
     else{if(card)m.olharPara(card);m.tocar('apontar');}
   }
-  return {razao:razao,reagirA2:reagirA2};
+  // b261 (frente 3): TONTO com rolagem muito rápida. Ação do ocioso: só entra com ele parado ou andando (nunca em cima de jato, escada,
+  // espiar, comemorar, aceno...), 1x por visita e com intervalo mínimo (quem chama, _tontoRapido, controla). tonto ~1,5 s -> tonto_fim ->
+  // volta a acompanhar a rolagem. Reduced-motion: nada. Devolve true se começou.
+  function tonto(){
+    if(!m||oculto()||ocupado()||ativa()||document.hidden||movimentoReduzido())return false;
+    var a=m.acao();
+    if(['parado','piscar','andar','correr'].indexOf(a)<0)return false;
+    var t={k:'tonto',acao:'tonto',abortavel:false};
+    acaoAtiva=t;estac=false;ultimoMov=performance.now();
+    m.tocar('tonto',{duracaoMs:MASCOTE_TONTO_MS,aoTerminar:function(){
+      if(acaoAtiva!==t||!m)return;                 // outra ação por cima: o motor já trocou o aoTerminar, mas por garantia
+      t.acao='tonto_fim';                           // ativa() confere a ação do motor: sem isto a fila liberaria no meio do tonto_fim
+      m.tocar('tonto_fim',{aoTerminar:function(){
+        if(acaoAtiva===t)acaoAtiva=null;
+        if(!m)return;
+        ultimoMov=performance.now();
+        m.tocar('parado');m.andarAte(ultAlvo,{correr:false});agendarParar(500); // volta ao que fazia: acompanhar a rolagem
+      }});
+    }});
+    return true;
+  }
+  return {razao:razao,reagirA2:reagirA2,tonto:tonto};
 })();
+// b261: ouvinte ÚNICO de rolagem do tonto (passivo, sem trabalho fora de amostrar o y). Vitrine: dispara no pico (o mascote do rodapé está
+// sempre na tela). App: a pose está na página e a rolagem rápida a leva embora; espera a rolagem parar (200 ms) e só então vê se ela
+// está à vista. 1x por visita (vitrine = carga; app = cada navTo, ver mascoteTela) e intervalo mínimo entre disparos. Reduced-motion: nada.
+function _tontoRolou(ev){
+  if(_mascoteReduzido())return; // sem mascote animado: nem amostra (antes de alocar)
+  var au=document.getElementById('auth-screen');
+  if(!mascoteLigado()&&!(au&&au.classList.contains('active')))return; // logado com o mascote desligado: nada (a vitrine é peça de venda e não depende do liga/desliga)
+  var t=ev&&ev.target;
+  if(t&&t!==document&&t!==document.body&&t!==document.scrollingElement&&!(t.classList&&t.classList.contains('app-content')))return; // carrossel/lista interna não conta
+  var agora=performance.now(),y=(t&&t!==document&&t.scrollTop!=null)?t.scrollTop:_scrollYReal();
+  var v=mascoteVelRolagem(_tontoAm,agora,y,MASCOTE_TONTO_JANELA_MS);
+  _tontoAm.push([agora,y]);
+  while(_tontoAm.length&&agora-_tontoAm[0][0]>MASCOTE_TONTO_JANELA_MS*2)_tontoAm.shift();
+  if(v>=MASCOTE_TONTO_VEL)_tontoRapido(agora);
+  if(_tontoPico){clearTimeout(_tontoTm);_tontoTm=setTimeout(_tontoAposRolar,MASCOTE_TONTO_PARADA_MS);}
+}
+function _tontoRapido(agora){
+  if(agora-_tontoUlt<MASCOTE_TONTO_INTERVALO_MS||_mascoteReduzido())return;
+  if(MascoteVitrine&&!_tontoVitrineFeito&&MascoteVitrine.tonto()){_tontoUlt=agora;_tontoVitrineFeito=true;return;}
+  if(!_tontoTelaFeito)_tontoPico=true; // app: decide quando a rolagem parar
+}
+function _tontoAposRolar(){
+  _tontoPico=false;
+  var agora=performance.now();
+  if(_tontoTelaFeito||agora-_tontoUlt<MASCOTE_TONTO_INTERVALO_MS)return;
+  if(mascoteTontoApp()){_tontoUlt=agora;_tontoTelaFeito=true;}
+}
+document.addEventListener('scroll',_tontoRolou,{capture:true,passive:true});
 
 // PM1/6-D — fumaça das junções .lp-fumaca (landing). Só entra aqui (depois de
 // movimentoReduzido já definido) porque o script de reveal da landing (inline, mais
@@ -7827,7 +7931,7 @@ function _cenaPorTempo(secao,c){
   }
   function mMover(x,flip){mel.style.transform='translateX('+x+'px) scaleX('+(flip||1)+')';}
   function mMostrar(v){
-    if(v&&!mCarregou){mCarregou=true;mel.style.backgroundImage='url("assets/mascote/folha_v5.png")';}
+    if(v&&!mCarregou){mCarregou=true;mel.style.backgroundImage='url("assets/mascote/folha_v7.png")';}
     mel.classList.toggle('off',!v);
   }
   function mPose(a,ms){mAuto=false;mSaida=null;mAnim=a;mDesenhar(a,ms);}
@@ -8680,7 +8784,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.362';
+const APP_VERSAO='v1.363';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio

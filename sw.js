@@ -51,13 +51,13 @@ self.addEventListener('notificationclick', (e) => {
   })());
 });
 
-const CACHE = 'ctsp-cache-v43';
+const CACHE = 'ctsp-cache-v44';
 const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
   'assets/cesar-coin.png',
   'assets/loading.mp4', 'assets/loading-poster.jpg',
-  'assets/mascote/folha_v5.png', 'assets/mascote/escada.png'
+  'assets/mascote/folha_v7.png', 'assets/mascote/escada.png'
 ];
 const CROSS = [
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
