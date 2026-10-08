@@ -662,6 +662,15 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .pg-kpi-delta.down{color:var(--red);}
 .pg-subline{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--text2);margin-bottom:16px;padding:0 2px;}
 .pg-subline b{color:var(--text);font-variant-numeric:tabular-nums;}
+/* PG1 (b258): ação de estudo embaixo do número. Token único para todo KPI clicável; o "?" fica no
+   rótulo, então o botão nunca aninha outro controle. Alvo de toque >=44px. */
+.pg-kpi-acao-slot{margin:0 0 -10px;}
+.dash-body.carregando .pg-kpi-acao-slot,.dash-body.carregando .pg-sub-it>span:last-child{visibility:hidden;pointer-events:none;}
+.pg-sub-it{display:flex;flex-direction:column;align-items:flex-start;}
+.pg-kpi-acao{display:inline-flex;align-items:center;min-height:44px;padding:0 2px;background:none;border:0;box-shadow:none;color:var(--ember-text);font-size:12px;font-weight:700;cursor:pointer;text-align:left;}
+.pg-sub-it .pg-kpi-acao{margin:-8px 0;}
+.pg-kpi-acao:hover{text-decoration:underline;}
+.pg-kpi-acao:focus-visible{outline:2px solid var(--ember-text);outline-offset:2px;border-radius:6px;}
 .pg-mod-h{font-family:var(--font-display);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text);margin:4px 0 10px;}
 /* v1.224 — variante sem caixa-alta/tracking pra módulo secundário (Evolução), que também
    perdeu o cartão próprio (ver #pg-atividade .chart-wrap no desktop). Evita 3-4 rótulos
@@ -3289,13 +3298,13 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 
           <!-- PLACAR + SUBLINE — abaixo do herói, sem repetir domínio/projeção (D3). -->
           <div class="pg-placar pg-placar-2">
-            <div class="pg-kpi"><div class="pg-kpi-v" id="kpi-cobertura">—</div><div class="pg-kpi-l">Cobertura do edital <span class="info-btn" onclick="showInfo('cobertura')" aria-label="O que é cobertura do edital">?</span></div></div>
-            <div class="pg-kpi"><div class="pg-kpi-v"><span id="kpi-acuracia">—</span><span class="pg-kpi-delta" id="kpi-acuracia-delta"></span></div><div class="pg-kpi-l">Acurácia geral <span class="info-btn" onclick="showInfo('acuracia')" aria-label="O que é acurácia geral">?</span></div></div>
+            <div class="pg-kpi"><div class="pg-kpi-v" id="kpi-cobertura">—</div><div class="pg-kpi-l">Cobertura do edital <span class="info-btn" onclick="showInfo('cobertura')" aria-label="O que é cobertura do edital">?</span></div><div class="pg-kpi-acao-slot" id="acao-cobertura"></div></div>
+            <div class="pg-kpi"><div class="pg-kpi-v"><span id="kpi-acuracia">—</span><span class="pg-kpi-delta" id="kpi-acuracia-delta"></span></div><div class="pg-kpi-l">Acurácia geral <span class="info-btn" onclick="showInfo('acuracia')" aria-label="O que é acurácia geral">?</span></div><div class="pg-kpi-acao-slot" id="acao-acuracia"></div></div>
           </div>
           <div class="pg-subline">
             <span><b id="kpi-respondidas">0</b> respondidas</span>
-            <span><b id="kpi-revisados">0</b> revisados</span>
-            <span><b id="kpi-streak">0</b> dias seguidos</span>
+            <span class="pg-sub-it"><span><b id="kpi-revisados">0</b> revisados</span><span id="acao-revisados"></span></span>
+            <span class="pg-sub-it"><span><b id="kpi-streak">0</b> dias seguidos</span><span id="acao-streak"></span></span>
             <span id="kpi-hoje">Hoje: 0</span>
           </div>
 
@@ -4534,6 +4543,11 @@ function questaoEhNova(q){
   const f=userStats.questoesFSRS||{};
   const seen=userStats.seenIds||[];
   return !f[q.id] && !seen.includes(q.id) && !seen.includes(q.id+'_E');
+}
+
+// Existe alguma questão nova elegível? Mesmo filtro de novasPorCobertura, sem montar nem ordenar a fila.
+function temCoberturaNova(){
+  return Object.values(allQuestoes).some(q=>questaoEhNova(q)&&((AI[q.area]&&AI[q.area].n)||0)>0);
 }
 
 // Questões nunca respondidas, escolhidas por PESO DO EDITAL (AI[a].n) e, dentro da
@@ -8490,7 +8504,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.357';
+const APP_VERSAO='v1.358';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -10358,7 +10372,7 @@ function fimIr(fn){document.getElementById('modal-fim').classList.add('hidden');
 // botão abriria fila vazia quando o banco novo já tivesse acabado). Checar aqui, não dentro
 // de iniciarCoberturaNova — a tela de fim precisa saber ANTES de desenhar o botão.
 function _extraCoberturaOuTreino(){
-  return novasPorCobertura(coberturaNovaTam()).length>0
+  return temCoberturaNova()
     ? {b:'Estudar assunto novo',fn:iniciarCoberturaNova}
     : {b:'Refazer o treino',fn:()=>abrirIntro('treino')};
 }
@@ -12774,9 +12788,30 @@ function renderDominio(){
       try{localStorage.setItem('ctsp_dom_geral_'+(currentUser?currentUser.uid:'anon'),String(geral));}catch(e){}
     }
   }
+  renderPlacarAcoes(); // antes dos outros: se um deles lançar, as ações não ficam velhas
   renderVereditos();
   renderAgora();
   renderEvolucaoGeral();
+}
+
+// PG1 (b258): cada número do placar de "Meu progresso" aponta UMA ação de estudo (feed forward,
+// Hattie & Timperley 2007), derivada aqui na hora do render a partir do estado vivo; nada é gravado.
+// Ação sem destino útil não aparece. Respondidas e Hoje ficam sem ação de propósito (contagem).
+// Único writer dos #acao-*: renderDominio, chamado por renderDashboard.
+function abrirAssuntoNovoPorPeso(){
+  const q=novasPorCobertura(1)[0]; // mesma regra do "assunto novo por peso" do treino do dia
+  if(!q||!q.topico){showToast('Assunto novo em dia, sem cobertura pendente agora.');return;}
+  abrirIntro('topico',q.topico);
+}
+function renderPlacarAcoes(){
+  const poe=(id,rotulo,fn)=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.innerHTML=fn?'<button class="pg-kpi-acao" type="button" onclick="'+fn+'">'+rotulo+' →</button>':'';
+  };
+  poe('acao-cobertura','Ver assunto novo',temCoberturaNova()?'abrirAssuntoNovoPorPeso()':null);
+  poe('acao-acuracia','Revisar erros',Object.values(allQuestoes).some(q=>questaoNoCaderno(q.id))?"abrirIntro('erro')":null);
+  poe('acao-revisados','Ir aos cards',Object.keys(allFlashcards).length?"navTo('cards')":null);
+  poe('acao-streak','Sessão do dia',treinoFeitoHoje()?null:"abrirIntro('sessao')");
 }
 
 // ── F2a: cinco vereditos automáticos por área — substituem "Comparar duas áreas" (D2):
