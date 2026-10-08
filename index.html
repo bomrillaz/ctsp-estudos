@@ -1447,7 +1447,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .dominio-geral-pct{font-family:var(--font-display);font-size:46px;font-weight:700;color:var(--text);line-height:1;letter-spacing:-.01em;}
 
 /* F2a — cartão-herói: anel de domínio + projeção em pontos, um cartão só (D3). */
-.pg-hero-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:18px 16px;box-shadow:var(--shadow);margin-bottom:16px;}
+.pg-hero-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:18px 16px;box-shadow:var(--shadow);margin-bottom:16px;position:relative;margin-top:24px;} /* b260: o mascote senta na borda de cima do herói; o margin-top abre o vão para a pose não cobrir o cabeçalho (vale com e sem pose, como o #pg-vazio) */
 .pg-hero-ring-row{display:flex;align-items:center;gap:16px;}
 .pg-hero-ring{width:120px;height:120px;flex-shrink:0;}
 .pg-hero-info{flex:1;min-width:0;}
@@ -2051,14 +2051,11 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 #metas-card>.mascote-pose.indo{z-index:2;}
 /* P3b/B1: o aceno é de frente (a arte não espelha, igual à vitrine) */
 #metas-card>.mascote-pose.de-frente{transform:none;}
-/* b257 (MA1): mascote nos hubs de Quiz, Cards e Resumos. Mesmo assento da Home: sentado na borda de cima do .hub-inicio (filho absoluto: o rect do bloco nao muda). Entrada = so um fade; reduced-motion sem fade. */
-.hub-inicio>.mascote-pose,#pg-agora>.mascote-pose,#pg-vazio>.mascote-pose{position:absolute;right:14px;bottom:100%;margin-bottom:calc(-1px - var(--mascote-oy,0px));transform:scaleX(-1);}
-.hub-inicio>.mascote-pose.entra,#pg-agora>.mascote-pose.entra,#pg-vazio>.mascote-pose.entra{animation:mascoteHubEntra .35s ease-out both;}
+/* b257 (MA1): mascote nos hubs de Quiz, Cards e Resumos. Mesmo assento da Home: sentado na borda de cima do .hub-inicio (filho absoluto: o rect do bloco nao muda). Entrada = caminhada de fora da tela (b260, _mascoteEntradaPassos); reduced-motion = quadro fixo. */
+.hub-inicio>.mascote-pose,#pg-agora>.mascote-pose,#pg-vazio>.mascote-pose,.pg-hero-card>.mascote-pose{position:absolute;right:14px;bottom:100%;margin-bottom:calc(-1px - var(--mascote-oy,0px));transform:scaleX(-1);}
 /* b258 (PG2): Meu progresso senta na borda do card do "E agora?" (ou do estado vazio); filho absoluto, o rect do card nao muda. Apontar = .indo/.de-frente como na Home. */
-#pg-agora>.mascote-pose.indo,#pg-vazio>.mascote-pose.indo{z-index:2;}
-#pg-agora>.mascote-pose.de-frente,#pg-vazio>.mascote-pose.de-frente{transform:none;}
-@keyframes mascoteHubEntra{from{opacity:0}to{opacity:1}}
-@media(prefers-reduced-motion:reduce){.hub-inicio>.mascote-pose.entra,#pg-agora>.mascote-pose.entra,#pg-vazio>.mascote-pose.entra{animation:none;}}
+#pg-agora>.mascote-pose.indo,#pg-vazio>.mascote-pose.indo,.pg-hero-card>.mascote-pose.indo{z-index:2;}
+#pg-agora>.mascote-pose.de-frente,#pg-vazio>.mascote-pose.de-frente,.pg-hero-card>.mascote-pose.de-frente{transform:none;}
 @media(prefers-reduced-motion:reduce){.mascote,.mascote-escada{transition:none;}}
 
 /* ═══ M4 — A8 "faixa do edital" (substitui a A6) ═══
@@ -6600,17 +6597,17 @@ function _mascoteHomeFixar(p){
 // lista interna ou textarea é de outro elemento e não mexe na posição do botão em relação à pose.
 function _mascoteHomeRolou(ev){
   var t=ev&&ev.target,p=_mascoteSeqP||_mascoteHomeP;
-  if(!p||(t&&t!==document&&t!==document.scrollingElement&&!(t.classList&&t.classList.contains('app-content'))))return;
+  if(!p||(t&&t!==document&&t!==document.body&&t!==document.scrollingElement&&!(t.classList&&t.classList.contains('app-content'))))return;
   _mascoteHomeCancelar();_mascoteHomeBorda(p);
 }
 // Uma perna da caminhada, quadro a quadro (linear): da posição `de()` até `para()`, ambas lidas AO VIVO ({x,y} de
 // tela do canto da pose) — a Home ainda pode se reorganizar (faixas que entram depois) e o destino acompanha.
 // Chegou: continua colado em para() a cada quadro até a próxima perna ou o Soltar. Devolve a duração (ms).
 var MASCOTE_IR_PX_S=100; // caminhada: px de tela por segundo
-function _mascoteMover(p,de,para){
+function _mascoteMover(p,de,para,vel,tetoMs){
   cancelAnimationFrame(_mascoteMovRaf);
   var a=de(),b0=para(),d=Math.sqrt(Math.pow(b0.x-a.x,2)+Math.pow(b0.y-a.y,2));
-  var ms=Math.max(500,Math.min(2600,d/MASCOTE_IR_PX_S*1000)),t0=performance.now(),s=p.el.style;
+  var ms=Math.max(500,Math.min(tetoMs||2600,d/(vel||MASCOTE_IR_PX_S)*1000)),t0=performance.now(),s=p.el.style;
   (function f(now){
     var k=Math.max(0,Math.min(1,(now-t0)/ms)),b=para(),q=p.el.getBoundingClientRect();
     // um ancestral com transform (o #screen-inicio, animado ao entrar) vira o bloco de contenção do fixed: a diferença
@@ -6630,8 +6627,9 @@ function _mascoteHomeBorda(p){
 // Sequência de poses da Home. passos: [[acao,msLaco?,fn?]...]. Não-loop encadeia pelo aoFim; ação em laço
 // (acenar, correr) termina pelo timer msLaco. No fim cai sempre sentado na borda. Nunca pula da borda direto para pé:
 // quem está sentado passa por `levantar` antes (_mascoteHomeReagir) e volta por `sentar_borda`.
+// fim (b260, opcional): o que fazer ao terminar no lugar de _mascoteHomeBorda (o hub tem a borda dele: cochilo e reação próprios).
 // fn(p) (b256) roda no início do passo, já depois do espelhamento; devolver número = vale como msLaco, false = pula o passo.
-function _mascoteHomeSeq(p,passos){
+function _mascoteHomeSeq(p,passos,fim){
   clearTimeout(_mascoteCochiloTm);clearTimeout(_mascoteSeqTm);
   if(_mascoteSeqP&&_mascoteSeqP!==p)_mascoteHomeSoltar(_mascoteSeqP); // b258: a sequência anterior era de outra pose (Home x Progresso)
   _mascoteSeqP=p;
@@ -6640,7 +6638,7 @@ function _mascoteHomeSeq(p,passos){
   _mascoteSeqAtiva=true;
   (function prox(){
     if(id!==_mascoteSeqId)return;
-    if(i>=passos.length){_mascoteSeqAtiva=false;_mascoteSeqP=null;_mascoteHomeBorda(p);return;}
+    if(i>=passos.length){_mascoteSeqAtiva=false;_mascoteSeqP=null;if(fim)fim();else _mascoteHomeBorda(p);return;}
     var pa=passos[i++],ms=pa[1];
     p.el.classList.toggle('de-frente',pa[0]==='acenar'); // aceno de frente: a arte não espelha (igual à vitrine)
     p.base('parado');
@@ -6698,9 +6696,35 @@ function _mascoteApontar(getBotao,getBase){
     }]
   ];
 }
-function _mascoteHomeReagir(p,acao){
+// b260: ENTRADA andando, fonte única de Início, Quiz, Cards, Resumos e Meu progresso. Vem de fora da tela pela borda mais perto do
+// assento (andar no <768, correr no PC, como a vitrine) até o ponto em que fica de pé na base, sem aborto por rolagem (o destino é
+// lido ao vivo a cada quadro). 2 passos: a caminhada e um micro-passo que solta o fixed (de pé na base = mesmo ponto, sem salto)
+// para o `sentar_borda` seguinte descer ao assento normalmente. Sem assento visível na tela (card fora dela), pula: aparece como antes.
+// Quem chama NÃO usa em reduced-motion nem com mascote off (esses ramos já saem antes).
+var MASCOTE_ENTRADA_PX_S={andar:40,correr:100},MASCOTE_ENTRADA_TETO_MS=2400;
+function _mascoteEntradaPassos(){
+  var gait=(document.documentElement.clientWidth||innerWidth)<768?'andar':'correr';
+  var base=null,home=null;
+  return [
+    [gait,1,function(p){
+      base=p.el.parentNode;
+      p.tocar('parado'); // do assento para de pé: zera o --mascote-oy antes de medir
+      var pr=p.el.getBoundingClientRect(),vw=document.documentElement.clientWidth||innerWidth;
+      if(!base||!(pr.width>0)||pr.bottom<0||pr.top>innerHeight)return false;
+      var c=base.getBoundingClientRect(),de={x:pr.left+pr.width/2<vw/2?-pr.width:vw,y:pr.top},s=p.el.style;
+      home={x:pr.left-c.left,y:pr.top-c.top};
+      p.el.classList.toggle('de-frente',pr.left-de.x>4); // arte nativa olha para a direita; o CSS espelha o assento (esquerda)
+      s.position='fixed';s.left=de.x+'px';s.top=de.y+'px';s.right='auto';s.bottom='auto';s.margin='0';
+      p.el.classList.add('indo'); // sem listener de rolagem: o destino acompanha a página, a caminhada não aborta
+      return _mascoteMover(p,function(){return de;},function(){var r=(p.el.parentNode||base).getBoundingClientRect();return {x:r.left+home.x,y:r.top+home.y};},MASCOTE_ENTRADA_PX_S[gait],MASCOTE_ENTRADA_TETO_MS);
+    }],
+    ['parado',1,function(p){_mascoteHomeSoltar(p);p.el.classList.remove('de-frente');}]
+  ];
+}
+function _mascoteHomeReagir(p,acao,entra){
   var s=[];
-  if(_mascoteSentada(p))s.push(['levantar']);
+  if(entra)s=_mascoteEntradaPassos(); // vem de fora: nunca está sentado
+  else if(_mascoteSentada(p))s.push(['levantar']);
   if(acao==='volta'||acao==='revisao'){
     if(acao==='volta')s.push(['acenar',MASCOTE_ACENO_MS]);
     else s.push(['parado',350]); // respiro: a reação nasce no topo do renderDashboard, antes de a Home terminar de se desenhar; a medida do botão vem depois dele
@@ -6709,9 +6733,10 @@ function _mascoteHomeReagir(p,acao){
   s.push(['sentar_borda']);
   _mascoteHomeSeq(p,s);
 }
-function _mascoteHomeAssentar(p){
+function _mascoteHomeAssentar(p,entra){
   var a=p.acao();
   if(_mascoteReduzido())_mascoteHomeBorda(p); // sem rAF o aoFim não vem: sem sequência, só o quadro fixo
+  else if(entra)_mascoteHomeSeq(p,_mascoteEntradaPassos().concat([['sentar_borda']]));
   else if(a==='borda')_mascoteAgendarCochilo(p);
   else if(a==='cochilar_borda')_mascoteHomeBorda(p);
   else _mascoteHomeSeq(p,[['sentar_borda']]);
@@ -6756,6 +6781,7 @@ function mascoteHome(acordar){
   // b256: sem a 1ª carga do progresso e do banco não há ausência nem vencidas para ler; reagir agora gastaria a marca do dia
   // com um aceno (o renderDashboard() do fim do initApp reavalia quando a carga termina). As contas só rodam enquanto a marca do dia está livre (a vencida varre o banco, 1x por dia).
   var pronto=naHome&&!_tutorialBloqueiaMascote()&&!_mascoteReduzido()&&_mascoteDadosProntos(),ultAceno=_mascoteLer('aceno'),last=userStats.lastStudyDate||'';
+  var entra=naHome&&(novo||acordar||estavaOculto)&&!_mascoteReduzido()&&!_tutorialBloqueiaMascote()&&_mascoteDadosProntos(); // b260: chegou agora (navTo, 1ª criação ou tour fechado): entra andando; sem dados prontos, senta direto como antes
   var feita=treinoFeitoHoje(),livre=pronto&&!document.hidden&&ultAceno!==hoje;
   var r=pronto?mascoteReacaoHome({completo:diaCompleto(),ultMeta:_mascoteLer('meta'),hoje:hoje,
     streak:userStats.streak,ultMarco:parseInt(_mascoteLer('marco'),10)||0,ultAceno:ultAceno,
@@ -6765,10 +6791,10 @@ function mascoteHome(acordar){
     _mascoteGravar('aceno',hoje); // qualquer reação gasta o aceno do dia (meta/marco/volta tomam o lugar dele)
     if(r.acao==='comemorar')_mascoteGravar('meta',hoje);else if(r.marco)_mascoteGravar('marco',String(r.marco));
     else if(r.volta)_mascoteGravar('volta',r.volta);
-    _mascoteHomeReagir(p,r.acao);
+    _mascoteHomeReagir(p,r.acao,entra);
     return;
   }
-  if((novo||acordar||estavaOculto)&&!(_mascoteSeqAtiva&&_mascoteSeqP===p))_mascoteHomeAssentar(p); // sequência do hub (Progresso) em curso não conta: o navTo roda isto antes do mascoteTela que a cancela
+  if((novo||acordar||estavaOculto)&&!(_mascoteSeqAtiva&&_mascoteSeqP===p))_mascoteHomeAssentar(p,entra); // sequência do hub (Progresso) em curso não conta: o navTo roda isto antes do mascoteTela que a cancela
 }
 // Fim de sessão: >=70% comemora, 50-69% continência, abaixo disso só parado (nunca triste).
 // Padrão do fim de sessão (modal-fim e fim dos Cards): parado agora e, 400 ms depois, a reação, se ainda estiver parado e o slot na página.
@@ -6792,6 +6818,7 @@ function mascoteFim(pct){
 // o proprio render do estudo apaga o .hub-inicio (e a pose junto) e o runner do Quiz esconde o #quiz-home-view; a pose so volta
 // quando o hub renderiza de novo. UMA pose, movida de hub em hub. Entra ~1,5 s depois de a tela abrir (sem atrasar o navTo, que
 // segue sincrono); trocar de tela antes disso cancela a entrada. Reduced-motion: sem espera e sem sequencia (quadro fixo).
+var _mascoteProgBaixo=false,_mascoteProgTm=0,_mascoteProgRaf=0,_mascoteProgId=0;
 var MASCOTE_HUB_MS=1500,MASCOTE_HUB_REACAO_MS=600,_mascoteHubP=null,_mascoteHubTm=0,_mascoteHubCochiloTm=0,_mascoteHubReacaoTm=0,_mascoteHubTela='',_mascoteHubPend='',_mascoteHubSeq=0;
 // Ancora por tela: devolve o .hub-inicio SE a tela esta no hub (ou null). Tela fora da tabela = sem mascote.
 var MASCOTE_HUB={
@@ -6800,9 +6827,14 @@ var MASCOTE_HUB={
   resumos:function(){return resumosModo==='hub'?document.querySelector('#resumos-content>.hub-inicio'):null;},
   // b258 (PG2): Meu progresso senta no card do "E agora?" (só com conteúdo: o card vazio é display:none via :empty e uma pose o
   // faria aparecer em branco) ou, sem nenhuma resposta, no card do estado vazio.
+  // b260: com conteúdo ele chega EM CIMA, na borda do 1º card (o herói: anel de domínio + projeção); só desce ao "E agora?"
+  // (#pg-agora) quando o usuário rola até lá (_mascoteProgressoVigiar/Descer). _mascoteProgBaixo = já desceu nesta visita.
   progresso:function(){
     var v=document.getElementById('pg-vazio');if(v&&!v.classList.contains('hidden'))return v;
-    var a=document.getElementById('pg-agora');return a&&a.querySelector('.pg-agora-body')?a:null;
+    var a=document.getElementById('pg-agora');
+    if(_mascoteProgBaixo){if(a&&a.querySelector('.pg-agora-body'))return a;_mascoteProgBaixo=false;} // o corpo sumiu: volta ao herói e a flag não fica presa
+    var c=document.getElementById('pg-conteudo');
+    return c&&!c.classList.contains('hidden')?c.querySelector('.pg-hero-card'):null;
   }
 };
 // Tour aberto, ou agendado (1º acesso: o tour abre ~600 ms depois do primeiro render da Home): mascote quieto e sem reacao do dia.
@@ -6818,15 +6850,20 @@ function _mascoteHubAncora(tela){
 }
 function _mascoteHubOcultar(){
   clearTimeout(_mascoteHubTm);clearTimeout(_mascoteHubCochiloTm);clearTimeout(_mascoteHubReacaoTm);_mascoteHubSeq++;_mascoteHubTela='';_mascoteHubPend='';
+  _mascoteProgressoParar();_mascoteProgBaixo=false;
   if(_mascoteSeqP&&_mascoteSeqP===_mascoteHubP)_mascoteHomeCancelar(); // reação do Progresso no meio: larga a pose (fixed/.indo) antes de esconder
   if(_mascoteHubP)_mascoteHubP.el.classList.remove('de-frente');
   if(_mascoteHubP)_mascoteHubP.el.classList.add('hidden');
 }
-function _mascoteHubBorda(p,id){
+function _mascoteHubBorda(p,id,semReacao){
   if(id!==_mascoteHubSeq)return;
   p.base('borda');p.tocar('borda');
   _mascoteHubCochiloTm=setTimeout(function(){p.base('cochilar_borda');p.tocar('cochilar_borda');},MASCOTE_COCHILO_MS);
-  if(_mascoteHubTela==='progresso')_mascoteHubReacaoTm=setTimeout(function(){_mascoteProgressoReagir(p,id);},MASCOTE_HUB_REACAO_MS);
+  if(_mascoteHubTela==='progresso'&&!semReacao)_mascoteHubReacaoTm=setTimeout(function(){
+    var v=document.getElementById('pg-vazio');
+    if(v&&!v.classList.contains('hidden'))_mascoteProgressoReagir(p,id); // sem resposta nenhuma: o único card é o vazio, aponta o nivelamento
+    else _mascoteProgressoVigiar(p,id);                                    // com conteúdo: fica em cima até o "E agora?" entrar na tela
+  },MASCOTE_HUB_REACAO_MS);
 }
 function _mascoteHubEntrar(tela,id){
   _mascoteHubPend='';
@@ -6837,10 +6874,8 @@ function _mascoteHubEntrar(tela,id){
   _mascoteHubTela=tela;
   p.el.classList.remove('hidden');
   if(_mascoteReduzido()){p.base('borda');p.tocar('borda');return;}
-  p.el.classList.add('entra');
-  p.el.addEventListener('animationend',function(){p.el.classList.remove('entra');},{once:true});
   p.base('parado');
-  p.tocar('sentar_borda',function(){_mascoteHubBorda(p,id);});
+  _mascoteHomeSeq(p,_mascoteEntradaPassos().concat([['sentar_borda']]),function(){_mascoteHomeSoltar(p);p.el.classList.remove('de-frente');_mascoteHubBorda(p,id);});
 }
 function _mascoteHubAgendar(tela){
   if(!MASCOTE_HUB[tela]||typeof Mascote==='undefined'||_mascoteHubPend===tela||!_mascoteHubAncora(tela))return;
@@ -6854,6 +6889,7 @@ function _mascoteHubAgendar(tela){
 function mascoteTela(s){
   if(s==null){var ac=document.querySelector('.screen.active');s=ac?ac.id.replace('screen-',''):'';}
   _mascoteHubOcultar();
+  if(s!=='inicio'&&_mascoteHomeP&&_mascoteSeqP===_mascoteHomeP){_mascoteHomeCancelar();_mascoteHomeBorda(_mascoteHomeP);} // b260: saiu da Home no meio da entrada/reação: larga o fixed e volta ao assento (a tela está escondida; sem pose órfã rodando)
   _mascoteHubAgendar(s);
 }
 // A pose esta de fato visivel neste hub? (consultar ANTES do render do hub: o render apaga o .hub-inicio e a pose vai junto)
@@ -6883,6 +6919,78 @@ function _mascoteProgressoReagir(p,id){
   clearTimeout(_mascoteHubCochiloTm);
   var s=_mascoteSentada(p)?[['levantar']]:[];
   _mascoteHomeSeq(p,s.concat(_mascoteApontar(_mascoteBotaoProgresso,function(){return p.el.parentNode;}),[['sentar_borda']]));
+}
+// b260: com conteúdo, o mascote fica EM CIMA (borda do herói) e só DESCE ao "E agora?" quando ele aparece inteiro na tela (com o vão da pose
+// acima), fazendo lá o gesto de apontar do dia (1x/dia, marca 'progresso'). Apontar do dia já consumido = fica em cima e não vigia nada
+// (escolha mais simples: nada de descer sem apontar). Desce uma vez por visita; voltar a subir a página não o leva de volta.
+function _mascoteCardVisivel(el){
+  if(!el)return false;
+  var r=el.getBoundingClientRect(),hd=document.getElementById('app-header'),nv=document.getElementById('bottom-nav');
+  var topo=hd?hd.getBoundingClientRect().bottom:0,base=innerHeight;
+  if(nv){var nr=nv.getBoundingClientRect();if(nr.top>innerHeight/2)base=nr.top;}
+  return r.width>0&&r.height>0&&r.top-64>=topo&&r.top+96<=base;
+}
+function _mascoteProgressoParar(){
+  clearTimeout(_mascoteProgTm);cancelAnimationFrame(_mascoteProgRaf);_mascoteProgRaf=0;
+  document.removeEventListener('scroll',_mascoteProgressoRolou,true);
+}
+function _mascoteProgressoRolou(ev){
+  var t=ev&&ev.target;
+  if(t&&t!==document&&t!==document.body&&t!==document.scrollingElement&&!(t.classList&&t.classList.contains('app-content')))return; // carrossel/lista interna não conta; o scroller pode ser o .app-content, o body ou o documento
+  if(_mascoteProgRaf)return;
+  _mascoteProgRaf=requestAnimationFrame(function(){_mascoteProgRaf=0;_mascoteProgressoChecar();});
+}
+function _mascoteProgressoChecar(){
+  var p=_mascoteHubP,id=_mascoteProgId;
+  if(!p||id!==_mascoteHubSeq||_mascoteHubTela!=='progresso'||!_mascoteHubViva('progresso')){_mascoteProgressoParar();return;}
+  if(_mascoteSeqAtiva||document.hidden||_tutorialBloqueiaMascote()||!_mascoteDadosProntos())return; // ocupado, tour ou carga incompleta: tenta na próxima rolagem
+  if(!_mascoteCardVisivel(document.getElementById('pg-agora')))return;
+  _mascoteProgressoParar();
+  _mascoteProgressoDescer(p,id);
+}
+function _mascoteProgressoVigiar(p,id){
+  _mascoteProgressoParar();
+  if(id!==_mascoteHubSeq||_mascoteHubTela!=='progresso'||_mascoteReduzido()||_mascoteProgBaixo||_mascoteLer('progresso')===diaLocal())return;
+  _mascoteProgId=id;
+  document.addEventListener('scroll',_mascoteProgressoRolou,true);
+  _mascoteProgTm=setTimeout(_mascoteProgressoChecar,0); // o "E agora?" já pode estar na tela (PC, tela alta): desce já
+}
+function _mascoteProgressoDescer(p,id){
+  var hoje=diaLocal(),ag=document.getElementById('pg-agora');
+  if(id!==_mascoteHubSeq||_mascoteHubTela!=='progresso'||_mascoteReduzido()||!ag||!_mascoteDadosProntos()||_mascoteLer('progresso')===hoje)return;
+  if(!_mascoteBotaoProgresso()||!_mascoteHubViva('progresso'))return;
+  _mascoteGravar('progresso',hoje);
+  clearTimeout(_mascoteHubCochiloTm);
+  // Pose em cima FORA da tela (a página rolou até o "E agora?"): não dá para vê-lo descer, e fora da tela o motor nem anima (o aoFim
+  // não vem). Então muda de card já e ENTRA andando pela borda no assento novo, igual à entrada da tela. À vista (PC), desce correndo.
+  var pr0=p.el.getBoundingClientRect(),hd0=document.getElementById('app-header'),topo0=hd0?hd0.getBoundingClientRect().bottom:0;
+  if(!(pr0.bottom>topo0&&pr0.top<innerHeight)){
+    _mascoteProgBaixo=true;
+    if(p.el.parentNode!==ag)ag.appendChild(p.el);
+    _mascoteHomeSoltar(p);
+    _mascoteHomeSeq(p,_mascoteEntradaPassos().concat(_mascoteApontar(_mascoteBotaoProgresso,function(){return p.el.parentNode;}),[['sentar_borda']]),
+      function(){_mascoteHomeSoltar(p);p.el.classList.remove('de-frente');_mascoteHubBorda(p,id,true);});
+    return;
+  }
+  var s=_mascoteSentada(p)?[['levantar']]:[],start=null;
+  function alvo(){var r=ag.getBoundingClientRect();return {x:r.right-14-64,y:r.top+1-64};} // de pé na borda de cima do card, canto direito (o mesmo assento)
+  s.push(['correr',1,function(p){ // desce andando pela tela (fixed) até o assento do "E agora?"; sem aborto por rolagem: o destino é lido ao vivo
+    p.tocar('parado');
+    var pr=p.el.getBoundingClientRect(),a=alvo(),st=p.el.style;
+    if(!(pr.width>0))return false;
+    start={x:pr.left,y:pr.top};
+    p.el.classList.toggle('de-frente',a.x-pr.left>4);
+    st.position='fixed';st.left=pr.left+'px';st.top=pr.top+'px';st.right='auto';st.bottom='auto';st.margin='0';
+    p.el.classList.add('indo');
+    return _mascoteMover(p,function(){return start;},alvo,MASCOTE_IR_PX_S,MASCOTE_ENTRADA_TETO_MS);
+  }]);
+  s.push(['parado',1,function(p){ // chegou: o card novo é o assento; solta o fixed no mesmo ponto
+    _mascoteProgBaixo=true;
+    if(p.el.parentNode!==ag)ag.appendChild(p.el);
+    _mascoteHomeSoltar(p);p.el.classList.remove('de-frente');
+  }]);
+  _mascoteHomeSeq(p,s.concat(_mascoteApontar(_mascoteBotaoProgresso,function(){return p.el.parentNode;}),[['sentar_borda']]),
+    function(){_mascoteHomeSoltar(p);p.el.classList.remove('de-frente');_mascoteHubBorda(p,id,true);});
 }
 // Fim do renderDominio (os dois ramos). `viva` foi lida ANTES do render: o renderAgora reescreve o #pg-agora e leva a pose junto.
 function mascoteProgressoRender(viva){
@@ -6954,6 +7062,7 @@ var MascoteVitrine=(function initMascoteVitrine(){
   function razao(nome,v){
     if(razoes[nome]===v)return;
     razoes[nome]=v;aplicarVis();
+    if(nome==='cena'&&!v)jatoA3Logo();
   }
   function garantir(){
     if(m)return;
@@ -7116,6 +7225,7 @@ var MascoteVitrine=(function initMascoteVitrine(){
   // Espiar atrás do card (item 2) é a de prioridade MAIS BAIXA: só tenta se nenhuma seção está pendente (vista e ainda sem ação)
   // e nenhuma ação desta parada começou; ver tentarEspiar().
   var VISTO_MS=1000,ORDEM=['a3','planos','esc:lp-instrutor','esc:lp-passos','esc:lp-instalar'];
+  var tentativasA3=0,MAX_TENT_A3=2;
   var visto={},acaoAtiva=null,estac=false,espiarVez=false; // espiarVez: 1 tentativa de espiar por parada (mede layout)
   function fimDe(eu){return function(){if(acaoAtiva===eu)acaoAtiva=null;};}
   // o motor TROCA o aoTerminar quando outra ação entra por cima (toque/aceno, reagirA2: tocar() sobrescreve), e aí fimDe
@@ -7130,6 +7240,7 @@ var MascoteVitrine=(function initMascoteVitrine(){
     delete visto[k];
     if(ativa()&&acaoAtiva.k===k&&acaoAtiva.abortavel){
       acaoAtiva=null;
+      if(k==='a3'&&tentativasA3<MAX_TENT_A3)delete vistas.a3; // b260: jato cortado pela rolagem não conta como visto: tenta de novo, no máximo MAX_TENT_A3 vezes por carga (a 2ª, mesmo cortada, conta)
       if(m){m.tocar('parado');ultimoMov=performance.now();} // aborta o jato (o motor limpa a água ao trocar de ação)
     }
   }
@@ -7138,13 +7249,26 @@ var MascoteVitrine=(function initMascoteVitrine(){
     if(k==='a3'){
       var alvo=document.getElementById('lp-a3-cena');
       if(!alvo)return false;
-      vistas.a3=1;eu.abortavel=true;ultimoMov=performance.now();
+      vistas.a3=1;tentativasA3++;eu.abortavel=true;ultimoMov=performance.now();
       m.jatoEm(alvo,{duracaoMs:3000,aoTerminar:fimDe(eu)});
       return true;
     }
     vistas[k]=1;ultimoMov=performance.now();
     m.tocar('comemorar',{aoTerminar:fimDe(eu)});
     return true;
+  }
+  // b260: a A4 solta o palco com a A3 já na tela (rolagem corrida nunca estaciona, e o jato só vinha depois de
+  // parar). Se a curva da A3 está >=50% visível, o jato começa NA HORA, de onde ele reaparece; sem estacionar, sem o
+  // 1 s de VISTO_MS (a seção já passou de 40% antes de a A4 soltar). Uma vez por carga (vistas.a3), como o caminho de parada.
+  function jatoA3Logo(){
+    if(!m||vistas.a3||!(visto.a3>=0)||document.hidden||oculto()||ocupado()||ativa())return;
+    var alvo=document.getElementById('lp-a3-cena'),a=m.acao();
+    if(!alvo||['parado','piscar','andar','correr','sentar','cochilar'].indexOf(a)<0)return;
+    var r=alvo.getBoundingClientRect(),vh=innerHeight||document.documentElement.clientHeight;
+    if(!(r.height>0)||(Math.min(r.bottom,vh)-Math.max(r.top,0))/r.height<.5)return;
+    var t={k:'a3',acao:'jato',abortavel:false};
+    acaoAtiva=t;
+    if(iniciarAcao('a3',t))estac=false;else if(acaoAtiva===t)acaoAtiva=null;
   }
   function tentarAcao(){
     if(!estac||ativa()||!m||document.hidden||oculto()||ocupado())return false;
@@ -8556,7 +8680,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.361';
+const APP_VERSAO='v1.362';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
