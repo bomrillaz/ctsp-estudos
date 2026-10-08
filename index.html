@@ -1071,8 +1071,6 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
 .fim-inline{text-align:center;padding:40px 20px;}
 .fim-inline-icon{font-size:48px;margin-bottom:12px;color:var(--green);display:flex;justify-content:center;}
 .fim-inline-icon svg{width:52px;height:52px;}
-/* B4: mascote no lugar do ícone, só no fim dos Cards (slot recriado a cada render; a pose é movida para ele) */
-.fim-inline-mascote{width:64px;height:64px;margin:0 auto 12px;}
 .fim-inline-title{font-family:var(--font-display);font-size:24px;font-weight:700;margin-bottom:8px;}
 .fim-inline-sub{font-size:14px;color:var(--text2);}
 
@@ -1082,7 +1080,9 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
    var(--text) normal. Reduced-motion: mostrarFimSessao() zera animation-delay por
    elemento antes do replay (a regra global :207 só zera duration, nunca delay). */
 .fim-cascata{text-align:center;}
-.fim-mascote{width:64px;height:64px;margin:0 auto 12px;display:block;
+/* medidas do slot do mascote: fim do Quiz (.fim-mascote) e fim dos Cards (.fim-inline-mascote, B4: no lugar do ícone; slot recriado a cada render, a pose é movida para ele) */
+.fim-mascote,.fim-inline-mascote{width:64px;height:64px;margin:0 auto 12px;}
+.fim-mascote{display:block;
   opacity:0;transform:translateY(12px);animation:fimFade .28s var(--ease-out) forwards;}
 @keyframes fimFade{to{opacity:1;transform:translateY(0);}}
 .fim-stats{display:flex;gap:8px;margin:16px 0 18px;}
@@ -6573,7 +6573,7 @@ function _mascoteLer(nome){try{return localStorage.getItem(_mascoteChave(nome))|
 function _mascoteGravar(nome,v){try{localStorage.setItem(_mascoteChave(nome),v);}catch(e){}}
 var _mascoteSeqTm=0,_mascoteSeqId=0,_mascoteSeqAtiva=false,_mascoteSeqP=null; // _mascoteSeqP = a pose que a sequência está conduzindo (Home ou hub)
 function _mascoteReduzido(){return typeof movimentoReduzido==='function'?movimentoReduzido():matchMedia('(prefers-reduced-motion:reduce)').matches;}
-function _mascoteSentada(p){var a=p.acao();return a==='borda'||a==='cochilar_borda';}
+function _mascoteSentada(p){var a=p.acao();return a==='borda'||a==='cochilar_borda'||a==='sentar_borda';} // sentar_borda (descendo ao assento) também: a reação que chega no meio dele passa por `levantar` em vez de saltar para de pé
 function _mascoteAgendarCochilo(p){
   clearTimeout(_mascoteCochiloTm);
   _mascoteCochiloTm=setTimeout(function(){p.base('cochilar_borda');p.tocar('cochilar_borda');},MASCOTE_COCHILO_MS);
@@ -6750,6 +6750,7 @@ function mascoteHome(acordar){
   var p=_mascoteHomeP,estavaOculto=p.el.classList.contains('hidden');
   if(_tourAberto()){p.el.classList.add('hidden');return;} // b259: com o tour aberto o mascote do tour e o unico; a classe hidden nao muda o rect do #metas-card (alvo do 1o passo)
   p.el.classList.remove('hidden');
+  if(_mascoteSeqAtiva&&_mascoteSeqP===p&&_mascoteReduzido()){_mascoteHomeCancelar();_mascoteHomeBorda(p);} // reduced-motion ligou no meio da sequência: o aoFim não vem mais e _mascoteSeqAtiva ficaria presa
   var sc=document.getElementById('screen-inicio'),naHome=!!(sc&&sc.classList.contains('active'));
   var hoje=diaLocal();
   // b256: sem a 1ª carga do progresso e do banco não há ausência nem vencidas para ler; reagir agora gastaria a marca do dia
@@ -6770,6 +6771,13 @@ function mascoteHome(acordar){
   if((novo||acordar||estavaOculto)&&!(_mascoteSeqAtiva&&_mascoteSeqP===p))_mascoteHomeAssentar(p); // sequência do hub (Progresso) em curso não conta: o navTo roda isto antes do mascoteTela que a cancela
 }
 // Fim de sessão: >=70% comemora, 50-69% continência, abaixo disso só parado (nunca triste).
+// Padrão do fim de sessão (modal-fim e fim dos Cards): parado agora e, 400 ms depois, a reação, se ainda estiver parado e o slot na página.
+// Devolve o timer (o fim dos Cards cancela o anterior). Reduced-motion: o motor desenha o quadro fixo sem depender de aoFim.
+function _mascoteFimTocar(p,acao){
+  p.base('parado');p.tocar('parado');
+  if(!acao)return 0;
+  return setTimeout(function(){if(p.el.isConnected&&(p.acao()==='parado'||p.acao()==='piscar'))p.tocar(acao);},400);
+}
 function mascoteFim(pct){
   var slot=document.getElementById('fim-mascote');if(!slot)return;
   var on=mascoteLigado()&&typeof Mascote!=='undefined';
@@ -6777,8 +6785,7 @@ function mascoteFim(pct){
   if(!on)return;
   if(!_mascoteFimP)_mascoteFimP=Mascote.criarPose(slot,{sprite:MASCOTE_APP_FOLHA});
   var p=_mascoteFimP,acao=pct>=70?'comemorar':pct>=50?'continencia':null;
-  p.base('parado');p.tocar('parado');
-  if(acao)setTimeout(function(){if(p.acao()==='parado'||p.acao()==='piscar')p.tocar(acao);},400);
+  _mascoteFimTocar(p,acao);
 }
 
 // b257 (MA1) — mascote nos HUBS de Quiz, Cards e Resumos. NUNCA na questao, no card virando nem no resumo aberto: nessas telas
@@ -6886,10 +6893,10 @@ function mascoteProgressoRender(viva){
 // B4: fim dos flashcards (_estudoCards, única chamada de fimInlineHTML dos Cards). Meta de cards do dia
 // batida (flashcards avaliados hoje >= dose('cards'), a mesma regra do diaCompleto) -> comemora; senão continência
 // (nunca triste). Pura para o teste (teste_b4_mascote_cards.js).
-function mascoteFimCardsAcao(fcHoje,meta){return (fcHoje||0)>=meta?'comemorar':'continencia';}
+function mascoteFimCardsAcao(fc,meta){return (fc||0)>=meta?'comemorar':'continencia';}
 // O slot nasce de novo a cada render do fim (o RTDB de cards re-renderiza): UMA pose, movida para o slot novo,
-// em vez de criar uma por render (cada pose liga rAF + IntersectionObserver + listener). Mesmo padrão do
-// mascoteFim: parado, depois de 400 ms a reação. Reduced-motion: o motor desenha o quadro fixo sem depender de aoFim.
+// em vez de criar uma por render (cada pose liga rAF + IntersectionObserver + listener). A reação é a do
+// mascoteFim (_mascoteFimTocar). Reduced-motion: o motor desenha o quadro fixo sem depender de aoFim.
 var _mascoteCardsP=null,_mascoteCardsTm=0,_mascoteCardsChave='';
 // chave = dia + cards avaliados: re-render do listener (mesma contagem) não repete a reação; fim de sessão nova sim
 function mascoteFimCards(slot,acao,chave){
@@ -6899,9 +6906,8 @@ function mascoteFimCards(slot,acao,chave){
   if(p.el.parentNode!==slot)slot.appendChild(p.el);
   if(p.acao()===acao||(chave&&chave===_mascoteCardsChave))return; // re-render: não reinicia nem repete
   _mascoteCardsChave=chave||'';
-  p.base('parado');p.tocar('parado');
   clearTimeout(_mascoteCardsTm);
-  _mascoteCardsTm=setTimeout(function(){if(p.el.isConnected&&(p.acao()==='parado'||p.acao()==='piscar'))p.tocar(acao);},400);
+  _mascoteCardsTm=_mascoteFimTocar(p,acao);
 }
 
 // b252-MV1 — onde o mascote da vitrine PARA (rolagem quieta). Pura: livre(x) diz se o retângulo dele em x
@@ -8550,7 +8556,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.360';
+const APP_VERSAO='v1.361';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -8698,15 +8704,19 @@ function entradaHoje(){
   return e;
 }
 
+// Leitura da entrada do dia SEM criá-la (entradaHoje cria): {} se hoje ainda não tem. Fonte única de `fc` etc. para
+// diaCompleto, o cartão do dia fechado, a meta do painel e o fim dos Cards.
+function entradaHojeLer(){return (userStats.history||[]).find(h=>h.date===diaLocal())||{};}
+function fcHoje(){return entradaHojeLer().fc||0;}
+
 // ── Fechamento do dia: as DUAS metas (questões, flashcards) batidas = uma celebração
 // única no dia. Base comportamental: efeito Zeigarnik (fechar loops alivia) + gradiente de
 // meta (fechar o ciclo motiva e vira hábito). Só dispara uma vez por dia.
 // b172/D6: resumo saiu da cota (Dunlosky 2013 — resumir/reler tem utilidade baixa). Continua
 // acessível pela aba como consulta; vira consequência do erro, não objetivo diário.
 function diaCompleto(){
-  const today=diaLocal();
   const meta=userStats.metaDiaria||10;
-  const hj=(userStats.history||[]).find(h=>h.date===today)||{};
+  const hj=entradaHojeLer();
   const d=userStats.dose||{};
   return (hj.n||0)>=meta && (hj.fc||0)>=(d.cards||DOSE_PADRAO.cards);
 }
@@ -8727,7 +8737,7 @@ function _aplicarDiaFechado(){
   const fechado=userStats.diaCelebrado===diaLocal();
   card.classList.toggle('hidden',!fechado);
   if(!fechado)return;
-  const hj=(userStats.history||[]).find(h=>h.date===diaLocal())||{};
+  const hj=entradaHojeLer();
   const dias=userStats.streak||0;
   const sub=document.getElementById('dia-fechado-sub');
   if(sub)sub.textContent=(hj.n||0)+' questões · '+(hj.fc||0)+' cards · '+(hj.rs||0)+' resumos · sequência de '+dias+(dias===1?' dia':' dias');
@@ -9026,7 +9036,7 @@ function renderDashboard(){
   // S60: bater 76 de uma meta de 30 mostrava um "100%" seco, igual a quem fez 30 em
   // ponto — o esforço extra sumia. Ao superar a meta o anel fica cheio e o número dá
   // lugar a um "✓", com o quanto passou logo abaixo.
-  const hj=(userStats.history||[]).find(h=>h.date===today)||{};
+  const hj=entradaHojeLer();
   const desenharMeta=(idFill,idPct,idLbl,feito,alvo,nome)=>{
     const p=alvo>0?Math.min(100,Math.round(feito/alvo*100)):0;
     const bateu=alvo>0&&feito>=alvo;
@@ -10656,8 +10666,8 @@ function _estudoCards(){
       extrasHTML: (restam>0&&origemReforco!=='quiz')?`<button class="btn-weak btn-neutral" style="margin-top:8px" onclick="maisCards()">Fazer mais ${Math.min(dose('cards'),restam)}</button>`:'',
       linksHTML: origemReforco!=='quiz'?`${filtro?`<button class="fim-inline-link" onclick="limparFiltroCards()">Ver todos os tópicos</button>`:''}<button class="fim-inline-link" onclick="voltarHubCards()">← Voltar aos flashcards</button>`:''
     });
-    if(mascoteOn){const fcHoje=((userStats.history||[]).find(h=>h.date===diaLocal())||{}).fc||0;
-      mascoteFimCards(body.querySelector('.fim-inline-mascote'),mascoteFimCardsAcao(fcHoje,dose('cards')),diaLocal()+':'+fcHoje);}
+    if(mascoteOn){const fc=fcHoje();
+      mascoteFimCards(body.querySelector('.fim-inline-mascote'),mascoteFimCardsAcao(fc,dose('cards')),diaLocal()+':'+fc);}
     return;
   }
   cardIdx=0;
