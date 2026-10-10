@@ -3995,7 +3995,7 @@ let quizQueue=[],quizIdx=0,quizArea='TODAS',quizSessao={c:0,t:0},quizAnswered=fa
 // b171: total da sessão CONGELADO no início (quizIdx===0) — a re-exposição empurra item no
 // fim de quizQueue, então quizQueue.length cresce durante a sessão. "X de Y"/placar/barra
 // usam este valor pra não mentir conforme a fila cresce.
-let quizTotalSessao=0;
+let quizTotalSessao=0,quizTotalQuestoes=0; // quizTotalQuestoes: só questões (a Sessão do dia intercala cards na fila); denominador do header
 // 'quiz' enquanto um resumo/flashcard está aberto como REFORÇO de uma questão errada,
 // para devolver o usuário à questão (e não ao carrossel de resumos/cards) ao concluir.
 let origemReforco=null;
@@ -5425,7 +5425,7 @@ function mostrarTelaConfirmarEmail(){
   if(w)w.classList.add('hidden');
   if(s)s.classList.add('hidden');
   const email=sanitize(currentUser&&currentUser.email||'');
-  if(txt)txt.innerHTML='Confirme seu e-mail para continuar. Enviamos um link para <b>'+email+'</b>. Depois de clicar no link, volte aqui e toque em "Já confirmei". Não chegou? Confira a caixa de spam.';
+  if(txt)txt.innerHTML='Confirme seu e-mail para continuar. Enviamos um link para <b>'+email+'</b>. Depois de clicar no link, volte aqui e toque em "Já confirmei". Não chegou? Confira a caixa de spam. Se reenviar, abra só o e-mail mais recente: os anteriores deixam de valer.';
   if(ce)ce.classList.add('show');
 }
 async function _jaConfirmeiEmail(){
@@ -5436,7 +5436,7 @@ async function _jaConfirmeiEmail(){
     await currentUser.getIdToken(true); // token só carrega email_verified novo depois do refresh
     if(currentUser.emailVerified){location.reload();return;} // reentra pelo onAuthStateChanged já limpo
     const txt=document.getElementById('loading-confirmar-email-texto');
-    if(txt)txt.textContent='Ainda não confirmado. Confira sua caixa de entrada (e o spam).';
+    if(txt)txt.textContent='Ainda não confirmado. Abra o e-mail mais recente (confira o spam) e toque em "Já confirmei" de novo.';
   }catch(e){
     console.warn('_jaConfirmeiEmail: falha ao checar.',e.message);
   }finally{
@@ -5450,6 +5450,9 @@ async function _reenviarEmailVerificacao(){
   try{
     auth.languageCode='pt-BR';
     await currentUser.sendEmailVerification();
+    // Cada envio invalida os links anteriores e o Gmail agrupa os e-mails e abre o mais antigo: avisa qual abrir.
+    const txt=document.getElementById('loading-confirmar-email-texto');
+    if(txt)txt.innerHTML='Enviamos um link novo para <b>'+sanitize(currentUser.email||'')+'</b>. Abra só o e-mail mais recente: os anteriores deixam de valer. Depois toque em "Já confirmei".';
     _cooldownReenvio=Date.now()+60000;
     let restante=60;
     const tick=()=>{
@@ -6840,7 +6843,7 @@ function mascoteTontoApp(){
   if(tela==='inicio'){p=_mascoteHomeP;if(p&&p.el.classList.contains('hidden'))p=null;}
   else if(_mascoteHubViva(tela)){
     p=_mascoteHubP;var id=_mascoteHubSeq;
-    fim=function(){_mascoteHomeSoltar(p);p.el.classList.remove('de-frente');_mascoteHubBorda(p,id,true);};
+    fim=_mascoteHubFim(p,id,true);
   }
   if(!p||(p.acao()!=='borda'&&p.acao()!=='cochilar_borda'))return false;
   var r=p.el.getBoundingClientRect(),hd=document.getElementById('app-header'),topo=hd?hd.getBoundingClientRect().bottom:0;
@@ -6908,6 +6911,10 @@ function _mascoteHubOcultar(){
   if(_mascoteHubP)_mascoteHubP.el.classList.remove('de-frente');
   if(_mascoteHubP)_mascoteHubP.el.classList.add('hidden');
 }
+// Fecho do hub (fonte única): solta a pose da sequência e volta à borda. Devolve o aoFim para o _mascoteHomeSeq.
+function _mascoteHubFim(p,id,semReacao){
+  return function(){_mascoteHomeSoltar(p);p.el.classList.remove('de-frente');_mascoteHubBorda(p,id,semReacao);};
+}
 function _mascoteHubBorda(p,id,semReacao){
   if(id!==_mascoteHubSeq)return;
   p.base('borda');p.tocar('borda');
@@ -6928,7 +6935,7 @@ function _mascoteHubEntrar(tela,id){
   p.el.classList.remove('hidden');
   if(_mascoteReduzido()){p.base('borda');p.tocar('borda');return;}
   p.base('parado');
-  _mascoteHomeSeq(p,_mascoteEntradaPassos().concat([['sentar_borda']]),function(){_mascoteHomeSoltar(p);p.el.classList.remove('de-frente');_mascoteHubBorda(p,id);});
+  _mascoteHomeSeq(p,_mascoteEntradaPassos().concat([['sentar_borda']]),_mascoteHubFim(p,id));
 }
 function _mascoteHubAgendar(tela){
   if(!MASCOTE_HUB[tela]||typeof Mascote==='undefined'||_mascoteHubPend===tela||!_mascoteHubAncora(tela))return;
@@ -7024,7 +7031,7 @@ function _mascoteProgressoDescer(p,id){
     if(p.el.parentNode!==ag)ag.appendChild(p.el);
     _mascoteHomeSoltar(p);
     _mascoteHomeSeq(p,_mascoteEntradaPassos().concat(_mascoteApontar(_mascoteBotaoProgresso,function(){return p.el.parentNode;}),[['sentar_borda']]),
-      function(){_mascoteHomeSoltar(p);p.el.classList.remove('de-frente');_mascoteHubBorda(p,id,true);});
+      _mascoteHubFim(p,id,true));
     return;
   }
   var s=_mascoteSentada(p)?[['levantar']]:[],start=null;
@@ -7045,7 +7052,7 @@ function _mascoteProgressoDescer(p,id){
     _mascoteHomeSoltar(p);p.el.classList.remove('de-frente');
   }]);
   _mascoteHomeSeq(p,s.concat(_mascoteApontar(_mascoteBotaoProgresso,function(){return p.el.parentNode;}),[['sentar_borda']]),
-    function(){_mascoteHomeSoltar(p);p.el.classList.remove('de-frente');_mascoteHubBorda(p,id,true);});
+    _mascoteHubFim(p,id,true));
 }
 // Fim do renderDominio (os dois ramos). `viva` foi lida ANTES do render: o renderAgora reescreve o #pg-agora e leva a pose junto.
 function mascoteProgressoRender(viva){
@@ -8784,7 +8791,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.363';
+const APP_VERSAO='v1.364';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -10406,7 +10413,7 @@ const QUIZ_AREAS_LIVRES=['RAPIDO','INTELIGENTE','TREINO','ERRO','INTERLEAVING','
 // bloco existir, em qualquer modo que já reexpunha (TREINO, em produção).
 function atualizarScoreV(){
   document.getElementById('quiz-score-v').textContent=
-    QUIZ_AREAS_LIVRES.includes(quizArea)?String(quizSessao.t):quizSessao.t+'/'+quizTotalSessao;
+    QUIZ_AREAS_LIVRES.includes(quizArea)?String(quizSessao.t):quizSessao.t+'/'+(quizTotalQuestoes||quizTotalSessao);
 }
 // b171/D4: distingue card de questão dentro da fila mista da Sessão do dia. Duas condições
 // (tem .f/.v E não tem .ops) — um campo só é frágil; checagem completa num lugar só, chamada
@@ -10426,6 +10433,7 @@ function renderQuizQ(){
     quizReexpostas=new Set();
     quizRespondidasSessao=new Set();
     quizTotalSessao=quizQueue.length; // CONGELA o total
+    quizTotalQuestoes=quizQueue.filter(x=>!ehCardDeSessao(x)).length;
   }
   _reforcoResumosAvaliados.clear(); // nova questão = nova ocorrência de reforço
   const tot=quizTotalSessao||quizQueue.length; // fallback defensivo se chamado fora do fluxo normal (idx>0 sem ter passado por idx=0)
@@ -10529,8 +10537,12 @@ async function responderQuiz(idx){
   });
   if(acertou)carimbarAcerto(opts[correta]); // APP-D/b2: só no acerto; nada no erro
   if(!acertou)tremerCartao(document.querySelector('#quiz-running-view .quiz-body')); // PV1/6
-  quizSessao.t++;
-  if(acertou){quizSessao.c++;userStats.correct=(userStats.correct||0)+1;}
+  // b261: o placar da sessão (header e fim) é só a PRIMEIRA tentativa de cada questão; a resposta do reforço (re-exposição
+  // intra-sessão) vai à parte em rf/rfc (lazy, quizSessao é recriado em ~15 pontos). O motor (userStats, FSRS) segue contando as duas.
+  const jaReexposta=quizReexpostas.has(q.id);
+  if(jaReexposta){quizSessao.rf=(quizSessao.rf||0)+1;if(acertou)quizSessao.rfc=(quizSessao.rfc||0)+1;}
+  else{quizSessao.t++;if(acertou)quizSessao.c++;}
+  if(acertou)userStats.correct=(userStats.correct||0)+1;
   else userStats.wrong=(userStats.wrong||0)+1;
 
   const area=q.area||quizArea;
@@ -10543,7 +10555,6 @@ async function responderQuiz(idx){
   // F2 (b156-bloco3) + b157: captura ANTES de "Marcar visto" e antes de quizReexpostas ser mutado
   // abaixo — a re-exposição intra-sessão (o reaprendizado do Treino) não prova retenção espaçada
   // (Rawson & Dunlosky 2022), então nem tira a questão do Caderno de Erros nem alimenta BKT/itemStats.
-  const jaReexposta=quizReexpostas.has(q.id);
 
   // Marcar visto — o `_E` PERMANECE gravado para sempre que a questão erra: é fato
   // ("errou em algum momento"), não estado. Quem sai do Caderno é carimbo, não remoção
@@ -10704,6 +10715,15 @@ function configFimSessao(area){
       {b:'Praticar esta área de novo',fn:()=>abrirIntro('quiz',area)}]};
   }
 }
+// b261: o que não entra no placar (primeira tentativa de cada questão) aparece à parte no fim-sub: reforço refeito e cards da Sessão.
+function _linhasFimSessao(sc){
+  let r='';
+  const rf=sc.rf||0,rfc=sc.rfc||0,cd=sc.cd||0;
+  if(rf===1)r+=` 1 refeita no reforço: ${rfc?'acertou':'errou'}.`;
+  else if(rf>1)r+=` ${rf} refeitas no reforço: ${rfc===0?'nenhuma acertou':rfc===rf?'todas acertaram':rfc===1?'1 acertou':rfc+' acertaram'}.`;
+  if(cd)r+=` ${cd} card${cd>1?'s':''} revisado${cd>1?'s':''}.`;
+  return r;
+}
 // Tela de conclusão da sessão: fecha o objetivo (quando há), revela o aproveitamento (só
 // aqui, não durante) e conduz ao próximo passo em vez de largar o usuário num menu.
 function mostrarFimSessao(){
@@ -10717,12 +10737,16 @@ function mostrarFimSessao(){
     // (decisão do João: terminar o quiz não deve sequestrar o usuário sem aviso).
     cfg={...cfg,extras:[{b:'← Voltar ao Foco',primaria:true,fn:()=>navTo('foco')},...cfg.extras.map(x=>({...x,primaria:false}))]};
   }
-  const subBase=pct>=70?(cfg.diario?'Mandou bem. Objetivo do dia cumprido.':'Mandou bem.'):pct>=50?'Bom trabalho, o reforço fixa o resto.':'O que vale é a constância; o que você errou volta espaçado.';
+  const semQ=!t; // b261: sessão só de cards (nenhuma questão em 1ª tentativa): sem Acertos/% e sem mensagem de desempenho
+  g('fim-stat-acertos').classList.toggle('hidden',semQ);
+  g('fim-stat-aproveitamento').classList.toggle('hidden',semQ);
+  const subBase=semQ?'':pct>=70?(cfg.diario?'Mandou bem. Objetivo do dia cumprido.':'Mandou bem.'):pct>=50?'Bom trabalho, o reforço fixa o resto.':'O que vale é a constância; o que você errou volta espaçado.';
   const md=tempoMedioQuestao();
-  const ritmo=md?` Ritmo ${fmtRitmo(md)}/questão${md>TEMPO_PROVA_POR_Q?' (acima dos 3min da prova)':''}.`:'';
+  const extras=_linhasFimSessao(quizSessao);
+  const ritmo=md?` Ritmo médio geral ${fmtRitmo(md)}/questão${md>TEMPO_PROVA_POR_Q?' (acima dos 3min da prova)':''}.`:'';
   mascoteFim(pct);
   g('fim-title').textContent=cfg.titulo;
-  g('fim-sub').textContent=subBase+ritmo;
+  g('fim-sub').textContent=(subBase+extras+ritmo).trim();
   window._fimSessaoFns=cfg.extras.map(x=>x.fn);
   g('fim-acoes').innerHTML=cfg.extras.map((x,i)=>
     `<button class="${x.primaria?'btn-primary':'btn-weak btn-neutral'}" onclick="fimIr(_fimSessaoFns[${i}])">${x.b}</button>`
@@ -11039,11 +11063,8 @@ async function avaliarCard(dif){
   if(dif==='med'||dif==='fac')bktTocarRecuperacao(topicoDe(fc),BKT_RECUP_CARD);
   saveProg();
   updateBadges();           // BLOCO 43: baixa o badge ao vivo conforme a dose do dia é cumprida
-  // b171/D4/#7: quizSessao é o placar da Sessão (quiz-score-v, mostrarFimSessao) — sem contar
-  // o card aqui, o denominador (quizTotalSessao, questão+card) nunca bate com o numerador
-  // (só questão), mesmo numa sessão 100% completa. med/fac = recuperação bem-sucedida, mesmo
-  // critério já usado acima pra bktTocarRecuperacao.
-  if(naSessao){quizSessao.t++;if(dif!=='dif')quizSessao.c++;quizIdx++;renderQuizQ();irAoTopoDoConteudo();}
+  // b261: card da Sessão NÃO entra no placar de acertos (t/c é só questão, primeira tentativa); só conta em cd, que o fim mostra à parte.
+  if(naSessao){quizSessao.cd=(quizSessao.cd||0)+1;quizIdx++;renderQuizQ();irAoTopoDoConteudo();}
   else{cardIdx++;renderCard();}
 }
 
@@ -14665,7 +14686,8 @@ async function loadReportes(){
         +(r.descricao?'<div class="rep-item-desc">'+sanitize(r.descricao)+'</div>':'')
         // B99 — sem isto, reporte que só tem `texto` (pedido de exclusão de conta,
         // aviso de pagamento) chegava ao painel como um cartão VAZIO.
-        +(r.texto&&!r.descricao?'<div class="rep-item-desc">'+sanitize(r.texto)+'</div>':'')
+        // PD4: o `texto` do reporte do formulário (categoria·tipo id·preview·quem) só repete o que o card já mostra; o fallback é para quem não passa pelo formulário.
+        +(r.texto&&!r.descricao&&!r.categoria?'<div class="rep-item-desc">'+sanitize(r.texto)+'</div>':'')
         +'<div class="rep-item-meta">'+sanitize(r.nome||'anônimo')+' · '+data+'</div>'
         // B149 — recolhido por padrão: é ruído em 90% dos casos e o painel não pode virar log.
         +(r.diag?'<details class="rep-item-diag"><summary>Diagnóstico técnico</summary><pre>'+sanitize(r.diag)+'</pre></details>':'')
