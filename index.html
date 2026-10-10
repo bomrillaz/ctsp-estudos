@@ -1176,6 +1176,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .resumo-btn.med{background:var(--amber-light);color:var(--amber);}
 .resumo-btn.fac{background:var(--green-light);color:var(--green);}
 .resumos-list{display:flex;flex-direction:column;gap:10px;}
+.resumo-list-item .resumo-dif-tag{flex-shrink:0;white-space:nowrap;}
 .resumo-list-item{background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px;cursor:pointer;}
 .resumo-list-vence{font-size:11px;color:var(--text3);}
 .resumo-list-vence--pend{color:var(--amber);font-weight:800;}
@@ -1248,8 +1249,6 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
    qualquer aba (inclusive Avisos, que TEM seu próprio primário "Enviar aos usuários") mostrava
    2 botões vermelhos de peso máximo ao mesmo tempo. Neutro aqui deixa o primário de cada aba
    ser o único "mais forte" da tela. */
-.btn-admin-util{width:100%;padding:14px;background:var(--paper-2);color:var(--text2);border:1px solid var(--line-soft);border-radius:14px;font-size:14px;font-weight:700;}
-.btn-admin-util:active{background:var(--border);}
 .admin-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:16px;}
 .admin-tab{padding:8px 16px;background:var(--surface);border:1px solid var(--line-soft);border-radius:20px;font-size:12px;font-weight:700;color:var(--text2);box-shadow:var(--shadow);text-align:center;}
 .admin-tab.active{background:var(--navy);color:white;border-color:var(--navy);}
@@ -1567,6 +1566,10 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
    botão do tour. O X e o "Entendi" voltam quando o convite é aberto pelo menu. */
 .install-banner.tour-ativo .install-x,
 .install-banner.tour-ativo .install-ok{display:none;}
+/* No passo do banner (tour-ativo SEM tour-oculto) ele sobe acima do #modal-tutorial (fixed, z 1000, onclick=fecharTutorial): antes o
+   overlay cobria o banner e engolia o toque em "Instalar" (fechava o tour e gravava tutorialVisto sem chamar prompt()). Nos outros
+   passos continua visibility:hidden, como sempre. */
+.install-banner.tour-ativo:not(.tour-oculto){z-index:1001;}
 
 /* PAINEL DO DIA + selo salvo */
 /* (S64) CSS do card "Hoje" removido — o painel virou KPI no placar de "Meu progresso". */
@@ -3251,10 +3254,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
       <div class="admin-screen">
         <h2>Painel Admin</h2>
         <p>Gerencie usuários, reportes e avisos</p>
-        <div id="admin-sync" style="margin-bottom:14px;">
-          <button class="btn-admin-util" onclick="sincronizarBanco()">Sincronizar banco (QI + FCI → Firebase)</button>
-          <p class="auth-msg" id="sync-msg" role="alert"></p>
-        </div>
         <div class="admin-tabs" role="tablist" aria-label="Seções do painel admin">
           <button class="admin-tab active" id="admin-tab-usuarios" role="tab" aria-selected="true" aria-controls="admin-usuarios" onclick="setAdminTab('usuarios',this)">Usuários</button>
           <button class="admin-tab" id="admin-tab-reportes" role="tab" aria-selected="false" aria-controls="admin-reportes" onclick="setAdminTab('reportes',this)">⚐ Reportes<span class="rep-badge" id="rep-badge-tab" style="display:none">0</span></button>
@@ -7365,7 +7364,9 @@ var MascoteVitrine=(function initMascoteVitrine(){
       });
       razao('cta',ctaNaBanda>0);
     },{rootMargin:'-'+topo+'px 0px 0px 0px'});
-    alvosCta=[].slice.call(landing.querySelectorAll('.lp-btn-cta,.lp-btn-linha,.plano-btn-cta,.plano-btn-weak,.plano-card'));
+    // MP (c): protege só os BOTÕES (CTA de assinar/teste). O cartão de plano em si deixou de esconder o mascote na faixa de 84 px:
+    // no 375 o cartão quase nunca saía dela e a comemoração dos planos nunca aparecia.
+    alvosCta=[].slice.call(landing.querySelectorAll('.lp-btn-cta,.lp-btn-linha,.plano-btn-cta,.plano-btn-weak'));
     alvosCta.forEach(function(el){el._mDentro=false;ioBanda.observe(el);});
   }
   var tmRs=0;
@@ -7547,7 +7548,7 @@ var MascoteVitrine=(function initMascoteVitrine(){
   //  2 topo remoto (qualquer largura): borda de cima visível (>=ESP_TOPO_MIN do alto) fora da faixa -> ele afunda pelo rodapé e
   //    reaparece recortado atrás dela (o motor teleporta enquanto 100% escondido). É o que faz o celular não depender da rolagem.
   var ESP_DIST=120,ESP_CIMA_MIN=24,ESP_CIMA_MAX=44,ESP_CIMA_MIN_M=4,ESP_CIMA_MAX_M=56,ESP_TOPO_MIN=72,
-      LP_CARDS='.lp-card,.lp-video-card,.lp-a2-card',CTA_SEL='.lp-btn-cta,.lp-btn-linha,.plano-btn-cta,.plano-btn-weak,.plano-card';
+      LP_CARDS='.lp-card,.lp-video-card,.lp-a2-card',CTA_SEL='.lp-btn-cta,.lp-btn-linha,.plano-btn-cta,.plano-btn-weak';
   function pendente(){return ORDEM.some(function(k){return visto[k]>=0&&!vistas[k];});} // há seção vista e ainda sem ação: ela tem prioridade
   // r = retângulo do mascote; maxCusto = px que ele aceita andar até a lateral de um card (parar(): o custo da borda)
   function acharCard(r,vw,maxCusto){
@@ -8942,23 +8943,9 @@ async function loadQuestoes(){
     return toSave;
   };
   const local=localFallback();
-  // QI (versionado no index.html) é SEMPRE a fonte de verdade do conteúdo — usado em memória
-  // incondicionalmente, independente do estado do Firebase (elimina questões órfãs herdadas
-  // de limpezas/consolidações anteriores que nunca foram removidas do banco remoto).
+  // QI (vem de conteudo/ via carregarConteudo, PS1) é a única fonte das questões, só em memória. Os nós
+  // `questoes`/`flashcards` do RTDB não são mais lidos nem espelhados (PJ24: auto-cura e botão do admin removidos).
   allQuestoes=local;
-  try{
-    const snap=await withTimeout(db.ref('questoes').get());
-    const remoto=snap.exists()?snap.val():{};
-    const remotoKeys=Object.keys(remoto),localKeys=Object.keys(local);
-    const desalinhado=remotoKeys.length!==localKeys.length||remotoKeys.some(k=>!local[k])||localKeys.some(k=>!remoto[k]);
-    if(desalinhado&&isAdmin()){
-      // Auto-cura silenciosa: espelha o Firebase 1:1 com o local (remove órfãos, adiciona novos).
-      // set() (não update()) — sobrescreve o nó inteiro, garantindo que nada desatualizado sobre.
-      try{await withTimeout(db.ref('questoes').set(local));}catch(e){console.warn('Auto-sync questoes (sem permissão de escrita?):',e.message);}
-    }
-  }catch(e){
-    console.warn('loadQuestoes: Firebase indisponível, usando banco local.',e.message);
-  }
   // Garantir que a lista de áreas está sempre populada após carregar
   renderAreaList();
 }
@@ -8966,21 +8953,8 @@ async function loadQuestoes(){
 async function loadFlashcards(){
   const localFallback=()=>{const t={};FCI.forEach(fc=>{t[fc.id]=fc;});return t;};
   const local=localFallback();
-  // FCI (versionado no index.html) é SEMPRE a fonte de verdade do conteúdo — usado em memória
-  // incondicionalmente (elimina flashcards órfãos de consolidações anteriores nunca removidos do Firebase).
+  // FCI (vem de conteudo/ via carregarConteudo, PS1) é a única fonte dos flashcards, só em memória (ver loadQuestoes).
   allFlashcards=local;
-  try{
-    const snap=await withTimeout(db.ref('flashcards').get());
-    const remoto=snap.exists()?snap.val():{};
-    const remotoKeys=Object.keys(remoto),localKeys=Object.keys(local);
-    const desalinhado=remotoKeys.length!==localKeys.length||remotoKeys.some(k=>!local[k])||localKeys.some(k=>!remoto[k]);
-    if(desalinhado&&isAdmin()){
-      // Auto-cura silenciosa: espelha o Firebase 1:1 com o local via set() (sobrescreve o nó inteiro).
-      try{await withTimeout(db.ref('flashcards').set(local));}catch(e){console.warn('Auto-sync flashcards (sem permissão de escrita?):',e.message);}
-    }
-  }catch(e){
-    console.warn('loadFlashcards: Firebase indisponível, usando banco local.',e.message);
-  }
   // Atualizar cards e badges após carregar
   renderCards();
   updateBadges();
@@ -8992,7 +8966,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.367';
+const APP_VERSAO='v1.368';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -10329,9 +10303,10 @@ function fecharConfirm(e){if(e&&e.target!==e.currentTarget)return;document.getEl
 // PE16: `topico` opcional — quando o call site passa o código do tópico, a própria
 // função anexa o selo "Atualizado" (fonte única, CLAUDE.md §10: consertar a fonte
 // compartilhada, nunca o call site). Ausente = comportamento igual a antes.
-function itemFolhaHTML({icBox,icon,titulo,sub,subTom,onclick,extraClass,seta,minw0,id,topico}){
+function itemFolhaHTML({icBox,icon,titulo,sub,subTom,onclick,extraClass,seta,minw0,id,topico,tagHTML}){
   return `<div${id?` id="${id}"`:''} class="resumo-list-item${extraClass?' '+extraClass:''}" role="button" tabindex="0" onclick="${onclick}">
         <div style="flex:1${minw0?';min-width:0':''}"><div style="font-size:13px;font-weight:700">${titulo}${topico?atuSeloHTML(topico):''}</div><div class="resumo-list-vence${subTom?' resumo-list-vence--'+subTom:''}">${sub}</div></div>
+        ${tagHTML||''}
         ${seta?'<div style="color:var(--text3);font-size:18px">→</div>':''}
       </div>`;
 }
@@ -11638,15 +11613,13 @@ function _estudoResumos(){
   const ehNovoR=!urR||!urR.reps; // S47: selo Novo/Revisão, igual a cards e quiz
   registrarVisualizacaoResumo(r.id);
   const aInfo=AI[r.area]||{};
-  const probLabel=r.prob==='alta'?'Alta probabilidade':r.prob==='media'?'Média':'Baixa';
-  const probCor=r.prob==='alta'?'background:var(--red-light);color:var(--red-dark)':r.prob==='baixa'?'background:var(--green-light);color:var(--green)':'background:var(--amber-light);color:var(--amber)';
   content.innerHTML=`
     <button onclick="voltarHubResumos()" style="width:100%;margin-bottom:10px;padding:9px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:700;color:var(--text2)">← Resumos</button>
     <div class="resumo-card">
       <div class="resumo-card-top">
         <span class="resumo-area-tag" style="background:${aInfo.bg};color:${aInfo.color}">${aInfo.icon} ${r.area}</span>
         <span class="q-badge ${ehNovoR?'badge-nova':'badge-rev'}">${ehNovoR?'NOVO':'REVISÃO'}</span>
-        <span class="resumo-dif-tag" style="${probCor}">${probLabel}</span>
+        ${resumoProbTag(r.prob,true)}
       </div>
       <div class="resumo-titulo">${sanitize(r.titulo)}</div>
       <div class="resumo-texto">${sanitize(r.texto).replace(/\n/g,'<br>')}</div>
@@ -11684,6 +11657,14 @@ function maisResumos(){doseExtra.resumos+=dose('resumos');renderResumos();}
 // Aposenta os chips de filtro do topo: no desktop a lista é grid (min 300px) e os
 // cabeçalhos soltos de área/tópico caíam como células da grade — eram os "blocos
 // opacos que não clicam" do print. Com o acordeão, cada área é UMA célula.
+// Etiqueta de probabilidade do resumo (PD3): fonte única do leitor (estudo e avulso) e da lista. Rótulos: alta | media | baixa
+// (o banco hoje só tem os dois primeiros); `longo` = "Alta probabilidade" na folha do resumo, "Alta" na lista e no avulso.
+function resumoProbTag(prob,longo){
+  if(!prob)return '';                             // sem prob no banco: sem tag (nunca inventar "Média")
+  const label=prob==='alta'?(longo?'Alta probabilidade':'Alta'):prob==='baixa'?'Baixa':'Média';
+  const cor=prob==='alta'?'background:var(--red-light);color:var(--red-dark)':prob==='baixa'?'background:var(--green-light);color:var(--green)':'background:var(--amber-light);color:var(--amber)';
+  return `<span class="resumo-dif-tag" style="${cor}">${label}</span>`;
+}
 function renderResumoLista(){
   const now=Date.now();
   const vencido=r=>{const ur=userStats['resumo_'+r.id];return !ur||!ur.next||ur.next<=now;};
@@ -11705,7 +11686,7 @@ function renderResumoLista(){
         const ur=userStats['resumo_'+r.id];
         const ehNovoR2=!ur||!ur.reps; // igual ao selo Novo/Revisão de Cards (S47) — sem isso, resumo nunca lido aparecia como "Revisão: Hoje"
         const vence=ehNovoR2?'Novo':`Revisão: ${ur?.next?new Date(ur.next).toLocaleDateString('pt-BR'):'Hoje'}`;
-        itens+=itemFolhaHTML({icBox,icon:aInfo.icon,titulo:sanitize(r.titulo),sub:vence,subTom:vencido(r)?'pend':null,onclick:`mostrarResumoDirecto('${r.id}')`,minw0:true});
+        itens+=itemFolhaHTML({icBox,icon:aInfo.icon,titulo:sanitize(r.titulo),sub:vence,subTom:vencido(r)?'pend':null,onclick:`mostrarResumoDirecto('${r.id}')`,minw0:true,tagHTML:resumoProbTag(r.prob)});
       });
       dentro+=hubTopicoHTML(sanitize(nomeTopico(t)),`${doTopico.length}${nPendT?` · ${nPendT} a revisar`:''}`,itens,t);
     });
@@ -11737,15 +11718,12 @@ function mostrarResumoDirecto(id,emSeq){
     </div>`:'';
   resumosModo='estudo';resumosUnico=true;
   const aInfo=AI[r.area]||{};
-  // Rótulos suportados: alta | media | baixa (o Bloco A usa só os dois primeiros).
-  const probLabel=r.prob==='alta'?'Alta':r.prob==='baixa'?'Baixa':'Média';
-  const probCor=r.prob==='alta'?'background:var(--red-light);color:var(--red-dark)':r.prob==='baixa'?'background:var(--green-light);color:var(--green)':'background:var(--amber-light);color:var(--amber)';
   resumoAtualId=id;
   document.getElementById('resumos-content').innerHTML=`${navSeq}
     <div class="resumo-card">
       <div class="resumo-card-top">
         <span class="resumo-area-tag" style="background:${aInfo.bg};color:${aInfo.color}">${aInfo.icon} ${r.area}</span>
-        <span class="resumo-dif-tag" style="${probCor}">${probLabel}</span>
+        ${resumoProbTag(r.prob)}
       </div>
       <div class="resumo-titulo">${sanitize(r.titulo)}</div>
       <div class="resumo-texto">${sanitize(r.texto).replace(/\n/g,'<br>')}</div>
@@ -13014,33 +12992,6 @@ async function voltarParaTeste(uid){
   loadAdminUsers();
 }
 
-// Sincroniza QI + FCI (fonte da verdade, versionados no index.html) com os nós 'questoes' e
-// 'flashcards' do Firebase. update() é merge por chave: adiciona itens novos, atualiza os campos
-// nos existentes e NUNCA apaga nada. Botão manual do admin; a reconciliação por contagem nos loads
-// já corrige o caso comum automaticamente, mas este botão força a sincronização quando preciso.
-async function sincronizarBanco(){
-  if(!isAdmin())return;
-  if(!confirm('Sincronizar questões (QI) e flashcards (FCI) com o Firebase?\n\nEspelho completo: o Firebase passa a ser IDÊNTICO ao index.html. Adiciona itens novos, atualiza existentes E remove do Firebase qualquer item que não exista mais no QI/FCI local (órfãos de limpezas/consolidações anteriores).'))return;
-  const mapa={};
-  Object.entries(QI).forEach(([area,qs])=>{
-    const areaKey=area.replace(/B$/,'');
-    qs.forEach(q=>{mapa[q.id]={...q,area:areaKey};});
-  });
-  const mapaFC={};
-  FCI.forEach(fc=>{mapaFC[fc.id]=fc;});
-  const n=Object.keys(mapa).length,nfc=Object.keys(mapaFC).length;
-  showMsg('sync-msg','Sincronizando '+n+' questões e '+nfc+' flashcards...');
-  try{
-    await withTimeout(db.ref('questoes').set(mapa));
-    await withTimeout(db.ref('flashcards').set(mapaFC));
-    allQuestoes=mapa;
-    allFlashcards=mapaFC;
-    renderAreaList();renderCards();updateBadges();
-    showMsg('sync-msg','Banco sincronizado (espelho completo): '+n+' questões + '+nfc+' flashcards.','ok');
-    showToast('Banco sincronizado: '+n+' questões + '+nfc+' flashcards.');
-  }catch(err){showMsg('sync-msg','Erro: '+err.message);}
-}
-
 // ═══════════════════════════════
 // AVISOS — central de notificações (b103)
 // ═══════════════════════════════
@@ -13825,7 +13776,7 @@ const TOUR_PASSOS=[
      : 'A faixa aqui embaixo instala o app na tela inicial. Ele passa a abrir em tela cheia, funciona sem internet e libera o lembrete diário das revisões vencidas. Se quiser deixar para depois, o convite volta no menu ☰, em "Instalar app".'}
 ];
 
-let _tourIdx=0,_tourLista=[],_tourRAF=0,_tourFocoAnterior=null,_tourReMedir=0;
+let _tourIdx=0,_tourLista=[],_tourRAF=0,_tourFocoAnterior=null,_tourReMedir=0,_tourBannerFocado=null;
 // b259: mascote do tour (pose unica, criada 1x). _tourMTm = fade da troca de passo; _tourMAtivo = ja revelado neste passo; _tourMLugar = {x,y,espelha} do ultimo _tourPosicionar (null = sem lugar).
 let _tourMP=null,_tourMTm=0,_tourMAtivo=false,_tourMLugar=null,_tourMPasso=null;   // _tourMPasso = passo em que o mascote ja entrou (remontagem por resize no mesmo passo so reposiciona)
 // Veredito de visibilidade por passo, guardado para o resize nao apagar passo de
@@ -14021,6 +13972,10 @@ function _tourRender(){
   try{els[0].scrollIntoView({block:bloco,behavior:'instant'});}
   catch(_){try{els[0].scrollIntoView();}catch(__){}}
   requestAnimationFrame(_tourPosicionar);          // mede depois do scroll assentar
+  // a11y: no passo do banner o foco vai para o "Instalar" (só existe visível na variante com prompt; iOS/manual não tem botão e o foco fica no Avançar)
+  const bi=document.getElementById('install-btn');
+  if(p.sel==='#install-banner'&&bi&&bi.offsetParent!==null){if(_tourBannerFocado!==p){_tourBannerFocado=p;bi.focus();}}   // só na ENTRADA no passo: remontagem por resize não re-foca
+  else{_tourBannerFocado=null;if(bi&&document.activeElement===bi){const a=document.getElementById('tour-avancar');if(a)a.focus();}}   // saiu do passo do banner: devolve o foco ao balão
   // Rede de seguranca: animacao de entrada disparada FORA do tour (navTo comum,
   // logo antes de abrir) ainda pode estar correndo. 420ms cobre os 380ms da
   // transicao mais o escalonamento -- medir antes fixaria um quadro intermediario.
@@ -14067,7 +14022,7 @@ function iniciarTutorial(){
   avaliarConviteInstalar();
   _tourLista=TOUR_PASSOS.filter(_tourAplicavel);
   if(!_tourLista.length){if(m)m.classList.add('hidden');return;}
-  _tourIdx=0;
+  _tourIdx=0;_tourBannerFocado=null;
   _tourFocoAnterior=document.activeElement;
   window.addEventListener('scroll',_tourReposicionar,true);   // capture: pega scroll interno
   window.addEventListener('resize',_tourAoRedimensionar);
@@ -15145,7 +15100,8 @@ document.addEventListener('keydown',e=>{
   if(e.key!=='Tab')return;
   const overlay=overlayAberto();
   if(!overlay)return;
-  const focaveis=[...overlay.querySelectorAll('button,a[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')]
+  const focaveis=[...(overlay.id==='modal-tutorial'?document.querySelectorAll('#install-banner.tour-ativo:not(.tour-oculto) #install-btn'):[]),   // passo do banner: o "Instalar" fica fora do #modal-tutorial (z 1001), mas entra no ciclo
+                  ...overlay.querySelectorAll('button,a[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')]
     .filter(el=>!el.disabled&&el.offsetParent!==null);
   if(!focaveis.length)return;
   const primeiro=focaveis[0],ultimo=focaveis[focaveis.length-1];
@@ -15211,6 +15167,9 @@ function instalarApp(){
     // _tourLiberarBanner() (Avançar/Pular/Esc/clique fora), nunca esta função.
     if(el&&!el.classList.contains('tour-ativo'))el.style.display='none';
     montarInstalarLanding();                   // landing volta para a instrução manual
+    // Tour aberto NO passo do banner: depois da escolha (aceita ou recusada) o tour segue. Sendo o último passo, o avanço o
+    // encerra pelo caminho normal (fecharTutorial grava tutorialVisto só agora, no fim).
+    if(el&&el.classList.contains('tour-ativo')&&!el.classList.contains('tour-oculto')&&_tourAberto()&&_tourLista[_tourIdx]&&_tourLista[_tourIdx].sel==='#install-banner')tourAvancar();
   });
 }
 // simplify: fonte única da árvore de decisão de instalação — antes duplicada, em ordens

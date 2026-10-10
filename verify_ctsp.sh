@@ -40,6 +40,9 @@ echo "\"$t\"=$N"
 done
 echo "Cap.4_total=$(cat index.html ${DATA} | grep -o 'Cap\.4' | wc -l) (legitimo se todas as ocorrencias citarem MABOM)"
 
+echo "-- leitura/escrita direta de questoes/flashcards no RTDB (PJ24: auto-heal removido; esperado 0)"
+echo "db_ref_questoes_flashcards=$(grep -o "db\.ref('\(questoes\|flashcards\)'" index.html | wc -l)"
+
 echo "-- onclick com campo de texto livre interpolado (esperado 0 -- S4, PLANO_correcao_seguranca.md)"
 echo "onclick_texto_livre=$(grep -c "onclick=\"[^\"]*\${[^}]*\(nome\|email\|texto\|descricao\|titulo\|corpo\)" index.html || true)"
 
@@ -168,7 +171,7 @@ node _count.js
 echo "=== HARNESSES (materiais/ e gitignorado: SKIP se o arquivo nao existir; esperado falhas=0) ==="
 HDIR="$REPO_ABS/materiais/entregas/testes"
 H_FALHAS=0; H_RODADOS=0
-for h in harness_cena_por_tempo harness_tempo harness_dia harness_p2_mascote_vitrine harness_p3_mascote_app harness_ma1_mascote_hubs harness_b259_mascote_tour harness_b261_placar_reforco harness_b261_tonto teste_mascote_motor teste_p3b_mascote_reacoes teste_b4_mascote_cards; do
+for h in harness_cena_por_tempo harness_tempo harness_dia harness_p2_mascote_vitrine harness_p3_mascote_app harness_ma1_mascote_hubs harness_b259_mascote_tour harness_b261_placar_reforco harness_b261_tonto harness_b262_pix_qr harness_b263_prob_tag teste_mascote_motor teste_p3b_mascote_reacoes teste_b4_mascote_cards; do
   if [ -f "$HDIR/$h.js" ]; then
     H_RODADOS=$((H_RODADOS+1))
     if node "$HDIR/$h.js" > "$W_ABS/_h_$h.log" 2>&1; then echo "$h=OK"; else echo "$h=FALHOU (ver $W_ABS/_h_$h.log)"; H_FALHAS=$((H_FALHAS+1)); fi
