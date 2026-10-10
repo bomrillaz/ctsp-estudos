@@ -8791,7 +8791,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.364';
+const APP_VERSAO='v1.365';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -10542,15 +10542,18 @@ async function responderQuiz(idx){
   const jaReexposta=quizReexpostas.has(q.id);
   if(jaReexposta){quizSessao.rf=(quizSessao.rf||0)+1;if(acertou)quizSessao.rfc=(quizSessao.rfc||0)+1;}
   else{quizSessao.t++;if(acertou)quizSessao.c++;}
-  if(acertou)userStats.correct=(userStats.correct||0)+1;
-  else userStats.wrong=(userStats.wrong||0)+1;
-
-  const area=q.area||quizArea;
-  if(!userStats.byArea)userStats.byArea={};
-  if(!userStats.byArea[area])userStats.byArea[area]={correct:0,wrong:0};
-  if(acertou)userStats.byArea[area].correct++;
-  else userStats.byArea[area].wrong++;
-  registrarFormato(q,acertou); // BLOCO 35: diagnóstico por formato de enunciado
+  // b261/PD7: a resposta do reforço (re-exposição) NÃO conta na taxa de acerto (correct/wrong, byArea, fmt) nem na atividade do dia
+  // (history n/c/w -> metas, anéis, streak): só a 1ª tentativa. O que agenda (FSRS) continua recebendo as duas, abaixo. Não retroativo.
+  if(!jaReexposta){
+    if(acertou)userStats.correct=(userStats.correct||0)+1;
+    else userStats.wrong=(userStats.wrong||0)+1;
+    const area=q.area||quizArea;
+    if(!userStats.byArea)userStats.byArea={};
+    if(!userStats.byArea[area])userStats.byArea[area]={correct:0,wrong:0};
+    if(acertou)userStats.byArea[area].correct++;
+    else userStats.byArea[area].wrong++;
+    registrarFormato(q,acertou); // BLOCO 35: diagnóstico por formato de enunciado
+  }
 
   // F2 (b156-bloco3) + b157: captura ANTES de "Marcar visto" e antes de quizReexpostas ser mutado
   // abaixo — a re-exposição intra-sessão (o reaprendizado do Treino) não prova retenção espaçada
@@ -10585,7 +10588,7 @@ async function responderQuiz(idx){
     userStats.erroCorrigidoEm[q.id]=Date.now();
   }
 
-  registrarAtividade(acertou);
+  if(!jaReexposta)registrarAtividade(acertou); // PD7: o reforço não conta na meta do dia
 
   // Fase 5: o agendamento da questão é só FSRS agora (SM-2 duplicado aposentado).
   // registrarRespostaAdaptativa grava BKT + FSRS + itemStats numa passada só.
