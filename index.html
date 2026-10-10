@@ -1356,7 +1356,8 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .pix-aviso{font-size:12px;line-height:1.5;color:var(--text2);margin-top:10px;}
 .pix-qr-wrap{margin-top:12px;}
 .pix-qr-wrap summary{font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;}
-.pix-qr{display:block;margin:10px auto 0;width:220px;height:220px;background:#fff;border-radius:8px;}
+.pix-qr{display:block;margin:10px auto 0;width:220px;height:220px;background:#fff;border-radius:8px;overflow:hidden;}
+.pix-qr svg{display:block;width:100%;height:100%;}
 .pix-ja{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line-soft);}
 .pix-ja-btn{width:100%;background:var(--green-light);color:var(--green);border:none;font-family:inherit;font-size:14px;font-weight:800;padding:13px;border-radius:12px;cursor:pointer;}
 .pix-ja-btn:disabled{opacity:.55;cursor:default;}
@@ -8991,7 +8992,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.366';
+const APP_VERSAO='v1.367';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -12850,7 +12851,8 @@ const COB_MESES_ANUAL=13;      // 12 pagos + 1º mês grátis
    ⚠️ O PDF do Nubank avisa: se a chave aleatória abaixo for EXCLUÍDA no app ou a
    conta for portada para outra instituição, este código PARA DE FUNCIONAR — e
    falha em silêncio, ninguém consegue pagar e nada avisa aqui. Se um dia mexer
-   nas chaves Pix da conta PJ, gere um QR novo e troque PIX_BRCODE + assets/pix-qr.png.
+   nas chaves Pix da conta PJ, gere um QR novo e troque PIX_BRCODE (o QR da tela sai dele,
+   gerado no navegador por assets/qrcode.js; assets/pix-qr.png não é mais usado).
 
    PIX_BRCODE é o "copia e cola" (padrão EMV/BR Code do Bacen), extraído do QR
    oficial da conta PJ e conferido por CRC16. É ESTÁTICO e SEM VALOR definido
@@ -14658,6 +14660,39 @@ function repPreview(tipo,id){
    textContent e por .value, para que nem em cenário absurdo uma string consiga
    injetar marcação. O único dado dinâmico é o plano, e ele é validado contra o
    mapa fechado PIX_PLANOS — nada vem de URL, de localStorage nem do banco. */
+// QR do Pix desenhado no navegador a partir do PRÓPRIO PIX_BRCODE (nunca de PNG estático que pode divergir do copia e cola).
+// Só roda depois do gate pixIntegro() de abrirPagamento. Nível M. O SVG que entra por innerHTML é só caminho numérico da biblioteca
+// + o texto literal do alt: o BR Code em si continua só em textContent/.value. Falha (biblioteca ausente, dado grande demais):
+// tira o bloco do QR e deixa o copia e cola, que é o caminho principal.
+// A biblioteca (assets/qrcode.js, qrcode-generator 1.4.4, MIT, Kazuhiko Arase) só carrega ao abrir a folha do Pix; está no SHELL do SW (offline).
+let _pixQrSvg=null,_pixQrLib=null;
+function _pixQrCarregarLib(){
+  if(typeof qrcode==='function')return Promise.resolve();
+  if(!_pixQrLib)_pixQrLib=new Promise(function(ok,falha){
+    const s=document.createElement('script');
+    s.src='assets/qrcode.js';s.onload=ok;
+    s.onerror=function(){_pixQrLib=null;falha(new Error('assets/qrcode.js não carregou'));}; // permite nova tentativa na próxima abertura
+    document.head.appendChild(s);
+  });
+  return _pixQrLib;
+}
+async function pixQrMontar(){
+  const box=document.getElementById('pix-qr');
+  if(!box||box.firstChild)return;
+  try{
+    if(!_pixQrSvg){
+      await _pixQrCarregarLib();
+      const q=qrcode(0,'M');q.addData(PIX_BRCODE);q.make();
+      _pixQrSvg=q.createSvgTag({cellSize:4,margin:16,scalable:true}); // sem alt: a 1.4.4 emite <description> (não existe em SVG) e o nome acessível fica no container
+    }
+    if(box.firstChild)return; // duas aberturas seguidas: a 1ª que terminou já desenhou
+    box.setAttribute('role','img');box.setAttribute('aria-label','QR Code para pagamento via Pix');
+    box.innerHTML=_pixQrSvg;
+  }catch(e){
+    console.warn('PIX: QR não gerado:',e&&e.message);
+    const d=box.closest('details');if(d)d.remove();
+  }
+}
 function abrirPagamento(plano){
   const p=PIX_PLANOS[plano]||PIX_PLANOS.mensal;
   if(!pixIntegro()){
@@ -14677,7 +14712,7 @@ function abrirPagamento(plano){
       +'<input class="pix-fallback" id="pix-fallback" readonly aria-label="Código Pix copia e cola">'
       +'<div class="pix-aviso" id="pix-aviso"></div>'
       +'<details class="pix-qr-wrap"><summary>Pagando de outro aparelho? Mostrar QR Code</summary>'
-        +'<img class="pix-qr" src="assets/pix-qr.png" alt="QR Code para pagamento via Pix" width="220" height="220">'
+        +'<div class="pix-qr" id="pix-qr"></div>'
       +'</details>'
       +'<div class="pix-ja" ><button class="pix-ja-btn" id="pix-ja-btn">Já paguei</button></div>'
       +'<div class="pix-legal">O plano vale pelo período contratado a partir da assinatura. '
@@ -14689,6 +14724,7 @@ function abrirPagamento(plano){
     ov.onclick=function(e){if(e.target===ov)fecharPagamento();};
     document.body.appendChild(ov);
   }
+  pixQrMontar();
   // Seletor de plano DENTRO da folha: ninguém fica preso no plano que o ponto de
   // entrada escolheu. Reabre a própria folha, que já está montada, então é instantâneo.
   const troca=document.getElementById('pix-troca');

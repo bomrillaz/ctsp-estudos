@@ -51,11 +51,11 @@ self.addEventListener('notificationclick', (e) => {
   })());
 });
 
-const CACHE = 'ctsp-cache-v44';
+const CACHE = 'ctsp-cache-v45';
 const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
-  'assets/cesar-coin.png',
+  'assets/cesar-coin.png', 'assets/qrcode.js',
   'assets/loading.mp4', 'assets/loading-poster.jpg',
   'assets/mascote/folha_v7.png', 'assets/mascote/escada.png'
 ];
@@ -107,9 +107,12 @@ self.addEventListener('fetch', (e) => {
   if (!sameOrigin && !sdkEstatico) return;
 
   if (req.mode === 'navigate') {
+    // Navegacao com query (?mode=...&oobCode=... da acao do e-mail, utm etc.) nunca e guardada com a query:
+    // o oobCode e segredo de uma acao de conta e nao pode ficar no Cache Storage. Chave = so origem + caminho.
+    const chave = url.search ? new Request(url.origin + url.pathname) : req;
     e.respondWith(
-      fetch(req).then((res) => { cachePut(req, res.clone()); return res; })
-        .catch(() => caches.match(req, { ignoreSearch: true }).then((r) => r || caches.match('index.html')))
+      fetch(req).then((res) => { cachePut(chave, res.clone()); return res; })
+        .catch(() => caches.match(chave, { ignoreSearch: true }).then((r) => r || caches.match('index.html')))
     );
     return;
   }
