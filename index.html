@@ -536,10 +536,11 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 
 /* SCREENS */
 .screen{display:none;animation:none;}
-/* ⚠️ O `both` deixa `transform:translateY(0)` grudado na tela ativa para sempre, e
-   transform em ancestral vira containing block que QUEBRA position:sticky descendente.
-   Sticky novo dentro de `.screen` nasce quebrado por causa disto — medido no b200. */
-.screen.active{display:block;animation:screenIn .2s var(--ease-out) both;}
+/* ⚠️ `backwards`, NUNCA `both` (b263): `both` deixava `transform:translateY(0)` grudado na tela
+   ativa para sempre, e transform em ancestral vira containing block: quebrava position:sticky
+   (b200) e deslocava todo position:fixed filho (mascote apontando caía 232px fora no PC, b263).
+   Durante os 0,2s da entrada o transform ainda vale; fixed medido nessa janela sai levemente fora. */
+.screen.active{display:block;animation:screenIn .2s var(--ease-out) backwards;}
 
 /* ═══ DASHBOARD ═══ */
 .dash-hero{background:linear-gradient(150deg,var(--navy-2) 0%,var(--navy) 55%,var(--navy-deep) 100%);padding:18px 16px 24px;color:white;position:relative;overflow:hidden;}
@@ -8966,7 +8967,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.368';
+const APP_VERSAO='v1.369';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio

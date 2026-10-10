@@ -42,6 +42,7 @@ echo "Cap.4_total=$(cat index.html ${DATA} | grep -o 'Cap\.4' | wc -l) (legitimo
 
 echo "-- leitura/escrita direta de questoes/flashcards no RTDB (PJ24: auto-heal removido; esperado 0)"
 echo "db_ref_questoes_flashcards=$(grep -o "db\.ref('\(questoes\|flashcards\)'" index.html | wc -l)"
+echo "screen_animacao_both=$(grep -c 'screenIn .2s var(--ease-out) both' index.html) (esperado 0, b263: both gruda transform e quebra fixed/sticky)"
 
 echo "-- onclick com campo de texto livre interpolado (esperado 0 -- S4, PLANO_correcao_seguranca.md)"
 echo "onclick_texto_livre=$(grep -c "onclick=\"[^\"]*\${[^}]*\(nome\|email\|texto\|descricao\|titulo\|corpo\)" index.html || true)"
