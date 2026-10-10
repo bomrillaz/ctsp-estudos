@@ -422,6 +422,11 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 /* ═══ BLOCO C (b58) — planos na tela de entrada + documentos ═══ */
 .link-inline{background:none;border:none;padding:0;font:inherit;color:var(--navy);font-weight:700;text-decoration:underline;cursor:pointer;}
 .auth-legal{font-size:11.5px;color:var(--text3);line-height:1.55;text-align:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft);}
+/* PD6: página da ação do e-mail (verifyEmail/resetPassword) dentro do #login-view — sem abas, sem rodapé legal, sem "← Voltar" da landing. */
+.auth-card--acao .auth-tabs,.auth-card--acao .auth-legal,#login-view.acao-ativa .lp-voltar{display:none;}
+.acao-titulo{font-size:19px;font-weight:800;color:var(--text);text-align:center;margin:4px 0 8px;}
+.acao-texto{font-size:13.5px;line-height:1.6;color:var(--text2);text-align:center;margin-bottom:18px;}
+.acao-botoes{display:flex;flex-direction:column;gap:10px;}
 /* PV1/b240 (ajuste pós-review do Opus): rótulo+título de Planos nascem em
    .lp-sec-in (1080px, alinhado à esquerda como todo o resto da vitrine), mas os
    cards vivem dentro de .planos-wrap, mais estreito e centralizado — título ficava
@@ -1875,6 +1880,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   background:var(--paper);color:var(--text);
 }
 .pm1-vitrine-escura .link-inline{color:var(--ember);}
+/* PC-EMBER: --ember-text (#8F4A0E) é o marrom do tema claro: 2,73:1 sobre o fundo escuro. Rótulo/título/destaque da vitrine usam --ember
+   (6,6:1+); o .lp-tag NÃO entra, ele fica sobre chip claro (--amber-light) onde o marrom passa (5,95:1). */
+.pm1-vitrine-escura .lp-label,.pm1-vitrine-escura .lp-nao-faz-tit,.pm1-vitrine-escura .lp-a4-fecho b{color:var(--ember);}
 .pm1-vitrine-escura .lp-btn-linha{border-color:rgba(255,255,255,.32);color:var(--text);}
 .pm1-vitrine-escura .lp-btn-linha:hover{background:rgba(255,255,255,.08);}
 /* PV1/b240: .quiz-opt.errada/.correta (A2) herdam --text creme daqui, mas
@@ -2790,6 +2798,25 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           </span>
           <span style="display:block;margin-top:10px;color:var(--text3);font-size:12px;">Já pagou e passou o prazo? <a class="link-inline" id="pending-whats" href="#" target="_blank" rel="noopener noreferrer">Chame no WhatsApp</a> que eu libero na hora.</span>
         </div>
+      </div>
+      <!-- PD6: AÇÃO DO E-MAIL (verifyEmail / resetPassword), aberta pelo link do Firebase -->
+      <div id="tab-acao" class="hidden" role="region" aria-labelledby="acao-titulo">
+        <div aria-live="polite">
+          <p class="acao-titulo" id="acao-titulo"></p>
+          <p class="acao-texto" id="acao-texto"></p>
+        </div>
+        <div class="field hidden" id="acao-campo-senha"><label for="acao-pass">Nova senha</label>
+          <div class="field-pass-wrap">
+            <input type="password" id="acao-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password" onkeydown="if(event.key==='Enter')acaoSalvarSenha()">
+            <button type="button" class="field-pass-toggle" aria-label="Mostrar senha" aria-pressed="false" onclick="toggleSenhaVisivel('acao-pass',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+        </div>
+        <div class="acao-botoes">
+          <button class="btn-primary hidden" id="acao-btn-salvar" onclick="acaoSalvarSenha()">Salvar nova senha</button>
+          <button class="btn-primary hidden" id="acao-btn-voltar" onclick="acaoVoltarAoApp()">Voltar ao app</button>
+          <button class="btn-primary btn-ghost-dark hidden" id="acao-btn-reenviar" onclick="acaoReenviar()">Reenviar e-mail</button>
+        </div>
+        <p class="auth-msg" id="acao-msg" role="alert"></p>
       </div>
       <div class="auth-legal">
         Ao criar a conta você concorda com os
@@ -5050,10 +5077,15 @@ function marcarTab(btn,ativo,cls){
   btn.setAttribute('aria-selected',ativo?'true':'false');
 }
 function showAuthTab(t){
-  ['login','register','pending'].forEach(x=>{
+  ['login','register','pending','acao'].forEach(x=>{
     document.getElementById('tab-'+x).classList.toggle('hidden',x!==t);
     marcarTab(document.getElementById('tab-btn-'+x),x===t);
   });
+  // PD6: a vista da ação do e-mail não tem abas nem rodapé legal (CSS por esta classe).
+  const card=document.querySelector('#login-view .auth-card');
+  if(card)card.classList.toggle('auth-card--acao',t==='acao');
+  const lv=document.getElementById('login-view');
+  if(lv)lv.classList.toggle('acao-ativa',t==='acao');
 }
 
 // F1-11: alterna type do campo de senha entre password/text, com aria-pressed.
@@ -5443,16 +5475,17 @@ async function _jaConfirmeiEmail(){
     if(btn){btn.disabled=false;btn.textContent='Já confirmei';}
   }
 }
-async function _reenviarEmailVerificacao(){
-  const btn=document.getElementById('btn-reenviar-email');
-  if(Date.now()<_cooldownReenvio){return;}
+// Núcleo do reenvio: usado pela tela de confirmação (loading) e pela página da ação do e-mail (PD6).
+async function _enviarLinkVerificacao(user,btnId,txtId,fimTxt){
+  const btn=document.getElementById(btnId);
+  if(Date.now()<_cooldownReenvio||!user){return;}
   if(btn){btn.disabled=true;}
   try{
     auth.languageCode='pt-BR';
-    await currentUser.sendEmailVerification();
+    await user.sendEmailVerification();
     // Cada envio invalida os links anteriores e o Gmail agrupa os e-mails e abre o mais antigo: avisa qual abrir.
-    const txt=document.getElementById('loading-confirmar-email-texto');
-    if(txt)txt.innerHTML='Enviamos um link novo para <b>'+sanitize(currentUser.email||'')+'</b>. Abra só o e-mail mais recente: os anteriores deixam de valer. Depois toque em "Já confirmei".';
+    const txt=document.getElementById(txtId);
+    if(txt)txt.innerHTML='Enviamos um link novo para <b>'+sanitize(user.email||'')+'</b>. Abra só o e-mail mais recente: os anteriores deixam de valer.'+fimTxt;
     _cooldownReenvio=Date.now()+60000;
     let restante=60;
     const tick=()=>{
@@ -5473,6 +5506,148 @@ async function _reenviarEmailVerificacao(){
     }
   }
 }
+function _reenviarEmailVerificacao(){
+  return _enviarLinkVerificacao(currentUser,'btn-reenviar-email','loading-confirmar-email-texto',' Depois toque em "Já confirmei".');
+}
+
+// ═══════════════════════════════
+// PD6 · AÇÃO DO E-MAIL (link do Firebase) numa página do próprio site
+// ═══════════════════════════════
+// Console → Authentication → Templates → "Customizar URL de ação" aponta para a raiz do site:
+// https://bomrillaz.github.io/ctsp-estudos/  (o Firebase anexa ?mode=...&oobCode=...).
+// Só verifyEmail e resetPassword: o app não tem troca de e-mail, então recoverEmail não existe aqui.
+// Sem esses parâmetros _ACAO é null e nada abaixo roda. A query é limpa na hora (o código fica em memória).
+const _ACAO=(function(){
+  try{
+    const q=new URLSearchParams(location.search),m=q.get('mode'),c=q.get('oobCode');
+    if(c&&(m==='verifyEmail'||m==='resetPassword')){
+      history.replaceState(null,'',location.pathname+location.hash);
+      return{mode:m,oobCode:c};
+    }
+  }catch(e){}
+  return null;
+})();
+let _acaoUsuarioPronto=null,_acaoUsuarioResolve=null;
+function _acaoVista(titulo,texto,botoes,campoSenha){
+  document.getElementById('auth-screen').classList.add('active');
+  document.getElementById('app').classList.remove('active');
+  const l=document.getElementById('landing-view'),v=document.getElementById('login-view'),ld=document.getElementById('loading');
+  if(ld)ld.style.display='none';
+  if(l)l.classList.add('hidden');
+  if(v)v.classList.remove('hidden');
+  showAuthTab('acao');
+  document.getElementById('acao-titulo').textContent=titulo;
+  document.getElementById('acao-texto').textContent=texto;
+  document.getElementById('acao-campo-senha').classList.toggle('hidden',!campoSenha);
+  // O 1º botão da ação (salvar > reenviar > voltar) é o primário; os demais ficam discretos.
+  const primario=['salvar','reenviar','voltar'].find(k=>botoes.indexOf(k)>=0);
+  [['salvar','acao-btn-salvar'],['voltar','acao-btn-voltar'],['reenviar','acao-btn-reenviar']].forEach(([k,id])=>{
+    const b=document.getElementById(id);
+    b.classList.toggle('hidden',botoes.indexOf(k)<0);
+    b.classList.toggle('btn-ghost-dark',k!==primario);
+    b.disabled=false;
+  });
+  document.getElementById('acao-btn-voltar').textContent='Voltar ao app';
+  document.getElementById('acao-btn-reenviar').textContent='Reenviar e-mail';
+  document.getElementById('acao-msg').textContent='';
+  irAoTopoDoConteudo();
+  if(campoSenha){const i=document.getElementById('acao-pass');if(i)i.focus();} // teclado/leitor de tela: a única tarefa da vista é digitar a senha
+}
+// Voltar/Entrar/Cancelar: a URL já está limpa, então recarrega e reentra pelo fluxo normal (onAuthStateChanged).
+// A flag faz o showAuth abrir direto o formulário de entrada (quem acabou de trocar a senha não quer a landing).
+function acaoVoltarAoApp(){
+  try{sessionStorage.setItem('_abrirLogin','1');}catch(e){}
+  location.reload();
+}
+// Firebase pendurado (rede ruim) não pode deixar a vista parada sem saída: rejeita com acao/timeout.
+function _acaoComTimeout(p,ms){
+  return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>{const e=new Error('timeout');e.code='acao/timeout';rej(e);},ms||15000))]);
+}
+// Usuário logado neste aparelho (a promessa resolve no 1º onAuthStateChanged; 3 s de teto se ele nunca vier).
+function _acaoUsuarioAtual(){
+  return Promise.race([_acaoUsuarioPronto,new Promise(r=>setTimeout(()=>r(auth.currentUser),3000))]);
+}
+async function iniciarAcaoEmail(){
+  if(!_ACAO)return;
+  clearTimeout(loadingGuard);
+  _acaoUsuarioPronto=new Promise(r=>{_acaoUsuarioResolve=r;});
+  auth.languageCode='pt-BR';
+  const {mode,oobCode}=_ACAO;
+  if(mode==='verifyEmail'){
+    _acaoVista('Confirmando seu e-mail','Só um instante...',[]);
+    try{
+      await _acaoComTimeout(auth.applyActionCode(oobCode));
+      _acaoVista('E-mail confirmado','Tudo certo. Agora é só voltar ao app.',['voltar']);
+    }catch(e){
+      console.warn('acao verifyEmail:',e&&e.code);
+      if(!(e&&(e.code==='auth/expired-action-code'||e.code==='auth/invalid-action-code'))){
+        _acaoVista('Não deu para confirmar','A conexão falhou ou demorou demais. Toque em "Voltar ao app" e abra o link do e-mail de novo.',['voltar']);
+        return;
+      }
+      // Link usado/vencido/substituído. Com sessão aqui e e-mail já confirmado (Gmail pré-busca o link, clique duplo), não há o que reenviar.
+      let ja=false;
+      try{const u=await _acaoUsuarioAtual();if(u){await _acaoComTimeout(u.reload(),8000);ja=!!u.emailVerified;}}catch(_){}
+      if(ja)_acaoVista('E-mail já confirmado','Seu e-mail já está confirmado. É só voltar ao app.',['voltar']);
+      else _acaoVista('Não deu para confirmar','Este link já foi usado, venceu ou foi substituído por um e-mail mais novo. Toque em "Reenviar e-mail" e abra só o mais recente.',['reenviar','voltar']);
+    }
+  }else{
+    _acaoVista('Validando o link','Só um instante...',[]);
+    try{
+      const email=await _acaoComTimeout(auth.verifyPasswordResetCode(oobCode));
+      _acaoVista('Criar nova senha','Conta: '+email,['salvar','voltar'],true);
+      document.getElementById('acao-btn-voltar').textContent='Cancelar';
+    }catch(e){
+      console.warn('acao resetPassword:',e&&e.code);
+      if(!(e&&(e.code==='auth/invalid-action-code'||e.code==='auth/expired-action-code'))){
+        _acaoVista('Não deu para validar o link','A conexão falhou ou demorou demais. Toque em "Voltar ao app" e abra o link do e-mail de novo.',['voltar']);
+        return;
+      }
+      _acaoVista('Link inválido','Este link já foi usado ou venceu. Na tela de entrada, toque em "Esqueci minha senha" para receber um novo.',['voltar']);
+    }
+  }
+}
+async function acaoSalvarSenha(){
+  if(!_ACAO||_ACAO.mode!=='resetPassword')return;
+  const inp=document.getElementById('acao-pass'),btn=document.getElementById('acao-btn-salvar');
+  if(btn.disabled)return; // Enter duplo (ou Enter + toque): a 2ª chamada gastaria o oobCode já usado e esconderia o sucesso
+  const nova=inp.value;
+  if(nova.length<6){showMsg('acao-msg','A senha precisa de pelo menos 6 caracteres.');return;}
+  btn.disabled=true;
+  try{
+    await _acaoComTimeout(auth.confirmPasswordReset(_ACAO.oobCode,nova));
+    inp.value='';
+    _acaoVista('Senha alterada','Pronto. Entre no app com a nova senha.',['voltar']);
+    document.getElementById('acao-btn-voltar').textContent='Entrar no app';
+  }catch(e){
+    console.warn('acao confirmPasswordReset:',e&&e.code);
+    btn.disabled=false;
+    if(e&&e.code==='acao/timeout'){
+      // Sem resposta: a troca pode ter acontecido. Não afirma sucesso nem falha.
+      _acaoVista('Sem resposta do servidor','Não deu para confirmar a troca. Tente entrar com a nova senha; se não funcionar, peça um novo link em "Esqueci minha senha".',['voltar']);
+    }
+    else if(e&&e.code==='auth/weak-password')showMsg('acao-msg',mensagemErroAuth(e,'Senha muito fraca.'));
+    else if(e&&e.code==='auth/network-request-failed')showMsg('acao-msg',mensagemErroAuth(e,'Sem conexão.'));
+    else if(e&&(e.code==='auth/invalid-action-code'||e.code==='auth/expired-action-code')){
+      _acaoVista('Link inválido','Este link já foi usado ou venceu. Na tela de entrada, toque em "Esqueci minha senha" para receber um novo.',['voltar']);
+    }
+    else showMsg('acao-msg','Não foi possível salvar agora. Tente de novo.');
+  }
+}
+// Reenvio só existe com sessão neste aparelho (sendEmailVerification exige usuário logado);
+// sem sessão, manda para a entrada, onde a tela de confirmação já tem o botão.
+async function acaoReenviar(){
+  const btn=document.getElementById('acao-btn-reenviar');
+  if(Date.now()<_cooldownReenvio){showMsg('acao-msg','Aguarde um instante para reenviar de novo.');return;}
+  if(btn.disabled)return;
+  btn.disabled=true; // antes do await: toques repetidos mandariam 2 e-mails e o 2º invalida o 1º
+  const user=await _acaoUsuarioAtual();
+  if(!user){
+    btn.disabled=false;
+    showMsg('acao-msg','Entre no app com seu e-mail e senha: a tela de confirmação tem o botão para reenviar.');
+    return;
+  }
+  await _enviarLinkVerificacao(user,'acao-btn-reenviar','acao-texto',' Depois toque em "Voltar ao app".');
+}
 
 // ═══════════════════════════════
 // AUTH STATE
@@ -5486,8 +5661,11 @@ const loadingGuard=setTimeout(()=>{
   }
 },8000);
 
+iniciarAcaoEmail(); // PD6: no-op sem ?mode&oobCode; antes do observer, que só dispara depois (assíncrono)
 auth.onAuthStateChanged(async user=>{
   clearTimeout(loadingGuard);
+  // PD6: com a página da ação do e-mail aberta, o fluxo normal (app/pending/landing) espera: "Voltar ao app" recarrega.
+  if(_ACAO){if(_acaoUsuarioResolve)_acaoUsuarioResolve(user);return;}
   if(!user){
     const uidSaindo=(currentUser&&currentUser.uid)||''; // b160: capturado ANTES de zerar, escopa o throttle abaixo
     document.getElementById('loading').style.display='none';
@@ -6953,6 +7131,18 @@ function mascoteTela(s){
   if(s!=='inicio'&&_mascoteHomeP&&_mascoteSeqP===_mascoteHomeP){_mascoteHomeCancelar();_mascoteHomeBorda(_mascoteHomeP);} // b260: saiu da Home no meio da entrada/reação: larga o fixed e volta ao assento (a tela está escondida; sem pose órfã rodando)
   _mascoteHubAgendar(s);
 }
+// MP (ae): reduced-motion ligado NO MEIO de uma sequência (Home ou hub): sem rAF o aoFim não vem mais e _mascoteSeqAtiva
+// ficaria presa até navegar. Um listener só, para qualquer pose; só age com sequência em curso. saveData não emite evento:
+// segue lido a cada decisão (como já era).
+function _mascoteReduzidoMudou(){
+  if(!_mascoteSeqAtiva||!_mascoteSeqP||!_mascoteReduzido())return;
+  var p=_mascoteSeqP,hub=p===_mascoteHubP;
+  _mascoteHomeCancelar();
+  p.el.classList.remove('de-frente');
+  if(hub){clearTimeout(_mascoteHubCochiloTm);clearTimeout(_mascoteHubReacaoTm);_mascoteProgressoParar();p.base('borda');p.tocar('borda');} // igual à entrada do hub sob reduced-motion: quadro fixo
+  else _mascoteHomeBorda(p);
+}
+try{var _mqMascote=matchMedia('(prefers-reduced-motion:reduce)');if(_mqMascote.addEventListener)_mqMascote.addEventListener('change',_mascoteReduzidoMudou);}catch(e){}
 // A pose esta de fato visivel neste hub? (consultar ANTES do render do hub: o render apaga o .hub-inicio e a pose vai junto)
 function _mascoteHubViva(tela){var p=_mascoteHubP;return !!p&&_mascoteHubTela===tela&&p.el.isConnected&&!p.el.closest('.hidden');}
 // Fim do render do hub (renderQuizHub/_hubCards/_hubResumos): pose viva = re-ancora no .hub-inicio novo (re-render por listener
@@ -7638,6 +7828,14 @@ function _pBezier(p0,c,p2,t){
   var mt=1-t;
   return{x:mt*mt*p0.x+2*mt*t*c.x+t*t*p2.x,y:mt*mt*p0.y+2*mt*t*c.y+t*t*p2.y};
 }
+// Canvas nítido das cenas da vitrine (A3 e A4): bitmap w×h em px CSS × dpr, transform com
+// deslocamento vertical oy (A4 tem folga de canvas acima da cena). Setar width/height já zera o contexto.
+function _cenaDpr(){return Math.min(window.devicePixelRatio||1,2);}
+function _cenaCanvasTam(canvas,ctx,w,h,dpr,oy){
+  canvas.style.height=h+'px';
+  canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,(oy||0)*dpr);
+}
 function _cenaPorTempo(secao,c){
   function fimDe(){return typeof c.fim==='function'?c.fim():c.fim;} // A3: número; A4: função (entrada do mascote depende da largura)
   var ultimo=null,io=null,ativo=false,visivel=false,tentando=false,resolvido=false,raf=0,tm=0,t=0,lastTs=null,fase=-1;
@@ -7658,10 +7856,10 @@ function _cenaPorTempo(secao,c){
     // segurar/pausa não pintam nada: dorme até o fim da fase em vez de acordar a 60Hz
     var espera=fase===1?seg-t:fase===3?cic-t:0;
     if(espera>50){
-      var dormiu=Date.now();lastTs=null;
+      var dormiu=performance.now();lastTs=null;
       tm=setTimeout(function(){
         tm=0;if(!ativo)return;
-        t+=Date.now()-dormiu;
+        t+=performance.now()-dormiu;
         if(!raf)raf=requestAnimationFrame(loop);
       },espera);
       return;
@@ -7742,7 +7940,7 @@ function _cenaPorTempo(secao,c){
   var ctx=canvas.getContext('2d');
   if(!ctx)return;
   var mks=[].slice.call(cena.querySelectorAll('.lp-a3-mk'));
-  var VB_W=600,W=0,H=0,K=1,dpr=Math.min(window.devicePixelRatio||1,2);
+  var VB_W=600,W=0,H=0,K=1,dpr=_cenaDpr();
   var curvas=[{el:sem,n:110,ini:0,span:900,ps:[],len:0},{el:com,n:200,ini:450,span:1500,ps:[],len:0}];
   var DUR_MIN=450,DUR_MAX=650,FADE=300;
   var FIM=curvas[1].ini+curvas[1].span+DUR_MAX+FADE;
@@ -7753,8 +7951,7 @@ function _cenaPorTempo(secao,c){
     var r=svg.getBoundingClientRect();
     if(r.width<2||r.height<2)return false;
     W=r.width;H=r.height;K=W/VB_W;
-    canvas.style.height=H+'px';canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
-    ctx.setTransform(dpr,0,0,dpr,0,0);
+    _cenaCanvasTam(canvas,ctx,W,H,dpr,0);
     return true;
   }
   function preparar(){
@@ -7962,7 +8159,7 @@ function _cenaPorTempo(secao,c){
   // true = o mascote do rodapé fica escondido (a cena está com o dela)
   function rodapeCena(esconde){if(window.MascoteVitrine)window.MascoteVitrine.razao('cena',esconde);}
 
-  var W=0,H=0,dpr=Math.min(window.devicePixelRatio||1,2),sigGeom='',amostrado=false;
+  var W=0,H=0,dpr=_cenaDpr(),sigGeom='',amostrado=false;
   var OY=70,BELOW=120; // folga do canvas acima (arco da água) e abaixo (pixels que escorrem) da cena
   var barras=ORDEM.map(function(){return{x:0,y:0,w:0,h:0,pts:[],cor:[255,255,255],dl:[],vx:[]};});
   var AGUA=[31,162,232],AGUA_STR='rgb(31,162,232)';
@@ -8027,9 +8224,7 @@ function _cenaPorTempo(secao,c){
     var rCena=cena.getBoundingClientRect();
     if(rCena.width<2||rCena.height<2)return false;
     W=rCena.width;H=rCena.height;
-    canvas.width=Math.round(W*dpr);canvas.height=Math.round((OY+H+BELOW)*dpr);
-    canvas.style.height=(OY+H+BELOW)+'px';
-    ctx.setTransform(dpr,0,0,dpr,0,OY*dpr);
+    _cenaCanvasTam(canvas,ctx,W,OY+H+BELOW,dpr,OY);
     ORDEM.forEach(function(k,i){
       var rWrap=wraps[i].getBoundingClientRect();
       barras[i].x=rWrap.left-rCena.left;
@@ -8378,10 +8573,15 @@ function verLanding(){
 // Quem chega deslogado cai na APRESENTAÇÃO, não no formulário. A única exceção é
 // o 'pending': ali a pessoa acabou de se cadastrar e precisa ver o aviso de
 // liberação — mandá-la para a landing seria esconder a resposta do que ela fez.
+function _consumirAbrirLogin(){
+  try{if(sessionStorage.getItem('_abrirLogin')==='1'){sessionStorage.removeItem('_abrirLogin');return true;}}catch(e){}
+  return false;
+}
 function showAuth(tab='login'){
   document.getElementById('auth-screen').classList.add('active');
   document.getElementById('app').classList.remove('active');
   if(tab==='pending'){verLogin('pending');carregarRecapPending();}
+  else if(_consumirAbrirLogin())verLogin('login'); // PD6: voltou da página da ação do e-mail
   else verLanding();
 }
 // Recapitula valor acumulado na tela de bloqueio, antes do Pix. Sem isso a tela
@@ -8791,7 +8991,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.365';
+const APP_VERSAO='v1.366';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio

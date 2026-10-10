@@ -9,6 +9,8 @@
 set -u
 ARG="${1:-.}"
 if [ -d "$ARG" ]; then DIR="$ARG"; else DIR="$(dirname "$ARG")"; fi
+REPO_ABS="$(cd "$DIR" && pwd)"
+W_ABS="$REPO_ABS/.tmp/verify_ctsp"
 W="$DIR/.tmp/verify_ctsp"
 mkdir -p "$W"; cp "$DIR/index.html" "$W/index.html"
 DATA=""
@@ -163,4 +165,16 @@ console.log('topico_invalido=' + (topInvalido.length ? topInvalido.join(',') : '
 console.log('incidencia_ids_fantasma=' + (incFantasma.length ? incFantasma.join(',') : '0'));
 EOF
 node _count.js
+echo "=== HARNESSES (materiais/ e gitignorado: SKIP se o arquivo nao existir; esperado falhas=0) ==="
+HDIR="$REPO_ABS/materiais/entregas/testes"
+H_FALHAS=0; H_RODADOS=0
+for h in harness_cena_por_tempo harness_tempo harness_dia harness_p2_mascote_vitrine harness_p3_mascote_app harness_ma1_mascote_hubs harness_b259_mascote_tour harness_b261_placar_reforco harness_b261_tonto teste_mascote_motor teste_p3b_mascote_reacoes teste_b4_mascote_cards; do
+  if [ -f "$HDIR/$h.js" ]; then
+    H_RODADOS=$((H_RODADOS+1))
+    if node "$HDIR/$h.js" > "$W_ABS/_h_$h.log" 2>&1; then echo "$h=OK"; else echo "$h=FALHOU (ver $W_ABS/_h_$h.log)"; H_FALHAS=$((H_FALHAS+1)); fi
+  else
+    echo "$h=SKIP (arquivo ausente: materiais/ nao esta neste checkout)"
+  fi
+done
+echo "harnesses_rodados=$H_RODADOS harnesses_falhas=$H_FALHAS"
 echo "=== FIM - comparar com o ultimo historico ==="
