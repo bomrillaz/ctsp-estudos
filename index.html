@@ -3266,8 +3266,9 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="admin-section" id="admin-avisos" role="tabpanel" aria-labelledby="admin-tab-avisos">
           <div class="field"><label for="av-titulo">Título</label><input type="text" id="av-titulo" maxlength="120"></div>
           <div class="field"><label for="av-corpo">Mensagem</label><textarea id="av-corpo" rows="3" maxlength="500"></textarea></div>
-          <button class="btn-primary" onclick="enviarAviso()">Enviar aos usuários</button>
+          <button class="btn-primary" id="av-btn" onclick="enviarAviso()">Enviar aos usuários</button>
           <p class="auth-msg" id="av-msg" role="alert"></p>
+          <div id="av-lista"></div>
           <p style="color:var(--text2);font-size:12px;margin-top:8px;">Aparece no sino de todo mundo na hora; o push no celular chega em até ~5 min.</p>
         </div>
         <div class="admin-section" id="admin-metricas" role="tabpanel" aria-labelledby="admin-tab-metricas">
@@ -3547,7 +3548,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="config-row">
       <div>
         <div class="config-label">Aparência</div>
-        <div class="config-sub">Tema do aplicativo</div>
+        <div class="config-sub">Tema do aplicativo · vale só neste aparelho</div>
       </div>
       <div class="theme-seg" id="theme-seg">
         <button type="button" data-t="claro" onclick="setTema('claro')">Claro</button>
@@ -3586,7 +3587,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     <div class="config-row">
       <div>
         <div class="config-label">Mascote</div>
-        <div class="config-sub">Bombeiro no início e no fim da sessão</div>
+        <div class="config-sub">Bombeiro no início e no fim da sessão · vale só neste aparelho</div>
       </div>
       <div class="theme-seg" id="mascote-seg">
         <button type="button" data-m="1" onclick="setMascote(true)">Mostrar</button>
@@ -3759,6 +3760,9 @@ function _cliqueAcaoId(e){
   if(a==='resolverReporte')resolverReporte(id);
   else if(a==='copiarReporte')copiarReporte(id);
   else if(a==='abrirTopico')abrirIntro('topico',id);
+  else if(a==='apagarAviso')apagarAviso(id);
+  else if(a==='repDefinirPlano')Promise.resolve(definirPlano(id,b.dataset.plano==='anual'?'anual':'mensal')).then(loadReportes);
+  else if(a==='repMarcarPago')Promise.resolve(marcarPago(id)).then(loadReportes);
 }
 document.addEventListener('click',_cliqueAcaoId);
 
@@ -9086,7 +9090,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.377';
+const APP_VERSAO='v1.378';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -12891,9 +12895,24 @@ async function loadAdminUsers(){
   }
 }
 
+// ROB-02/COM-13: escrita de admin com erro visível. Sem isto, PERMISSION_DENIED/rede virava rejeição solta
+// e o admin achava que tinha aprovado/revogado. Devolve true se gravou.
+async function _admEscrever(fn){
+  try{await fn();return true;}
+  catch(err){
+    console.error('admin erro:',err);
+    showToast('Não foi possível concluir: '+((err&&err.message)||'erro')+'. Nada foi alterado.');
+    return false;
+  }
+}
+// Leitura do usuário para marcarPago/desfazerPago; null se falhar (já avisou no toast).
+async function _admLerUsuario(uid){
+  try{const snap=await db.ref('usuarios/'+uid).get();return snap.val()||{};}
+  catch(err){console.error('admin leitura:',err);showToast('Não foi possível ler o usuário: '+((err&&err.message)||'erro'));return null;}
+}
 async function approveUser(uid){
   if(!isAdmin())return;
-  await db.ref('usuarios/'+uid).update({aprovado:true});
+  if(!await _admEscrever(()=>db.ref('usuarios/'+uid).update({aprovado:true})))return;
   // Limpa o carimbo de revogação em chamada SEPARADA: se as regras do RTDB recusarem a
   // chave, quem cai é só a limpeza — a aprovação acima já está gravada.
   try{await db.ref('usuarios/'+uid+'/revogadoEm').remove();}catch(e){console.warn('revogadoEm nao limpo:',e.message);}
@@ -12902,7 +12921,7 @@ async function approveUser(uid){
 async function revokeUser(uid){
   if(!isAdmin())return;
   if(!confirm('Revogar o acesso deste usuário agora?\n\nO app fecha pra ele(a) no próximo carregamento. Dá pra reverter aprovando de novo.'))return;
-  await db.ref('usuarios/'+uid).update({aprovado:false});   // isto é o que corta o acesso
+  if(!await _admEscrever(()=>db.ref('usuarios/'+uid).update({aprovado:false})))return;   // isto é o que corta o acesso
   // Carimbo é só rótulo da lista. Vai em chamada separada porque `revogadoEm` é chave
   // nova: se a regra `$outros` do RTDB barrar, a revogação NÃO pode cair junto.
   try{await db.ref('usuarios/'+uid+'/revogadoEm').set(Date.now());}catch(e){console.warn('revogadoEm nao gravado:',e.message);}
@@ -12930,7 +12949,8 @@ async function removerUsuario(uid){
 async function makeAdmin(uid){
   if(!isAdmin())return;
   if(!confirm('Tornar este usuário ADMIN?\n\nEle(a) ganha acesso total ao painel (usuários, cobrança, reportes). Não existe botão para desfazer aqui, só pelo Firebase Console.'))return;
-  await db.ref('usuarios/'+uid).update({admin:true,aprovado:true});loadAdminUsers();showToast('Admin concedido!');
+  if(!await _admEscrever(()=>db.ref('usuarios/'+uid).update({admin:true,aprovado:true})))return;
+  loadAdminUsers();showToast('Admin concedido!');
 }
 
 // ═══════════════════════════════
@@ -13088,8 +13108,7 @@ async function definirPlano(uid,plano){
 // vencimento antigo, que é o que preserva a data de aniversário da assinatura.
 async function marcarPago(uid){
   if(!isAdmin())return;
-  const snap=await db.ref('usuarios/'+uid).get();
-  const u=snap.val()||{};
+  const u=await _admLerUsuario(uid);if(!u)return;
   const st=estadoCobranca(u);
   const plano=st.plano==='trial'?'mensal':st.plano;
   const base=(st.prox&&st.prox>Date.now())?st.prox:Date.now();
@@ -13104,8 +13123,7 @@ async function marcarPago(uid){
 }
 async function desfazerPago(uid){
   if(!isAdmin())return;
-  const snap=await db.ref('usuarios/'+uid).get();
-  const u=snap.val()||{};
+  const u=await _admLerUsuario(uid);if(!u)return;
   const st=estadoCobranca(u);
   if(st.plano==='trial'||!st.prox){showToast('Nada para desfazer.');return;}
   const prox=_cobAddMeses(st.prox,st.plano==='anual'?-COB_MESES_ANUAL:-1);
@@ -13136,13 +13154,15 @@ function iniciarListenerNotif(){
   db.ref('notificacoes').orderByChild('ts').limitToLast(30).on('value',snap=>{
     const v=snap.val()||{};
     notifCache=Object.keys(v).map(id=>({id,...v[id]})).sort((a,b)=>(b.ts||0)-(a.ts||0));
-    renderBadgeNotif();
+    renderBadgeNotif();renderAvisosAdmin();
   });
 }
+// COM-20: sem `ultimaNotifLida` (conta nova) a leitura começa em `criadoEm`: aviso de antes do cadastro não conta como não lido.
+function _notifLidaAte(){return (userProfile&&(userProfile.ultimaNotifLida||userProfile.criadoEm))||0;}
 function renderBadgeNotif(){
   const badge=document.getElementById('notif-badge');
   if(!badge)return;
-  const lida=(userProfile&&userProfile.ultimaNotifLida)||0;
+  const lida=_notifLidaAte();
   const naoLidas=notifCache.filter(n=>(n.ts||0)>lida).length;
   badge.textContent=naoLidas>9?'9+':String(naoLidas);
   badge.classList.toggle('hidden',naoLidas===0);
@@ -13156,7 +13176,7 @@ function abrirModalNotif(){
     :'<p style="color:var(--text2);font-size:13px;">Nenhum aviso ainda.</p>';
   document.getElementById('modal-notif').classList.remove('hidden');
   const maisNova=notifCache.reduce((m,n)=>Math.max(m,n.ts||0),0);
-  if(currentUser&&maisNova>((userProfile&&userProfile.ultimaNotifLida)||0)){
+  if(currentUser&&maisNova>_notifLidaAte()){
     userProfile.ultimaNotifLida=maisNova;
     db.ref('usuarios/'+currentUser.uid).update({ultimaNotifLida:maisNova}).catch(()=>{});
     renderBadgeNotif();
@@ -13166,17 +13186,37 @@ function fecharModalNotif(e){
   if(!e||e.target===document.getElementById('modal-notif'))
     document.getElementById('modal-notif').classList.add('hidden');
 }
+let _avisoEnviando=false;
 async function enviarAviso(){
-  if(!isAdmin())return;
+  if(!isAdmin()||_avisoEnviando)return;
   const titulo=document.getElementById('av-titulo').value.trim();
   const corpo=document.getElementById('av-corpo').value.trim();
   if(!titulo||!corpo){showMsg('av-msg','Preencha título e mensagem.');return;}
+  if(!confirm('Enviar este aviso a TODOS os usuários?\n\nO sino atualiza na hora e o push chega no celular de todo mundo em até ~5 min. Apagar o aviso depois não cancela o push.'))return;
+  _avisoEnviando=true;
+  const btn=document.getElementById('av-btn');if(btn)btn.disabled=true;
   try{
     await db.ref('notificacoes').push({titulo,corpo,ts:Date.now(),pushPendente:true});
     showMsg('av-msg','Aviso enviado!','ok');
     document.getElementById('av-titulo').value='';
     document.getElementById('av-corpo').value='';
   }catch(err){showMsg('av-msg','Erro: '+err.message);}
+  finally{_avisoEnviando=false;if(btn)btn.disabled=false;}
+}
+// COM-20: lista dos últimos avisos no painel, com "Apagar" (id vai em data-id, ver btnId). Apagar tira do sino de todos;
+// o push que já saiu não volta. `ts` segue sendo o relógio do admin: trocar por ServerValue.TIMESTAMP exigiria mudar a regra do RTDB (fora).
+function renderAvisosAdmin(){
+  const el=document.getElementById('av-lista');if(!el||!isAdmin())return;
+  el.innerHTML=notifCache.length
+    ?'<div class="config-label" style="margin:14px 0 6px">Enviados (últimos 30)</div>'+notifCache.map(n=>'<div class="notif-item"><div class="notif-item-titulo">'+sanitize(n.titulo)+
+      '</div><div class="notif-item-corpo">'+sanitize(n.corpo)+'</div><div class="notif-item-data">'+fmtData(n.ts)+' '+
+      btnId('btn-config-reset','apagarAviso',n.id,'Apagar')+'</div></div>').join('')
+    :'';
+}
+async function apagarAviso(id){
+  if(!isAdmin())return;
+  if(!confirm('Apagar este aviso do sino de todos?\n\nO push que já saiu não é cancelado.'))return;
+  if(await _admEscrever(()=>db.ref('notificacoes/'+id).remove()))showToast('Aviso apagado.');
 }
 
 // ═══════════════════════════════
@@ -13204,22 +13244,29 @@ async function loadMetricas(){
   try{
     const snap=await withTimeout(db.ref('usuarios').get(),8000);
     const users=snap.exists()?snap.val():{};
-    const entradas=Object.entries(users).filter(([,u])=>u);
-    const aprovados=entradas.filter(([,u])=>u.aprovado===true);
+    const todas=Object.entries(users).filter(([,u])=>u);
+    // COM-19: admin não é assinante; "com acesso" = aprovado E não vencido (a data corta o acesso, não a flag).
+    const entradas=todas.filter(([,u])=>!u.admin);
+    const aprovados=entradas.filter(([,u])=>u.aprovado===true&&estadoCobranca(u).estado!=='vencido');
     const agora=Date.now(),DIA=86400000;
     const cad7=entradas.filter(([,u])=>u.criadoEm&&agora-u.criadoEm<=7*DIA).length;
     const cad30=entradas.filter(([,u])=>u.criadoEm&&agora-u.criadoEm<=30*DIA).length;
-    const planos={trial:0,mensal:0,anual:0};
-    aprovados.forEach(([,u])=>{const p=(u.cob&&u.cob.plano)||'trial';planos[p]=(planos[p]||0)+1;});
+    const planos={teste:0,pago:0,vencido:0};
+    entradas.filter(([,u])=>u.aprovado===true).forEach(([,u])=>{
+      const e=estadoCobranca(u).estado;
+      if(e==='vencido')planos.vencido++;else if(e==='ok'||e==='vencendo')planos.pago++;else planos.teste++;
+    });
 
     const progs=await Promise.all(aprovados.map(([uid])=>
       withTimeout(db.ref('progresso/'+uid).get(),8000)
-        .then(s=>[uid,s.exists()?s.val():null]).catch(()=>[uid,null])
+        .then(s=>[uid,s.exists()?s.val():null]).catch(()=>[uid,undefined])   // undefined = leitura falhou (null = sem progresso)
     ));
     const porUid=Object.fromEntries(progs);
+    const falhas=progs.filter(([,v])=>v===undefined).length;
 
     let diagFeito=0,ret2ok=0,ret2eleg=0,ret7ok=0,ret7eleg=0;
-    aprovados.forEach(([uid,u])=>{
+    const lidos=aprovados.filter(([uid])=>porUid[uid]!==undefined);   // leitura que falhou fica fora do denominador
+    lidos.forEach(([uid,u])=>{
       const p=porUid[uid]||{};
       if(p.diagFeito)diagFeito++;
       const r2=_metricaRetencao(u.criadoEm,p.history,2);
@@ -13232,12 +13279,13 @@ async function loadMetricas(){
       '</div><div class="config-sub">'+sanitize(sub)+'</div></div>'+
       '<div style="font-size:19px;font-weight:800;color:var(--text)">'+sanitize(String(val))+'</div></div>';
     el.innerHTML=
-      linha('Usuários aprovados',entradas.length+' cadastros no total',aprovados.length)+
+      linha('Assinantes com acesso',entradas.length+' cadastros (sem admin); teste vencido não conta',aprovados.length)+
       linha('Cadastros em 7 dias',cad30+' nos últimos 30 dias',cad7)+
-      linha('Completaram o nivelamento',aprovados.length+' aprovados',_metricaPct(diagFeito,aprovados.length))+
+      linha('Completaram o nivelamento',lidos.length+' com acesso lidos',_metricaPct(diagFeito,lidos.length))+
       linha('Retenção D2','voltou a estudar 2 dias depois',_metricaPct(ret2ok,ret2eleg))+
       linha('Retenção D7','voltou a estudar 7 dias depois',_metricaPct(ret7ok,ret7eleg))+
-      linha('Trial / Mensal / Anual','distribuição de plano',planos.trial+' / '+planos.mensal+' / '+planos.anual);
+      linha('Em teste / Pagos / Vencidos','pelo estado de cobrança, como na aba Usuários',planos.teste+' / '+planos.pago+' / '+planos.vencido)+
+      (falhas?'<p style="color:var(--red);font-size:12px;margin-top:8px">'+(falhas>1?falhas+' leituras de progresso falharam':'1 leitura de progresso falhou')+' e ficaram fora das porcentagens. Atualize para tentar de novo.</p>':'');
   }catch(err){el.innerHTML='<p style="color:var(--red);font-size:13px;">Erro: '+err.message+'</p>';}
 }
 
@@ -14237,32 +14285,43 @@ function fecharModalConfig(e){
     document.getElementById('modal-config').classList.add('hidden');
 }
 
+let _salvandoConfig=false;
 async function salvarConfig(){
-  const nome=document.getElementById('config-nome-input').value.trim();
-  if(nome){
-    userProfile.nome=nome;
-    await db.ref('usuarios/'+currentUser.uid).update({nome});
-    const nomeDisplay=nome.split(' ')[0];
-    const hn2El=document.getElementById('hdr-nome');if(hn2El)hn2El.textContent=nomeDisplay;
-    document.getElementById('dash-nome').textContent=nomeDisplay;
-  }
-  const metaInp=document.getElementById('config-meta-input');
-  const metaVal=metaInp?parseInt(metaInp.value)||0:0;
-  if(metaVal>=1&&metaVal<=200)userStats.metaDiaria=metaVal;
-  // Bloco B: dose diária configurável (cards e resumos), como já era a meta de questões.
-  if(!userStats.dose)userStats.dose={};
-  userStats.dose.questoes=userStats.metaDiaria||DOSE_PADRAO.questoes;
-  const dcInp=document.getElementById('config-dose-cards');
-  const dcVal=dcInp?parseInt(dcInp.value)||0:0;
-  if(dcVal>=1&&dcVal<=200)userStats.dose.cards=dcVal;
-  const drInp=document.getElementById('config-dose-resumos');
-  const drVal=drInp?parseInt(drInp.value)||0:0;
-  if(drVal>=1&&drVal<=70)userStats.dose.resumos=drVal;
-  doseExtra={cards:0,resumos:0};
-  saveProg();   // b266/MOT-07: sem await (espelho local é síncrono; offline o set() não resolve e o modal nunca fechava)
-  renderDashboard();
-  document.getElementById('modal-config').classList.add('hidden');
-  showToast('Configurações salvas');
+  if(_salvandoConfig)return;
+  _salvandoConfig=true;
+  try{
+    const nome=document.getElementById('config-nome-input').value.trim();
+    let nomeFalhou=false;
+    if(nome){
+      // ROB-01: falha no nome (rede, regra) não pode impedir meta e doses.
+      try{
+        await db.ref('usuarios/'+currentUser.uid).update({nome});
+        userProfile.nome=nome;
+        const nomeDisplay=nome.split(' ')[0];
+        const hn2El=document.getElementById('hdr-nome');if(hn2El)hn2El.textContent=nomeDisplay;
+        document.getElementById('dash-nome').textContent=nomeDisplay;
+      }catch(err){console.error('salvarConfig nome:',err);nomeFalhou=true;}
+    }
+    const foraDaFaixa=[];
+    const lerFaixa=(id,max,rotulo,aplicar)=>{
+      const inp=document.getElementById(id);if(!inp)return;
+      const v=parseInt(inp.value)||0;
+      if(v>=1&&v<=max)aplicar(v);else foraDaFaixa.push(rotulo+' (1 a '+max+')');
+    };
+    lerFaixa('config-meta-input',200,'Meta diária',v=>{userStats.metaDiaria=v;});
+    // Bloco B: dose diária configurável (cards e resumos), como já era a meta de questões.
+    if(!userStats.dose)userStats.dose={};
+    userStats.dose.questoes=userStats.metaDiaria||DOSE_PADRAO.questoes;
+    lerFaixa('config-dose-cards',200,'Flashcards por dia',v=>{userStats.dose.cards=v;});
+    lerFaixa('config-dose-resumos',70,'Resumos por vez',drVal=>{userStats.dose.resumos=drVal;});   // harness_dia trava esta atribuicao literal
+    doseExtra={cards:0,resumos:0};
+    saveProg();   // b266/MOT-07: sem await (espelho local é síncrono; offline o set() não resolve e o modal nunca fechava)
+    renderDashboard();
+    document.getElementById('modal-config').classList.add('hidden');
+    if(nomeFalhou)showToast('Configurações salvas, mas o apelido não foi gravado. Tente de novo.');
+    else if(foraDaFaixa.length)showToast('Salvo, exceto: '+foraDaFaixa.join(', ')+'. Mantive o valor anterior.');
+    else showToast('Configurações salvas');
+  }finally{_salvandoConfig=false;}
 }
 
 async function resetarStreak(){
@@ -15106,9 +15165,22 @@ async function loadReportes(){
     atualizarBadgeReportes(abertos.length);
     if(!abertos.length){el.innerHTML='<p style="color:var(--text2);font-size:13px">Nenhum reporte aberto. 🎉</p>';return;}
     abertos.sort((a,b)=>(b[1].criadoEm||0)-(a[1].criadoEm||0));
+    // COM-21: reporte de pagamento mostra o estado atual de cobrança (lido de usuarios/$uid, não do texto do reporte)
+    const usuariosPag={};
+    await Promise.all(abertos.filter(e=>e[1].tipo==='pagamento'&&/^[A-Za-z0-9]{10,40}$/.test(e[1].uid||'')).map(e=>
+      withTimeout(db.ref('usuarios/'+e[1].uid).get(),8000).then(sn=>{usuariosPag[e[1].uid]=sn.val();}).catch(()=>{})));
     let html='';
     abertos.forEach(function(e){
       const key=e[0],r=e[1];
+      let pagBloco='';
+      if(r.tipo==='pagamento'&&/^[A-Za-z0-9]{10,40}$/.test(r.uid||'')){
+        const u=usuariosPag[r.uid];
+        pagBloco=u
+          ?'<div class="rep-item-desc">Conta: '+sanitize(u.nome||'sem nome')+' · '+sanitize(u.email||'')+'<br>Agora: '+sanitize(estadoCobranca(u).label)+'</div>'
+            +'<div class="rep-item-acts">'+btnId('rep-resolve','repDefinirPlano',r.uid,'Definir plano '+(r.plano==='anual'?'Anual':'Mensal'),'data-plano="'+(r.plano==='anual'?'anual':'mensal')+'"')
+            +btnId('rep-copy','repMarcarPago',r.uid,'Pago (soma um ciclo)')+'</div>'
+          :'<div class="rep-item-desc">Conta do aviso não encontrada ou não lida. Confira na aba Usuários.</div>';
+      }
       const data=new Date(r.criadoEm||0).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
       html+='<div class="rep-item">'
         +'<div class="rep-item-top"><span class="rep-item-cat">'+sanitize(REP_CAT_LBL[r.categoria]||REP_TIPO_LBL[r.tipo]||r.categoria||'?')+'</span><span class="rep-item-id">'+sanitize(r.tipo||'')+(r.itemId?' · '+sanitize(r.itemId):'')+'</span></div>'
@@ -15119,6 +15191,7 @@ async function loadReportes(){
         // PD4: o `texto` do reporte do formulário (categoria·tipo id·preview·quem) só repete o que o card já mostra; o fallback é para quem não passa pelo formulário.
         +(r.texto&&!r.descricao&&!r.categoria?'<div class="rep-item-desc">'+sanitize(r.texto)+'</div>':'')
         +'<div class="rep-item-meta">'+sanitize(r.nome||'anônimo')+' · '+data+'</div>'
+        +pagBloco
         // B149 — recolhido por padrão: é ruído em 90% dos casos e o painel não pode virar log.
         +(r.diag?'<details class="rep-item-diag"><summary>Diagnóstico técnico</summary><pre>'+sanitize(r.diag)+'</pre></details>':'')
         +'<div class="rep-item-acts">'+btnId('rep-resolve','resolverReporte',key,'Resolver')+btnId('rep-copy','copiarReporte',key,'Copiar')+'</div>'
@@ -15158,8 +15231,10 @@ function animateCount(el,target,suf,pre){
   el.setAttribute('data-cv',target);requestAnimationFrame(step);
 }
 
+let _toastTimer=null;
 function showToast(msg,acaoLabel,acaoFn){
   const t=document.getElementById('toast');
+  clearTimeout(_toastTimer);   // COM-25: o timer do aviso anterior cortava o novo
   t.innerHTML='';
   const span=document.createElement('span');
   span.textContent=msg;
@@ -15171,7 +15246,7 @@ function showToast(msg,acaoLabel,acaoFn){
     t.appendChild(btn);
   }
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
+  _toastTimer=setTimeout(()=>t.classList.remove('show'),acaoLabel&&acaoFn?6000:2500);   // UI-14: toast com ação precisa de tempo para o toque
 }
 
 // S54 A11Y (bloco31) — cards clicáveis alcançáveis por teclado.
