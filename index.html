@@ -3743,6 +3743,18 @@ async function _emailBateAdmin(email){
 
 // ── Sanitize XSS ──
 function sanitize(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+// Botao que leva um ID vindo do banco (SEG-13/ROB-06): o ID vai em data-id, escapado como ATRIBUTO, e o ouvinte delegado le por
+// dataset. Nunca interpolar ID dentro de string JS de onclick: o navegador decodifica a entidade do atributo ANTES de o JS rodar,
+// entao sanitize() nao protege esse contexto. Acao nova = 1 linha na lista branca de _cliqueAcaoId. `attrs` e so texto do codigo.
+function btnId(cls,acao,id,label,attrs){return'<button type="button" class="'+cls+'" data-acao="'+acao+'" data-id="'+sanitize(id)+'"'+(attrs?' '+attrs:'')+'>'+label+'</button>';}
+function _cliqueAcaoId(e){
+  const b=e.target&&e.target.closest&&e.target.closest('[data-acao]');if(!b)return;
+  const a=b.dataset.acao,id=b.dataset.id;
+  if(a==='resolverReporte')resolverReporte(id);
+  else if(a==='copiarReporte')copiarReporte(id);
+  else if(a==='abrirTopico')abrirIntro('topico',id);
+}
+document.addEventListener('click',_cliqueAcaoId);
 
 // O <body> é quem rola neste layout (html,body{height:100%} + overflow-x:hidden),
 // então window.scrollTo(0,0) é inerte aqui — medido no b180. Zera os três porque
@@ -8937,7 +8949,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.371';
+const APP_VERSAO='v1.372';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -12523,7 +12535,7 @@ function tqSel(btn){
   btn.classList.add('sel');
   const code=btn.dataset.code,name=btn.dataset.name,pct=btn.dataset.pct,c=btn.dataset.cor,weak=btn.dataset.weak;
   const d=tq.querySelector('.tq-detail');
-  if(d)d.innerHTML='<span class="tq-dot" style="background:'+c+'"></span><b>'+sanitize(code)+'</b> · '+sanitize(name)+': <b>'+sanitize(pct)+'</b>'+(weak?'<span class="tq-weak">ponto mais fraco</span>':'')+'<button type="button" class="tq-praticar" onclick="abrirIntro(\'topico\',\''+sanitize(code)+'\')">Praticar →</button>';
+  if(d)d.innerHTML='<span class="tq-dot" style="background:'+c+'"></span><b>'+sanitize(code)+'</b> · '+sanitize(name)+': <b>'+sanitize(pct)+'</b>'+(weak?'<span class="tq-weak">ponto mais fraco</span>':'')+btnId('tq-praticar','abrirTopico',code,'Praticar →');
 }
 function toggleAreaTopicos(el){
   const row=el.closest('.pg-area-row');
@@ -13458,7 +13470,7 @@ function renderAgora(){
   el.innerHTML='<div class="pg-mod-h">E agora?</div>'
     +'<div class="pg-agora-body">'
       +'<div class="pg-agora-txt">Seu ponto mais frágil agora é <b style="color:'+a.color+'">'+sanitize(p.nome)+'</b> ('+sanitize(a.nome||'')+' · '+pct+'% de domínio).</div>'
-      +'<button class="btn-primary" type="button" onclick="abrirIntro(\'topico\',\''+sanitize(p.t)+'\')" style="width:100%;margin-top:10px;">Praticar '+sanitize(p.nome)+' →</button>'
+      +btnId('btn-primary','abrirTopico',p.t,'Praticar '+sanitize(p.nome)+' →','style="width:100%;margin-top:10px;"')
     +'</div>';
 }
 
@@ -14856,7 +14868,7 @@ async function loadReportes(){
         +'<div class="rep-item-meta">'+sanitize(r.nome||'anônimo')+' · '+data+'</div>'
         // B149 — recolhido por padrão: é ruído em 90% dos casos e o painel não pode virar log.
         +(r.diag?'<details class="rep-item-diag"><summary>Diagnóstico técnico</summary><pre>'+sanitize(r.diag)+'</pre></details>':'')
-        +'<div class="rep-item-acts"><button class="rep-resolve" onclick="resolverReporte(\''+sanitize(key)+'\')">Resolver</button><button class="rep-copy" onclick="copiarReporte(\''+sanitize(key)+'\')">Copiar</button></div>'
+        +'<div class="rep-item-acts">'+btnId('rep-resolve','resolverReporte',key,'Resolver')+btnId('rep-copy','copiarReporte',key,'Copiar')+'</div>'
         +'</div>';
     });
     el.innerHTML=html;
