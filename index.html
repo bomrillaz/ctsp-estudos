@@ -3817,10 +3817,11 @@ async function flushCardsSujos(){
   const ids=Object.keys(_cardsSujos);
   if(!ids.length)return;
   const patch=_patchCardsSujos(ids,userCards);
+  const seqs={};Object.keys(patch).forEach(id=>{seqs[id]=_cardsSeq[id]||0;});   // b266: foto da gravação enviada
   if(!Object.keys(patch).length){_cardsSujos={};gravarCardsSujos();return;}
   try{
     await db.ref('cards/'+currentUser.uid).update(patch);   // só os sujos, merge por id
-    Object.keys(patch).forEach(id=>{delete _cardsSujos[id];});
+    Object.keys(patch).forEach(id=>{if((_cardsSeq[id]||0)===seqs[id])delete _cardsSujos[id];});   // b266: card regravado durante o voo mantém a marca
     gravarCardsSujos();
   }catch(e){console.warn('flushCardsSujos adiado (segue offline):',e.message);}
 }
@@ -4303,7 +4304,7 @@ function sincronizarAgendaPush(){
     if(!currentUser||!dataLoaded)return;
     if(!('Notification'in window)||Notification.permission!=='granted')return;
     const ag=agendaRevisoesTs();
-    db.ref('push/'+currentUser.uid+'/_agenda').set({prox:ag[0]||0,agenda:ag,ts:Date.now()});
+    db.ref('push/'+currentUser.uid+'/_agenda').set({prox:ag[0]||0,agenda:ag,ts:Date.now()}).catch(function(){});   // b266: sem unhandled rejection offline/negado
   }catch(_){}
 }
 function registrarRespostaAdaptativa(q,acertou,reexposicao){
@@ -4993,6 +4994,7 @@ async function importarProgresso(ev){
   ev.target.value='';
   if(!file)return;
   if(!dataLoaded){showToast('Aguarde os dados carregarem antes de importar.');return;}
+  if(navigator.onLine===false){showToast('Sem conexão: restaurar backup precisa de internet.');return;}   // b266/MOT-07: offline o await do set() de cards nunca resolve
   try{
     const obj=JSON.parse(await file.text());
     if(!obj||obj.app!=='ctsp-estudos'||typeof obj.userStats!=='object')throw new Error('arquivo não é um backup válido');
@@ -5005,7 +5007,7 @@ async function importarProgresso(ev){
       userCards=obj.userCards;
       if(currentUser)await db.ref('cards/'+currentUser.uid).set(userCards);
     }
-    await saveProg();
+    saveProg();   // b266/MOT-07: sem await (espelho local é síncrono; offline o set() não resolve)
     renderDashboard();updateBadges();
     showToast('Backup restaurado');
   }catch(e){showToast('Falha ao importar: '+e.message);}
@@ -8946,18 +8948,28 @@ async function saveProg(){
     if(_saveDeNovo){_saveDeNovo=false;saveProg();} // houve mudança durante o write → grava de novo
   }
 }
-async function saveCard(id,data){
+// b266 (MOT-06 / ROB-08): trava de reentrada por chave. Botao, gesto e seta chegam ao mesmo handler
+// por portas diferentes; o 2o toque, antes do re-render, avaliava de novo o mesmo item ou o SEGUINTE
+// sem leitura. Janela curta: virar o card, ler e avaliar leva bem mais que isso. Fonte unica: chamada
+// dentro de avaliarCard/avaliarResumo, nunca no call site.
+let _toqueAte={};
+function _semReentrada(chave,ms=450){const t=Date.now();if(t<(_toqueAte[chave]||0))return false;_toqueAte[chave]=t+ms;return true;}
+// b266 (MOT-07): NAO espera o servidor. Offline o set() do SDK nao rejeita, fica pendente ate a rede
+// voltar; o await antigo travava o card e o catch (C6) nunca rodava. Agora o card e marcado sujo ANTES
+// do set() (se a aba fechar offline, o reflush sobe na proxima abertura) e a marca so cai quando a
+// ULTIMA gravacao daquele id confirma (_cardsSeq: a resposta de uma gravacao antiga nao limpa a nova).
+let _cardsSeq={};
+function saveCard(id,data){
   userCards[id]=data;                                    // memória é a fonte da verdade da sessão
   gravarEspelhoCards();                                  // espelho local sempre (durável offline)
+  _cardsSujos[id]=true;gravarCardsSujos();               // C6: marca ANTES do set() p/ reflush
+  const seq=_cardsSeq[id]=(_cardsSeq[id]||0)+1;
   try{
-    await db.ref('cards/'+currentUser.uid+'/'+id).set(data);
-    if(_cardsSujos[id]){delete _cardsSujos[id];gravarCardsSujos();}   // subiu: limpa a marca
-  }catch(e){
-    _cardsSujos[id]=true;gravarCardsSujos();                          // C6: marca p/ reflush na reconexão
-    console.warn('saveCard offline (card marcado p/ reflush):',e.message);
-  }
-  // (item 2/auditoria jul/26: nunca propagar a exceção — senão avaliarCard abortava
-  //  antes de avançar o card. Espelho durável + reflush conservador na reconexão.)
+    db.ref('cards/'+currentUser.uid+'/'+id).set(data).then(()=>{
+      if(_cardsSeq[id]===seq&&_cardsSujos[id]){delete _cardsSujos[id];gravarCardsSujos();}   // subiu: limpa a marca
+    }).catch(e=>{console.warn('saveCard: set rejeitado (card segue marcado p/ reflush):',e.message);});
+  }catch(e){console.warn('saveCard: set lançou (card segue marcado p/ reflush):',e.message);}   // o SDK lança síncrono com valor inválido
+  // nunca propagar exceção nem bloquear o chamador: avaliarCard precisa avançar o card.
 }
 
 // Indicador discreto de progresso salvo
@@ -9013,7 +9025,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.375';
+const APP_VERSAO='v1.376';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -11277,10 +11289,11 @@ async function avaliarCard(dif){
   const naSessao=quizArea==='SESSAO'&&origemReforco!=='quiz'&&ehCardDeSessao(quizQueue[quizIdx]);
   const fc=naSessao?quizQueue[quizIdx]:cardQueue[cardIdx];
   if(!fc)return;                       // fila já esgotada — nada a avaliar
+  if(!_semReentrada('card'))return;    // b266/MOT-06: duplo toque/gesto/seta repetida não avalia 2x nem pula o próximo
   const existing=userCards[fc.id]||{};
   const updated=fsrsCardUpdate(existing,dif);
   vibrarFeedback(dif!=='dif'); // PM1/M6.5 — curto em med/fac, duplo em dif
-  await saveCard(fc.id,updated);
+  saveCard(fc.id,updated);   // b266/MOT-07: sem await (offline o set() nunca resolve)
   if(dif==='fac'){userStats.cardStreak=(userStats.cardStreak||0)+1;}
   else userStats.cardStreak=0;
   registrarAtividadeCard(); // S62: alimenta o anel de meta de flashcards
@@ -11359,6 +11372,7 @@ async function avaliarCard(dif){
     const flip=document.getElementById('card-flip-el');
     if(!flip||!flip.classList.contains('flipped'))return;
     e.preventDefault();
+    if(e.repeat)return;      // b266: tecla segurada não avalia em rajada
     avaliarCard(e.key==='ArrowLeft'?'dif':'fac');
   });
 })();
@@ -11799,6 +11813,7 @@ async function avaliarResumo(dif){
   if(!resumoAtualId)return;
   const r=RESUMOS_BANCO.find(x=>x.id===resumoAtualId);
   if(!r)return;
+  if(!_semReentrada('resumo'))return;   // b266/ROB-08: o 2º toque avaliaria o PRÓXIMO resumo sem leitura
   const key='resumo_'+resumoAtualId;
   const existing=userStats[key]||{};
   const updated=fsrsCardUpdate(existing,dif);
@@ -14183,7 +14198,7 @@ async function salvarConfig(){
   const drVal=drInp?parseInt(drInp.value)||0:0;
   if(drVal>=1&&drVal<=70)userStats.dose.resumos=drVal;
   doseExtra={cards:0,resumos:0};
-  await saveProg();
+  saveProg();   // b266/MOT-07: sem await (espelho local é síncrono; offline o set() não resolve e o modal nunca fechava)
   renderDashboard();
   document.getElementById('modal-config').classList.add('hidden');
   showToast('Configurações salvas');
@@ -14193,7 +14208,7 @@ async function resetarStreak(){
   if(!confirm('Zerar contagem de dias? Essa ação não pode ser desfeita.'))return;
   userStats.streak=0;
   userStats.lastAccessDate='';
-  await saveProg();
+  saveProg();   // b266/MOT-07: sem await (offline não resolve)
   _renderStreakDias();
   document.getElementById('config-streak-info').textContent='0 dias seguidos';
   showToast('Contagem zerada.');
@@ -14267,6 +14282,7 @@ function confirmarDestrutivo(o){
 async function reiniciarEstudos(){
   if(!currentUser){showToast('Você precisa estar logado.');return;}
   if(!dataLoaded){showToast('Aguarde os dados carregarem antes de reiniciar.');return;}
+  if(navigator.onLine===false){showToast('Sem conexão: reiniciar precisa de internet para apagar também na nuvem.');return;}   // b266/MOT-07: offline os await abaixo ficariam pendentes e o reset só local ressuscitaria os cards
   const conf=await confirmarDestrutivo({titulo:'Reiniciar do zero',
     texto:'Isso vai APAGAR TODO o seu progresso: questões, flashcards, histórico, streak e revisões. Esta ação NÃO pode ser desfeita. Dica: dá para exportar um backup antes (botão Exportar).',
     palavra:'REINICIAR',botao:'Reiniciar'});
