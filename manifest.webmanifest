@@ -8,7 +8,7 @@
   "scope": "./",
   "id": "/ctsp-estudos/",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any",
   "background_color": "#0B1430",
   "theme_color": "#101B3D",
   "categories": ["education"],

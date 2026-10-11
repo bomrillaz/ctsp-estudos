@@ -4151,7 +4151,6 @@ function fmtRitmo(seg){
 }
 let simQuestoes=[],simRespostas={},simOrdem={},simIdx=0,simTimer=null,simFim=0,simModo='completo';   // b267/D11: simFim = fim ABSOLUTO (Date.now()); o relógio não é mais contagem de ticks
 let simRevisao=[]; // itens não acertados do último simulado encerrado — só em memória, nunca em userStats
-let resumosQueue=[],resumoAtualIdx=0;
 
 // ═══════════════════════════════
 // SM-2 (questões) — APOSENTADO na Fase 5 (v1.107): o agendamento de questão é só FSRS.
@@ -5407,15 +5406,25 @@ async function _lerConteudoCache(){
     });
   }catch(e){return null;}
 }
-async function _gravarConteudoCache(c){
+// b266 PWA-06: fonte única de escrita no IndexedDB. Devolve true/false (nunca lança) para o chamador
+// poder avisar; falha típica: cota cheia, modo privado, bloqueio por outra aba. tx.onabort cobre a
+// QuotaExceededError, que no commit chega como abort e não como error.
+async function _idbEscrever(store,fazer){
   try{
     const bd=await _abrirConteudoDB();
     await new Promise((res,rej)=>{
-      const tx=bd.transaction(CONTEUDO_STORE,'readwrite');
-      tx.objectStore(CONTEUDO_STORE).put(c,'atual');
-      tx.oncomplete=res;tx.onerror=()=>rej(tx.error);
+      const tx=bd.transaction(store,'readwrite');
+      fazer(tx.objectStore(store));
+      tx.oncomplete=res;tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error||new Error('transação abortada'));
     });
-  }catch(e){}
+    return true;
+  }catch(e){return false;}
+}
+async function _gravarConteudoCache(c){
+  const ok=await _idbEscrever(CONTEUDO_STORE,st=>st.put(c,'atual'));
+  // Sem o cache o app abre normal, mas baixa o nó `conteudo` inteiro a cada abertura: o admin vê isto no log.
+  if(!ok)_errPush('IndexedDB: conteudo nao gravado no aparelho','',0,0);
+  return ok;
 }
 // b266 PWA-01: carimbo da última verificação ONLINE do perfil (uid + hora). É o que autoriza abrir
 // pelo cache quando o RTDB não responde (sem rede/timeout). Teto de 7 dias: coincide com o teste
@@ -5438,16 +5447,7 @@ async function _offlinePermitido(uid){
 }
 // PS3/A1 (v17): quem vence de verdade (PERMISSION_DENIED + estadoCobranca vencido) não
 // pode continuar estudando pelo cache antigo — ver carregarConteudo().
-async function _apagarConteudoCache(){
-  try{
-    const bd=await _abrirConteudoDB();
-    await new Promise((res,rej)=>{
-      const tx=bd.transaction(CONTEUDO_STORE,'readwrite');
-      tx.objectStore(CONTEUDO_STORE).delete('atual');
-      tx.oncomplete=res;tx.onerror=()=>rej(tx.error);
-    });
-  }catch(e){}
-}
+async function _apagarConteudoCache(){return _idbEscrever(CONTEUDO_STORE,st=>st.delete('atual'));}
 // PJ18/Bloco B: cache do áudio das Aulas, store próprio (AULAS_AUDIO_STORE), chave
 // "<topico>:<av>" — o av na chave é o que faz uma republicação invalidar o cache velho
 // sem precisar apagá-lo: a chave nova nunca bate com a antiga, então nunca lê o Blob errado.
@@ -5463,25 +5463,35 @@ async function _lerAudioAulaCache(chave){
     });
   }catch(e){return null;}
 }
-async function _gravarAudioAulaCache(chave,blob){
-  try{
-    const bd=await _abrirConteudoDB();
-    await new Promise((res,rej)=>{
-      const tx=bd.transaction(AULAS_AUDIO_STORE,'readwrite');
-      tx.objectStore(AULAS_AUDIO_STORE).put(blob,chave);
-      tx.oncomplete=res;tx.onerror=()=>rej(tx.error);
-    });
-  }catch(e){}
+function _gravarAudioAulaCache(chave,valor){return _idbEscrever(AULAS_AUDIO_STORE,st=>st.put(valor,chave));}
+function _apagarAudioAulaCache(chave){return _idbEscrever(AULAS_AUDIO_STORE,st=>st.delete(chave));}
+// b266 COM-24: partes já baixadas ficam guardadas sob "p|<tópico>|<av>|<i>" (Uint8Array) para a conexão
+// que cai na parte 7 de 10 retomar de onde parou; saem quando o Blob final é gravado.
+function _chaveParteAula(t,av,i){return 'p|'+t+'|'+av+'|'+i;}
+async function _apagarPartesAula(t,av,n){
+  return _idbEscrever(AULAS_AUDIO_STORE,st=>{for(let i=0;i<n;i++)st.delete(_chaveParteAula(t,av,i));});
 }
-async function _apagarAudioAulaCache(chave){
+// b266 PWA-05: a chave carrega o `av`, então cada republicação deixa o Blob velho órfão. Apaga tudo que é
+// de um tópico PRESENTE em AULAS e não é da versão atual. Tópico ausente de AULAS fica quieto (bloco
+// parcial ou ainda não publicado não pode apagar download do usuário). Sem AULAS carregada, não faz nada.
+async function _limparAudiosObsoletos(){
   try{
+    const a=AULAS;
+    if(!a||typeof a!=='object')return 0;
     const bd=await _abrirConteudoDB();
-    await new Promise((res,rej)=>{
-      const tx=bd.transaction(AULAS_AUDIO_STORE,'readwrite');
-      tx.objectStore(AULAS_AUDIO_STORE).delete(chave);
-      tx.oncomplete=res;tx.onerror=()=>rej(tx.error);
+    const chaves=await new Promise((res,rej)=>{
+      const rq=bd.transaction(AULAS_AUDIO_STORE,'readonly').objectStore(AULAS_AUDIO_STORE).getAllKeys();
+      rq.onsuccess=()=>res(rq.result||[]);rq.onerror=()=>rej(rq.error);
     });
-  }catch(e){}
+    const velhas=chaves.filter(k=>{
+      const m=/^(?:p\|)?([^:|]+)[:|](\d+)/.exec(String(k));
+      if(!m||!Object.prototype.hasOwnProperty.call(a,m[1]))return false;
+      const av=a[m[1]]&&a[m[1]].audio&&a[m[1]].audio.av;
+      return String(av)!==m[2];
+    });
+    if(velhas.length)await _idbEscrever(AULAS_AUDIO_STORE,st=>velhas.forEach(k=>st.delete(k)));
+    return velhas.length;
+  }catch(e){return 0;}
 }
 // PJ18/Bloco B: existência só (getKey, não get) — o hub marca "· Baixada" sem carregar
 // o Blob inteiro (podem ser MBs) de cada tópico só para saber se ele existe.
@@ -5513,7 +5523,8 @@ function _popularGlobaisConteudo(c){
   // PJ18/Bloco B: mesmo tratamento tolerante — a tela Aulas ainda cobre poucos tópicos
   // (produção contínua, PLANO_aulas_ui.md), então "ausente" é o estado normal por muito
   // tempo, não um erro a avisar no console.
-  AULAS=c.aulas?JSON.parse(c.aulas):{};
+  // b266 COM-24: ausente = {} ("nenhuma aula ainda", normal); JSON ilegível = null (erro, a tela oferece tentar de novo).
+  try{AULAS=c.aulas?JSON.parse(c.aulas):{};}catch(e){AULAS=null;console.warn('conteudo: bloco AULAS ilegível.',e.message);}
   // PE16: mesmo tratamento tolerante de GLOSARIO/NORMAS/AULAS — "sem publicação ainda"
   // não pode travar o app, e o hub de tópico não pode quebrar por selo ausente.
   ATUALIZACOES=c.atualizacoes?JSON.parse(c.atualizacoes):[];
@@ -5523,6 +5534,7 @@ function _popularGlobaisConteudo(c){
 // "cache não serve", deixa o chamador decidir o próximo passo, nunca trava a tela de loading.
 function _usarConteudo(c){
   try{_popularGlobaisConteudo(c);}catch(e){console.warn('carregarConteudo: cache corrompido, ignorando.',e.message);return false;}
+  _limparAudiosObsoletos();   // b266 PWA-05: sem await, nunca atrasa o boot
   return true;
 }
 // Conjunto OBRIGATÓRIO: sem qualquer um destes o app não tem o que ensinar, e o download é
@@ -9196,7 +9208,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.382';
+const APP_VERSAO='v1.383';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -11698,8 +11710,6 @@ function setConsultaSub(which){
   if(which==='normas')renderNormas();
 }
 function renderConsulta(){
-  const g=document.getElementById('consulta-glo-n');if(g&&typeof GLOSARIO!=='undefined')g.textContent=GLOSARIO.length;
-  const n=document.getElementById('consulta-nor-n');if(n&&typeof NORMAS!=='undefined')n.textContent=NORMAS.length;
   setConsultaSub(_consultaSub||'glossario');
 }
 // Chips do cabeçalho do Quiz: respondidas, % de acertos e áreas tocadas (de userStats.byArea).
@@ -12119,7 +12129,7 @@ async function _marcarAulasBaixadas(){
     if(!baixada||!aulasAtiva())continue;
     const item=document.getElementById('aula-item-'+t);
     const sub=item&&item.querySelector('.resumo-list-vence');
-    if(sub)sub.textContent+=' · Baixada';
+    if(sub&&!sub.textContent.endsWith(' · Baixada'))sub.textContent+=' · Baixada';
   }
 }
 function abrirAula(t){
@@ -12135,6 +12145,7 @@ function voltarHubAulas(){
 // Acordeão por área, igual ao Quiz (renderAreaList): o TÓPICO é a ação (abre a aula),
 // 1 nível só — Aulas não tem 3º nível como Cards/Resumos, então nada de hubTopicoHTML.
 function renderAulaLista(){
+  if(typeof AULAS==='undefined'||AULAS===null)return '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Não foi possível carregar as aulas.<br><button class="fim-inline-link" onclick="location.reload()">Tentar de novo</button></div>';
   const topicos=aulasTopicos();
   if(!topicos.length)return '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Nenhuma aula publicada ainda.</div>';
   const porArea={};
@@ -12260,22 +12271,31 @@ async function ouvirAula(t){
     if(!blob){
       const chaveRtdb=t.replace(/\./g,'_');
       const partes=[];
+      let guardouTudo=true;
       for(let i=0;i<info.partes;i++){
         setBtn(`Baixando ${i} de ${info.partes}…`);
-        const snap=await withTimeout(db.ref(`aulas_audio/${chaveRtdb}/v${info.av}/${i}`).get(),20000);
-        const b64=snap.val();
-        if(!b64)throw new Error('parte '+i+' ausente no RTDB');
-        partes.push(_base64ParaBytes(b64));
+        // b266 COM-24: parte já guardada numa tentativa anterior não baixa de novo.
+        let bytes=await _lerAudioAulaCache(_chaveParteAula(t,info.av,i));
+        if(!bytes){
+          const snap=await withTimeout(db.ref(`aulas_audio/${chaveRtdb}/v${info.av}/${i}`).get(),20000);
+          const b64=snap.val();
+          if(!b64)throw new Error('parte '+i+' ausente no RTDB');
+          bytes=_base64ParaBytes(b64);
+          if(!await _gravarAudioAulaCache(_chaveParteAula(t,info.av,i),bytes))guardouTudo=false;
+        }
+        partes.push(bytes);
       }
       setBtn(`Baixando ${info.partes} de ${info.partes}…`);
       blob=new Blob(partes,{type:info.mime||'audio/mp4'});
-      await _gravarAudioAulaCache(chaveLocal,blob);
+      if(await _gravarAudioAulaCache(chaveLocal,blob))await _apagarPartesAula(t,info.av,info.partes);
+      else guardouTudo=false;
+      if(!guardouTudo){showToast('Não foi possível guardar neste aparelho. A aula toca agora, mas será baixada de novo.');_errPush('IndexedDB: audio da aula '+t+' nao gravado','',0,0);}
     }
     // Corrida: o usuário pode ter saído da aula (ou aberto outra) enquanto baixava.
     if(aulaAtual===t)_tocarBlobAula(t,blob);
   }catch(e){
     console.warn('ouvirAula: falha ao baixar.',t,e.message);
-    showToast('Não foi possível baixar. Verifique a conexão e tente de novo.');
+    showToast('Não foi possível baixar. As partes já baixadas ficam guardadas: verifique a conexão e tente de novo.');
     setBtn(_labelBotaoAudio(info),true);
   }finally{
     if(_aulaAudioBaixando===t)_aulaAudioBaixando=null;
@@ -12288,8 +12308,8 @@ function _tocarBlobAula(t,blob){
   _aulaAudioUrl=URL.createObjectURL(blob);
   const box=document.getElementById('aula-audio-box');
   if(!box)return;
-  box.innerHTML=`<audio controls style="width:100%" src="${_aulaAudioUrl}"></audio>
-    <button class="fim-inline-link" onclick="removerAudioAulaDoAparelho('${t}')">Remover do aparelho</button>`;
+  box.innerHTML=`<audio controls aria-label="Áudio da aula ${sanitize(nomeTopico(t))}" style="width:100%" src="${_aulaAudioUrl}"></audio>
+    <button class="fim-inline-link" onclick="confirmarRemoverAudioAula('${t}')">Remover do aparelho</button>`;
 }
 async function _atualizarBotaoAudio(t){
   const info=(aulasDados()[t]||{}).audio;
@@ -12297,10 +12317,17 @@ async function _atualizarBotaoAudio(t){
   const blob=await _lerAudioAulaCache(_chaveAudioAula(t,info.av));
   if(blob&&aulaAtual===t)_tocarBlobAula(t,blob);
 }
+// b266 COM-24: re-baixar custa dado móvel, então confirma. Usa o modal genérico: X, Esc e clique fora
+// já fecham sem remover (FECHAR_MODAL / fecharConfirm); "Cancelar" é o quarto caminho.
+function confirmarRemoverAudioAula(t){
+  confirmarAcao({titulo:'Remover o áudio deste aparelho?',texto:'Para ouvir de novo será preciso baixar outra vez, o que gasta dados móveis.',
+    acoes:[{rotulo:'Remover',primaria:true,fn:()=>removerAudioAulaDoAparelho(t)},{rotulo:'Cancelar',fn:()=>{}}]});
+}
 async function removerAudioAulaDoAparelho(t){
   const info=(aulasDados()[t]||{}).audio;
   if(!info)return;
   await _apagarAudioAulaCache(_chaveAudioAula(t,info.av));
+  await _apagarPartesAula(t,info.av,info.partes);
   if(_aulaAudioUrl){URL.revokeObjectURL(_aulaAudioUrl);_aulaAudioUrl=null;}
   if(aulaAtual===t)renderAulas();
 }

@@ -52,7 +52,7 @@ self.addEventListener('notificationclick', (e) => {
   })());
 });
 
-const CACHE = 'ctsp-cache-v46';
+const CACHE = 'ctsp-cache-v47';
 const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
