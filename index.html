@@ -3867,6 +3867,10 @@ function progMaisAvancado(a,b){
 // `_meuUltimoRev` = rev do último write DESTE aparelho — usado pelo listener pós-load
 // para ignorar o eco do próprio write e só reagir a escrita de OUTRO aparelho.
 let _meuUltimoRev=0;
+// MOT-11c (b266): assinatura do que o último saveProg bem-sucedido subiu (sem rev/updatedAt, que o próprio saveProg carimba). Ao esconder
+// a aba, só regrava se o estado mudou desde então: mutador sem saveProg próprio continua subindo, e um hide sem mudança não sobe `rev`.
+let _snapSalvo='';
+function _assinaturaProg(o){return JSON.stringify(o,(k,v)=>(k==='rev'||k==='updatedAt')?undefined:v);}
 function _mergeMapaMax(a,b,campos){
   const out={...(a||{})};
   for(const [k,v] of Object.entries(b||{})){
@@ -3983,6 +3987,8 @@ function _mergeFoco(a,b){ // por tópico: geração maior vence; igual: r em uni
 // MOT-01 (b266): a escolha acima NÃO muda; o que faltava é o `lastStudyDate` vir do MESMO lado. Antes ele seguia a base
 // {...remoto,...local} (sempre o local) e o streak do remoto chegava com a data velha do local: `registrarEstudoDia` contava o
 // mesmo dia 2x. Não gravar lastStudyDate=hoje ao zerar (quebra `registrarEstudoDia`), nem escolher o lado só por data.
+// MOT-16 (b266): o merge NÃO corta data "do futuro" pelo relógio local: um relógio atrasado deste aparelho corromperia uma data remota
+// correta. Quem cura data futura são os escritores locais (updateStreak, registrarEstudoDia, fsrsUpdate, fsrsCardUpdate), quando a usam.
 function _ladoStreak(local,remoto){
   const dl=local.lastStudyDate||'',dr=remoto.lastStudyDate||'';
   if(dl>dr)return local;
@@ -4194,6 +4200,7 @@ function fsrsCardUpdate(card,dif){
   const now=Date.now();card=card||{};
   const grau=dif==='dif'?1:dif==='fac'?3:2; // 1=lapso, 2=ok, 3=fácil
   let S=card.S,D=(card.D!=null?card.D:5),reps=card.reps||0,last=card.last||now;
+  if(last>now)last=now;   // MOT-16
   if(S==null){ S=(reps>0&&card.interval)?Math.max(1,card.interval):0; } // herda do SM-2 legado
   if(!reps||S<=0){
     S=grau===1?0.8:grau===2?2.2:4;
@@ -4322,9 +4329,14 @@ function _fecharSessaoBkt(){
 }
 
 // ── F2.3 FSRS-lite (questões): estabilidade S e dificuldade D ──
+// MOT-16 (b266): relógio do aparelho adiantado e depois corrigido deixa `last` no futuro, e a curva de esquecimento lê tempo negativo.
+// Nada legítimo está lá: `last` > agora conta como agora (aqui e em fsrsCardUpdate). TETO conhecido: o `next` que já foi gravado com o
+// relógio errado NÃO é curado (limitar na leitura não ajuda, o limite acompanha o relógio; curar exigiria reescrever o dado). O dano é de
+// no máximo o desvio do relógio.
 function fsrsUpdate(card,acertou){
   const now=Date.now();
   let{S=0,D=5,reps=0,last=now}=card||{};
+  if(last>now)last=now;
   if(!reps||S<=0){
     S=acertou?3:0.6; D=acertou?5:6.5;
   }else{
@@ -5043,32 +5055,93 @@ function exportarProgresso(){
     const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
-    a.href=url;a.download='ctsp_backup_'+new Date().toISOString().slice(0,10)+'.json';
+    a.href=url;a.download='ctsp_backup_'+diaLocal()+'.json';   // ROB-04/MOT-11b: dia local (UTC trocava o dia às 21h); `exportadoEm` segue ISO
     document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),3000);
     showToast('Backup exportado');
   }catch(e){showToast('Falha ao exportar: '+e.message);}
 }
+// ROB-04 (b266): `exportadoEm` é ISO em UTC; o rótulo mostra o dia LOCAL de quem exportou.
+function _diaDoBackup(iso){const d=iso?new Date(iso):null;return d&&!isNaN(d)?diaLocal(d):'data desconhecida';}
+// MOT-18 (b266): backup é arquivo editável e pode vir de outra versão. O SDK lança SÍNCRONO em set() com NaN/Infinity, e o saveProg
+// trata isso como "sem conexão": o progresso deixaria de subir. Entrada FSRS (questão ou card) só entra com os campos numéricos
+// finitos; chave ilegal no RTDB (`. # $ / [ ]`) derruba o set() inteiro. Limite conhecido: tipo errado (texto no lugar de número) só é
+// checado nos campos conhecidos e nas entradas FSRS; NaN/Infinity são removidos em qualquer profundidade (_semNaoFinito).
+const _CAMPOS_FSRS=['S','D','reps','last','next','interval'];
+function _entradaFsrsOk(e){
+  if(!e||typeof e!=='object'||Array.isArray(e))return false;
+  return _CAMPOS_FSRS.every(k=>e[k]==null||(typeof e[k]==='number'&&isFinite(e[k])));
+}
+function _mapaFsrsSaneado(m){
+  const out={};
+  if(!m||typeof m!=='object'||Array.isArray(m))return out;
+  Object.keys(m).forEach(k=>{if(!/[.#$\/\[\]]/.test(k)&&_entradaFsrsOk(m[k]))out[k]=m[k];});
+  return out;
+}
+// Troca número não finito por REMOÇÃO do campo (em lista, do elemento), em qualquer profundidade.
+function _semNaoFinito(v){
+  if(Array.isArray(v))return v.filter(x=>!(typeof x==='number'&&!isFinite(x))).map(_semNaoFinito);
+  if(v&&typeof v==='object'){
+    const o={};
+    Object.keys(v).forEach(k=>{const x=v[k];if(typeof x==='number'&&!isFinite(x))return;o[k]=_semNaoFinito(x);});
+    return o;
+  }
+  return v;
+}
+function _sanearBackup(stats,cards){
+  if(!stats||typeof stats!=='object'||Array.isArray(stats))return null;
+  const s={...stats};
+  ['correct','wrong','streak','metaDiaria','rev','updatedAt','wipe','diagData','erroMig'].forEach(k=>{
+    if(k in s&&!(typeof s[k]==='number'&&isFinite(s[k])))delete s[k];
+  });
+  ['seenIds','history'].forEach(k=>{if(k in s&&!Array.isArray(s[k]))delete s[k];});
+  ['byArea','bkt','erroHistorico','foco','fmt'].forEach(k=>{if(k in s&&(!s[k]||typeof s[k]!=='object'||Array.isArray(s[k])))delete s[k];});
+  if('questoesFSRS' in s)s.questoesFSRS=_mapaFsrsSaneado(s.questoesFSRS);
+  Object.keys(s).forEach(k=>{if(k.indexOf('resumo_')===0&&!_entradaFsrsOk(s[k]))delete s[k];});   // resumos: mesma regra das entradas FSRS
+  // varredura recursiva do resto (itemStats, tempoQ, questoesSM2, byArea, bkt, foco...): nenhum NaN/Infinity chega ao set() do SDK
+  return {stats:_semNaoFinito(Object.assign({},PROG_DEFAULT,s)),cards:_semNaoFinito(_mapaFsrsSaneado(cards))};
+}
+// MOT-08/COM-23 (b266, decisão D8): restaurar SUBSTITUI de verdade. Mesmo mecanismo do reiniciarEstudos: carimba `wipe`, que faz o merge
+// descartar a geração velha em vez de fundi-la (o saveProg antigo juntava o backup com o remoto por máximo/união e o backup não tinha efeito).
+// `_wipeCards` + espelho de cards carimbados: sem isso o espelho velho de cards ressuscitaria no load seguinte.
 async function importarProgresso(ev){
   const file=ev.target.files&&ev.target.files[0];
   ev.target.value='';
   if(!file)return;
+  if(!currentUser){showToast('Você precisa estar logado.');return;}
   if(!dataLoaded){showToast('Aguarde os dados carregarem antes de importar.');return;}
-  if(navigator.onLine===false){showToast('Sem conexão: restaurar backup precisa de internet.');return;}   // b266/MOT-07: offline o await do set() de cards nunca resolve
+  if(navigator.onLine===false){showToast('Sem conexão: restaurar backup precisa de internet.');return;}   // b266/MOT-07: offline o await do set() nunca resolve
   try{
     const obj=JSON.parse(await file.text());
-    if(!obj||obj.app!=='ctsp-estudos'||typeof obj.userStats!=='object')throw new Error('arquivo não é um backup válido');
-    const respNovo=(obj.userStats.correct||0)+(obj.userStats.wrong||0);
+    if(!obj||obj.app!=='ctsp-estudos')throw new Error('arquivo não é um backup válido');
+    const san=_sanearBackup(obj.userStats,obj.userCards);
+    if(!san)throw new Error('arquivo não é um backup válido');
+    const respNovo=(san.stats.correct||0)+(san.stats.wrong||0);
     const respAtual=(userStats.correct||0)+(userStats.wrong||0);
-    const dataBkp=obj.exportadoEm?obj.exportadoEm.slice(0,10):'data desconhecida';
-    if(!confirm('Restaurar backup de '+dataBkp+'?\nBackup: '+respNovo+' respostas · Atual: '+respAtual+' respostas.\nIsto SUBSTITUI o progresso atual.'))return;
-    userStats=Object.assign({},PROG_DEFAULT,obj.userStats);
-    if(obj.userCards&&typeof obj.userCards==='object'){
-      userCards=obj.userCards;
-      if(currentUser)await db.ref('cards/'+currentUser.uid).set(userCards);
-    }
-    saveProg();   // b266/MOT-07: sem await (espelho local é síncrono; offline o set() não resolve)
+    const nCards=Object.keys(san.cards).length;
+    const conf=await confirmarDestrutivo({titulo:'Restaurar backup',   // b174: sem confirm() nativo na superfície do usuário
+      texto:'Restaurar o backup de '+_diaDoBackup(obj.exportadoEm)+'? Backup: '+respNovo+' respostas e '+nCards+' flashcards. Atual: '+respAtual+' respostas. Isto SUBSTITUI o progresso atual e NÃO pode ser desfeito.',
+      palavra:'RESTAURAR',botao:'Restaurar'});
+    if(!conf)return;
+    showToast('Restaurando...');
+    const agora=Date.now();
+    const novoStats={...san.stats,wipe:agora,updatedAt:agora,rev:Math.max(userStats.rev||0,san.stats.rev||0)+1};
+    // UMA escrita multi-caminho (atômica no RTDB: grava progresso e cards, ou nenhum). A memória e os espelhos só mudam DEPOIS dela
+    // confirmar: falha ou timeout não deixam o aparelho com o backup e a nuvem com a geração velha. O wipe segue autoritativo (como o
+    // reiniciarEstudos) para chegar aos outros aparelhos; o eco do próprio update é ignorado pelo guard de rev.
+    const revAntes=_meuUltimoRev;
+    _meuUltimoRev=novoStats.rev;
+    try{
+      await withTimeout(db.ref().update({['progresso/'+currentUser.uid]:bktParaFirebase(novoStats),['cards/'+currentUser.uid]:nCards?san.cards:null}),15000);
+    }catch(e){_meuUltimoRev=revAntes;throw e;}
+    userStats=novoStats;
+    userCards=san.cards;_cardsSujos={};_wipeCards=agora;   // MOT-10: cards do backup são da geração nova deste aparelho
+    try{localStorage.removeItem(chaveCardsSujos());}catch(e){}
+    gravarEspelho();gravarEspelhoCards();
+    _snapSalvo=_assinaturaProg(userStats);
     renderDashboard();updateBadges();
+    if(typeof renderCards==='function')renderCards();
+    _renderStreakDias();
     showToast('Backup restaurado');
   }catch(e){showToast('Falha ao importar: '+e.message);}
 }
@@ -8891,7 +8964,7 @@ async function loadUserData(){
       _wipeCards=userStats.wipe||0;    // MOT-10: já vale para um saveCard que caia durante o await dos cards abaixo
       // S47/MOT-03: se o mesclado tem algo que o servidor não tem (trabalho offline do espelho), sobe. Via saveProg, que
       // relê o servidor e funde; o `set()` cego de antes apagava o que outro aparelho gravou no meio tempo.
-      if(local&&!_progIgual(escolhido,remoto)){saveProg();}
+      if(local&&!_progIgual(escolhido,remoto)){saveProg();}else _snapSalvo=_assinaturaProg(userStats);   // MOT-11c: baseline = o que o servidor já tem
       const cs=await withTimeout(db.ref('cards/'+currentUser.uid).get(),attempt*8000);
       let espCards=lerEspelhoCards();
       // MOT-10: espelho de geração anterior à zeragem atual não volta (cards "já vistos" numa conta zerada).
@@ -8955,7 +9028,7 @@ async function loadUserData(){
       // MOT-10: o fallback offline carregou os cards do espelho; se o progresso reconciliado é de uma zeragem mais nova, são da geração velha.
       if((userStats.wipe||0)>wipeDoEspelhoCards(espLocal)){userCards={};_cardsSujos={};try{localStorage.removeItem(chaveEspelhoCards());localStorage.removeItem(chaveCardsSujos());}catch(e){}}
       _wipeCards=userStats.wipe||0;
-      if(local&&!_progIgual(escolhido,remoto)){saveProg();}   // MOT-03: só quando o mesclado tem algo além do servidor
+      if(local&&!_progIgual(escolhido,remoto)){saveProg();}else _snapSalvo=_assinaturaProg(userStats);   // MOT-03: só quando o mesclado tem algo além do servidor
       renderDashboard();updateBadges();return;
     }
     dataLoaded=true;gravarEspelho();mostrarAlertaConexao(false);
@@ -9002,10 +9075,11 @@ async function saveProg(){
     // local (otimista) assim que a escrita entra no cache, não só quando o servidor confirma.
     _meuUltimoRev=userStats.rev;
     await ref.set(bktParaFirebase(userStats));   // S48: chaves do BKT sem "."
+    _snapSalvo=_assinaturaProg(userStats);
     flashSalvo();
   }catch(e){
     console.warn('saveProg 1ª tentativa:',e.message);
-    try{await ref.set(bktParaFirebase(userStats));}
+    try{await ref.set(bktParaFirebase(userStats));_snapSalvo=_assinaturaProg(userStats);}
     catch(e2){savePendente=true;showToast('Sem conexão: progresso guardado no aparelho');}
   }finally{
     _saveEmCurso=false;
@@ -9048,7 +9122,9 @@ function flashSalvo(){
 }
 // Robustez iOS: ao minimizar/fechar, garante espelho local + tenta sincronizar
 document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='hidden'&&currentUser){try{gravarEspelho();}catch(e){}if(dataLoaded)saveProg();}
+  // MOT-11c (b266): só regrava se algo ficou pendente (offline/falha) OU o estado mudou desde o último saveProg bem-sucedido (rede de
+  // segurança de mutador sem saveProg próprio). Sempre regravar subia `rev` e acordava o listener do outro aparelho a cada ida ao fundo.
+  if(document.visibilityState==='hidden'&&currentUser){try{gravarEspelho();}catch(e){}if(dataLoaded&&(savePendente||_assinaturaProg(userStats)!==_snapSalvo))saveProg();}
 });
 window.addEventListener('pagehide',()=>{try{if(currentUser)gravarEspelho();}catch(e){}});
 
@@ -9090,7 +9166,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.378';
+const APP_VERSAO='v1.379';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -9154,6 +9230,9 @@ function diaLocal(d){
   const p=n=>String(n).padStart(2,'0');
   return x.getFullYear()+'-'+p(x.getMonth()+1)+'-'+p(x.getDate());
 }
+// MOT-17 (b266): o dia `i` dias atrás por componentes LOCAIS. `hoje-i*86400000` assume dia de 24h: em fuso com horário de verão
+// a barra do dia da mudança some e a seguinte repete. Fonte única do gráfico de 7 dias e da faixa da sequência.
+function diaLocalAtras(i){const h=new Date();return new Date(h.getFullYear(),h.getMonth(),h.getDate()-i);}
 
 // b159: o merge por união destruiu, no banco, a informação de que a questão saiu do Caderno.
 // Sobraram dois carimbos: o último erro (erroHistorico.last) e a última resposta de qualquer
@@ -9188,10 +9267,9 @@ function _renderStreakDias(){
   const box=document.getElementById('hdr-streak-days');
   if(!box)return;
   const hist=userStats.history||[];
-  const hoje=new Date();
   let html='';
   for(let i=6;i>=0;i--){
-    const d=new Date(hoje-i*86400000);
+    const d=diaLocalAtras(i);
     const h=hist.find(x=>x.date===diaLocal(d))||{};
     const estudou=((h.n||0)+(h.fc||0)+(h.rs||0))>0;
     html+='<i class="'+(estudou?'on':'')+'"></i>';
@@ -9205,6 +9283,8 @@ function updateStreak(){
   if(!dataLoaded&&!progressoLocalOk){_renderStreakDias();return;}
   const today=diaLocal();
   const last=userStats.lastStudyDate||'';
+  // MOT-16 (b266): data no futuro (relógio adiantado que depois foi corrigido) conta como hoje: a sequência não cai por isso.
+  if(last>today){userStats.lastStudyDate=today;saveProg();_renderStreakDias();return;}
   // Passou mais de 1 dia sem estudar → a sequência quebrou.
   if(last&&last!==today&&diffDias(last,today)>1&&(userStats.streak||0)>0){
     userStats.streak=0;
@@ -9218,6 +9298,7 @@ function registrarEstudoDia(){
   if(!dataLoaded&&!progressoLocalOk)return;
   const today=diaLocal();
   const last=userStats.lastStudyDate||'';
+  if(last>today){userStats.lastStudyDate=today;saveProg();return;}   // MOT-16: data futura conta como hoje (já contou), sequência mantida
   if(last===today)return; // já contou hoje
   userStats.streak=(last&&diffDias(last,today)===1)?(userStats.streak||0)+1:1;
   userStats.lastStudyDate=today;
@@ -10032,14 +10113,13 @@ function estudarFraco(){
 function renderChart(){
   const bars=document.getElementById('chart-bars');
   const labels=document.getElementById('chart-labels');
-  const hoje=new Date();
   const meta=userStats.metaDiaria||10;
   const hist=userStats.history||[];
   const maxN=Math.max.apply(null,[1,meta].concat(hist.map(h=>h.n||0)));
   const nomes=['dom','seg','ter','qua','qui','sex','sáb'];
   let totalSemana=0,naMeta=0,bhtml='',lhtml='';
   for(let i=6;i>=0;i--){
-    const d=new Date(hoje-i*86400000);
+    const d=diaLocalAtras(i);
     const key=diaLocal(d);
     const n=(hist.find(h=>h.date===key)||{}).n||0;
     totalSemana+=n;if(n>=meta&&n>0)naMeta++;
@@ -10232,7 +10312,7 @@ function renderAreaEvolution(){
 // Médio/Fácil) incrementa hj, que é justamente o gesto que agenda a próxima revisão.
 // doseExtra ("Fazer mais") é voluntário e não ressuscita o badge.
 function updateBadges(){
-  const hj=entradaHoje();
+  const hj=entradaHojeLer();   // MOT-11c: leitura de render não cria a entrada do dia
   // Cards — falta da dose do dia
   const acervoC=cardsPendentes(null).todos.length;
   const restaC=Math.max(0,dose('cards')-(hj.fc||0));
@@ -10824,7 +10904,9 @@ async function responderQuiz(idx){
     mostrarOnboard();
     return;
   }
-  registrarTempoQuestao(); // S53: fecha o cronômetro antes de qualquer await
+  // MOT-15 / D10 (b266): "Ver exemplo real" (Padrões) mostra o feedback mas NÃO grava como estudo: nada em placar, BKT, FSRS, sequência, Caderno.
+  const exemplo=quizExemploAtivo;
+  if(!exemplo)registrarTempoQuestao(); // S53: fecha o cronômetro antes de qualquer await
   quizRespondidasSessao.add(quizIdx); // a partir daqui a função só chega ao fim (sem outro return)
   const correta=q._shuffledG!==undefined?q._shuffledG:q.g;
   const acertou=idx===correta;
@@ -10837,6 +10919,7 @@ async function responderQuiz(idx){
   });
   if(acertou)carimbarAcerto(opts[correta]); // APP-D/b2: só no acerto; nada no erro
   if(!acertou)tremerCartao(document.querySelector('#quiz-running-view .quiz-body')); // PV1/6
+  if(!exemplo){
   // b261: o placar da sessão (header e fim) é só a PRIMEIRA tentativa de cada questão; a resposta do reforço (re-exposição
   // intra-sessão) vai à parte em rf/rfc (lazy, quizSessao é recriado em ~15 pontos). O motor (userStats, FSRS) segue contando as duas.
   const jaReexposta=quizReexpostas.has(q.id);
@@ -10895,6 +10978,7 @@ async function responderQuiz(idx){
   registrarRespostaAdaptativa(q,acertou,jaReexposta);
 
   saveProg();
+  }   // fim do !exemplo
 
   // Feedback
   const fb=document.getElementById('quiz-feedback');
@@ -10912,10 +10996,10 @@ async function responderQuiz(idx){
       erroEl.style.display='flex';
       erroEl.innerHTML=`<div class="fb-linha fb-marcada"><span class="fb-rotulo">Você marcou</span>${sanitize(escolhidaTxt)}</div>`+
         `<div class="fb-linha fb-correta"><span class="fb-rotulo">Resposta correta</span>${sanitize(corretaTxt)}</div>`+
-        `<div class="fb-caderno">Salva no Caderno de Erros \u2014 refa\u00e7a quando quiser</div>`;
+        (exemplo?'':`<div class="fb-caderno">Salva no Caderno de Erros \u2014 refa\u00e7a quando quiser</div>`);
     } else { erroEl.style.display='none'; erroEl.innerHTML=''; }
   }
-  const contErros=!acertou&&userStats.erroHistorico?.[q.id]?.count||0;
+  const contErros=!exemplo&&!acertou&&userStats.erroHistorico?.[q.id]?.count||0;
   const sufixoErro=!acertou&&contErros>1?` (${contErros}ª vez que erra esta questão)`:'';
   document.getElementById('quiz-fb-text').textContent=(q.exp||'')+sufixoErro;
 
@@ -10946,13 +11030,14 @@ async function responderQuiz(idx){
 }
 
 function nextQuiz(){
+  if(quizExemploAtivo){voltarMenuQuiz();return;}   // MOT-15: o exemplo avulso fecha, não abre a tela de fim de sessão
   quizIdx++;
   if(quizIdx>=quizQueue.length)finishQuiz();
   else{renderQuizQ();irAoTopoDoConteudo();}
 }
 
 // Chave de dia em horário LOCAL (não UTC) — evita "virar o dia" à meia-noite errada.
-function diaKeyHoje(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function diaKeyHoje(){return diaLocal();}   // ROB-04: uma fonte só da regra do dia local (CLAUDE.md §6)
 function treinoFeitoHoje(){return userStats.treinoDia===diaKeyHoje();}
 // Reflete no card da home se o treino do dia já foi concluído (fechamento do objetivo).
 function atualizarCardTreino(){
@@ -11145,7 +11230,7 @@ function renderCards(){
 function _hubCards(){
   const mh=_mascoteHubViva('cards');
   updateBadges();
-  const hj=entradaHoje();
+  const hj=entradaHojeLer();   // MOT-11c
   const acervo=cardsPendentes(null).todos.length;
   const resta=Math.min(acervo,Math.max(0,dose('cards')-(hj.fc||0)));
   const body=document.getElementById('cards-body');
@@ -11166,7 +11251,7 @@ function voltarHubCards(){cardsModo='hub';cardsUnico=false;renderCards();irAoTop
 // (b171/D1), que compõe esta fila com montarTreinoDoDia em vez de fundir os seletores.
 function doseCardsDoDia(){
   const now=Date.now();
-  const limite=Math.max(0,dose('cards')-(entradaHoje().fc||0))+doseExtra.cards;
+  const limite=Math.max(0,dose('cards')-(entradaHojeLer().fc||0))+doseExtra.cards;
   return priorizarPorMalha(cardsPendentes().todos,fc=>cardVencido(fc,now)).slice(0,limite);
 }
 // Modo estudo imersivo: um card por vez, sem o índice competindo pela atenção.
@@ -11459,7 +11544,7 @@ function resumosDose(){
   const now=Date.now();
   // A dose do dia FECHA ao bater a meta (hj.rs), igual aos cards. Sem isso a fila puxava
   // do acervo inteiro (78) e nunca mostrava "concluída" — só ao esgotar TODOS os resumos.
-  const restaMeta=Math.max(0,dose('resumos')-(entradaHoje().rs||0))+doseExtra.resumos;
+  const restaMeta=Math.max(0,dose('resumos')-(entradaHojeLer().rs||0))+doseExtra.resumos;
   if(restaMeta<=0)return [];
   const ehVencido=r=>{const ur=userStats['resumo_'+r.id];return !!(ur&&ur.reps>0&&ur.next&&ur.next<=now);};
   return priorizarPorMalha(resumosPendentes(),ehVencido).slice(0,restaMeta);
