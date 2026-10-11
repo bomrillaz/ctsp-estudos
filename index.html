@@ -1609,6 +1609,12 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .rep-cancel{background:var(--bg);color:var(--text2);}
 .rep-send{background:var(--red-solid);color:#fff;box-shadow:0 4px 14px rgba(var(--red-solid-rgb),.28);}
 .rep-send:disabled{opacity:.5;cursor:default;box-shadow:none;}
+/* b267: confirmação destrutiva própria (substitui prompt()). Reaproveita .rep-overlay/.rep-sheet; fica acima do modal de config. */
+#conf-overlay{z-index:10001;}
+#conf-overlay .rep-sheet{position:relative;}
+.conf-lbl{display:block;font-size:12px;font-weight:700;color:var(--text2);margin:10px 0 5px;}
+.conf-in{width:100%;border:1px solid var(--border);border-radius:12px;padding:11px;font-size:16px;font-family:inherit;background:var(--surface);color:var(--text);box-sizing:border-box;}
+.conf-x{position:absolute;top:10px;right:10px;width:44px;height:44px;border:none;background:transparent;color:var(--text2);font-size:24px;line-height:1;cursor:pointer;border-radius:12px;}
 .rep-badge{display:inline-flex;min-width:17px;height:17px;padding:0 4px;align-items:center;justify-content:center;background:var(--red-solid);color:#fff;border-radius:9px;font-size:10px;font-weight:800;margin-left:5px;}
 .rep-item{background:var(--surface);border:1px solid var(--line-soft);border-left:4px solid var(--ember);border-radius:12px;padding:12px;margin-bottom:10px;box-shadow:var(--shadow);}
 .rep-item-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;}
@@ -9007,7 +9013,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.374';
+const APP_VERSAO='v1.375';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -12831,10 +12837,15 @@ async function revokeUser(uid){
 // renasce como "Aguardando aprovação" — sem acesso, porque o portão é o `aprovado`.
 async function removerUsuario(uid){
   if(!isAdmin())return;
-  if(!confirm('Remover este usuário da lista?\n\nO acesso já fica bloqueado, mas a conta de login continua existindo no Firebase. Se a pessoa entrar de novo, ela reaparece aqui como "Aguardando aprovação".\n\nPara apagar o login de vez: Firebase Console → Authentication.'))return;
+  // b267 (COM-18): o cliente só apaga usuarios/. progresso/cards/push e o login ficam (a regra não deixa o
+  // admin apagar dado de outro uid); o resto sai pelo script, que apaga na ordem obrigatória.
+  const cmd=/^[A-Za-z0-9]{10,40}$/.test(uid)?'node materiais/entregas/publicacao/excluir_usuario.js '+uid+' --confirmo':'excluir_usuario.js <uid> --confirmo';
+  const sobra='Isso remove só o cadastro da lista. FICAM no banco: progresso, cards, push e a conta de login. Para apagar tudo, rode no computador:\n'+cmd;
+  if(!confirm('Remover este usuário da lista?\n\nO acesso já fica bloqueado. Se a pessoa entrar de novo, ela reaparece aqui como "Aguardando aprovação".\n\n'+sobra))return;
   try{
     await db.ref('usuarios/'+uid).remove();
     loadAdminUsers();showToast('Usuário removido da lista.');
+    alert('Cadastro removido. Ainda existem progresso, cards, push e login deste usuário.\n\nApague o resto com:\n'+cmd);
   }catch(err){
     console.error('removerUsuario erro:',err);
     showToast('Não foi possível remover: '+err.message);
@@ -14188,13 +14199,78 @@ async function resetarStreak(){
   showToast('Contagem zerada.');
 }
 
+// ── b267 (E1-B3): confirmação destrutiva própria, no lugar de prompt() ──
+// Palavra digitada (+ senha em campo type=password, nunca em texto claro). Fecha por X, Cancelar,
+// clique fora e Esc (OVERLAYS_ATIVOS). Resolve {senha} ao confirmar, null ao cancelar.
+let _confResolve=null,_confPalavra='';
+function _confFechar(res){
+  const ov=document.getElementById('conf-overlay');
+  if(ov)ov.classList.remove('show');
+  const s=document.getElementById('conf-senha'),p=document.getElementById('conf-palavra');
+  if(s)s.value='';if(p)p.value='';
+  const r=_confResolve;_confResolve=null;if(r)r(res);
+}
+function _confValido(){
+  const p=document.getElementById('conf-palavra'),s=document.getElementById('conf-senha'),bl=document.getElementById('conf-bloco-senha');
+  if(!p)return false;
+  const precisaSenha=!!bl&&bl.style.display!=='none';
+  const v=(p.value||'').trim().toUpperCase()===_confPalavra&&(!precisaSenha||!!(s&&s.value));
+  const btn=document.getElementById('conf-ok');
+  if(btn)btn.disabled=!v;
+  return v;
+}
+function confirmarDestrutivo(o){
+  if(_confResolve)_confFechar(null);
+  return new Promise(resolve=>{
+    _confResolve=resolve;
+    let ov=document.getElementById('conf-overlay');
+    if(!ov){
+      ov=document.createElement('div');ov.id='conf-overlay';ov.className='rep-overlay';
+      ov.innerHTML='<div class="rep-sheet" role="dialog" aria-modal="true" aria-labelledby="conf-titulo">'
+        +'<button class="conf-x" id="conf-x" aria-label="Fechar" type="button">×</button>'
+        +'<h3 id="conf-titulo"></h3>'
+        +'<div class="rep-ctx" id="conf-texto"></div>'
+        +'<label class="conf-lbl" for="conf-palavra" id="conf-lbl-palavra"></label>'
+        +'<input class="conf-in" id="conf-palavra" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false">'
+        +'<div id="conf-bloco-senha"><label class="conf-lbl" for="conf-senha">Sua senha</label>'
+        +'<input class="conf-in" id="conf-senha" type="password" autocomplete="current-password"></div>'
+        +'<div class="rep-actions"><button class="rep-cancel" id="conf-cancel" type="button">Cancelar</button><button class="rep-send" id="conf-ok" type="button" disabled></button></div>'
+        +'</div>';
+      document.body.appendChild(ov);
+      ov.addEventListener('click',e=>{if(e.target===ov)_confFechar(null);});
+      document.getElementById('conf-x').addEventListener('click',()=>_confFechar(null));
+      document.getElementById('conf-cancel').addEventListener('click',()=>_confFechar(null));
+      document.getElementById('conf-ok').addEventListener('click',()=>{
+        if(!_confValido())return;
+        _confFechar({senha:document.getElementById('conf-senha').value});
+      });
+      ['conf-palavra','conf-senha'].forEach(id=>{
+        const el=document.getElementById(id);
+        el.addEventListener('input',_confValido);
+        el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('conf-ok').click();}});
+      });
+    }
+    _confPalavra=String(o.palavra||'').toUpperCase();
+    document.getElementById('conf-titulo').textContent=o.titulo||'';
+    document.getElementById('conf-texto').textContent=o.texto||'';
+    document.getElementById('conf-lbl-palavra').textContent='Para confirmar, digite '+_confPalavra;
+    const p=document.getElementById('conf-palavra');p.value='';
+    document.getElementById('conf-senha').value='';
+    document.getElementById('conf-bloco-senha').style.display=o.senha?'':'none';
+    document.getElementById('conf-ok').textContent=o.botao||'Confirmar';
+    document.getElementById('conf-ok').disabled=true;
+    requestAnimationFrame(()=>{ov.classList.add('show');try{p.focus();}catch(e){}});
+  });
+}
+
 // ── Reiniciar estudos do zero (reset completo, à prova de quebra) ──
 async function reiniciarEstudos(){
   if(!currentUser){showToast('Você precisa estar logado.');return;}
   if(!dataLoaded){showToast('Aguarde os dados carregarem antes de reiniciar.');return;}
-  const c=prompt('Isso vai APAGAR TODO o seu progresso: questões, flashcards, histórico, streak e revisões. Esta ação NÃO pode ser desfeita.\n\nDica: dá para exportar um backup antes (botão Exportar).\n\nPara confirmar, digite REINICIAR:');
-  if(c===null)return;
-  if((c||'').trim().toUpperCase()!=='REINICIAR'){showToast('Confirmação incorreta. Nada foi apagado.');return;}
+  const conf=await confirmarDestrutivo({titulo:'Reiniciar do zero',
+    texto:'Isso vai APAGAR TODO o seu progresso: questões, flashcards, histórico, streak e revisões. Esta ação NÃO pode ser desfeita. Dica: dá para exportar um backup antes (botão Exportar).',
+    palavra:'REINICIAR',botao:'Reiniciar'});
+  if(!conf)return;
   try{
     showToast('Reiniciando...');
     const agora=Date.now();
@@ -14238,14 +14314,54 @@ async function reiniciarEstudos(){
 // Enquanto o João não colar `SEGURANCA_regras_rtdb.json` v12 no Console, esta função
 // degrada com honestidade: apaga o que consegue e registra um pedido formal de
 // exclusão em `reportes` (create-only para qualquer logado), em vez de fingir sucesso.
+// b267: texto do pedido de exclusão (reportes.texto é OBRIGATÓRIO pela regra; teto 2000).
+function _textoPedidoExclusao(uid,email,sobrou){
+  return ('PEDIDO DE EXCLUSAO DE CONTA (LGPD) · uid '+uid+' · '+email
+    +' · o proprio usuario pediu a exclusao. Ficou sem apagar: '+sobrou.join(', ')
+    +'. Concluir com: node materiais/entregas/publicacao/excluir_usuario.js '+uid+' --confirmo').slice(0,2000);
+}
+// b267: texto do alerta final. Diz exatamente o que foi e o que não foi apagado.
+function _msgResultadoExclusao(r){
+  if(!r.sobrou.length)return 'Conta excluída. Seus dados foram apagados.';
+  const feito=['progresso','cards','push','cadastro','conta de login'].filter(x=>!r.sobrou.includes(x));
+  return (feito.length?'Foi apagado: '+feito.join(', ')+'.\n\n':'')
+    +'NÃO foi possível apagar: '+r.sobrou.join(', ')+'.\n\n'
+    +(r.pedidoRegistrado?'O pedido já foi registrado e será concluído em até 15 dias, como manda a LGPD.'
+      :'O pedido NÃO pôde ser registrado automaticamente. Escreva para '+EMPRESA.email+' pedindo a exclusão.')
+    +'\n\nDúvidas: '+EMPRESA.email;
+}
+// b267: o que fica no aparelho. Varre ctsp_*<uid> (não depende de lista de chaves) + o carimbo do boot offline.
+// Preferências do aparelho sem uid (ctsp_theme, ctsp_mascote) ficam de propósito.
+function _limparDadosLocaisDaConta(uid){
+  try{
+    const ks=[];
+    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('ctsp_')&&uid&&k.endsWith(uid))ks.push(k);}
+    ks.forEach(k=>{try{localStorage.removeItem(k);}catch(e){}});
+  }catch(e){}
+  _limparVerifOnline();
+}
+// b267: limpa os 2 stores (conteúdo e áudio das Aulas). clear(), não deleteDatabase: delete fica
+// bloqueado enquanto esta mesma aba mantém a conexão aberta e a exclusão termina em reload().
+async function _limparCachesIndexedDB(){
+  try{
+    const bd=await _abrirConteudoDB();
+    for(const nome of [CONTEUDO_STORE,AULAS_AUDIO_STORE]){
+      if(!bd.objectStoreNames.contains(nome))continue;
+      await new Promise((res,rej)=>{
+        const tx=bd.transaction(nome,'readwrite');
+        tx.objectStore(nome).clear();
+        tx.oncomplete=res;tx.onerror=()=>rej(tx.error);
+      });
+    }
+  }catch(e){console.warn('limpar cache local:',e&&e.message);}
+}
 async function excluirMinhaConta(){
   if(!currentUser){showToast('Você precisa estar logado.');return;}
-  const c=prompt('EXCLUIR A CONTA apaga seu cadastro, todo o seu progresso e encerra o acesso. Não há como desfazer.\n\nSe quiser guardar uma cópia, cancele agora e use Configurações → Backup do progresso → Exportar.\n\nPara confirmar, digite EXCLUIR:');
-  if(c===null)return;
-  if((c||'').trim().toUpperCase()!=='EXCLUIR'){showToast('Confirmação incorreta. Nada foi apagado.');return;}
-  const senha=prompt('Por segurança, digite sua senha para confirmar a exclusão:');
-  if(senha===null)return;
-  if(!senha){showToast('Senha vazia. Exclusão cancelada.');return;}
+  const conf=await confirmarDestrutivo({titulo:'Excluir a conta',
+    texto:'Isso apaga seu cadastro e todo o seu progresso e encerra o acesso. Não há como desfazer. Se quiser guardar uma cópia, cancele e use Configurações → Backup do progresso → Exportar.',
+    palavra:'EXCLUIR',senha:true,botao:'Excluir conta'});
+  if(!conf)return;
+  const senha=conf.senha;
   const uid=currentUser.uid,email=currentUser.email;
   try{
     showToast('Excluindo...');
@@ -14258,39 +14374,42 @@ async function excluirMinhaConta(){
     return;
   }
   // Daqui para baixo a identidade está confirmada. Falhas viram aviso, não silêncio.
-  const falhou=[];
-  for(const caminho of ['progresso/'+uid,'cards/'+uid,'push/'+uid]){
-    try{await db.ref(caminho).remove();}catch(e){falhou.push(caminho);console.warn('exclusao '+caminho+':',e.message);}
+  const sobrou=[];
+  for(const no of ['progresso','cards','push']){
+    try{await db.ref(no+'/'+uid).remove();}catch(e){sobrou.push(no);console.warn('exclusao '+no+':',e.message);}
   }
-  let registroApagado=true;
   try{await db.ref('usuarios/'+uid).remove();}
-  catch(e){
-    registroApagado=false;
-    console.warn('exclusao usuarios:',e.message);
+  catch(e){sobrou.push('cadastro');console.warn('exclusao usuarios:',e.message);}
+  // b267 (COM-15): qualquer sobra vira pedido registrado ANTES de apagar o login (depois, o
+  // usuário não consegue mais gravar). `texto` é obrigatório; reportes aceita push de conta revogada.
+  let pedidoRegistrado=false;
+  const registrar=async lista=>{
     try{
-      await db.ref('reportes').push({
-        texto:'PEDIDO DE EXCLUSAO DE CONTA (LGPD) · uid '+uid+' · '+email
-          +' · o proprio usuario pediu a exclusao e as regras do RTDB bloquearam a remocao do registro. Apagar manualmente em usuarios/'+uid+' e em Authentication.',
-        tipo:'exclusao',diag:_diagReporte('exclusao bloqueada: '+((e&&e.message)||e)),criadoEm:Date.now()
-      });
+      await db.ref('reportes').push({texto:_textoPedidoExclusao(uid,email,lista),tipo:'exclusao',
+        diag:_diagReporte('exclusao parcial: '+lista.join(',')),criadoEm:Date.now()});
+      pedidoRegistrado=true;
     }catch(e2){console.warn('reporte de exclusao:',e2.message);}
+  };
+  if(sobrou.length)await registrar(sobrou);
+  // Sobrou dado E o pedido não foi gravado: NÃO apaga o login (seria perder a última forma de o
+  // usuário tentar de novo). Nada local é limpo; a pessoa repete ou escreve para o contato.
+  if(sobrou.length&&!pedidoRegistrado){
+    alert('NÃO foi possível apagar: '+sobrou.join(', ')+', nem registrar o pedido. Sua conta de login foi mantida.\n\nTente de novo mais tarde ou escreva para '+EMPRESA.email+' pedindo a exclusão.');
+    return;
   }
-  try{localStorage.removeItem(chaveEspelho());}catch(e){}
-  try{localStorage.removeItem(chaveEspelhoCards());}catch(e){}
-  try{localStorage.removeItem(chaveCardsSujos());}catch(e){}
-  let loginApagado=true;
+  _limparDadosLocaisDaConta(uid);
+  await withTimeout(_limparCachesIndexedDB(),4000).catch(()=>{});   // cache sem tx pendente não pode travar a exclusão do login
   // b160: delete() derruba o auth e dispara onAuthStateChanged(null) sozinho, ANTES dos
   // alerts logo abaixo — a flag impede o listener de recarregar por cima do aviso LGPD.
   _exclusaoEmAndamento=true;
   try{await currentUser.delete();}
-  catch(e){loginApagado=false;console.error('exclusao auth:',e.message);}
-  if(registroApagado&&loginApagado&&!falhou.length){
-    alert('Conta excluída. Seus dados foram apagados.');
-  }else{
-    alert('Seus dados de estudo foram apagados e seu acesso foi encerrado.\n\n'
-      +'A remoção final do registro precisa de uma última ação do responsável. O pedido já foi registrado e será concluído em até 15 dias, como manda a LGPD.\n\n'
-      +'Dúvidas: '+EMPRESA.email);
+  catch(e){
+    console.error('exclusao auth:',e.message);
+    sobrou.push('conta de login');
+    pedidoRegistrado=false;   // o pedido anterior (se houve) não cobre o login
+    await registrar(['conta de login']);
   }
+  alert(_msgResultadoExclusao({sobrou,pedidoRegistrado}));
   try{await auth.signOut();}catch(e){}
   location.reload();
 }
@@ -15104,6 +15223,7 @@ document.addEventListener('keydown',e=>{
 const OVERLAYS_ATIVOS=[
   {id:'onboard-gate',classe:'active',fechar:()=>fecharOnboard()},
   {id:'splash-screen',classe:'active',fechar:()=>fecharSplash()},
+  {id:'conf-overlay',classe:'show',fechar:()=>_confFechar(null)},
   {id:'rep-overlay',classe:'show',fechar:()=>fecharReporte()},
   {id:'pix-overlay',classe:'show',fechar:()=>fecharPagamento()},
   {id:'mais-overlay',classe:'open',fechar:el=>fecharMais({target:el,currentTarget:el})},
