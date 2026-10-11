@@ -4964,6 +4964,9 @@ const DOM_ESCALA=[{min:80,cor:'var(--green)',bg:'var(--green-light)',rot:'Domina
                   {min:0 ,cor:'var(--red)'  ,bg:'var(--red-light)'  ,rot:'Frágil'}];
 function domFaixa(pct){return DOM_ESCALA.find(f=>pct>=f.min)||DOM_ESCALA[2];}
 function domCor(pct){return domFaixa(pct).cor;}
+// D7: a projeção é P(acertar), não domínio. Os limiares da escala passam pela MESMA probAcertoBKT
+// (limiar_P = P(limiar_pL)), para a faixa da projeção bater com a cor do herói no mesmo aluno.
+function domFaixaProj(pct){return DOM_ESCALA.find(f=>pct>=probAcertoBKT(f.min/100,1)*100-1e-6)||DOM_ESCALA[2];}
 
 // ── S35 PRONT: projeção de pontos na prova (BKT médio por área × cota do edital) ──
 // C4: piso de respostas para a projeção da prova ser considerada confiável.
@@ -4984,14 +4987,25 @@ function dominioAreaBKT(k,perfil){
 function respostasAreaBKT(k,perfil){
   return (perfil||perfilTopicos()).filter(p=>p.area===k).reduce((s,p)=>s+(p.n||0),0);
 }
+// MOT-14/D7: a projeção em "X de 60" é P(acertar a questão), não o domínio cru:
+// P = pL·(1−S) + (1−pL)·G, com S e G do próprio BKT_P. O herói (domínio) segue sendo pL.
+// Tópico sem nenhuma resposta (n=0) não tem evidência: entra com P_NAO_PRATICADO, nunca com a
+// fórmula (que lhe daria acertos por G sobre um pL que é só o prior). 'G' = chute puro (1/5
+// alternativas, propriedade da prova); 'L0' = o prior 0,30 usado antes do D7.
+const PRONT_P_NAO_PRATICADO='G';
+function probAcertoBKT(pL,n){
+  if(!(n>0))return PRONT_P_NAO_PRATICADO==='L0'?BKT_P.L0:BKT_P.G;
+  return pL*(1-BKT_P.S)+(1-pL)*BKT_P.G;
+}
 function calcProntidao(){
   const perfil=perfilTopicos();
   if(!perfil.some(p=>p.n>0))return null; // sem dados BKT ainda
   const nResp=perfil.reduce((s,p)=>s+(p.n||0),0); // total de respostas que alimentaram o BKT
   const proj={};let total=0;
   Object.entries(AI).forEach(([k,a])=>{
-    const m=dominioAreaBKT(k,perfil);
-    proj[k]=a.n*m;total+=proj[k];
+    let soma=0,peso=0;
+    perfil.filter(p=>p.area===k&&p.nQ>0).forEach(p=>{soma+=probAcertoBKT(p.pL,p.n)*p.nQ;peso+=p.nQ;});
+    proj[k]=a.n*(peso?soma/peso:probAcertoBKT(BKT_P.L0,0));total+=proj[k];
   });
   return{total,proj,nResp};
 }
@@ -5012,7 +5026,7 @@ function renderProntidao(){
   if(stEl){
     // Sem nota de corte oficial: classifica pela MESMA escala de domínio usada em área/tópico
     // (DOM_ESCALA), não contra um número de aprovação inventado.
-    const fx=domFaixa(p*100);
+    const fx=domFaixaProj(p*100);
     const cls=fx.rot==='Dominado'?'ok':fx.rot==='Em construção'?'atencao':'alerta';
     stEl.textContent=fx.rot+' — projeção de '+total+' de 60 questões';
     stEl.className='pg-status '+cls;
@@ -9182,7 +9196,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.381';
+const APP_VERSAO='v1.382';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -10264,8 +10278,8 @@ function gaugeProjecao(total,lo,hi){
   const end=P(Math.max(0.5,total),r);
   // faixa de confiança agora é uma FAIXA preenchida (translúcida), não dois tracinhos
   const band=hi>lo?('<path d="'+arc(lo,hi,r)+'" fill="none" style="stroke:var(--ember)" stroke-opacity="0.2" stroke-width="20" stroke-linecap="round"/>'):'';
-  const aria='Projeção de aproximadamente '+total+' de 60'+(hi>lo?(', faixa '+lo+' a '+hi):'');
-  const faixa=hi>lo?(' · faixa '+lo+'–'+hi):'';
+  const aria='Projeção de aproximadamente '+total+' de 60'+(hi>lo?(', faixa provável de '+lo+' a '+hi):'');
+  const faixa=hi>lo?(' · faixa provável '+lo+'–'+hi):'';
   return '<svg class="pg-gauge" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+aria+'">'
     +'<defs><linearGradient id="gaugeFill" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:var(--ember)"/><stop offset="1" style="stop-color:#F5B24B"/></linearGradient>'
     +'<filter id="gaugeGlow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3.5"/></filter></defs>'
@@ -13644,11 +13658,11 @@ function calcVereditos(perfil){
     });
     if(pior!==null)porArea[pior].push('a que menos evoluiu: '+(piorD>0?'+':'')+piorD+'pp na semana');
   }
-  // "maior ganho possível" — maior distância entre a cota do edital e a projeção atual.
+  // "maior ganho possível" — maior distância entre o teto real da área (cota·(1−S)) e a projeção atual.
   if(r){
     let melhor=null,melhorGap=-Infinity;
     comEvid.forEach(k=>{
-      const gap=AI[k].n-(r.proj[k]||0);
+      const gap=AI[k].n*(1-BKT_P.S)-(r.proj[k]||0);
       if(gap>melhorGap){melhorGap=gap;melhor=k;}
     });
     if(melhor!==null&&melhorGap>0.05)porArea[melhor].push('maior ganho possível: ~'+melhorGap.toFixed(1).replace('.',',')+' pts em aberto');
@@ -15016,10 +15030,10 @@ function showInfo(tipo){
       +'Quanto mais vezes você acerta um tópico, mais devagar ele esfria. Revisar o tópico levanta o número de novo. '
       +'A Sessão do dia usa exatamente isso para escolher o que te dar.',
     prontidao:'Quantos pontos dos 60 da prova você faria se ela fosse hoje. '
-      +'Cada área entra pela cota do edital (AT1 14 · AT2 8 · AT3 14 · AT4 12 · AT5 12) multiplicada pelo seu domínio nela; '
+      +'Cada área entra pela cota do edital (AT1 14 · AT2 8 · AT3 14 · AT4 12 · AT5 12) multiplicada pela sua chance de acertar uma questão nela (que parte do seu domínio e inclui o chute); '
       +'por isso ir bem numa área de cota pequena move pouco o total. '
       +'Não é nota garantida nem previsão do resultado: é a melhor estimativa possível com o que você respondeu até agora, '
-      +'e ela erra mais no começo. Abaixo de '+MIN_RESP_PRONT+' respostas a tela marca como preliminar. '
+      +'e ela erra mais no começo. O número real cai dentro da faixa provável mostrada em cerca de 2 de cada 3 casos; nos outros ele fica fora. Tópico que você nunca estudou vale só o chute (1 de 5 alternativas). Abaixo de '+MIN_RESP_PRONT+' respostas a tela marca como preliminar. '
       +'Se o número estiver baixo, abra "Por área" e veja onde está a maior distância entre a cota e o que você faz: '
       +'é ali que cada hora de estudo rende mais ponto.',
     acuracia:'Sua taxa de acerto somando todas as áreas: acertos ÷ questões respondidas, todas as tentativas incluídas. '
