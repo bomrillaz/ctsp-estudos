@@ -153,6 +153,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 #loading-erro-conteudo.show,#loading-renovacao.show,#loading-confirmar-email.show{display:flex;}
 #loading-erro-conteudo div,#loading-renovacao div,#loading-confirmar-email div{color:rgba(255,255,255,.92);font-size:15px;font-weight:500;line-height:1.5;}
 #loading-erro-conteudo .btn-primary,#loading-renovacao .btn-primary,#loading-confirmar-email .btn-primary{width:auto;padding:14px 28px;}
+#loading-renovacao-espera{display:none;}
+#loading-renovacao div#loading-renovacao-espera.show{display:block;font-size:14px;}
+#loading-renovacao-whats{color:rgba(255,255,255,.8);font-size:13px;text-decoration:underline;}
 /* PS3/A1: "Renovar acesso" abre o Pix por cima do #loading (z 9999) — sem isso o modal
    (z 1000) e o toast de falha do Pix (z 9998) nascem escondidos atrás da tela. */
 #pix-overlay{z-index:10000;}
@@ -1238,7 +1241,6 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .inc-btn.praticar{background:var(--red-light);border-color:var(--red);color:var(--red-dark);}
 .inc-btn.revisar{background:var(--surface);}
 .incidencia-assunto{font-size:13px;color:var(--text);}
-.incidencia-prob{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;}
 
 /* ═══ ADMIN ═══ */
 .admin-screen{padding:16px;background:transparent;}
@@ -2151,7 +2153,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   </div>
   <div id="loading-renovacao">
     <div id="loading-renovacao-texto"></div>
+    <div id="loading-renovacao-espera"></div>
     <button class="btn-primary" id="loading-renovacao-btn">Renovar acesso</button>
+    <button class="btn-primary btn-ghost-dark" onclick="location.reload()">Já fui liberado</button>
+    <a id="loading-renovacao-whats" href="#" target="_blank" rel="noopener noreferrer">Já pagou? Chame no WhatsApp</a>
     <button class="btn-primary btn-ghost-dark" onclick="doLogout()">Sair</button>
   </div>
   <div id="loading-confirmar-email">
@@ -2293,7 +2298,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
             <span class="lp-a2-tag">Exemplo real do banco · Ferimentos, Hemorragia e Queimaduras</span>
           </div>
           <p class="lp-a2-enun">Sobre hemorragia externa grave no protocolo X do XABCDE, a conduta CORRETA é:</p>
-          <div class="quiz-doc">ITO 23 CBMMG (3ª ed./2021) — P508 Hemorragia</div>
+          <div class="quiz-doc">ITO 23 CBMMG (3ª ed./2021), P508 Hemorragia</div>
           <div class="quiz-opts">
             <div class="quiz-opt"><span class="quiz-opt-letter">A</span><span class="quiz-opt-text">Aguardar a obtenção de acesso venoso periférico antes de qualquer intervenção no sangramento.</span></div>
             <div class="quiz-opt" id="lp-a2-errada"><span class="quiz-opt-letter">B</span><span class="quiz-opt-text">Aplicar o torniquete imediatamente em qualquer hemorragia de membro, sem medidas prévias.</span></div>
@@ -2721,7 +2726,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <button type="button" class="link-inline" onclick="abrirDoc('sobre')">Como foi feito</button>
         <button type="button" class="link-inline" onclick="abrirDoc('faq')">Perguntas frequentes</button>
         <button type="button" class="link-inline" onclick="abrirDoc('termos')">Termos de Uso</button>
-        <button type="button" class="link-inline" onclick="abrirDoc('privacidade')">Privacidade</button>
+        <button type="button" class="link-inline" onclick="abrirDoc('privacidade')">Política de Privacidade</button>
       </div>
     </div>
   </footer>
@@ -3643,8 +3648,8 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="config-sub">Termos, privacidade e perguntas frequentes</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-        <button class="btn-config-reset" onclick="abrirDoc('termos')">Termos</button>
-        <button class="btn-config-reset" onclick="abrirDoc('privacidade')">Privacidade</button>
+        <button class="btn-config-reset" onclick="abrirDoc('termos')">Termos de Uso</button>
+        <button class="btn-config-reset" onclick="abrirDoc('privacidade')">Política de Privacidade</button>
         <button class="btn-config-reset" onclick="abrirDoc('faq')">FAQ</button>
       </div>
     </div>
@@ -4637,7 +4642,7 @@ function iniciarRevisaoDue(){
 function coberturaNovaTam(){return userStats.metaDiaria||DOSE_PADRAO.questoes;}
 function iniciarCoberturaNova(){
   const fila=novasPorCobertura(coberturaNovaTam());
-  if(!fila.length){showToast('Assunto novo em dia — sem cobertura pendente agora.');return;}
+  if(!fila.length){showToast('Assunto novo em dia: sem cobertura pendente agora.');return;}
   quizQueue=interleavePorTopico(fila);
   quizArea='COBERTURA';quizModoErro=false;quizIdx=0;quizSessao={c:0,t:0};quizAnswered=false;
   abrirRunnerQuiz();
@@ -5027,7 +5032,7 @@ function renderProntidao(){
     // (DOM_ESCALA), não contra um número de aprovação inventado.
     const fx=domFaixaProj(p*100);
     const cls=fx.rot==='Dominado'?'ok':fx.rot==='Em construção'?'atencao':'alerta';
-    stEl.textContent=fx.rot+' — projeção de '+total+' de 60 questões';
+    stEl.textContent=fx.rot+': projeção de '+total+' de 60 questões';
     stEl.className='pg-status '+cls;
   }
   const avisoEl=document.getElementById('pront-aviso');
@@ -5655,7 +5660,24 @@ function mostrarTelaRenovacao(st){
       btn.onclick=()=>abrirPagamento(planoAtual());
     }
   }
+  // COM-04: a tela é reaproveitada; o texto de espera e o atalho são decididos SEMPRE aqui.
+  const esp=document.getElementById('loading-renovacao-espera');
+  if(esp){esp.textContent='';esp.classList.remove('show');}
+  const wa=document.getElementById('loading-renovacao-whats');
+  if(wa){
+    const urlWa=semData?'':linkWhats('Olá! Meu acesso ao Prontidão venceu e já fiz o pagamento da renovação. Pode conferir?');
+    if(urlWa){wa.href=urlWa;wa.style.display='';}else wa.style.display='none';
+  }
   if(rv)rv.classList.add('show');
+}
+// COM-04: depois de "Já paguei" a tela de vencido continuava dizendo só "Seu acesso venceu".
+// Devolve true se a tela de renovação estava aberta (e agora mostra o texto de espera).
+function marcarPagamentoInformadoNaRenovacao(){
+  const rv=document.getElementById('loading-renovacao'),esp=document.getElementById('loading-renovacao-espera');
+  if(!rv||!esp||!rv.classList.contains('show'))return false;
+  esp.textContent='Pagamento informado. Assim que for confirmado, toque em "Já fui liberado".';
+  esp.classList.add('show');
+  return true;
 }
 
 // PS3/A3 (v18): tela própria de quem ainda não confirmou o e-mail. Checada ANTES de
@@ -8833,8 +8855,6 @@ async function carregarRecapPending(){
 async function initApp(){
   document.getElementById('auth-screen').classList.remove('active');
   document.getElementById('app').classList.add('active');
-  const nomeDisplay=userProfile.nome&&userProfile.nome!==currentUser.email?userProfile.nome.split(' ')[0]:(currentUser.email||'').split('@')[0];
-  const hnEl=document.getElementById('hdr-nome');if(hnEl)hnEl.textContent=nomeDisplay||'Bombeiro';
   // b165: o portão do painel é SÓ o banco (userProfile.admin), que é o que a regra do RTDB
   // checa. O e-mail ainda abre a porta, mas bloqueada e com o motivo na tela — antes o painel
   // abria confiando no e-mail e toda escrita morria em silêncio.
@@ -9208,7 +9228,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.383';
+const APP_VERSAO='v1.384';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -10177,8 +10197,6 @@ function renderChart(){
   if(ct)ct.textContent=totalSemana>0?totalSemana+' essa semana':'Comece hoje: seu progresso aparece aqui';
   const st=document.getElementById('atividade-streak');
   if(st)st.innerHTML='<span class="pg-streak-badge">'+naMeta+'/7 dias na meta</span>'+((userStats.streak||0)>0?'<span class="pg-streak-badge">'+userStats.streak+' dias seguidos</span>':'');
-  {const g=document.getElementById('glance-semana');if(g)g.innerHTML=totalSemana>0?totalSemana+'<small> q</small>':'—';}
-  renderAreaEvolution();
 }
 
 // Piso de confiança: nº mínimo de respostas numa área para exibir % (abaixo disso = "poucos dados").
@@ -10223,6 +10241,7 @@ function registrarRetratoSemanal(){
 // Variação de acerto da área entre o retrato ANTERIOR e agora.
 // Devolve null quando ainda não há semana anterior — nesse caso a interface diz
 // "1ª semana", em vez de fingir uma tendência que não existe.
+// (b266 E4-B3: sem chamador na UI desde que a barra de evolução por área saiu; fica porque harness_semana a cobre.)
 function deltaSemanal(area,pctAtual){
   const h=userStats.semanas;
   if(!Array.isArray(h)||h.length<2)return null;
@@ -10305,48 +10324,6 @@ function gaugeProjecao(total,lo,hi){
     +'</svg>';
 }
 
-function renderAreaEvolution(){
-  const el=document.getElementById('area-evolution');
-  if(!el)return;
-  const ba=userStats.byArea||{};
-  const cores={AT1:'var(--at1)',AT2:'var(--at2)',AT3:'var(--at3)',AT4:'var(--at4)',AT5:'var(--at5)'};
-  let html='';
-  Object.entries(AI).forEach(([k,v])=>{
-    const c=(ba[k]?.correct||0),w=(ba[k]?.wrong||0),t=c+w;
-    if(t<MIN_RESP_CONF){
-      // Abaixo do piso: não exibe % (amostra pequena engana). Mostra progresso até o piso.
-      html+=`<div class="area-evo-row">
-        <div class="area-evo-label">${k}</div>
-        <div class="area-evo-bar-wrap"><div class="area-evo-bar" style="width:0%;background:${cores[k]}"></div></div>
-        <span style="font-size:10.5px;color:var(--text3);min-width:96px;text-align:right;">poucos dados (${t}/${MIN_RESP_CONF})</span>
-      </div>`;
-    } else {
-      const pct=Math.round(c/t*100);
-      const cor=pct>=80?'var(--green)':pct>=60?'var(--amber)':'var(--red)';
-      // S57 (bloco33): o percentual sai SEMPRE na coluna da direita, nunca dentro da
-      // barra. Antes, `pct>=20` mandava o número para dentro: as áreas acima de 20%
-      // ficavam com barra preenchida e rótulo branco, e as abaixo ficavam com um fio
-      // quase invisível e o número solto fora. Duas áreas pareciam ter dado e três
-      // pareciam vazias — foi lido como "faltando dados", quando os 130 respondidos
-      // sempre estiveram todos ali. Agora as 5 linhas têm a mesma anatomia, e a barra
-      // tem largura mínima para que 8% continue sendo visível como 8%, não como nada.
-      // S59: variação desde o retrato da semana passada. Só aparece quando existe
-      // semana anterior comparável — antes disso mostra "1ª semana", sem inventar seta.
-      const d=deltaSemanal(k,pct);
-      const tend=d===null?`<span class="area-evo-tend neutra">1ª semana</span>`
-        :d===0?`<span class="area-evo-tend neutra">estável</span>`
-        :`<span class="area-evo-tend ${d>0?'sobe':'desce'}">${d>0?'▲':'▼'} ${Math.abs(d)} pp</span>`;
-      html+=`<div class="area-evo-row">
-        <div class="area-evo-label">${k}</div>
-        <div class="area-evo-bar-wrap"><div class="area-evo-bar" style="width:${pct}%;min-width:${pct>0?'8px':'0'};background:${cor}"></div></div>
-        <span class="area-evo-val" style="color:${cor}">${pct}% · ${c}/${t}</span>
-        ${tend}
-      </div>`;
-    }
-  });
-  el.innerHTML=html;
-}
-
 // BLOCO 43: o badge mostra O QUE FALTA DA DOSE DO DIA, não o acervo nem a dose cheia.
 // Antes era min(acervo, dose): com backlog grande nunca zerava (fazia 3, voltava 3).
 // Agora desconta o que já foi AVALIADO hoje (hj.fc/hj.rs) — bater a meta do dia zera o
@@ -10361,9 +10338,6 @@ function updateBadges(){
   const due=Math.min(acervoC,restaC);
   const bc=document.getElementById('badge-cards');
   if(due>0){bc.classList.remove('hidden');bc.textContent=due;}else bc.classList.add('hidden');
-  const cdEl=document.getElementById('cards-due');if(cdEl)cdEl.textContent=due;
-  const ctEl=document.getElementById('cards-total-n');if(ctEl)ctEl.textContent=Object.keys(allFlashcards).length;
-  const csEl=document.getElementById('cards-streak-n');if(csEl)csEl.textContent=userStats.cardStreak||0;
 
   // Resumos — falta da dose do dia
   const acervoR=resumosPendentes().length;
@@ -10371,9 +10345,6 @@ function updateBadges(){
   const dueR=Math.min(acervoR,restaR);
   const br=document.getElementById('badge-resumos');
   if(dueR>0){br.classList.remove('hidden');br.textContent=dueR;}else br.classList.add('hidden');
-  const rfEl=document.getElementById('resumos-fila');if(rfEl)rfEl.textContent=dueR;
-  const rtEl=document.getElementById('resumos-total');if(rtEl)rtEl.textContent=RESUMOS_BANCO.length;
-  const rvEl=document.getElementById('resumos-revis');if(rvEl)rvEl.textContent=RESUMOS_BANCO.filter(r=>{const u=userStats['resumo_'+r.id];return u&&u.reps>0;}).length;
 
   // Quiz — falta da dose do dia. Meta vem de metaDiaria (mesma fonte do anel do painel
   // e da CTA do hub do Quiz), não de dose('questoes'), pra não abrir uma segunda meta.
@@ -11815,7 +11786,6 @@ function _hubResumos(){
   updateBadges();
   const acervo=resumosPendentes().length;
   const fila=resumosDose();
-  const rf=document.getElementById('resumos-fila');if(rf)rf.textContent=fila.length;
   const content=document.getElementById('resumos-content');
   const cta = fila.length>0
     ? `<button class="btn-weak" style="width:100%" onclick="iniciarMetaResumos()">Ler ${fila.length} resumo${fila.length!==1?'s':''} pendente${fila.length!==1?'s':''}</button>
@@ -11839,7 +11809,6 @@ function _estudoResumos(){
   _resumoSeq=null; // meta de resumos tem fila própria; sequência de tópico largada não pode sequestrar o avaliar
   const acervo=resumosPendentes().length;
   const fila=resumosDose();
-  const rf=document.getElementById('resumos-fila');if(rf)rf.textContent=fila.length;
   const content=document.getElementById('resumos-content');
   if(!fila.length){
     content.innerHTML = acervo>0
@@ -11870,8 +11839,9 @@ function _estudoResumos(){
       <div class="resumo-card-top">
         <span class="resumo-area-tag" style="background:${aInfo.bg};color:${aInfo.color}">${aInfo.icon} ${r.area}</span>
         <span class="q-badge ${ehNovoR?'badge-nova':'badge-rev'}">${ehNovoR?'NOVO':'REVISÃO'}</span>
-        ${resumoProbTag(r.prob,true)}
+        ${resumoIncidenciaTag(r.topico,true)}
       </div>
+      ${resumoIncidenciaNota(r.topico)}
       <div class="resumo-titulo">${sanitize(r.titulo)}</div>
       <div class="resumo-texto">${sanitize(r.texto).replace(/\n/g,'<br>')}</div>
       <button class="resumo-audio-btn" id="resumo-audio-btn" onclick="ouvirResumo('${r.id}')">▶ Ouvir este resumo</button>
@@ -11908,13 +11878,35 @@ function maisResumos(){doseExtra.resumos+=dose('resumos');renderResumos();}
 // Aposenta os chips de filtro do topo: no desktop a lista é grid (min 300px) e os
 // cabeçalhos soltos de área/tópico caíam como células da grade — eram os "blocos
 // opacos que não clicam" do print. Com o acordeão, cada área é UMA célula.
-// Etiqueta de probabilidade do resumo (PD3): fonte única do leitor (estudo e avulso) e da lista. Rótulos: alta | media | baixa
-// (o banco hoje só tem os dois primeiros); `longo` = "Alta probabilidade" na folha do resumo, "Alta" na lista e no avulso.
-function resumoProbTag(prob,longo){
-  if(!prob)return '';                             // sem prob no banco: sem tag (nunca inventar "Média")
-  const label=prob==='alta'?(longo?'Alta probabilidade':'Alta'):prob==='baixa'?'Baixa':'Média';
-  const cor=prob==='alta'?'background:var(--red-light);color:var(--red-dark)':prob==='baixa'?'background:var(--green-light);color:var(--green)':'background:var(--amber-light);color:var(--amber)';
+// Selo de incidência do resumo (D13, b266): DERIVADO de INCIDENCIA pelo tópico do resumo.
+// O campo `prob` do banco nunca teve base medida e não é lido aqui. Fonte única do leitor (estudo
+// e avulso) e da lista. Níveis: 'ambas' (tópico nas provas de 2024 e 2025) | '2025' | null (sem selo).
+function incidenciaNivel(provas){
+  const p=String(provas||'');
+  return /2024/.test(p)&&/2025/.test(p)?'ambas':/2025/.test(p)?'2025':null;
+}
+function incidenciaDoTopico(topico){
+  if(!topico||typeof INCIDENCIA==='undefined'||!Array.isArray(INCIDENCIA))return null;
+  let r=null;
+  for(const i of INCIDENCIA){
+    if(i.topico!==topico)continue;
+    const n=incidenciaNivel(i.provas);
+    if(n==='ambas')return n;
+    if(n)r=n;
+  }
+  return r;
+}
+// `longo` = frase completa na folha do resumo; curto ("2024 e 2025" / "2025") na lista e no avulso.
+function resumoIncidenciaTag(topico,longo){
+  const n=incidenciaDoTopico(topico);
+  if(!n)return '';
+  const label=n==='ambas'?(longo?'Tema presente nas provas de 2024 e 2025':'2024 e 2025'):(longo?'Tema presente na prova de 2025':'2025');
+  const cor=n==='ambas'?'background:var(--amber-light);color:var(--amber)':'background:var(--bg);color:var(--text2)';
   return `<span class="resumo-dif-tag" style="${cor}">${label}</span>`;
+}
+// Nota de honestidade do selo: só aparece junto do selo, nos dois leitores do resumo (estudo e avulso).
+function resumoIncidenciaNota(topico){
+  return incidenciaDoTopico(topico)?'<div class="resumo-incid-nota" style="font-size:12px;color:var(--text3);margin:0 0 8px">Levantamento próprio das provas anteriores, não é previsão do que vai cair.</div>':'';
 }
 function renderResumoLista(){
   const now=Date.now();
@@ -11937,7 +11929,7 @@ function renderResumoLista(){
         const ur=userStats['resumo_'+r.id];
         const ehNovoR2=!ur||!ur.reps; // igual ao selo Novo/Revisão de Cards (S47) — sem isso, resumo nunca lido aparecia como "Revisão: Hoje"
         const vence=ehNovoR2?'Novo':`Revisão: ${ur?.next?new Date(ur.next).toLocaleDateString('pt-BR'):'Hoje'}`;
-        itens+=itemFolhaHTML({icBox,icon:aInfo.icon,titulo:sanitize(r.titulo),sub:vence,subTom:vencido(r)?'pend':null,onclick:`mostrarResumoDirecto('${r.id}')`,minw0:true,tagHTML:resumoProbTag(r.prob)});
+        itens+=itemFolhaHTML({icBox,icon:aInfo.icon,titulo:sanitize(r.titulo),sub:vence,subTom:vencido(r)?'pend':null,onclick:`mostrarResumoDirecto('${r.id}')`,minw0:true,tagHTML:resumoIncidenciaTag(r.topico)});
       });
       dentro+=hubTopicoHTML(sanitize(nomeTopico(t)),`${doTopico.length}${nPendT?` · ${nPendT} a revisar`:''}`,itens,t);
     });
@@ -11974,8 +11966,9 @@ function mostrarResumoDirecto(id,emSeq){
     <div class="resumo-card">
       <div class="resumo-card-top">
         <span class="resumo-area-tag" style="background:${aInfo.bg};color:${aInfo.color}">${aInfo.icon} ${r.area}</span>
-        ${resumoProbTag(r.prob)}
+        ${resumoIncidenciaTag(r.topico)}
       </div>
+      ${resumoIncidenciaNota(r.topico)}
       <div class="resumo-titulo">${sanitize(r.titulo)}</div>
       <div class="resumo-texto">${sanitize(r.texto).replace(/\n/g,'<br>')}</div>
       <button class="resumo-audio-btn" id="resumo-audio-btn" onclick="ouvirResumo('${r.id}')">▶ Ouvir este resumo</button>
@@ -12844,7 +12837,6 @@ function renderPadroes(){
           <div class="incidencia-assunto">${sanitize(i.assunto)}</div>
           <div style="font-size:11px;color:var(--text2)">${i.topico?sanitize(nomeTopico(i.topico))+' · ':''}Provas: ${sanitize(i.provas||'')}</div>
         </div>
-        <span class="incidencia-prob" style="background:${i.prob==='alta'?'var(--red-light)':'var(--amber-light)'};color:${i.prob==='alta'?'var(--red-dark)':'var(--amber)'}">${i.prob==='alta'?'Alta':'Média'}</span>
       </div>
       ${acoes}
     </div>`;
@@ -12864,7 +12856,7 @@ function topicosAreaHTML(area,perfil){
     const c=(semDados||baixaConf)?'var(--text3)':cor(pct);
     const h=semDados?0:pct;
     const isWeak=!!(weak&&p.t===weak.t);
-    return `<button type="button" class="tq-col${isWeak?' weak':''}" onclick="tqSel(this)" data-code="${sanitize(p.t)}" data-name="${sanitize(p.nome)}" data-pct="${semDados?'—':pct+'%'}" data-cor="${c}" data-weak="${isWeak?'1':''}" aria-label="${sanitize(p.t)}: ${semDados?'sem dados':pct+'%'}">
+    return `<button type="button" class="tq-col${isWeak?' weak':''}" onclick="tqSel(this)" data-code="${sanitize(p.t)}" data-name="${sanitize(p.nome)}" data-pct="${semDados?'não praticado':pct+'%'}" data-cor="${c}" data-weak="${isWeak?'1':''}" aria-label="${sanitize(p.t)}: ${semDados?'não praticado':pct+'%'}">
       <span class="tq-v" style="color:${c}">${semDados?'—':pct}</span>
       <span class="tq-track"><span class="tq-fill" style="height:${h}%;background:${c}"></span></span>
       <span class="tq-code">${sanitize(p.t)}</span>
@@ -13092,7 +13084,7 @@ async function loadAdminUsers(){
   }catch(err){
     console.error('loadAdminUsers erro:',err);
     const msg=err.message==='timeout'?'Tempo limite: toque para tentar novamente':'Erro: '+err.message;
-    el.innerHTML=`<p style="color:var(--red);font-size:13px">${msg}</p><button class="btn-weak btn-contorno" onclick="loadAdminUsers()">Tentar novamente</button>`;
+    el.innerHTML=`<p style="color:var(--red);font-size:13px">${msg}</p><button class="btn-weak btn-contorno" onclick="loadAdminUsers()">Tentar de novo</button>`;
   }
 }
 
@@ -13901,9 +13893,10 @@ function renderObjetivoSemana(){
   perfil.sort((a,b)=>(a.pL-b.pL)||(b.n-a.n));
   const p=perfil[0];
   const pct=Math.round(p.pL*100);
+  const nunca=p.n===0; // D15: sem resposta, o BKT devolve o prior (30%); isso não é domínio, nunca vira número
   const a=AI[p.area]||{};
-  const cor=pct>=80?'var(--green)':pct>=60?'var(--amber)':'var(--red)';
-  const bg=pct>=80?'var(--green-light)':pct>=60?'var(--amber-light)':'var(--red-light)';
+  const cor=nunca?'var(--text2)':pct>=80?'var(--green)':pct>=60?'var(--amber)':'var(--red)';
+  const bg=nunca?'var(--paper-2)':pct>=80?'var(--green-light)':pct>=60?'var(--amber-light)':'var(--red-light)';
   const motivo=p.n===0
     ?'Tópico ainda não praticado. Comece por aqui para o sistema mapear seu domínio.'
     :`Menor domínio estimado (BKT) entre seus tópicos, com base em ${p.n} resposta${p.n>1?'s':''}.${p.n<3?' Estimativa preliminar. Responda mais para confirmar.':''}`;
@@ -13911,7 +13904,7 @@ function renderObjetivoSemana(){
     <div class="obj-card-label">Foco da semana · sistema definiu</div>
     <div class="obj-card-area">${a.icon||''} ${sanitize(p.nome)}</div>
     <div class="obj-card-motivo">${motivo} <span style="opacity:.7">(${p.t} · ${p.area})</span></div>
-    <span class="obj-card-pct" style="background:${bg};color:${cor}">${pct}% de domínio</span>
+    <span class="obj-card-pct" style="background:${bg};color:${cor}">${nunca?'não praticado':pct+'% de domínio'}</span>
     <button class="btn-weak btn-bloco" onclick="iniciarEstudoTopico('${p.t}')">Estudar este tópico agora →</button>
   </div>`;
 }
@@ -14502,7 +14495,6 @@ async function salvarConfig(){
         await db.ref('usuarios/'+currentUser.uid).update({nome});
         userProfile.nome=nome;
         const nomeDisplay=nome.split(' ')[0];
-        const hn2El=document.getElementById('hdr-nome');if(hn2El)hn2El.textContent=nomeDisplay;
         document.getElementById('dash-nome').textContent=nomeDisplay;
       }catch(err){console.error('salvarConfig nome:',err);nomeFalhou=true;}
     }
@@ -14566,7 +14558,7 @@ function confirmarDestrutivo(o){
     if(!ov){
       ov=document.createElement('div');ov.id='conf-overlay';ov.className='rep-overlay';
       ov.innerHTML='<div class="rep-sheet" role="dialog" aria-modal="true" aria-labelledby="conf-titulo">'
-        +'<button class="conf-x" id="conf-x" aria-label="Fechar" type="button">×</button>'
+        +'<button class="conf-x" id="conf-x" aria-label="Fechar" type="button">✕</button>'
         +'<h3 id="conf-titulo"></h3>'
         +'<div class="rep-ctx" id="conf-texto"></div>'
         +'<label class="conf-lbl" for="conf-palavra" id="conf-lbl-palavra"></label>'
@@ -15176,7 +15168,7 @@ function abrirPagamento(plano){
       +'<div class="pix-ja" ><button class="pix-ja-btn" id="pix-ja-btn">Já paguei</button></div>'
       +'<div class="pix-legal">O plano vale pelo período contratado a partir da assinatura. '
         +'Compras online têm <b>7 dias de arrependimento</b> (CDC). '
-        +'<button type="button" class="link-inline" onclick="abrirDoc(\'termos\')">Ver os Termos</button></div>'
+        +'<button type="button" class="link-inline" onclick="abrirDoc(\'termos\')">Termos de Uso</button></div>'
       +'<div class="pix-cartao" id="pix-cartao"></div>'
       +'<div class="rep-actions"><button class="rep-cancel" onclick="fecharPagamento()">Fechar</button></div>'
       +'</div>';
@@ -15301,6 +15293,7 @@ async function avisarPagamento(plano){
   try{
     await db.ref('reportes').push(rep);
     fecharPagamento();
+    marcarPagamentoInformadoNaRenovacao();
     showToast('Avisado! Assim que eu confirmar, seu acesso é renovado.');
   }catch(e){
     console.error('aviso de pagamento:',e);
@@ -15408,7 +15401,7 @@ async function loadReportes(){
     });
     el.innerHTML=html;
   }catch(err){
-    el.innerHTML='<p style="color:var(--red);font-size:13px">Erro: '+sanitize(err.message)+'</p><button class="btn-weak btn-contorno" onclick="loadReportes()">Tentar novamente</button>';
+    el.innerHTML='<p style="color:var(--red);font-size:13px">Erro: '+sanitize(err.message)+'</p><button class="btn-weak btn-contorno" onclick="loadReportes()">Tentar de novo</button>';
   }
 }
 async function resolverReporte(key){
@@ -15863,7 +15856,7 @@ montarInstalarLanding();
   <div class="install-head">
     <img src="assets/icon-192.png" alt="" class="install-ico">
     <div class="install-titulo" id="install-titulo">Instalar no iPhone</div>
-    <button class="install-x" aria-label="Dispensar" onclick="dispensarInstalar()">×</button>
+    <button class="install-x" aria-label="Dispensar" onclick="dispensarInstalar()">✕</button>
   </div>
   <!-- só no modo .install-guia -->
   <ol class="install-passos" role="list">
