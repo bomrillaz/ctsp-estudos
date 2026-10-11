@@ -5104,12 +5104,16 @@ function toggleSenhaVisivel(id,btn){
 }
 
 // F1-10: reset de senha por email — sem ele, quem esquece a senha só volta via WhatsApp manual.
+let _resetEmAndamento=false;
 async function enviarResetSenha(){
+  if(_resetEmAndamento)return;
   const e=document.getElementById('login-email').value.trim();
   if(!e){showMsg('login-msg','Digite seu email acima e toque em "Esqueci minha senha" de novo.');return;}
+  _resetEmAndamento=true;
   try{
     await auth.sendPasswordResetEmail(e);
   }catch(err){}
+  finally{_resetEmAndamento=false;}
   // Mensagem neutra sempre — nunca revelar se o email existe na base.
   showMsg('login-msg','Se este email tiver cadastro, enviamos um link para redefinir a senha.','ok');
 }
@@ -5120,6 +5124,10 @@ function mensagemErroAuth(err,fallback){
   const mapa={
     'auth/wrong-password':'Email ou senha incorretos.',
     'auth/user-not-found':'Email ou senha incorretos.',
+    'auth/invalid-login-credentials':'Email ou senha incorretos.',
+    'auth/invalid-credential':'Email ou senha incorretos.',
+    'auth/missing-password':'Digite a senha.',
+    'auth/internal-error':'Erro temporário no serviço de login. Tente de novo em instantes.',
     'auth/invalid-email':'Email inválido.',
     'auth/user-disabled':'Esta conta foi desativada.',
     'auth/too-many-requests':'Muitas tentativas. Aguarde alguns minutos e tente de novo.',
@@ -5130,11 +5138,23 @@ function mensagemErroAuth(err,fallback){
   return mapa[err&&err.code]||fallback;
 }
 
+// COM-12: Enter na tela de auth vai para a aba visível; troca de senha (#tab-acao) tem handler próprio.
+function enterNaTelaAuth(){
+  const as=document.getElementById('auth-screen');
+  if(!as||!as.classList.contains('active'))return false;
+  const visivel=x=>!document.getElementById('tab-'+x).classList.contains('hidden');
+  const aba=visivel('login')?'login':visivel('register')?'register':null;
+  const btn=aba&&document.querySelector('#tab-'+aba+' .btn-primary');
+  if(btn&&btn.disabled)return true;   // Enter repetido/segurado: o botão desabilitado só protegia o clique, não a tecla
+  if(aba==='login')doLogin();else if(aba==='register')doRegister();
+  return true;
+}
+
 async function doLogin(){
-  if(!checkRateLimit()){showMsg('login-msg','Muitas tentativas. Aguarde 1 minuto.');return;}
   const e=document.getElementById('login-email').value.trim();
   const p=document.getElementById('login-pass').value;
   if(!e||!p){showMsg('login-msg','Preencha email e senha.');return;}
+  if(!checkRateLimit()){showMsg('login-msg','Muitas tentativas. Aguarde 1 minuto.');return;}
   const btn=document.querySelector('#tab-login .btn-primary');
   btn.disabled=true;btn.textContent='Entrando...';
   try{await auth.signInWithEmailAndPassword(e,p);}
@@ -5184,7 +5204,7 @@ function doLogout(){
     document.getElementById('auth-screen').classList.add('active');
     document.getElementById('splash-screen').classList.remove('active');
     verLanding();   // b59: sair leva à apresentação, não ao formulário
-  });
+  }).catch(()=>{showToast('Não foi possível sair. Tente de novo.');});
 }
 
 // ═══════════════════════════════
@@ -8949,7 +8969,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.372';
+const APP_VERSAO='v1.373';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -14195,9 +14215,8 @@ async function excluirMinhaConta(){
     await currentUser.reauthenticateWithCredential(cred);
   }catch(e){
     console.error('excluirMinhaConta reauth:',e);
-    showToast(e.code==='auth/wrong-password'||e.code==='auth/invalid-credential'
-      ?'Senha incorreta. Nada foi apagado.'
-      :'Não foi possível confirmar sua identidade. Nada foi apagado.');
+    const m=mensagemErroAuth(e,'');   // COM-02: mesmo mapa do login; senha errada vira "Senha incorreta."
+    showToast((m==='Email ou senha incorretos.'?'Senha incorreta.':m||'Não foi possível confirmar sua identidade.')+' Nada foi apagado.');
     return;
   }
   // Daqui para baixo a identidade está confirmada. Falhas viram aviso, não silêncio.
@@ -14970,8 +14989,7 @@ document.addEventListener('keydown',e=>{
   const tag=(e.target&&e.target.tagName||'').toLowerCase();
   if(tag==='input'||tag==='textarea'||tag==='select'){
     if(e.key==='Enter'){
-      const as=document.getElementById('auth-screen');
-      if(as&&as.classList.contains('active'))doLogin();
+      enterNaTelaAuth();
     }
     return; // digitando em campo: não interceptar
   }
@@ -15020,7 +15038,7 @@ document.addEventListener('keydown',e=>{
   }
   if(e.key==='Enter'){
     const as=document.getElementById('auth-screen');
-    if(as&&as.classList.contains('active')){doLogin();return;}
+    if(as&&as.classList.contains('active'))return;   // COM-12: botão focado ativa pelo click nativo; sem doLogin duplicado
     const nb=document.getElementById('quiz-next-btn');
     if(nb&&nb.classList.contains('show')){nextQuiz();return;}
   }
@@ -15257,10 +15275,13 @@ function atualizarBotaoNotif(){
   else if(st==='denied'){btn.textContent='Bloqueado';btn.disabled=true;if(sub)sub.textContent='Permissão negada. Libere nas configurações do navegador.';}
   else{btn.textContent='Ativar';if(sub)sub.textContent='Lembrete diário das revisões vencidas';}
 }
+let _notifEmAndamento=false;
 async function ativarNotificacoes(){
+  if(_notifEmAndamento)return;
   if(!fcmSuportado||!fcmMessaging){showToast('Notificações indisponíveis neste navegador.');return;}
   if(VAPID_KEY.indexOf('COLE_A_CHAVE')===0){showToast('Push ainda não configurado (falta a chave VAPID).');return;}
   if(!currentUser||!dataLoaded){showToast('Aguarde os dados carregarem antes de ativar.');return;}
+  _notifEmAndamento=true;
   try{
     var perm=await Notification.requestPermission();
     if(perm!=='granted'){atualizarBotaoNotif();return;}
@@ -15274,6 +15295,7 @@ async function ativarNotificacoes(){
     showToast('Notificações ativadas!');
     atualizarBotaoNotif();
   }catch(e){showToast('Falha ao ativar: '+(e&&e.message?e.message:'erro'));}
+  finally{_notifEmAndamento=false;}
 }
 window.addEventListener('appinstalled',function(){
   deferredPrompt=null;
