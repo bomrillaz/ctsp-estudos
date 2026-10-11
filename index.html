@@ -2122,16 +2122,6 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   100%{transform:translate(-50%,-50%) scale(4);opacity:0;}
 }
 
-/* ═══ PM1/M6.5 — cursor-brasa (PC, pointer:fine, só na vitrine) ═══ */
-.lp-brasa-faisca{position:fixed;z-index:9997;pointer-events:none;width:5px;height:5px;left:0;top:0;
-  transform:translate(-50%,-50%);border-radius:50%;
-  background:radial-gradient(circle,#FFE1A8,var(--ember) 55%,transparent 80%);
-  box-shadow:0 0 6px 1px rgba(240,136,60,.6);animation:lpFaiscaCai .6s ease-out forwards;}
-@keyframes lpFaiscaCai{
-  0%{opacity:1;transform:translate(-50%,-50%) translateY(0) scale(1);}
-  100%{opacity:0;transform:translate(-50%,-50%) translateY(18px) scale(.3);}
-}
-
 /* ═══ PM1/M6.5 — escada do caminhão como indicador de progresso da vitrine ═══
    Vive colada na borda de baixo do topbar (que já é sticky) em vez de precisar
    saber a altura dele de antemão. */
@@ -8058,26 +8048,6 @@ function _cenaPorTempo(secao,c){
     setTimeout(function(){gota.remove();},520);
   },{passive:true});
 })();
-// PM1/M6.5 — cursor-brasa: só PC (pointer:fine) e só na vitrine. Throttle de 70ms
-// pra não inundar o DOM de faíscas num mousemove contínuo.
-(function initCursorBrasa(){
-  if(!matchMedia('(pointer:fine)').matches)return;
-  var ultimo=0;
-  document.addEventListener('mousemove',function(e){
-    if(movimentoReduzido())return;
-    var t=e.target;
-    if(!t||typeof t.closest!=='function'||!t.closest('#landing-view,#login-view'))return;
-    var agora=performance.now();
-    if(agora-ultimo<70)return;
-    ultimo=agora;
-    var faisca=document.createElement('div');
-    faisca.className='lp-brasa-faisca';
-    faisca.style.left=e.clientX+'px';
-    faisca.style.top=e.clientY+'px';
-    document.body.appendChild(faisca);
-    setTimeout(function(){faisca.remove();},620);
-  },{passive:true});
-})();
 // PM1/M6.5 — escada do caminhão = indicador de progresso da vitrine inteira. Fica
 // ATIVO mesmo com reduced-motion (é leitura de estado — quanto já rolei —, não
 // autoplay; a transição de largura já é curta o bastante pra não incomodar).
@@ -8967,7 +8937,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.369';
+const APP_VERSAO='v1.370';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
