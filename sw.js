@@ -8,8 +8,9 @@
    Firebase dinâmico. Nunca reintroduzir `data.js` aqui.
    - navegacao (HTML): network-first (offline cai no cache).
    - demais GET elegiveis: stale-while-revalidate.
-   Atualizacao: skipWaiting no install (hotfix chega automatico); no controllerchange
-   o app recarrega UMA vez (guard de 1a instalacao no index). */
+   Atualizacao (b267, D1/PWA-03): skipWaiting no install (hotfix chega automatico); o index.html
+   recarrega UMA vez no controllerchange, mas ADIA enquanto houver sessao de estudo aberta
+   (sessaoEstudoAberta). Sem banner e sem canal de mensagem: o SW novo ja assume sozinho. */
 
 /* ── Fase 4: FCM em background (SW ÚNICO, sem guerra de escopo) ──
    Importamos SÓ app+messaging (NUNCA database) — a regra de ouro continua valendo:
@@ -51,12 +52,12 @@ self.addEventListener('notificationclick', (e) => {
   })());
 });
 
-const CACHE = 'ctsp-cache-v45';
+const CACHE = 'ctsp-cache-v46';
 const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
   'assets/cesar-coin.png', 'assets/qrcode.js',
-  'assets/loading.mp4', 'assets/loading-poster.jpg',
+  'assets/loading-poster.jpg',   // PWA-07: loading.mp4 NAO entra (video pede Range, que o SW nao serve; 738 KB baixados a toa por CACHE). apresentacao.mp4 fora de proposito.
   'assets/mascote/folha_v7.png', 'assets/mascote/escada.png'
 ];
 const CROSS = [
@@ -69,9 +70,12 @@ const CROSS = [
 self.addEventListener('install', (e) => {
   e.waitUntil((async () => {
     const cache = await caches.open(CACHE);
-    await Promise.allSettled(SAME.map((u) => cache.add(u)));
+    // PWA-09: cache:'reload' ignora o cache HTTP (GitHub Pages serve max-age=600): o SW novo nao pre-cacheia index velho.
+    await Promise.allSettled(SAME.map((u) => cache.add(new Request(u, { cache: 'reload' }))));
+    // PWA-04: mode:'cors' (gstatic manda access-control-allow-origin:*) guarda a resposta com tamanho real;
+    // a opaca contava ~7 MB de cota cada. O <script> sem crossorigin continua casando no cache.match (ignora o modo).
     await Promise.allSettled(CROSS.map(async (u) => {
-      try { const r = await fetch(u, { mode: 'no-cors' }); await cache.put(u, r); } catch (_) {}
+      try { const r = await fetch(u, { mode: 'cors' }); if (r.ok) await cache.put(u, r); } catch (_) {}
     }));
     await self.skipWaiting();
   })());
@@ -85,12 +89,8 @@ self.addEventListener('activate', (e) => {
   })());
 });
 
-self.addEventListener('message', (e) => {
-  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
-});
-
 function cachePut(req, res) {
-  if (res && (res.status === 200 || res.status === 0)) {
+  if (res && res.status === 200) {   // PWA-04: sem opaca (status 0)
     caches.open(CACHE).then((c) => c.put(req, res)).catch(() => {});
   }
 }
@@ -111,9 +111,19 @@ self.addEventListener('fetch', (e) => {
     // o oobCode e segredo de uma acao de conta e nao pode ficar no Cache Storage. Chave = so origem + caminho.
     const chave = url.search ? new Request(url.origin + url.pathname) : req;
     e.respondWith(
-      fetch(req).then((res) => { cachePut(chave, res.clone()); return res; })
+      // PWA-09: revalida, nao serve index do cache HTTP. Motor/WebView que rejeite Request(navigate)+init cai em fetch(req)
+      // puro (rede) antes do fallback de cache; sem isso o index ficaria preso no cache para sempre.
+      fetch(req, { cache: 'no-cache' }).catch(() => fetch(req)).then((res) => { cachePut(chave, res.clone()); return res; })
         .catch(() => caches.match(chave, { ignoreSearch: true }).then((r) => r || caches.match('index.html')))
     );
+    return;
+  }
+
+  // SDK do Firebase: versao fixada na URL (9.23.0), imutavel. Cache primeiro; no miss busca com cors (PWA-04)
+  // e nunca revalida em segundo plano (o fetch(req) do <script> sem crossorigin voltaria opaco).
+  if (sdkEstatico) {
+    e.respondWith(caches.match(req).then((cached) =>
+      cached || fetch(req.url, { mode: 'cors' }).then((res) => { cachePut(req, res.clone()); return res; })));
     return;
   }
 
@@ -122,7 +132,7 @@ self.addEventListener('fetch', (e) => {
   // servir uma versao antiga cacheada mesmo depois de um bump de cache-buster (?v=...) sem
   // bump de CACHE. Sem querystring, ignoreSearch:true (comportamento normal).
   // Video: iPhone pede com Range; respondWith de cache/rede sem 206 quebra a reproducao.
-  if (req.headers.has('range')) return; // b252: video do estribo (assets/landing) saiu; loading.mp4 segue coberto pelo Range
+  if (req.headers.has('range')) return; // b252: video do estribo (assets/landing) saiu; loading.mp4 (rede direto, fora do SHELL desde o b267) cai aqui
 
   const temQuery = url.search !== '';
   e.respondWith(

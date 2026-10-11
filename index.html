@@ -3146,7 +3146,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="sim-running-header">
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <div><div class="sim-timer" id="sim-timer">03:00:00</div><div class="sim-timer-sub" id="sim-q-label">Questão 1 de 60</div></div>
-            <button class="sim-end-btn" onclick="encerrarSimulado()">Encerrar</button>
+            <button class="sim-end-btn" onclick="simConfirmarEncerrar()">Encerrar</button>
           </div>
         </div>
         <div class="sim-q-wrap">
@@ -4149,7 +4149,7 @@ function fmtRitmo(seg){
   const m=Math.floor(seg/60),s=Math.round(seg%60);
   return m>0?`${m}min${String(s).padStart(2,'0')}s`:`${s}s`;
 }
-let simQuestoes=[],simRespostas={},simOrdem={},simIdx=0,simTimer=null,simTempo=10800,simModo='completo';
+let simQuestoes=[],simRespostas={},simOrdem={},simIdx=0,simTimer=null,simFim=0,simModo='completo';   // b267/D11: simFim = fim ABSOLUTO (Date.now()); o relógio não é mais contagem de ticks
 let simRevisao=[]; // itens não acertados do último simulado encerrado — só em memória, nunca em userStats
 let resumosQueue=[],resumoAtualIdx=0;
 
@@ -5336,6 +5336,7 @@ async function doRegister(){
 }
 
 function doLogout(){
+  simLimparEspelho();if(simTimer){clearInterval(simTimer);simTimer=null;}   // b267/D11 (ROB-05): antes do signOut, a chave usa currentUser
   try{if('speechSynthesis' in window)speechSynthesis.cancel();}catch(e){}
   _ttsTocando=false;
   try{db.ref('notificacoes').off();}catch(e){}
@@ -8877,6 +8878,7 @@ async function initApp(){
   renderAreaList();
   renderCards();
   renderSimHome();
+  simRetomarSePreciso();   // b267/D11: simulado interrompido por reload volta de onde parou
   renderResumos();
   renderPadroes();
   if(isAdmin())loadAdminUsers();
@@ -9180,7 +9182,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.380';
+const APP_VERSAO='v1.381';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -12458,18 +12460,74 @@ function iniciarSimulado(modo){
     }
     simQuestoes=pool;
   }
-  simTempo=modo==='inteligente'?2700:10800;
+  simFim=Date.now()+(modo==='inteligente'?2700:10800)*1000;
   document.getElementById('sim-home-view').classList.add('hidden');
   document.getElementById('sim-running-view').classList.remove('hidden');
   document.getElementById('sim-result-view').classList.add('hidden');
-  if(simTimer)clearInterval(simTimer);
-  simTimer=setInterval(()=>{
-    simTempo--;
-    const h=Math.floor(simTempo/3600),m=Math.floor((simTempo%3600)/60),s=simTempo%60;
-    document.getElementById('sim-timer').textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-    if(simTempo<=0)encerrarSimulado();
-  },1000);
+  _simLigarRelogio();
   renderSimQ();
+  simGravarEspelho();
+}
+
+// b267/D11 (MOT-09/ROB-05): o relógio da prova NÃO para quando a tela some (bloquear o celular, trocar de aba,
+// recarregar): o restante sai de `simFim - Date.now()`, nunca de contar ticks. Estado (respostas, ordem, fim)
+// espelhado em localStorage por conta; NUNCA no RTDB (decisoes/sair-do-quiz-no-meio-e-pausa-nao-descarte).
+// Zerar o tempo com a tela fora de vista NÃO encerra em segundo plano: o tick espera o simulado ficar visível.
+function chaveSimEspelho(){return 'ctsp_sim_'+(currentUser?currentUser.uid:'anon');}
+function simRestante(){return Math.max(0,Math.ceil((simFim-Date.now())/1000));}
+function simGravarEspelho(){
+  try{localStorage.setItem(chaveSimEspelho(),JSON.stringify({v:1,modo:simModo,fim:simFim,ids:simQuestoes.map(q=>q.id),ordem:simOrdem,resp:simRespostas,idx:simIdx}));}catch(e){}
+}
+function simLimparEspelho(){try{localStorage.removeItem(chaveSimEspelho());}catch(e){}}
+function _simVisivel(){
+  const sc=document.getElementById('screen-simulado');
+  return !document.hidden&&!!(sc&&sc.classList.contains('active'));
+}
+function _simPintarRelogio(){
+  const r=simRestante(),h=Math.floor(r/3600),m=Math.floor((r%3600)/60),s=r%60;
+  const el=document.getElementById('sim-timer');
+  if(el)el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return r;
+}
+function _simTick(){
+  if(_simPintarRelogio()<=0&&_simVisivel())encerrarSimulado();
+}
+function _simLigarRelogio(){
+  if(simTimer)clearInterval(simTimer);
+  simTimer=setInterval(_simTick,1000);
+  _simPintarRelogio();
+}
+// Encerrar grava tudo (BKT/FSRS) sem volta: pede confirmação, com o número de questões em branco.
+function simConfirmarEncerrar(){
+  const br=simQuestoes.filter((_,i)=>simRespostas[i]===undefined||simRespostas[i]===null).length;
+  confirmarAcao({
+    titulo:'Encerrar o simulado?',
+    texto:(br?`${br===1?'Há 1 questão em branco, que vale':'Há '+br+' questões em branco, que valem'} zero. `:'')+'O resultado é gravado e não dá para voltar.',
+    acoes:[
+      {rotulo:'Encerrar e ver o resultado',primaria:true,fn:()=>encerrarSimulado()},
+      {rotulo:'Continuar o simulado',fn:()=>{}}
+    ]
+  });
+}
+// Recarregou (atualização do app, iOS descartou o PWA) no meio da prova: reabre de onde parou. Fim já passado: grava o
+// resultado AGORA, com a pessoa olhando (a tela do simulado é aberta antes), nunca em segundo plano.
+function simRetomarSePreciso(){
+  let e=null;
+  try{const r=localStorage.getItem(chaveSimEspelho());e=r?JSON.parse(r):null;}catch(x){e=null;}
+  if(!e)return false;
+  const qs=Array.isArray(e.ids)?e.ids.map(id=>allQuestoes[id]):[];
+  if(!qs.length||qs.some(q=>!q)||!(e.fim>0)){simLimparEspelho();return false;}
+  simModo=e.modo||'completo';simQuestoes=qs;simFim=e.fim;simOrdem=e.ordem||{};simRespostas=e.resp||{};
+  simIdx=Math.min(Math.max(+e.idx||0,0),qs.length-1);simRevisao=[];
+  document.getElementById('sim-home-view').classList.add('hidden');
+  document.getElementById('sim-running-view').classList.remove('hidden');
+  document.getElementById('sim-result-view').classList.add('hidden');
+  navTo('simulado');
+  _simLigarRelogio();
+  renderSimQ();
+  if(simRestante()<=0){showToast('O tempo do simulado acabou: resultado gravado.');encerrarSimulado();}
+  else showToast('Simulado retomado de onde você parou.');
+  return true;
 }
 
 function renderSimQ(){
@@ -12491,12 +12549,14 @@ function renderSimQ(){
 function marcarSim(i){
   simRespostas[simIdx]=i;
   renderSimQ();
+  simGravarEspelho();
 }
-function simNext(){if(simIdx<simQuestoes.length-1){simIdx++;renderSimQ();irAoTopoDoConteudo();}}
-function simPrev(){if(simIdx>0){simIdx--;renderSimQ();irAoTopoDoConteudo();}}
+function simNext(){if(simIdx<simQuestoes.length-1){simIdx++;renderSimQ();irAoTopoDoConteudo();simGravarEspelho();}}
+function simPrev(){if(simIdx>0){simIdx--;renderSimQ();irAoTopoDoConteudo();simGravarEspelho();}}
 
 async function encerrarSimulado(){
   if(simTimer)clearInterval(simTimer);
+  simTimer=null;simLimparEspelho();   // b267/D11: terminou, o espelho não pode ressuscitar este simulado
   let correct=0;const byArea={};
   simQuestoes.forEach((q,i)=>{
     const area=q.area||'';
@@ -14520,6 +14580,7 @@ async function reiniciarEstudos(){
     try{localStorage.removeItem(chaveEspelho());}catch(e){}
     try{localStorage.removeItem(chaveEspelhoCards());}catch(e){}   // C6: espelho de cards
     try{localStorage.removeItem(chaveCardsSujos());}catch(e){}      // C6: fila de reflush
+    simLimparEspelho();if(simTimer){clearInterval(simTimer);simTimer=null;}   // b267/D11: zeragem não pode deixar um simulado velho ressuscitar
     gravarEspelho();
     _meuUltimoRev=userStats.rev;
     // autoritativo no remoto: set do estado zerado COM wipe (não .remove — o wipe precisa
@@ -15528,32 +15589,64 @@ document.addEventListener('keydown',e=>{
 });
 
 // ── Fase 2: registro do Service Worker (offline + aviso de nova versao) ──
-let swReg=null, swRecarregando=false;
-function aplicarAtualizacao(){
-  var el=document.getElementById('sw-update'); if(el)el.style.display='none';
-  if(swReg&&swReg.waiting)swReg.waiting.postMessage({type:'SKIP_WAITING'});
+// b267 (D1/PWA-03): o SW novo assume sozinho (skipWaiting) e o app recarrega sozinho, MAS adia enquanto houver sessão
+// de estudo aberta; recarrega quando ela termina. Sem banner "nova versão" (era código morto: o reload vinha antes).
+let swReg=null, swRecarregando=false, swAtualizacaoPendente=false, _swTimer=null, _swTinhaControlador=false;
+// Fonte ÚNICA de "sessão aberta": Quiz/Treino/Diagnóstico/Modo Erro (sessaoQuizViva), Simulado em curso, Cards e Resumos em
+// modo estudo, Foco ativo. Tela nova de estudo que perca estado ao recarregar entra AQUI, nunca num call site.
+function sessaoEstudoAberta(){
+  if(simTimer)return true;
+  if(sessaoQuizViva())return true;
+  const ativa=id=>{const e=document.getElementById('screen-'+id);return !!(e&&e.classList.contains('active'));};
+  if(cardsModo==='estudo'&&ativa('cards'))return true;
+  if(resumosModo==='estudo'&&ativa('resumos'))return true;
+  if(focoAtivo)return true;
+  return false;
 }
+// Além da sessão: não atropelar quem está digitando, com modal/folha aberta, ouvindo uma Aula ou lendo um Resumo
+// fora do modo estudo. Mesma fonte (só _recarregarSeLivre chama); nada em call site.
+function usuarioOcupado(){
+  const ae=document.activeElement;
+  if(ae){
+    const tag=(ae.tagName||'').toUpperCase();
+    const tipoBotao=/^(checkbox|radio|button|submit|reset|range|color|file|image)$/i.test(ae.type||'');
+    if((tag==='INPUT'&&!tipoBotao)||tag==='TEXTAREA'||tag==='SELECT'||ae.isContentEditable)return true;
+  }
+  if(document.querySelector('.modal-overlay:not(.hidden), .sheet-overlay.open'))return true;
+  const ativa=id=>{const e=document.getElementById('screen-'+id);return !!(e&&e.classList.contains('active'));};
+  if(resumosModo!=='hub'&&ativa('resumos'))return true;
+  if(aulasModo==='detalhe'&&ativa('aulas'))return true;
+  return false;
+}
+async function _recarregarAgora(){
+  swRecarregando=true;if(_swTimer){clearInterval(_swTimer);_swTimer=null;}
+  // Progresso ainda não gravado: espera o saveProg em curso (teto 4 s). O espelho local já é sempre gravado por saveProg.
+  try{
+    if(dataLoaded&&!_saveEmCurso&&_assinaturaProg(userStats)!==_snapSalvo)saveProg();
+    const t0=Date.now();
+    while(_saveEmCurso&&Date.now()-t0<4000)await new Promise(r=>setTimeout(r,100));
+  }catch(e){}
+  location.reload();
+}
+function _recarregarSeLivre(){
+  if(!swAtualizacaoPendente||swRecarregando||sessaoEstudoAberta()||usuarioOcupado())return;
+  _recarregarAgora();
+}
+function _swControllerChange(){
+  if(swRecarregando)return;
+  if(!_swTinhaControlador){_swTinhaControlador=true;return;} // 1a instalação (clients.claim): não recarrega
+  swAtualizacaoPendente=true;
+  _recarregarSeLivre();
+  if(!swRecarregando&&!_swTimer)_swTimer=setInterval(_recarregarSeLivre,3000);   // só enquanto há atualização esperando
+}
+// Ir para o segundo plano é o momento menos invasivo para recarregar (além do poll de 3 s).
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')_recarregarSeLivre();});
 if('serviceWorker' in navigator){
   window.addEventListener('load',function(){
-    // Guarda se JÁ havia um SW controlando: se não havia, o primeiro controllerchange
-    // é só a instalação inicial (clients.claim) e NÃO deve recarregar a página.
-    var tinhaControlador=!!navigator.serviceWorker.controller;
-    navigator.serviceWorker.addEventListener('controllerchange',function(){
-      if(swRecarregando)return;
-      if(!tinhaControlador){tinhaControlador=true;return;} // 1a instalação: não recarrega
-      swRecarregando=true; location.reload();
-    });
-    navigator.serviceWorker.register('sw.js').then(function(reg){
-      swReg=reg;
-      reg.addEventListener('updatefound',function(){
-        var nw=reg.installing; if(!nw)return;
-        nw.addEventListener('statechange',function(){
-          if(nw.state==='installed'&&navigator.serviceWorker.controller){
-            var el=document.getElementById('sw-update'); if(el)el.style.display='flex';
-          }
-        });
-      });
-    }).catch(function(){});
+    // Se JÁ havia um SW controlando, o próximo controllerchange é atualização de verdade.
+    _swTinhaControlador=!!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange',_swControllerChange);
+    navigator.serviceWorker.register('sw.js').then(function(reg){swReg=reg;}).catch(function(){});
   });
 }
 
@@ -15568,8 +15661,6 @@ function ehIOSNaoSafari(){return ehIOS()&&/CriOS|FxiOS|EdgiOS|OPiOS/i.test(navig
 // item "Instalar app" do menu ☰, então não há mais o que carimbar por 30 dias
 // (installDismiss saiu junto com conviteDispensado()).
 function dispensarInstalar(){var el=document.getElementById('install-banner');if(el)el.style.display='none';}
-// F1-06: X do aviso de nova versão só esconde nesta sessão — reaparece no próximo deploy real.
-function dispensarSwUpdate(){var el=document.getElementById('sw-update');if(el)el.style.display='none';}
 // b123 (§6.5): antes usava .finally e ignorava a recusa. b126: o carimbo de recusa saiu
 // junto com o gatilho automático — quem recusar o prompt do Android reabre o convite pelo
 // menu ☰ (e sem deferredPrompt cai no fallback de instrução manual, que é honesto).
@@ -15726,11 +15817,6 @@ window.addEventListener('appinstalled',function(){
 // montada aqui (a landing já está no DOM: este script fecha depois dela).
 montarInstalarLanding();
 </script>
-<div id="sw-update" role="status" style="display:none;position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:200;background:var(--navy-2);color:#fff;border:1px solid var(--ember);border-radius:12px;padding:10px 14px;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 8px 24px rgba(11,20,48,.4);">
-  <span style="font-size:13px;font-weight:600">Nova versão disponível</span>
-  <button onclick="aplicarAtualizacao()" style="background:var(--ember);color:#1C1206;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer">Atualizar</button>
-  <button onclick="dispensarSwUpdate()" aria-label="Dispensar" style="background:transparent;border:none;color:rgba(255,255,255,.6);font-size:20px;line-height:1;cursor:pointer;flex-shrink:0;padding:9px">×</button>
-</div>
 <div id="install-banner" style="display:none" class="install-banner" role="region"
      aria-label="Como instalar o app na tela de início">
   <div class="install-head">
