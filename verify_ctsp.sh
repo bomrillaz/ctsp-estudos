@@ -174,7 +174,6 @@ HDIR="$REPO_ABS/materiais/entregas/testes"
 # Excecoes: NAO rodam no laco. Cada uma com motivo; sair daqui e consertar/apagar o arquivo.
 EXCECOES="
 harness_b13_cirurgico_novasPorCobertura|lento e instavel: estoura o heap do Node (OOM aos ~125s, e >30 min com 4 GB); medicao de cobertura, nao regressao; rodar a mao com --max-old-space-size ou reduzir as 200 chamadas/limite
-harness_formato|dono E5 (precisa de _analise/classificar_tipos.py que nao existe; sera tratado no E5)
 harness_b165_portao_admin|obsoleto: comparava HEAD x arvore do b165 (ADMIN_EMAIL virou hash); apagar o arquivo
 harness_f3_teto_data_prova|obsoleto: injetava userStats.dataProva, removido no v1.256; coberto por harness_b167_data_prova_constante; apagar o arquivo
 "
