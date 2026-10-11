@@ -13,6 +13,7 @@
    (PUSH_TITULO/PUSH_CORPO) sempre prevalece. Clientes antigos sem `agenda` caem no default. */
 
 const admin = require('firebase-admin');
+const { tokensDoNo, enviarEmLotes } = require('./lib-push');
 
 let svc;
 try {
@@ -85,12 +86,7 @@ function corpoContagem(n) {
     const vencidas = vencidasDoNo(noh, agora);
     const elegivel = forcar || vencidas > 0 || vencidas === -1;
     if (!elegivel) { pulados++; continue; } // sem revisão vencida → não incomoda
-    const tokens = [];
-    for (const chave of Object.keys(noh)) {
-      if (chave === '_agenda') continue; // metadado, não é token
-      const t = noh[chave] && noh[chave].token;
-      if (t) tokens.push({ chave, token: t });
-    }
+    const tokens = tokensDoNo(noh); // só token string (SEG-06); _agenda é metadado
     if (tokens.length) usuarios.push({ uid, tokens, vencidas });
   }
 
@@ -103,42 +99,37 @@ function corpoContagem(n) {
   }
   console.log('Usuarios alvo:', usuarios.length, '· Tokens alvo:', totalTokens);
 
-  let sucesso = 0, falha = 0;
+  let sucesso = 0, falha = 0, lotesComErro = 0, usuariosComErro = 0;
   const remocoes = [];
 
   for (const u of usuarios) {
-    // Texto manual sempre prevalece; senão, personaliza pela contagem quando conhecida (>0).
-    const corpoU = (!TEM_CUSTOM && u.vencidas > 0) ? corpoContagem(u.vencidas) : CORPO;
+    // Um usuário com dado ruim não pode impedir o envio aos próximos (SEG-06).
+    try {
+      // Texto manual sempre prevalece; senão, personaliza pela contagem quando conhecida (>0).
+      const corpoU = (!TEM_CUSTOM && u.vencidas > 0) ? corpoContagem(u.vencidas) : CORPO;
 
-    // DATA-ONLY (bloco 50): sem o campo `notification`, o FCM NÃO exibe sozinho — quem
-    // mostra é só o onBackgroundMessage do sw.js. Isso mata a notificação DUPLICADA (antes
-    // vinham 2: a auto do FCM + a do nosso handler). Título/corpo/ícone/link vão no data.
-    const resp = await msg.sendEachForMulticast({
-      tokens: u.tokens.map((t) => t.token),
-      data: { title: TITULO, body: corpoU, icon: 'assets/icon-192.png', link: LINK }
-    });
-    sucesso += resp.successCount;
-    falha += resp.failureCount;
-
-    resp.responses.forEach((r, i) => {
-      if (r.success) return;
-      const code = (r.error && r.error.code) || 'desconhecido';
-      // b166: log do Actions em repo PUBLICO -- uid truncado. 6 chars bastam para
-      // correlacionar entre execucoes e casar com o banco, sem publicar o id inteiro.
-      console.log('Falhou uid=' + String(u.uid).slice(0, 6) + '... code=' + code);
-      if (code === 'messaging/registration-token-not-registered' ||
-          code === 'messaging/invalid-argument' ||
-          code === 'messaging/invalid-registration-token') {
-        remocoes.push(db.ref('push/' + u.uid + '/' + u.tokens[i].chave).remove());
-      }
-    });
+      // DATA-ONLY (bloco 50): sem o campo `notification`, o FCM NÃO exibe sozinho — quem
+      // mostra é só o onBackgroundMessage do sw.js. Isso mata a notificação DUPLICADA (antes
+      // vinham 2: a auto do FCM + a do nosso handler). Título/corpo/ícone/link vão no data.
+      const r = await enviarEmLotes(msg, u.tokens,
+        { title: TITULO, body: corpoU, icon: 'assets/icon-192.png', link: LINK },
+        // b166: log do Actions em repo PUBLICO -- uid truncado. 6 chars bastam para
+        // correlacionar entre execucoes e casar com o banco, sem publicar o id inteiro.
+        (item, code) => console.log('Falhou uid=' + String(u.uid).slice(0, 6) + '... code=' + code));
+      sucesso += r.sucesso; falha += r.falha; lotesComErro += r.lotesComErro;
+      r.invalidos.forEach((it) => remocoes.push(db.ref('push/' + u.uid + '/' + it.chave).remove()));
+    } catch (e) {
+      usuariosComErro++;
+      console.log('Erro uid=' + String(u.uid).slice(0, 6) + '...: ' + ((e && e.code) || 'erro'));
+    }
   }
 
-  console.log('Sucesso:', sucesso, '· Falha:', falha);
-  await Promise.all(remocoes);
+  console.log('Sucesso:', sucesso, '· Falha:', falha, '· lotes com erro:', lotesComErro, '· usuarios com erro:', usuariosComErro);
+  await Promise.allSettled(remocoes);
   if (remocoes.length) console.log('Tokens inválidos removidos:', remocoes.length);
 
-  process.exit(0);
+  // Falha sistêmica (nada foi entregue e algo deu erro) fica vermelha no Actions; dado ruim isolado não.
+  process.exit(sucesso === 0 && (lotesComErro > 0 || usuariosComErro > 0) ? 1 : 0);
 })().catch((e) => {
   console.error('Erro no envio:', e && e.message ? e.message : e);
   process.exit(1);

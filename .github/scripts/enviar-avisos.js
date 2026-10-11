@@ -9,6 +9,7 @@
    Segredo: FIREBASE_SERVICE_ACCOUNT (mesmo já usado por enviar-push.js). */
 
 const admin = require('firebase-admin');
+const { tokensDoNo, enviarEmLotes } = require('./lib-push');
 
 let svc;
 try {
@@ -49,41 +50,30 @@ const LINK = 'https://bomrillaz.github.io/ctsp-estudos/';
   const tokens = [];
   for (const uid of Object.keys(usuarios)) {
     if (!usuarios[uid] || usuarios[uid].aprovado !== true) continue;
-    const noh = pushNode[uid];
-    if (!noh) continue;
-    for (const chave of Object.keys(noh)) {
-      if (chave === '_agenda') continue;
-      const t = noh[chave] && noh[chave].token;
-      if (t) tokens.push({ uid, chave, token: t });
-    }
+    tokensDoNo(pushNode[uid]).forEach((it) => tokens.push({ uid, chave: it.chave, token: it.token })); // só string (SEG-06)
   }
 
   console.log('Avisos pendentes:', pendentes.length, '· tokens alvo:', tokens.length);
 
   const remocoes = [];
   for (const [id, n] of pendentes) {
+    let entregue = !tokens.length;
     if (tokens.length) {
-      const resp = await msg.sendEachForMulticast({
-        tokens: tokens.map((t) => t.token),
-        data: { title: n.titulo || 'Prontidão', body: n.corpo || '', icon: 'assets/icon-192.png', link: LINK }
-      });
-      console.log('Aviso', id, '— sucesso:', resp.successCount, '· falha:', resp.failureCount);
-      resp.responses.forEach((r, i) => {
-        if (r.success) return;
-        const code = (r.error && r.error.code) || 'desconhecido';
-        if (code === 'messaging/registration-token-not-registered' ||
-            code === 'messaging/invalid-argument' ||
-            code === 'messaging/invalid-registration-token') {
-          remocoes.push(db.ref('push/' + tokens[i].uid + '/' + tokens[i].chave).remove());
-        }
-      });
+      // Lotes de 500; um lote que lança não impede os outros (SEG-06).
+      const r = await enviarEmLotes(msg, tokens,
+        { title: n.titulo || 'Prontidão', body: n.corpo || '', icon: 'assets/icon-192.png', link: LINK });
+      console.log('Aviso', id, '— sucesso:', r.sucesso, '· falha:', r.falha, '· lotes com erro:', r.lotesComErro);
+      r.invalidos.forEach((it) => remocoes.push(db.ref('push/' + it.uid + '/' + it.chave).remove()));
+      entregue = r.sucesso > 0 || r.lotesComErro === 0;
     } else {
       console.log('Aviso', id, '— sem token elegível, nada a enviar.');
     }
+    // Nada entregue porque todos os lotes falharam: mantém pendente para a próxima rodada (não perde o aviso).
+    if (!entregue) { console.log('Aviso', id, '— nenhum lote entregue, segue pendente.'); continue; }
     await db.ref('notificacoes/' + id + '/pushPendente').set(false);
   }
 
-  await Promise.all(remocoes);
+  await Promise.allSettled(remocoes);
   if (remocoes.length) console.log('Tokens inválidos removidos:', remocoes.length);
   process.exit(0);
 })().catch((e) => {
