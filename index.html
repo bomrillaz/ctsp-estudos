@@ -5200,6 +5200,7 @@ function doLogout(){
   try{db.ref('notificacoes').off();}catch(e){}
   notifCache=[];
   auth.signOut().then(()=>{
+    _limparVerifOnline(); // só logout explícito; queda de rede não passa por aqui
     document.getElementById('app').classList.remove('active');
     document.getElementById('auth-screen').classList.add('active');
     document.getElementById('splash-screen').classList.remove('active');
@@ -5259,6 +5260,25 @@ async function _gravarConteudoCache(c){
       tx.oncomplete=res;tx.onerror=()=>rej(tx.error);
     });
   }catch(e){}
+}
+// b266 PWA-01: carimbo da última verificação ONLINE do perfil (uid + hora). É o que autoriza abrir
+// pelo cache quando o RTDB não responde (sem rede/timeout). Teto de 7 dias: coincide com o teste
+// grátis (o menor acesso concedido) e cobre uma semana sem sinal no quartel; passou disso, pede
+// conexão. Sem o carimbo o cache offline nunca basta: o perímetro real segue sendo a regra do RTDB.
+// Teto simples de propósito; upgrade possível: guardar também cob/criadoEm para o offline respeitar o vencimento.
+const _OFFLINE_MAX_MS=7*24*3600*1000;
+const _VERIF_CHAVE='ctsp_verif_online'; // prefixo ctsp_*: varrido na exclusão de conta
+function _marcarVerifOnline(uid){try{localStorage.setItem(_VERIF_CHAVE,JSON.stringify({uid,ts:Date.now()}));}catch(e){}}
+function _limparVerifOnline(){try{localStorage.removeItem(_VERIF_CHAVE);}catch(e){}}
+async function _offlinePermitido(uid){
+  try{
+    const v=JSON.parse(localStorage.getItem(_VERIF_CHAVE)||'null');
+    if(!v||v.uid!==uid||typeof v.ts!=='number')return false;
+    const idade=Date.now()-v.ts;
+    if(idade<0||idade>_OFFLINE_MAX_MS)return false; // idade<0: relógio mexido
+    const c=await _lerConteudoCache();
+    return !!c&&_CAMPOS_CONTEUDO.every(k=>typeof c[k]==='string');
+  }catch(e){return false;}
 }
 // PS3/A1 (v17): quem vence de verdade (PERMISSION_DENIED + estadoCobranca vencido) não
 // pode continuar estudando pelo cache antigo — ver carregarConteudo().
@@ -5368,6 +5388,9 @@ async function carregarConteudo(){
   const [cache,leitura]=await Promise.all([
     _lerConteudoCache(),
     (async()=>{
+      // b266 PWA-02: sem rede conhecida (aparelho offline ou perfil que já falhou por rede) não há o que
+      // esperar: serve o cache já. Só _semRede, nunca _perfilIncerto: o ramo PERMISSION_DENIED do perfil segue como era.
+      if(navigator.onLine===false||(userProfile&&userProfile._semRede))return {val:null,code:null};
       try{return {val:(await withTimeout(db.ref('conteudo/versao').get(),12000)).val(),code:null};}
       catch(e){
         // PERMISSION_DENIED aqui é usuarios/$uid/aprovado!==true no BANCO (divergindo do
@@ -5718,14 +5741,18 @@ auth.onAuthStateChanged(async user=>{
   // B58: mesmo tratamento do cadastro — o e-mail vai normalizado para o banco.
   const emailNorm=String(user.email||'').trim().toLowerCase();
   const isAdmEmail=await _emailBateAdmin(emailNorm);
+  let _noInexistente=false; // b266: leitura funcionou e o nó não existe = conta removida; carimbo não vale
   try{
     // b121: se doRegister() está gravando o perfil agora, espera terminar antes de checar
     // "existe" — sem isto, esta leitura corre na frente do write dele, acha o nó vazio e
     // cria por cima um perfil de auto-reparo com aprovado:false. Teto de 2s por segurança
     // (doRegister() sempre baixa a flag no finally, mesmo em erro).
     for(let i=0;_registroEmAndamento&&i<40;i++)await new Promise(r=>setTimeout(r,50));
+    // b266 PWA-01: aparelho sabidamente offline não espera 12 s de timeout.
+    if(navigator.onLine===false){const eo=new Error('offline');eo.code='offline';throw eo;}
     const snap=await withTimeout(db.ref('usuarios/'+user.uid).get());
     if(!snap.exists()){
+      _noInexistente=true;_limparVerifOnline();
       // Auto-reparo: quem loga sem nó no banco ganha um. É a origem conhecida das
       // linhas com "nome igual ao e-mail" no painel — acontece depois de o admin
       // usar "Remover" (que apaga o registro, não a conta de login).
@@ -5737,9 +5764,20 @@ auth.onAuthStateChanged(async user=>{
     }
     const freshSnap=await withTimeout(db.ref('usuarios/'+user.uid).get());
     userProfile={nome:user.email,email:user.email,admin:false,aprovado:isAdmEmail,...(freshSnap.val()||{}),_isAdmEmail:isAdmEmail};
+    if(userProfile.aprovado===true)_marcarVerifOnline(user.uid);else _limparVerifOnline();
   }catch(e){
     console.warn('Auth profile fallback:',e.message);
     userProfile={nome:user.email,email:user.email,admin:false,aprovado:isAdmEmail,_perfilIncerto:true,_isAdmEmail:isAdmEmail};
+    // b266 PWA-01: falha de REDE/timeout (nunca PERMISSION_DENIED, que segue como era) de quem já foi
+    // verificado online neste aparelho, com cache válido, abre pelo cache. Conta sem carimbo+cache
+    // nunca entra por aqui, e o renascimento de conta removida (_noInexistente) continua trancado.
+    if(e.code!=='PERMISSION_DENIED'&&!_noInexistente){
+      userProfile._semRede=true;
+      if(!isAdmEmail){
+        if(await _offlinePermitido(user.uid))userProfile.aprovado=true;
+        else{document.getElementById('loading').style.display='';mostrarErroConteudo();return;} // sem conexão, não "aguardando liberação"
+      }
+    }
   }
   if(!userProfile.aprovado&&!isAdmEmail){
     document.getElementById('loading').style.display='none';
@@ -8969,7 +9007,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.373';
+const APP_VERSAO='v1.374';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
