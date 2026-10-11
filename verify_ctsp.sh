@@ -169,16 +169,32 @@ console.log('topico_invalido=' + (topInvalido.length ? topInvalido.join(',') : '
 console.log('incidencia_ids_fantasma=' + (incFantasma.length ? incFantasma.join(',') : '0'));
 EOF
 node _count.js
-echo "=== HARNESSES (materiais/ e gitignorado: SKIP se o arquivo nao existir; esperado falhas=0) ==="
+echo "=== HARNESSES (laco sobre testes/harness_*.js + teste_* explicitos; materiais/ e gitignorado: SKIP se a pasta nao existir; esperado falhas=0) ==="
 HDIR="$REPO_ABS/materiais/entregas/testes"
-H_FALHAS=0; H_RODADOS=0
-for h in harness_cena_por_tempo harness_tempo harness_dia harness_p2_mascote_vitrine harness_p3_mascote_app harness_ma1_mascote_hubs harness_b259_mascote_tour harness_b261_placar_reforco harness_b261_tonto harness_b262_pix_qr harness_b263_prob_tag teste_mascote_motor teste_p3b_mascote_reacoes teste_b4_mascote_cards; do
-  if [ -f "$HDIR/$h.js" ]; then
+# Excecoes: NAO rodam no laco. Cada uma com motivo; sair daqui e consertar/apagar o arquivo.
+EXCECOES="
+harness_b13_cirurgico_novasPorCobertura|lento e instavel: estoura o heap do Node (OOM aos ~125s, e >30 min com 4 GB); medicao de cobertura, nao regressao; rodar a mao com --max-old-space-size ou reduzir as 200 chamadas/limite
+harness_formato|dono E5 (precisa de _analise/classificar_tipos.py que nao existe; sera tratado no E5)
+harness_b165_portao_admin|obsoleto: comparava HEAD x arvore do b165 (ADMIN_EMAIL virou hash); apagar o arquivo
+harness_f3_teto_data_prova|obsoleto: injetava userStats.dataProva, removido no v1.256; coberto por harness_b167_data_prova_constante; apagar o arquivo
+"
+# Timeout por harness (segundos); padrao 120. Os b13_* sao simulacoes pesadas.
+timeout_de() { case "$1" in harness_b13_*) echo 300;; *) echo 120;; esac; }
+H_FALHAS=0; H_RODADOS=0; H_EXC=0
+if [ -d "$HDIR" ]; then
+  for f in "$HDIR"/harness_*.js "$HDIR"/teste_mascote_motor.js "$HDIR"/teste_p3b_mascote_reacoes.js "$HDIR"/teste_b4_mascote_cards.js; do
+    h="$(basename "$f" .js)"
+    [ -f "$f" ] || { echo "$h=SKIP (arquivo ausente)"; continue; }
+    motivo="$(echo "$EXCECOES" | grep "^$h|" | cut -d'|' -f2)"
+    if [ -n "$motivo" ]; then echo "$h=EXCECAO ($motivo)"; H_EXC=$((H_EXC+1)); continue; fi
     H_RODADOS=$((H_RODADOS+1))
-    if node "$HDIR/$h.js" > "$W_ABS/_h_$h.log" 2>&1; then echo "$h=OK"; else echo "$h=FALHOU (ver $W_ABS/_h_$h.log)"; H_FALHAS=$((H_FALHAS+1)); fi
-  else
-    echo "$h=SKIP (arquivo ausente: materiais/ nao esta neste checkout)"
-  fi
-done
-echo "harnesses_rodados=$H_RODADOS harnesses_falhas=$H_FALHAS"
+    timeout "$(timeout_de "$h")" node "$f" > "$W_ABS/_h_$h.log" 2>&1; rc=$?
+    if [ $rc -eq 0 ]; then echo "$h=OK"; else echo "$h=FALHOU$([ $rc -eq 124 ] && echo ' [TIMEOUT]') (ver $W_ABS/_h_$h.log)"; H_FALHAS=$((H_FALHAS+1)); fi
+  done
+else
+  echo "harnesses=SKIP (materiais/entregas/testes ausente neste checkout)"
+fi
+echo "harnesses_rodados=$H_RODADOS harnesses_falhas=$H_FALHAS harnesses_excecoes=$H_EXC"
+echo "-- onclick com sanitize( dentro do atributo (esperado 0; b266 SEG-13)"
+echo "onclick_sanitize=$(grep -c 'onclick="[^"]*sanitize(' index.html || true)"
 echo "=== FIM - comparar com o ultimo historico ==="

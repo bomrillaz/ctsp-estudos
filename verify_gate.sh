@@ -70,6 +70,7 @@ echo "=== GATE ==="
 exato unsafe-eval 0
 exato initializeApp 1
 exato onclick_texto_livre 0
+exato onclick_sanitize 0   # b266 SEG-13: sanitize() dentro de onclick="..."; independe do data.js
 contem '"Parte 3.1"=0'
 contem '"Parte 7.2"=0'
 contem '"57390"=0'
@@ -107,6 +108,19 @@ else
   piso questoes_total 533
   piso flashcards 174
   piso resumos 78
+fi
+
+# --- b266 E2-B1: rede de harnesses (laco do verify_ctsp.sh) ---
+# So vale onde materiais/entregas/testes existe. No CI a pasta nao existe: o verify
+# imprime "harnesses=SKIP" e esta checagem e pulada (o gate continua passando la).
+if printf '%s
+' "$OUT" | grep -q '^harnesses=SKIP'; then
+  echo "[gate] harnesses ausentes (esperado no CI) -- pulando a rede de harnesses."
+else
+  HF="$(printf '%s
+' "$OUT" | grep -m1 '^harnesses_rodados=' | grep -o 'harnesses_falhas=[0-9]*' | cut -d= -f2)"
+  [ -n "$HF" ] || falhar "harnesses_falhas nao apareceu na saida do verify_ctsp.sh"
+  [ -z "$HF" ] || [ "$HF" = "0" ] || falhar "harnesses_falhas=$HF (esperado exatamente 0)"
 fi
 
 # --- piso: sobem com funcao nova, so reprovam se CAIREM ---
