@@ -3801,8 +3801,15 @@ function lerEspelho(){try{const r=localStorage.getItem(chaveEspelho());return r?
 // item 2/auditoria jul/26: espelho local de userCards — flashcards passam a sobreviver
 // offline (antes só existiam no Firebase; nota se perdia sem conexão). Simétrico ao de progresso.
 function chaveEspelhoCards(){return 'ctsp_cards_'+(currentUser?currentUser.uid:'anon');}
-function gravarEspelhoCards(){try{localStorage.setItem(chaveEspelhoCards(),JSON.stringify(userCards));}catch(e){}}
+// MOT-10 (b266): o espelho carrega o carimbo da geração de zeragem (wipe) em que `userCards` é válido. Aparelho que ficou
+// offline durante um REINICIAR abre com espelho de geração velha: sem o carimbo, os cards antigos voltavam a "já vistos".
+// `_wipeCards` = wipe a que a memória `userCards` pertence (load, listener de wipe novo e reiniciarEstudos o atualizam).
+let _wipeCards=0;
+function chaveWipeCards(){return 'ctsp_cards_wipe_'+(currentUser?currentUser.uid:'anon');}
+function gravarEspelhoCards(){try{localStorage.setItem(chaveEspelhoCards(),JSON.stringify(userCards));if(dataLoaded)localStorage.setItem(chaveWipeCards(),String(_wipeCards||0));}catch(e){}}
 function lerEspelhoCards(){try{const r=localStorage.getItem(chaveEspelhoCards());return r?JSON.parse(r):null;}catch(e){return null;}}
+// Espelho legado (sem carimbo): cai no wipe do espelho de PROGRESSO deste aparelho, que andava junto com ele.
+function wipeDoEspelhoCards(espProgresso){try{const r=localStorage.getItem(chaveWipeCards());const n=r===null?NaN:Number(r);if(isFinite(n))return n;}catch(e){}return (espProgresso&&espProgresso.wipe)||0;}
 // item C6/auditoria jul/26: REFLUSH de cards sujos. Card rateado offline é marcado
 // como "sujo"; na reconexão, só os sujos sobem — NUNCA o acervo inteiro (evita
 // write-amplification). O conjunto sujo é espelhado local p/ sobreviver a reload.
@@ -3874,6 +3881,19 @@ function _mergePorLast(a,b){ // por chave, mantém o registro com `last` mais re
   }
   return out;
 }
+// MOT-05 (b266): `bkt` NÃO se escolhe só por `last`: bktTocarRecuperacao (card) avança `last` sem tocar em pL/n/nc, então um toque
+// de card num aparelho vencia a resposta de questão MAIS nova do outro. Vence o registro com mais respostas (`n`); empate, `last`.
+function _mergeBkt(a,b){
+  const out={...(a||{})};
+  for(const [k,v] of Object.entries(b||{})){
+    const cur=out[k];
+    if(!cur){out[k]=v;continue;}
+    const nc=(cur&&cur.n)||0,nv=(v&&v.n)||0;
+    if(nv!==nc){out[k]=nv>nc?v:cur;continue;}
+    out[k]=(((v&&v.last)||0)>=((cur&&cur.last)||0))?v:cur;
+  }
+  return out;
+}
 function _umPorLast(a,b){ if(!a)return b; if(!b)return a; return ((b.last||0)>=(a.last||0))?b:a; }
 function _mergePorReps(a,b){ // questoesSM2 legado: mais revisões (reps) vence
   const out={...(a||{})};
@@ -3900,6 +3920,7 @@ function _mergeHistory(a,b){ // por data, máximo de cada campo numérico
     if(!e||!e.date)return;
     const cur=map[e.date]||{date:e.date};
     ['n','c','w','fc','rs'].forEach(f=>{cur[f]=Math.max(cur[f]||0,e[f]||0);});
+    cur.n=Math.max(cur.n||0,(cur.c||0)+(cur.w||0));   // MOT-11a: máximos de c e w vindos de lados diferentes não podem passar de n
     map[e.date]=cur;
   });
   return Object.values(map).sort((x,y)=>x.date<y.date?-1:x.date>y.date?1:0);
@@ -3922,16 +3943,23 @@ function _mergeSimHist(a,b){ // união por instante `data`, últimas 20
   [...(a||[]),...(b||[])].forEach(h=>{if(h&&h.data!=null)map[h.data]=h;});
   return Object.values(map).sort((x,y)=>(x.data||0)-(y.data||0)).slice(-20);
 }
-function _mergeFoco(a,b){ // por tópico: r em união, fc/q máximo, done OR
+// MOT-12 (b266): `gen` = geração do tópico. focoConcluido incrementa `gen` ao REABRIR (etapas zeradas); como a regra abaixo é
+// monotônica (done OR, r união, fc/q máximo), sem o carimbo a reabertura era desfeita pelo remoto antigo no saveProg seguinte.
+// Geração maior vence o tópico INTEIRO; geração igual segue a regra de antes.
+function _mergeFoco(a,b){ // por tópico: geração maior vence; igual: r em união, fc/q máximo, done OR
   const out={...(a||{})};
   for(const [k,v] of Object.entries(b||{})){
     const cur=out[k];
     if(!cur){out[k]={...v};continue;}
+    const gc=cur.gen||0,gv=v.gen||0;
+    if(gc!==gv){out[k]={...(gv>gc?v:cur)};continue;}
     const r=Array.from(new Set([...(cur.r||[]),...(v.r||[])]));
     const curProg=(cur.r?cur.r.length:0)+(cur.fc||0)+(cur.q||0);
     const vProg=(v.r?v.r.length:0)+(v.fc||0)+(v.q||0);
-    out[k]={r,fc:Math.max(cur.fc||0,v.fc||0),q:Math.max(cur.q||0,v.q||0),
+    const bool=typeof cur.fc==='boolean'||typeof v.fc==='boolean'||typeof cur.q==='boolean'||typeof v.q==='boolean';   // o app grava booleano; manter o tipo
+    out[k]={r,fc:bool?!!(cur.fc||v.fc):Math.max(cur.fc||0,v.fc||0),q:bool?!!(cur.q||v.q):Math.max(cur.q||0,v.q||0),
       done:!!(cur.done||v.done),pL:(vProg>=curProg?v.pL:cur.pL)};
+    if(gc)out[k].gen=gc;
   }
   return out;
 }
@@ -3948,12 +3976,16 @@ function _mergeFoco(a,b){ // por tópico: r em união, fc/q máximo, done OR
 // `updatedAt` (já existe no blob, carimbado em `saveProg()` ANTES do merge daquela
 // chamada): quem está escrevendo agora sempre tem o carimbo mais novo, inclusive no
 // reset no mesmo dia.
-function _mergeStreak(local,remoto){
+// MOT-01 (b266): a escolha acima NÃO muda; o que faltava é o `lastStudyDate` vir do MESMO lado. Antes ele seguia a base
+// {...remoto,...local} (sempre o local) e o streak do remoto chegava com a data velha do local: `registrarEstudoDia` contava o
+// mesmo dia 2x. Não gravar lastStudyDate=hoje ao zerar (quebra `registrarEstudoDia`), nem escolher o lado só por data.
+function _ladoStreak(local,remoto){
   const dl=local.lastStudyDate||'',dr=remoto.lastStudyDate||'';
-  if(dl>dr)return local.streak||0;
-  if(dr>dl)return remoto.streak||0;
-  return (local.updatedAt||0)>=(remoto.updatedAt||0)?(local.streak||0):(remoto.streak||0);
+  if(dl>dr)return local;
+  if(dr>dl)return remoto;
+  return (local.updatedAt||0)>=(remoto.updatedAt||0)?local:remoto;
 }
+function _mergeStreak(local,remoto){return _ladoStreak(local,remoto).streak||0;}
 // Mescla `local` (memória, autoridade de settings recém-mexidos) com `remoto` (leitura fresca).
 // Base {...remoto,...local}: escalares/settings seguem o local; progresso é mesclado simétrico.
 function mergeProgresso(local,remoto){
@@ -3964,6 +3996,9 @@ function mergeProgresso(local,remoto){
   // — senão o merge união/máximo ressuscitaria justamente o que o usuário acabou de zerar.
   // Lados "vivos" na geração atual (declaram o wipe mais novo, ou têm atividade >= ele) são
   // preservados; se os dois estão vivos, cai no merge normal (progresso pós-zeragem soma).
+  // MOT-04 (b266, risco ACEITO, decisão D9): `updatedAt` (relógio do aparelho) é comparado com `wipe` (relógio de OUTRO aparelho).
+  // Teto: aparelho com relógio atrasado mais que a diferença perde, como "geração velha", o estudo feito depois de outro zerar.
+  // Upgrade se um dia doer: `wipe` como contador inteiro incrementado, ou ServerValue.TIMESTAMP.
   const wipe=Math.max(local.wipe||0,remoto.wipe||0);
   if(wipe){
     const lVivo=(local.wipe||0)>=wipe||(local.updatedAt||0)>=wipe;
@@ -3974,7 +4009,9 @@ function mergeProgresso(local,remoto){
   const out={...remoto,...local};
   out.correct=Math.max(local.correct||0,remoto.correct||0);
   out.wrong=Math.max(local.wrong||0,remoto.wrong||0);
-  out.streak=_mergeStreak(local,remoto);
+  const ladoStreak=_ladoStreak(local,remoto);
+  out.streak=ladoStreak.streak||0;
+  if(ladoStreak.lastStudyDate!==undefined)out.lastStudyDate=ladoStreak.lastStudyDate;   // MOT-01: data coerente com o streak escolhido
   // A2 (b155): cardStreak segue a base {...remoto,...local} (local vence) — não precisa de
   // Math.max nem de carimbo de recência. `local` é a sessão que está avaliando cards agora,
   // é ela que sabe se a sequência de "Fácil" continua ou zerou; e o campo é display-only
@@ -3984,7 +4021,7 @@ function mergeProgresso(local,remoto){
   out.history=_mergeHistory(local.history,remoto.history);
   out.semanas=_mergeSemanas(local.semanas,remoto.semanas);
   out.simHistorico=_mergeSimHist(local.simHistorico,remoto.simHistorico);
-  out.bkt=_mergePorLast(local.bkt,remoto.bkt);
+  out.bkt=_mergeBkt(local.bkt,remoto.bkt);
   out.questoesFSRS=_mergePorLast(local.questoesFSRS,remoto.questoesFSRS);
   out.questoesSM2=_mergePorReps(local.questoesSM2,remoto.questoesSM2);
   out.erroHistorico=_mergeErro(local.erroHistorico,remoto.erroHistorico);
@@ -3995,6 +4032,11 @@ function mergeProgresso(local,remoto){
   out.erroMig=Math.max(local.erroMig||0,remoto.erroMig||0);
   out.foco=_mergeFoco(local.foco,remoto.foco);
   out.fmt=_mergeMapaMax(local.fmt,remoto.fmt,['c','w']);
+  // MOT-02 (b266): campos que já são gravados e ficavam com "local vence" (apagavam o do outro aparelho). Só entram se algum lado
+  // tem o campo (não cria campo novo no set()). `dose`/`metaDiaria`/`cardStreak` seguem o local de propósito (configuração/display).
+  if(local.itemStats||remoto.itemStats)out.itemStats=_mergeMapaMax(local.itemStats,remoto.itemStats,['t','c']);
+  if(local.tempoQ||remoto.tempoQ){const tl=local.tempoQ||{},tr=remoto.tempoQ||{};out.tempoQ=((tr.n||0)>(tl.n||0)||!local.tempoQ)?{...tr}:{...tl};}   // amostras: lado com mais n (soma anda junto com n)
+  ['diaCelebrado','treinoDia'].forEach(c=>{if(local[c]||remoto[c])out[c]=(local[c]||'')>=(remoto[c]||'')?(local[c]||remoto[c]):remoto[c];});   // 'AAAA-MM-DD' compara em ordem de data
   for(const k of Object.keys(out)) if(k.indexOf('resumo_')===0) out[k]=_umPorLast(local[k],remoto[k]);
   out.diagFeito=!!(local.diagFeito||remoto.diagFeito);
   const datas=[local.diagData,remoto.diagData].filter(x=>x>0);
@@ -4015,8 +4057,22 @@ function reconciliarLoad(remoto,local){
     if(rVivo&&!lVivo)return remoto;
     if(lVivo&&!rVivo)return local;
   }
-  if(remoto&&local)return progMaisAvancado(remoto,local);
+  // MOT-03 (b266): sem wipe decisivo, FUNDE (o mais avançado dá os escalares/settings). Antes era tudo-ou-nada: o espelho com
+  // trabalho offline e o servidor com o do outro aparelho eram excludentes, e o perdedor sumia (e o vencedor era gravado às cegas).
+  if(remoto&&local){const av=progMaisAvancado(remoto,local);return mergeProgresso(av,av===remoto?local:remoto);}
   return remoto||local||{...PROG_DEFAULT};
+}
+// Igualdade de conteúdo entre dois progressos, ignorando rev/updatedAt, valores vazios e a ordem de listas de primitivos. O load usa para
+// só gravar quando o mesclado tem algo que o servidor ainda não tem (senão toda abertura do app gravaria).
+function _progIgual(a,b){
+  const norm=o=>JSON.stringify(o,(k,v)=>{
+    if(k==='rev'||k==='updatedAt')return undefined;
+    if(v===0||v===false||v===''||v===null||(Array.isArray(v)&&!v.length)||(v&&typeof v==='object'&&!Array.isArray(v)&&!Object.keys(v).length))return undefined;   // vazio == ausente (o merge materializa defaults)
+    if(Array.isArray(v)&&v.every(x=>x===null||typeof x!=='object'))return v.slice().sort();
+    if(v&&typeof v==='object'&&!Array.isArray(v)){const s={};Object.keys(v).sort().forEach(x=>{s[x]=v[x];});return s;}
+    return v;
+  });
+  return norm(a)===norm(b);
 }
 
 function mostrarAlertaConexao(on){
@@ -8828,12 +8884,14 @@ async function loadUserData(){
       userStats=escolhido;
       dataLoaded=true;gravarEspelho(); // S30: leitura confirmada — gravações liberadas
       _meuUltimoRev=userStats.rev||0;  // C1: baseline p/ o listener ignorar o eco do load
-      // S47: se o espelho local venceu o servidor (ex.: quiz de hoje vs Firebase defasado), empurrar de volta
-      if(local&&escolhido===local&&remoto!==local){
-        try{await db.ref('progresso/'+currentUser.uid).set(bktParaFirebase(userStats));}catch(e){}
-      }
+      _wipeCards=userStats.wipe||0;    // MOT-10: já vale para um saveCard que caia durante o await dos cards abaixo
+      // S47/MOT-03: se o mesclado tem algo que o servidor não tem (trabalho offline do espelho), sobe. Via saveProg, que
+      // relê o servidor e funde; o `set()` cego de antes apagava o que outro aparelho gravou no meio tempo.
+      if(local&&!_progIgual(escolhido,remoto)){saveProg();}
       const cs=await withTimeout(db.ref('cards/'+currentUser.uid).get(),attempt*8000);
-      const espCards=lerEspelhoCards();
+      let espCards=lerEspelhoCards();
+      // MOT-10: espelho de geração anterior à zeragem atual não volta (cards "já vistos" numa conta zerada).
+      if(espCards&&(userStats.wipe||0)>wipeDoEspelhoCards(espLocal)){espCards=null;try{localStorage.removeItem(chaveEspelhoCards());}catch(e){}}
       // merge por `last`: nota rateada offline (espelho) não é apagada por um servidor defasado
       userCards=_mergePorLast(espCards||{},cs.exists()?cs.val():{});
       gravarEspelhoCards();
@@ -8868,7 +8926,7 @@ async function loadUserData(){
       userStats.rev=Math.max(userStats.rev||0,(remoto.rev||0));
       _meuUltimoRev=userStats.rev;
       if(wipeNovo){                              // outro aparelho zerou → zera os cards daqui também
-        userCards={};_cardsSujos={};
+        userCards={};_cardsSujos={};_wipeCards=userStats.wipe||0;   // MOT-10: a memória de cards agora é da geração nova
         try{localStorage.removeItem(chaveEspelhoCards());}catch(e){}
         try{localStorage.removeItem(chaveCardsSujos());}catch(e){}
       }
@@ -8890,7 +8948,10 @@ async function loadUserData(){
       let escolhido=reconciliarLoad(remoto,local);   // honra o wipe (reset) além do rev/updatedAt
       userStats=escolhido;
       dataLoaded=true;gravarEspelho();mostrarAlertaConexao(false);
-      if(local&&escolhido===local&&remoto!==local){saveProg();}
+      // MOT-10: o fallback offline carregou os cards do espelho; se o progresso reconciliado é de uma zeragem mais nova, são da geração velha.
+      if((userStats.wipe||0)>wipeDoEspelhoCards(espLocal)){userCards={};_cardsSujos={};try{localStorage.removeItem(chaveEspelhoCards());localStorage.removeItem(chaveCardsSujos());}catch(e){}}
+      _wipeCards=userStats.wipe||0;
+      if(local&&!_progIgual(escolhido,remoto)){saveProg();}   // MOT-03: só quando o mesclado tem algo além do servidor
       renderDashboard();updateBadges();return;
     }
     dataLoaded=true;gravarEspelho();mostrarAlertaConexao(false);
@@ -9025,7 +9086,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.376';
+const APP_VERSAO='v1.377';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -9623,7 +9684,7 @@ function focoConcluido(t,pLAtual){
   const caiu=typeof f.pL==='number'&&pLAtual<f.pL-0.05;
   if(caiu){
     // Reabriu de verdade: etapas voltam a exigir prática nova, não ficam com ✓ velho.
-    focoGravar(t,{done:false,q:false,fc:false,r:[],pL:0});
+    focoGravar(t,{done:false,q:false,fc:false,r:[],pL:0,gen:(f.gen||0)+1});   // MOT-12: carimbo p/ o merge respeitar a reabertura
     return false;
   }
   return true;
@@ -14293,7 +14354,7 @@ async function reiniciarEstudos(){
     // memória vira "conta nova" COM carimbo de zeragem (wipe). O wipe se propaga aos
     // outros aparelhos e faz o merge descartar a geração velha em vez de ressuscitá-la.
     userStats={...PROG_DEFAULT,wipe:agora,updatedAt:agora,rev:(userStats.rev||0)+1};
-    userCards={};_cardsSujos={};
+    userCards={};_cardsSujos={};_wipeCards=agora;   // MOT-10: cards pós-zeragem deste aparelho são da geração nova
     try{localStorage.removeItem(chaveEspelho());}catch(e){}
     try{localStorage.removeItem(chaveEspelhoCards());}catch(e){}   // C6: espelho de cards
     try{localStorage.removeItem(chaveCardsSujos());}catch(e){}      // C6: fila de reflush
