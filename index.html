@@ -5361,6 +5361,9 @@ function doLogout(){
   notifCache=[];
   auth.signOut().then(()=>{
     _limparVerifOnline(); // só logout explícito; queda de rede não passa por aqui
+    // b266 E1-B4 SEG-08: só logout explícito apaga conteúdo e áudio das Aulas do aparelho (compartilhado). Queda de rede,
+    // sessão expirada e onAuthStateChanged(null) NÃO passam por aqui: o cache offline segue valendo (decisão do João).
+    _limparCachesIndexedDB().catch(()=>{});
     document.getElementById('app').classList.remove('active');
     document.getElementById('auth-screen').classList.add('active');
     document.getElementById('splash-screen').classList.remove('active');
@@ -9228,7 +9231,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.384';
+const APP_VERSAO='v1.385';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
