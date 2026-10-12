@@ -1421,6 +1421,8 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .btn-intercalado:active{transform:scale(.98);background:var(--paper-2);}
 .mt14{margin-top:14px;}
 
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
 /* Info button */
 .info-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(16,27,61,.1);color:var(--text2);font-size:11px;font-weight:800;cursor:pointer;margin-left:4px;vertical-align:middle;transition:background .2s;flex-shrink:0;}
 .info-btn:active{background:rgba(16,27,61,.22);}
@@ -2870,6 +2872,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 
     <!-- INÍCIO -->
     <div class="screen active" id="screen-inicio">
+      <h1 class="sr-only">Início</h1>
       <!-- BLOCO 55: faixa de cobrança (teste acabando / mensalidade vencendo). Escrita por
            renderAvisoCobranca(); fica vazia quando não há nada a avisar. -->
       <div id="aviso-cobranca"></div>
@@ -3401,7 +3404,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   </main>
 
   <!-- BOTTOM NAV -->
-  <nav class="bottom-nav" id="bottom-nav">
+  <nav class="bottom-nav" id="bottom-nav" aria-label="Navegação principal">
     <button class="nav-collapse" onclick="toggleSidebar()" aria-label="Recolher menu" title="Recolher menu">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
@@ -3446,10 +3449,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   </nav>
 
   <!-- PAINEL "MAIS" — bottom sheet com os destinos de uso esporádico -->
-  <div class="sheet-overlay" id="mais-overlay" onclick="fecharMais(event)">
-    <div class="sheet-panel" id="mais-panel" onclick="event.stopPropagation()">
+  <div class="sheet-overlay" id="mais-overlay" aria-hidden="true" inert onclick="fecharMais(event)">
+    <div class="sheet-panel" id="mais-panel" role="dialog" aria-modal="true" aria-labelledby="mais-titulo" onclick="event.stopPropagation()">
       <div class="sheet-handle"></div>
-      <div class="sheet-title">Mais</div>
+      <div class="sheet-title" id="mais-titulo">Mais</div>
       <button class="sheet-item" id="sheet-simulado" onclick="navMais('simulado')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         <div><div class="sheet-item-t">Simulado</div><div class="sheet-item-sub">60 questões na proporção do edital</div></div>
@@ -3479,10 +3482,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 </div>
 
 <!-- Modal Meta Diária -->
-<div class="modal-overlay hidden" id="modal-busca" onclick="fecharBuscaGlobal(event)">
+<div class="modal-overlay hidden" id="modal-busca" role="dialog" aria-modal="true" aria-label="Buscar no conteúdo" onclick="fecharBuscaGlobal(event)">
   <div class="modal-box" onclick="event.stopPropagation()" style="max-width:540px;width:94%;max-height:82vh;display:flex;flex-direction:column">
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-      <input type="search" id="busca-global-input" placeholder="🔎 Buscar em resumos, flashcards, glossário e normas…" autocomplete="off" oninput="onBuscaGlobal(this.value)"
+      <input type="search" id="busca-global-input" data-foco-inicial aria-label="Buscar em resumos, flashcards, glossário e normas" placeholder="🔎 Buscar em resumos, flashcards, glossário e normas…" autocomplete="off" oninput="onBuscaGlobal(this.value)"
         style="flex:1;padding:11px 14px;border-radius:12px;border:1px solid var(--line-soft);background:var(--surface);color:var(--text);font-size:15px;font-family:inherit;box-sizing:border-box">
       <button class="btn-weak btn-neutral" onclick="fecharBuscaGlobal()" style="padding:10px 12px;border-radius:10px;font-weight:700">Fechar</button>
     </div>
@@ -3490,7 +3493,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   </div>
 </div>
 
-<div class="modal-overlay hidden" id="modal-intro" onclick="fecharIntro(event)">
+<div class="modal-overlay hidden" id="modal-intro" role="dialog" aria-modal="true" aria-labelledby="intro-title" onclick="fecharIntro(event)">
   <div class="modal-box" onclick="event.stopPropagation()">
     <div class="modal-title" id="intro-title">Treino do dia</div>
     <div class="modal-sub" id="intro-sub"></div>
@@ -3500,7 +3503,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   </div>
 </div>
 
-<div class="modal-overlay hidden" id="modal-fim" onclick="fecharFim(event)">
+<div class="modal-overlay hidden" id="modal-fim" role="dialog" aria-modal="true" aria-labelledby="fim-title" onclick="fecharFim(event)">
   <div class="modal-box fim-cascata" onclick="event.stopPropagation()">
     <div class="fim-mascote" id="fim-mascote"></div>
     <div class="modal-title fim-title" id="fim-title">Treino do dia concluído!</div>
@@ -3548,7 +3551,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="config-label">Meu apelido</div>
         <div class="config-sub">Como você aparece no app</div>
       </div>
-      <input type="text" class="config-input" id="config-nome-input" placeholder="Ex: João" maxlength="20">
+      <input type="text" class="config-input" id="config-nome-input" aria-label="Meu apelido" placeholder="Ex: João" maxlength="20">
     </div>
     <div class="config-row">
       <div>
@@ -3573,21 +3576,21 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="config-label">Meta diária</div>
         <div class="config-sub">Questões por dia</div>
       </div>
-      <input type="number" class="config-input" id="config-meta-input" min="1" max="200" placeholder="10">
+      <input type="number" class="config-input" id="config-meta-input" aria-label="Meta diária" min="1" max="200" placeholder="10">
     </div>
     <div class="config-row">
       <div>
         <div class="config-label">Flashcards por dia</div>
         <div class="config-sub">Dose da sessão (~5 min)</div>
       </div>
-      <input type="number" class="config-input" id="config-dose-cards" min="1" max="200" placeholder="15">
+      <input type="number" class="config-input" id="config-dose-cards" aria-label="Flashcards por dia" min="1" max="200" placeholder="15">
     </div>
     <div class="config-row">
       <div>
         <div class="config-label">Resumos por vez</div>
         <div class="config-sub">Quantos a aba de Resumos oferece · não é meta do dia</div>
       </div>
-      <input type="number" class="config-input" id="config-dose-resumos" min="1" max="70" placeholder="3">
+      <input type="number" class="config-input" id="config-dose-resumos" aria-label="Resumos por vez" min="1" max="70" placeholder="3">
     </div>
     <div class="config-row">
       <div>
@@ -3661,10 +3664,10 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 </div>
 
 <!-- Modal Avisos (b103) -->
-<div class="modal-overlay hidden" id="modal-notif" onclick="fecharModalNotif(event)">
+<div class="modal-overlay hidden" id="modal-notif" role="dialog" aria-modal="true" aria-labelledby="notif-title" onclick="fecharModalNotif(event)">
   <div class="modal-box" onclick="event.stopPropagation()">
     <div class="modal-fechar-bar"><button class="modal-fechar" type="button" aria-label="Fechar" onclick="fecharModalNotif()">✕</button></div>
-    <div class="modal-title">Avisos</div>
+    <div class="modal-title" id="notif-title">Avisos</div>
     <div class="modal-sub">Comunicados da Prontidão</div>
     <div id="notif-lista"><p style="color:var(--text2);font-size:13px;">Nenhum aviso ainda.</p></div>
   </div>
@@ -9231,7 +9234,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.385';
+const APP_VERSAO='v1.386';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -14593,7 +14596,7 @@ function confirmarDestrutivo(o){
     document.getElementById('conf-bloco-senha').style.display=o.senha?'':'none';
     document.getElementById('conf-ok').textContent=o.botao||'Confirmar';
     document.getElementById('conf-ok').disabled=true;
-    requestAnimationFrame(()=>{ov.classList.add('show');try{p.focus();}catch(e){}});
+    requestAnimationFrame(()=>{ov.classList.add('show');setTimeout(()=>{try{p.focus();}catch(e){}},0);});   // E4-B2: o inert da folha só cai no microtask do observador; foco síncrono falharia
   });
 }
 
@@ -15158,8 +15161,8 @@ function abrirPagamento(plano){
   let ov=document.getElementById('pix-overlay');
   if(!ov){
     ov=document.createElement('div');ov.id='pix-overlay';ov.className='rep-overlay';
-    ov.innerHTML='<div class="rep-sheet pix-sheet">'
-      +'<h3>Pagar com Pix</h3>'
+    ov.innerHTML='<div class="rep-sheet pix-sheet" role="dialog" aria-modal="true" aria-labelledby="pix-titulo">'
+      +'<h3 id="pix-titulo">Pagar com Pix</h3>'
       +'<div class="pix-troca" id="pix-troca"></div>'
       +'<div class="pix-plano" id="pix-plano"></div>'
       +'<button class="pix-copiar" id="pix-copiar">Copiar código Pix</button>'
@@ -15310,12 +15313,12 @@ function abrirReporte(tipo,id){
   let ov=document.getElementById('rep-overlay');
   if(!ov){
     ov=document.createElement('div');ov.id='rep-overlay';ov.className='rep-overlay';
-    ov.innerHTML='<div class="rep-sheet">'
-      +'<h3>Reportar erro</h3>'
+    ov.innerHTML='<div class="rep-sheet" role="dialog" aria-modal="true" aria-labelledby="rep-titulo">'
+      +'<h3 id="rep-titulo">Reportar erro</h3>'
       +'<div class="rep-ctx" id="rep-ctx"></div>'
       +'<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:7px;">Qual o problema?</div>'
       +'<div class="rep-cats" id="rep-cats"></div>'
-      +'<textarea id="rep-desc" maxlength="1000" placeholder="Descreva o que está errado (ex: o gabarito deveria ser a letra C porque...)"></textarea>'
+      +'<textarea id="rep-desc" aria-label="Descreva o problema" maxlength="1000" placeholder="Descreva o que está errado (ex: o gabarito deveria ser a letra C porque...)"></textarea>'
       +'<div class="rep-actions"><button class="rep-cancel" onclick="fecharReporte()">Cancelar</button><button class="rep-send" id="rep-send" onclick="enviarReporte()" disabled>Enviar</button></div>'
       +'</div>';
     ov.onclick=function(e){if(e.target===ov)fecharReporte();};
@@ -15592,6 +15595,67 @@ function overlayAberto(){
   }
   return document.querySelector('.modal-overlay:not(.hidden)');
 }
+// b268 E4-B2 (UI-03/04/09): fonte ÚNICA de acessibilidade dos overlays, por observação de classe, sem tocar
+// nos abrir/fechar (nenhum call site). Ao ABRIR: guarda o gatilho e leva o foco para dentro. Ao FECHAR: devolve o foco
+// ao gatilho. Folhas fechadas por opacidade (rep/sheet) ficam aria-hidden+inert. Role/aria-modal/nome ficam no HTML de
+// cada um. Esc, clique fora e focus-trap seguem em OVERLAYS_ATIVOS. Overlay novo: basta uma das classes abaixo.
+// O tour guarda/devolve o próprio foco. Também mantém aria-current="page" na aba ativa (.nav-item.active).
+const _OV_SEL='.modal-overlay,.rep-overlay,.sheet-overlay,.doc-overlay';
+const _ovEstado=new WeakMap();
+let _ovGat=null,_ovGatTs=0;
+function _ovAberto(el){
+  if(el.classList.contains('rep-overlay'))return el.classList.contains('show');
+  if(el.classList.contains('sheet-overlay'))return el.classList.contains('open');
+  return !el.classList.contains('hidden');
+}
+function _ovFocoInicial(el){
+  const ok=n=>!n.disabled&&!n.closest('.hidden');
+  const alvo=[...el.querySelectorAll('[data-foco-inicial],.modal-fechar,button,a[href],[tabindex]:not([tabindex="-1"])')].find(ok);
+  const c=alvo||el.querySelector('[role="dialog"]')||el;
+  if(!alvo)c.setAttribute('tabindex','-1');
+  try{c.focus({preventScroll:true});}catch(e){c.focus();}
+}
+function _ovSincronizar(el){
+  const ab=_ovAberto(el);
+  if(el.classList.contains('rep-overlay')||el.classList.contains('sheet-overlay')){
+    if(ab){el.removeAttribute('aria-hidden');el.removeAttribute('inert');}
+    else{el.setAttribute('aria-hidden','true');el.setAttribute('inert','');}
+  }
+  const st=_ovEstado.get(el)||{aberto:false,gatilho:null};
+  _ovEstado.set(el,st);
+  if(st.aberto===ab)return;
+  st.aberto=ab;
+  if(el.id==='modal-tutorial')return;
+  if(ab){
+    const ae=document.activeElement;
+    const recente=_ovGat&&Date.now()-_ovGatTs<1500&&_ovGat.isConnected&&!el.contains(_ovGat);
+    st.gatilho=recente?_ovGat:(ae&&ae!==document.body&&!el.contains(ae)?ae:null);
+    _ovGat=null;
+    if(!el.contains(document.activeElement))_ovFocoInicial(el);
+  }else{
+    const g=st.gatilho;st.gatilho=null;
+    const ae=document.activeElement;
+    if(g&&g.isConnected&&(!ae||ae===document.body||el.contains(ae))){try{g.focus({preventScroll:true});}catch(e){}}
+  }
+}
+function _ovAtual(t){
+  if(t.classList.contains('nav-item')){
+    if(t.classList.contains('active'))t.setAttribute('aria-current','page');else t.removeAttribute('aria-current');
+  }else if(t.matches(_OV_SEL))_ovSincronizar(t);
+}
+function _ovIniciarA11y(){
+  document.addEventListener('click',e=>{
+    const t=e.target&&e.target.closest?e.target.closest('button,a[href],[role="button"],[tabindex],[onclick],input,select'):null;
+    if(t&&!t.matches(_OV_SEL)){_ovGat=t;_ovGatTs=Date.now();}
+  },true);
+  if(typeof MutationObserver!=='function'||!document.body){document.querySelectorAll('[inert]').forEach(n=>n.removeAttribute('inert'));return;}   // sem observador a folha 'Mais' não pode ficar inerte
+  new MutationObserver(rs=>{const v=new Set();rs.forEach(r=>{if(r.target.nodeType===1)v.add(r.target);});v.forEach(_ovAtual);})
+    .observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+  new MutationObserver(rs=>{rs.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1&&n.matches(_OV_SEL))_ovSincronizar(n);}));})
+    .observe(document.body,{childList:true});
+  document.querySelectorAll('.nav-item,'+_OV_SEL).forEach(_ovAtual);
+}
+_ovIniciarA11y();
 // F1-03: Esc fecha o overlay visível mais ao topo. Listener PRÓPRIO — não usar o
 // handler S35 acima, que desiste cedo quando há modal aberto (justo o caso que
 // precisa funcionar aqui).
@@ -15649,7 +15713,7 @@ function usuarioOcupado(){
     const tipoBotao=/^(checkbox|radio|button|submit|reset|range|color|file|image)$/i.test(ae.type||'');
     if((tag==='INPUT'&&!tipoBotao)||tag==='TEXTAREA'||tag==='SELECT'||ae.isContentEditable)return true;
   }
-  if(document.querySelector('.modal-overlay:not(.hidden), .sheet-overlay.open'))return true;
+  if(document.querySelector('.modal-overlay:not(.hidden), .sheet-overlay.open, .rep-overlay.show, .doc-overlay:not(.hidden)'))return true;
   const ativa=id=>{const e=document.getElementById('screen-'+id);return !!(e&&e.classList.contains('active'));};
   if(resumosModo!=='hub'&&ativa('resumos'))return true;
   if(aulasModo==='detalhe'&&ativa('aulas'))return true;
