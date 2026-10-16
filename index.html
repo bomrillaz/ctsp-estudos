@@ -122,12 +122,17 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opac
 #app,#auth-screen,#loading{position:relative;z-index:1;}
 button{font-family:inherit;cursor:pointer;border:none;outline:none;}
 input,select,textarea{font-family:inherit;outline:none;}
+/* b271 E4-B1 (UI-02): no toque, campo < 16px faz o iOS ampliar a página ao focar. !important porque há
+   font-size inline (glo-filtro) e por classe (.config-input, .cod-input, .rep-sheet textarea). */
+@media (pointer:coarse){input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),select,textarea{font-size:max(16px,1em)!important;}}
 /* A11y: foco visível apenas para navegação por teclado (não afeta clique/toque) */
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,
 .quiz-opt:focus-visible,.nav-item:focus-visible,.auth-tab:focus-visible,.quick-btn:focus-visible,
 .adapt-btn:focus-visible,.diag-card:focus-visible,.btn-weak:focus-visible{
-  outline:2px solid var(--ember-deep);outline-offset:2px;border-radius:var(--radius-xs);
+  outline:2px solid var(--ember-text);outline-offset:2px;border-radius:var(--radius-xs);
 }
+/* b271 UI-08: cards promovidos pelo shim de teclado; sem border-radius, cada card mantém o próprio */
+[role="button"]:focus-visible,[tabindex="0"]:focus-visible{outline:2px solid var(--ember-text);outline-offset:2px;}
 /* Ícones inline do sistema */
 .ai-ic{width:1.05em;height:1.05em;display:inline-block;vertical-align:-0.16em;}
 /* Números técnicos */
@@ -242,7 +247,7 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
    colado no rodapé sobre a foto" desceu para o #login-view — é dele, não da tela. */
 #auth-screen{display:none;padding:0;}
 #auth-screen.active{display:block;}
-#login-view{min-height:100vh;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;}
+#login-view{min-height:100vh;min-height:100dvh;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;}
 #login-view.hidden{display:none;}
 #landing-view.hidden{display:none;}
 .auth-bg{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,20,48,.25) 0%,rgba(11,20,48,.72) 45%,rgba(8,13,32,.97) 100%);z-index:1;}
@@ -255,7 +260,7 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .auth-card{background:var(--surface);border-radius:28px 28px 0 0;padding:28px 22px 32px;width:100%;max-width:480px;margin:0 auto;position:relative;overflow:hidden;}
 .auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--fire-line);}
 .auth-tabs{display:flex;gap:4px;background:var(--paper-2);border-radius:12px;padding:4px;margin-bottom:22px;}
-.auth-tab{flex:1;padding:9px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--text2);transition:all .2s;}
+.auth-tab{flex:1;min-height:44px;padding:9px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--text2);transition:all .2s;}
 .auth-tab.active{background:var(--navy);color:white;box-shadow:0 2px 8px rgba(16,27,61,.25);}
 .field{margin-bottom:14px;}
 .field-pass-wrap{position:relative;}
@@ -278,7 +283,7 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
    desktop mora no @media (min-width:768px) lá embaixo, junto com o resto.
    Prefixo `lp-` para não colidir com nada do app.
    ═══════════════════════════════════════════════════════════════════════ */
-#landing-view{background:var(--paper);color:var(--text);min-height:100vh;}
+#landing-view{background:var(--paper);color:var(--text);min-height:100vh;min-height:100dvh;}
 .lp-sec-in{max-width:1080px;margin-inline:auto;padding-inline:20px;}
 
 /* Barra fixa */
@@ -477,7 +482,7 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .pending-recap{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--paper-2);color:var(--text);font-size:12.5px;font-weight:700;line-height:1.5;}
 
 /* APP SHELL */
-#app{display:none;flex-direction:column;min-height:100vh;}
+#app{display:none;flex-direction:column;min-height:100vh;min-height:100dvh;}
 #app.active{display:flex;}
 
 /* HEADER — painel navy com linha de fogo */
@@ -493,7 +498,8 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .streak-days{display:flex;gap:2px;}
 .streak-days i{width:6px;height:6px;border-radius:2px;background:rgba(255,255,255,.22);display:block;}
 .streak-days i.on{background:var(--ember);}
-.btn-logout{background:rgba(255,255,255,.12);color:white;border-radius:9px;padding:6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.btn-logout{background:rgba(255,255,255,.12);color:white;border-radius:9px;padding:6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;}
+.btn-logout::before{content:'';position:absolute;inset:-8px -2px;}/* b271 UI-05: 28px visível, 32x44 de toque; gap do .header-right é 4px, então não invade o vizinho */
 .btn-logout svg{width:16px;height:16px;}
 .btn-notif{position:relative;}
 .notif-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center;background:var(--red-solid);color:#fff;border-radius:9px;font-size:10px;font-weight:800;line-height:1;}
@@ -611,7 +617,7 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .metas-hide{display:none;flex-shrink:0;width:20px;height:20px;align-items:center;justify-content:center;background:none;border:none;color:rgba(255,255,255,.58);cursor:pointer;border-radius:6px;padding:0;position:relative;}
 .metas-hide::before{content:'';position:absolute;inset:-12px;}
 .metas-hide svg{width:13px;height:13px;}
-.metas-hide:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.08);}
+@media (hover:hover) and (pointer:fine){.metas-hide:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.08);}}
 .metas-card:not(.expanded) .metas-row.vis .metas-hide{display:flex;}
 /* Consulta — acordeão de glossário/normas (só sigla/termo; expande no clique) */
 .acc-letra{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--red);letter-spacing:.1em;margin:16px 3px 7px;}
@@ -678,7 +684,7 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .pg-sub-it{display:flex;flex-direction:column;align-items:flex-start;}
 .pg-kpi-acao{display:inline-flex;align-items:center;min-height:44px;padding:0 2px;background:none;border:0;box-shadow:none;color:var(--ember-text);font-size:12px;font-weight:700;cursor:pointer;text-align:left;}
 .pg-sub-it .pg-kpi-acao{margin:-8px 0;}
-.pg-kpi-acao:hover{text-decoration:underline;}
+@media (hover:hover) and (pointer:fine){.pg-kpi-acao:hover{text-decoration:underline;}}
 .pg-kpi-acao:focus-visible{outline:2px solid var(--ember-text);outline-offset:2px;border-radius:6px;}
 .pg-mod-h{font-family:var(--font-display);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text);margin:4px 0 10px;}
 /* v1.224 — variante sem caixa-alta/tracking pra módulo secundário (Evolução), que também
@@ -719,7 +725,7 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .hub-topico{border-top:1px solid var(--line-soft);}
 .hub-topico:first-child{border-top:none;}
 .hub-topico-head{display:flex;align-items:center;gap:8px;width:100%;padding:11px 4px;background:none;border:none;cursor:pointer;text-align:left;border-radius:8px;transition:background .15s;}
-.hub-topico-head:hover,.hub-topico-head:focus-visible{background:var(--paper-2);}
+.hub-topico-head:focus-visible{background:var(--paper-2);}@media (hover:hover) and (pointer:fine){.hub-topico-head:hover{background:var(--paper-2);}}
 .hub-topico-nome{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--text2);overflow-wrap:anywhere;}
 .hub-topico-n{font-size:10px;font-weight:800;color:var(--text3);font-variant-numeric:tabular-nums;flex-shrink:0;}
 .hub-topico-chev{flex-shrink:0;color:var(--text3);transition:transform .2s;}
@@ -781,7 +787,8 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
    segunda porta pro vermelho aqui: um `.btn-weak` que precise virar ação primária vira
    `.btn-primary`, não ganha variante vermelha do secundário (senão a One Red Rule volta
    a furar na próxima tela). `.btn-forte` foi cogitado e removido: 0 dos 11 usava, YAGNI. */
-.btn-weak{background:var(--bg);color:var(--text2);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;flex-shrink:0;box-shadow:none;}
+.btn-weak{background:var(--bg);color:var(--text2);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;flex-shrink:0;box-shadow:none;position:relative;}
+.btn-weak::before{content:'';position:absolute;inset:-6px 0;}/* b271 UI-05: ~33px visível, 44px de toque */
 /* b105: .btn-neutral fica como alias redundante do default acima (mesmo resultado, sem
    custo) — não vale tocar os 8 call sites que já usam "btn-weak btn-neutral" só pra
    remover uma classe que não muda nada visualmente. */
@@ -957,7 +964,7 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
    prefers-reduced-motion ja e tratado globalmente na regra universal acima. */
 #modal-tutorial{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;align-items:stretch;justify-content:stretch;}
 .tour-spot{position:fixed;top:0;left:0;width:0;height:0;border-radius:12px;box-shadow:0 0 0 9999px rgba(11,20,48,.72);pointer-events:none;transition:top .25s var(--ease-out),left .25s var(--ease-out),width .25s var(--ease-out),height .25s var(--ease-out);}
-.tour-box{position:fixed;top:0;left:0;width:calc(100% - 24px);max-width:320px;max-height:calc(100vh - 32px);overflow-y:auto;display:flex;flex-direction:column;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow-lg);z-index:1001;}
+.tour-box{position:fixed;top:0;left:0;width:calc(100% - 24px);max-width:320px;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto;display:flex;flex-direction:column;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow-lg);z-index:1001;}
 .tour-progress{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
 .tour-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px;}
 .tour-text{font-size:13px;line-height:1.5;color:var(--text2);overflow-y:auto;min-height:0;}
@@ -969,7 +976,7 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
    alvo de largura cheia e acabava CENTRALIZADA em cima dele, tapando o spotlight.
    Encurtar a caixa faz ela voltar a caber embaixo; so o texto rola (flex-column
    acima), entao Pular/Avancar continuam visiveis. */
-@media (max-height:480px){.tour-box{max-height:min(40vh,calc(100vh - 32px));}}
+@media (max-height:480px){.tour-box{max-height:min(40vh,calc(100vh - 32px));max-height:min(40dvh,calc(100dvh - 32px));}}
 /* b259: mascote do tour. Pose unica, fixed, depois do .tour-spot (acima da sombra) e sem receber toque. Arte olha para a direita; .espelha vira para a esquerda. Troca de passo = so fade de opacity. */
 .mascote-pose.tour-mascote{position:fixed;top:0;left:0;z-index:1;opacity:1;transition:opacity .15s ease-out;}
 .mascote-pose.tour-mascote.espelha{transform:scaleX(-1);}
@@ -981,7 +988,7 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
 #confirm-acoes button{min-height:44px;}
 .modal-fechar-bar{position:sticky;top:0;height:0;z-index:5;}
 .modal-fechar{position:absolute;top:2px;right:0;width:30px;height:30px;border:none;background:var(--paper-2);border-radius:50%;font-size:15px;line-height:1;color:var(--text2);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12);}
-.modal-fechar::before{content:'';position:absolute;inset:-6px;}
+.modal-fechar::before{content:'';position:absolute;inset:-7px;}
 .modal-title{font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:.02em;}
 .modal-sub{font-size:13px;color:var(--text2);margin-bottom:20px;}
 
@@ -1158,7 +1165,7 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
 .lista-topico{font-size:12.5px;font-weight:700;color:var(--text2);margin:11px 0 6px 2px;}
 /* BLOCO 55 — cabeçalho de tópico clicável dentro do acordeão de Cards */
 .lista-topico-acao{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;border-radius:8px;padding:8px 10px;margin:11px 0 6px 0;transition:background .15s;background:var(--paper-2);}
-.lista-topico-acao:hover,.lista-topico-acao:focus-visible{background:var(--border);}
+.lista-topico-acao:focus-visible{background:var(--border);}@media (hover:hover) and (pointer:fine){.lista-topico-acao:hover{background:var(--border);}}
 .lt-acao{font-size:11px;font-weight:800;color:var(--ember,var(--navy));flex-shrink:0;}
 mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px;}
 .resumo-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:16px;box-shadow:var(--shadow-md);margin-bottom:16px;}
@@ -1424,7 +1431,8 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 
 /* Info button */
-.info-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(16,27,61,.1);color:var(--text2);font-size:11px;font-weight:800;cursor:pointer;margin-left:4px;vertical-align:middle;transition:background .2s;flex-shrink:0;}
+.info-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(16,27,61,.1);color:var(--text2);font-size:11px;font-weight:800;cursor:pointer;margin-left:4px;vertical-align:middle;transition:background .2s;flex-shrink:0;position:relative;}
+.info-btn::before{content:'';position:absolute;inset:-10px;}/* b271 UI-05: 24px visível, 44px de toque */
 .info-btn:active{background:rgba(16,27,61,.22);}
 
 /* Info tooltip modal */
@@ -1470,7 +1478,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .pg-vereditos-list{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);}
 .pg-veredito-row{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:11px 14px;background:none;border:none;border-top:1px solid var(--line-soft);cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;transition:background .15s;}
 .pg-veredito-row:first-child{border-top:none;}
-.pg-veredito-row:hover,.pg-veredito-row:focus-visible{background:var(--paper-2);}
+.pg-veredito-row:focus-visible{background:var(--paper-2);}@media (hover:hover) and (pointer:fine){.pg-veredito-row:hover{background:var(--paper-2);}}
 .pg-veredito-row.sel{background:color-mix(in srgb,var(--ember) 8%,transparent);}
 .pg-veredito-ic{font-size:15px;flex-shrink:0;line-height:1;}
 .pg-veredito-main{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;}
@@ -1591,13 +1599,13 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 
 /* ── Reporte de erros ── */
 .rep-link{display:inline-flex;align-items:center;gap:5px;margin-top:10px;background:none;border:none;color:var(--text3);font-size:13px;font-weight:600;cursor:pointer;padding:4px 0;text-decoration:underline;text-underline-offset:2px;}
-.rep-link:hover{color:var(--red);}
+@media (hover:hover) and (pointer:fine){.rep-link:hover{color:var(--red);}}
 /* Cards: ações terciárias da tela de conclusão (limpar filtro / voltar ao hub) viravam
    uma pilha de até 3 btn-weak cheios competindo com o CTA primário. Vira link de texto
    lado a lado, só "Fazer mais N" continua como botão (é a única ação secundária real). */
 .fim-inline-links{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:16px;margin-top:12px;}
 .fim-inline-link{background:none;border:none;color:var(--text3);font-size:12.5px;font-weight:700;cursor:pointer;padding:4px 2px;text-decoration:underline;text-underline-offset:2px;}
-.fim-inline-link:hover,.fim-inline-link:focus-visible{color:var(--text2);}
+.fim-inline-link:focus-visible{color:var(--text2);}@media (hover:hover) and (pointer:fine){.fim-inline-link:hover{color:var(--text2);}}
 .rep-overlay{position:fixed;inset:0;background:rgba(11,20,48,.55);display:flex;align-items:flex-end;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s;}
 .rep-overlay.show{opacity:1;pointer-events:auto;}
 .rep-sheet{background:var(--surface);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -8px 32px rgba(16,27,61,.22);transform:translateY(20px);transition:transform .25s var(--ease-out);max-height:86vh;overflow-y:auto;}
@@ -1672,7 +1680,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   .area-list>.quiz-area-row,.resumos-list>.quiz-area-row,.aulas-list>.quiz-area-row,.atu-list>.quiz-area-row{display:contents;}
   .quiz-area-row>.area-row{grid-column:1;margin-bottom:10px;}
   .pg-area-row.quiz-area-row.open>.area-row{border-radius:16px;box-shadow:var(--shadow);}
-  .quiz-area-row>.pg-area-topicos{grid-column:2;grid-row:1/span 99;align-self:start;border:1px solid var(--line-soft);border-radius:16px;margin-top:0;padding:12px 14px 14px;position:sticky;top:16px;max-height:calc(100vh - 120px);overflow:auto;}
+  .quiz-area-row>.pg-area-topicos{grid-column:2;grid-row:1/span 99;align-self:start;border:1px solid var(--line-soft);border-radius:16px;margin-top:0;padding:12px 14px 14px;position:sticky;top:16px;max-height:calc(100vh - 120px);max-height:calc(100dvh - 120px);overflow:auto;}
   .hub-detalhe-vazio{display:flex;align-items:center;justify-content:center;grid-column:2;grid-row:1/span 99;align-self:start;min-height:200px;border:1px dashed var(--line-soft);border-radius:16px;color:var(--text3);font-size:13px;line-height:1.5;padding:24px;text-align:center;}
   .area-list:has(.quiz-area-row.open) .hub-detalhe-vazio,
   .resumos-list:has(.quiz-area-row.open) .hub-detalhe-vazio,
@@ -1687,7 +1695,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
      nunca fica vazio). O cartão-herói passa a dividir anel/projeção em 2 colunas em vez de
      empilhar, e os 2 KPIs ganham teto de largura pra não virar barra vazia. */
   .pg-area-grid{display:grid;grid-template-columns:minmax(260px,340px) 1fr;column-gap:20px;align-items:start;}
-  .pg-area-detalhe{margin-top:0;position:sticky;top:16px;max-height:calc(100vh - 120px);overflow:auto;}
+  .pg-area-detalhe{margin-top:0;position:sticky;top:16px;max-height:calc(100vh - 120px);max-height:calc(100dvh - 120px);overflow:auto;}
   .pg-hero-card{display:flex;align-items:stretch;gap:24px;}
   .pg-hero-ring-row{flex:0 0 320px;}
   .pg-hero-div{width:1px;height:auto;margin:0;flex-shrink:0;}
@@ -1703,7 +1711,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
   #admin-users-list>.user-row{display:contents;}
   .user-row>.user-head{grid-column:1;margin-bottom:8px;}
   .user-row.open>.user-head{border-radius:12px;}
-  .user-row>.user-detalhe{grid-column:2;grid-row:1/span 99;align-self:start;border-top:1px solid var(--line-soft);border-radius:12px;position:sticky;top:16px;max-height:calc(100vh - 120px);overflow:auto;}
+  .user-row>.user-detalhe{grid-column:2;grid-row:1/span 99;align-self:start;border-top:1px solid var(--line-soft);border-radius:12px;position:sticky;top:16px;max-height:calc(100vh - 120px);max-height:calc(100dvh - 120px);overflow:auto;}
   .user-grupo,.cob-resumo{grid-column:1;}
   #admin-users-list:has(.user-row.open) .hub-detalhe-vazio{display:none;}
   .user-row{margin-bottom:0;}
@@ -1899,7 +1907,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
    (6,6:1+); o .lp-tag NÃO entra, ele fica sobre chip claro (--amber-light) onde o marrom passa (5,95:1). */
 .pm1-vitrine-escura .lp-label,.pm1-vitrine-escura .lp-nao-faz-tit,.pm1-vitrine-escura .lp-a4-fecho b{color:var(--ember);}
 .pm1-vitrine-escura .lp-btn-linha{border-color:rgba(255,255,255,.32);color:var(--text);}
-.pm1-vitrine-escura .lp-btn-linha:hover{background:rgba(255,255,255,.08);}
+@media (hover:hover) and (pointer:fine){.pm1-vitrine-escura .lp-btn-linha:hover{background:rgba(255,255,255,.08);}}
 /* PV1/b240: .quiz-opt.errada/.correta (A2) herdam --text creme daqui, mas
    --red-light/--green-light NÃO são redefinidos neste escopo — seguem o tema
    claro/escuro do visitante e podem virar bem claros, quebrando o contraste do
@@ -1921,7 +1929,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
    texto sozinho já passa de 100vh, o layout sobrepunha os dois (achado do M3). */
 .lp-a1-door{position:relative;}
 .lp-a1-track{position:relative;height:210vh;}
-.lp-a1-stage{position:sticky;top:0;height:100vh;min-height:480px;display:flex;align-items:center;justify-content:center;overflow:hidden;
+.lp-a1-stage{position:sticky;top:0;height:100vh;height:100dvh;min-height:480px;display:flex;align-items:center;justify-content:center;overflow:hidden;
   background:radial-gradient(120% 90% at 50% 30%,rgba(240,136,60,.10),transparent 60%),var(--paper);}
 .lp-phone{position:relative;width:min(58vw,240px);aspect-ratio:375/812;border-radius:38px;
   background:#05070F;padding:9px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.07);
@@ -1941,7 +1949,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
    curtas (celular retrato), e height:100vh fixo + overflow:hidden cortava o topo
    (tag) e o rodapé (domínio) por igual, centralizados. min-height no lugar de
    height deixa o stage crescer com o conteúdo sem cortar nada. */
-.lp-a2-stage{position:sticky;top:0;min-height:max(560px,100vh);display:flex;align-items:center;justify-content:center;
+.lp-a2-stage{position:sticky;top:0;min-height:max(560px,100vh);min-height:max(560px,100dvh);display:flex;align-items:center;justify-content:center;
   overflow:hidden;padding:20px;background:radial-gradient(120% 90% at 50% 100%,rgba(240,136,60,.08),transparent 60%),var(--paper);}
 .lp-a2-card{position:relative;width:100%;max-width:520px;background:var(--surface);border:1px solid var(--line-soft);
   border-radius:20px;padding:22px 20px;box-shadow:var(--shadow-md);}
@@ -2841,7 +2849,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 <!-- APP -->
 <div id="app">
   <!-- HEADER -->
-  <header class="app-header">
+  <header class="app-header" id="app-header">
     <img class="header-logo" src="assets/cesar-coin.png" onerror="this.style.opacity='0'" alt="Prontidão">
     <div class="header-titles">
       <div class="header-title">Prontidão</div>
@@ -3103,6 +3111,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
           <div class="quiz-q-text" id="quiz-q-text"></div>
           <div class="quiz-doc" id="quiz-q-doc"></div>
           <div class="quiz-opts" id="quiz-opts"></div>
+          <div class="sr-only" id="quiz-fb-anuncio" role="status" aria-live="polite"></div>
           <div class="quiz-feedback" id="quiz-feedback">
             <div class="quiz-feedback-title" id="quiz-fb-title"></div>
             <div class="quiz-fb-erro" id="quiz-fb-erro" style="display:none"></div>
@@ -3172,8 +3181,8 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
         <div class="sim-result">
           <div class="sim-result-ring ring-container" style="width:120px;height:120px;">
             <svg class="ring-svg" width="120" height="120" viewBox="0 0 120 120">
-              <circle fill="none" stroke="var(--border)" stroke-width="10" cx="60" cy="60" r="50"/>
-              <circle fill="none" stroke="var(--red)" stroke-width="10" stroke-linecap="round" cx="60" cy="60" r="50" id="sim-result-ring" stroke-dasharray="314.16" stroke-dashoffset="314.16"/>
+              <circle fill="none" style="stroke:var(--border)" stroke-width="10" cx="60" cy="60" r="50"/>
+              <circle fill="none" style="stroke:var(--red)" stroke-width="10" stroke-linecap="round" cx="60" cy="60" r="50" id="sim-result-ring" stroke-dasharray="314.16" stroke-dashoffset="314.16"/>
             </svg>
             <div class="ring-center"><div class="sim-result-score" id="sim-result-score">0</div></div>
           </div>
@@ -9234,7 +9243,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.386';
+const APP_VERSAO='v1.387';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -10286,7 +10295,7 @@ function serieSemanalArea(k){
 function sparklineSVG(vals){
   const w=118,h=34,pad=5;
   if(!vals||!vals.length)return '<span class="pg-spark-vazio">sem histórico ainda</span>';
-  if(vals.length===1)return '<svg class="pg-spark" viewBox="0 0 '+w+' '+h+'" aria-hidden="true"><circle cx="'+(w/2)+'" cy="'+(h/2)+'" r="2.6" fill="var(--text3)"/></svg>';
+  if(vals.length===1)return '<svg class="pg-spark" viewBox="0 0 '+w+' '+h+'" aria-hidden="true"><circle cx="'+(w/2)+'" cy="'+(h/2)+'" r="2.6" style="fill:var(--text3)"/></svg>';
   const mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals),span=(mx-mn)||1;
   const X=i=>(pad+i*(w-2*pad)/(vals.length-1));
   const Y=v=>(h-pad-((v-mn)/span)*(h-2*pad));
@@ -10303,7 +10312,7 @@ function sparklineSVG(vals){
     +'<path d="'+area+'" style="fill:url(#'+id+')"/>'
     +'<path d="'+d+'" fill="none" style="stroke:'+cor+'" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>'
     +'<circle cx="'+lx+'" cy="'+ly+'" r="5" style="fill:'+cor+'" opacity="0.18"/>'
-    +'<circle cx="'+lx+'" cy="'+ly+'" r="2.6" style="fill:'+cor+'" stroke="var(--surface)" stroke-width="1.4"/></svg>';
+    +'<circle cx="'+lx+'" cy="'+ly+'" r="2.6" style="fill:'+cor+';stroke:var(--surface)" stroke-width="1.4"/></svg>';
 }
 // P1 — gauge semicircular da projeção, com faixa de confiança (ticks lo/hi).
 // Sem linha de nota de corte: decisão do João, não existe corte oficial pro CTSP.
@@ -11004,6 +11013,7 @@ async function responderQuiz(idx){
   fb.classList.add('show');
   fb.style.borderLeftColor=acertou?'var(--green)':'var(--red)';
   document.getElementById('quiz-fb-title').textContent=acertou?'Correto':'Incorreto';
+  const _an=document.getElementById('quiz-fb-anuncio');if(_an){const _z=_an.textContent.slice(-1)==='\u200b'?'':'\u200b';_an.textContent=(acertou?'Correto':'Incorreto')+_z;}   // b271 UI-15: o caractere invisível alterna para o texto sempre mudar e o leitor repetir o anúncio
   document.getElementById('quiz-fb-title').style.color=acertou?'var(--green)':'var(--red)';
   // CONT-01: mostrar a alternativa marcada × a correta
   const opsDisplay=q._shuffledOps||q.ops||[];
@@ -14427,7 +14437,7 @@ function fecharTutorial(e){
   _tourLiberarBanner();                            // b126
   _tourMascoteFim();                               // b259
   try{localStorage.setItem('tutorialVisto','1');}catch(_){}
-  if(_tourFocoAnterior&&_tourFocoAnterior.focus){try{_tourFocoAnterior.focus();}catch(_){}}
+  const _tf=typeof _focoDevolvivel==='function'?_focoDevolvivel(_tourFocoAnterior):_tourFocoAnterior;if(_tf&&_tf.focus){try{_tf.focus();}catch(_){}}
   _tourFocoAnterior=null;
   mascoteHome(false);mascoteTela();                // b257: com o tour fechado, a reacao do dia (Home) e a pose do hub voltam
 }
@@ -14767,6 +14777,7 @@ function showMsg(id,txt,tipo){
 function toggleHeaderMenu(){
   const dd=document.getElementById('header-dropdown');
   if(dd)dd.classList.toggle('hidden');
+  if(dd&&dd.classList.contains('hidden')&&dd.contains(document.activeElement)){const b=_focoDevolvivel(document.activeElement);if(b)b.focus();}   // b271 UI-04: Tema/Instalar/Recarregar não deixam o foco no BODY
   // b126: decidido a cada abertura em vez de uma vez no init — cobre de graça o app
   // ser instalado no meio da sessão (aí o item some sozinho na próxima abertura).
   const bi=document.getElementById('btn-instalar-app');
@@ -15463,7 +15474,7 @@ function showToast(msg,acaoLabel,acaoFn){
 // o DOM e promove todo elemento com `onclick` que não é focável por natureza.
 // Exclusões: overlay e box de modal — o overlay fecha ao clicar no fundo e a box é
 // só contêiner; ambos viram armadilha na ordem de tabulação se entrarem nela.
-const A11Y_IGNORA='.modal-overlay,.modal-box';
+const A11Y_IGNORA='.modal-overlay,.modal-box,.tour-box';
 function aplicarAcessibilidadeTeclado(raiz){
   const alvo=raiz||document.body;
   if(!alvo||!alvo.querySelectorAll)return 0;
@@ -15615,6 +15626,13 @@ function _ovFocoInicial(el){
   if(!alvo)c.setAttribute('tabindex','-1');
   try{c.focus({preventScroll:true});}catch(e){c.focus();}
 }
+// b271 E4-B1 (UI-04): item do menu ☰ some quando o menu fecha; o foco volta ao botão que abriu o menu.
+function _focoDevolvivel(g){
+  if(!g||!g.isConnected)return null;
+  if(!g.closest('.hidden'))return g;
+  const dd=g.closest('.header-dropdown'),b=dd&&dd.parentElement&&dd.parentElement.querySelector('.btn-header-menu');
+  return b&&!b.closest('.hidden')?b:null;
+}
 function _ovSincronizar(el){
   const ab=_ovAberto(el);
   if(el.classList.contains('rep-overlay')||el.classList.contains('sheet-overlay')){
@@ -15633,9 +15651,9 @@ function _ovSincronizar(el){
     _ovGat=null;
     if(!el.contains(document.activeElement))_ovFocoInicial(el);
   }else{
-    const g=st.gatilho;st.gatilho=null;
+    const g=_focoDevolvivel(st.gatilho);st.gatilho=null;
     const ae=document.activeElement;
-    if(g&&g.isConnected&&(!ae||ae===document.body||el.contains(ae))){try{g.focus({preventScroll:true});}catch(e){}}
+    if(g&&(!ae||ae===document.body||el.contains(ae))){try{g.focus({preventScroll:true});}catch(e){}}
   }
 }
 function _ovAtual(t){
