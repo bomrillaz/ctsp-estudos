@@ -52,13 +52,14 @@ self.addEventListener('notificationclick', (e) => {
   })());
 });
 
-const CACHE = 'ctsp-cache-v47';
+const CACHE = 'ctsp-cache-v48';
 const SAME = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png',
   'assets/cesar-coin.png', 'assets/qrcode.js',
   'assets/loading-poster.jpg',   // PWA-07: loading.mp4 NAO entra (video pede Range, que o SW nao serve; 738 KB baixados a toa por CACHE). apresentacao.mp4 fora de proposito.
-  'assets/mascote/folha_v7.png', 'assets/mascote/escada.png'
+  'assets/mascote/folha_v7.png', 'assets/mascote/escada.png',
+  'assets/fonts/barlow-condensed-500.woff2', 'assets/fonts/barlow-condensed-600.woff2', 'assets/fonts/barlow-condensed-700.woff2'
 ];
 const CROSS = [
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',

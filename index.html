@@ -42,10 +42,10 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet"/>
 <style>
+@font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:500;font-display:swap;src:url('assets/fonts/barlow-condensed-500.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:600;font-display:swap;src:url('assets/fonts/barlow-condensed-600.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:700;font-display:swap;src:url('assets/fonts/barlow-condensed-700.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{
   /* ── Identidade "Manual Operacional" ── */
@@ -70,6 +70,8 @@
   --shadow-lg:0 8px 32px rgba(16,27,61,.18);
   --radius:18px;--radius-sm:12px;--radius-xs:9px;
   --nav-h:84px;--header-h:60px;
+  /* UI-24: escala de camadas (valores efetivos inalterados) */
+  --z-nav:100;--z-sheet:200;--z-modal:1000;--z-tour:1001;--z-tooltip:2000;--z-doc:2500;--z-splash:9990;--z-gate:9995;--z-toast:9998;--z-topo:9999;--z-pix:10000;--z-toast-renov:10001;
   --ease-out:cubic-bezier(0.16,1,0.3,1);
   --ease-spring:cubic-bezier(0.34,1.56,0.64,1);
   /* PM1/M0: tokens de duração do plano de movimento. Reaproveitam os --ease-* acima. */
@@ -82,7 +84,7 @@
 /* ── S30: Modo noturno ── */
 html[data-theme="dark"]{
   --paper:#0D1322;--paper-2:#19233E;--surface:#141C33;--bg:#19233E;
-  --text:#EAECF4;--text2:#A7AEC5;--text3:#7E87A8;
+  --text:#EAECF4;--text2:#A7AEC5;--text3:#848DAD;
   --border:#283354;--line-soft:#222C49;
   --red:#F05B43;--red-dark:#FF9A86;--red-light:#3A1712;
   --green:#46C07A;--green-light:#11301F;
@@ -139,7 +141,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .num,.sim-timer,.splash-dias,.quiz-score-v,.dominio-geral-pct,.sim-result-score,.sim-hist-score,.ring-pct{font-variant-numeric:tabular-nums;}
 
 /* LOADING */
-#loading{position:fixed;inset:0;background:var(--navy-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;overflow:hidden;transition:opacity .6s ease;}
+#loading{position:fixed;inset:0;background:var(--navy-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:var(--z-topo);gap:16px;overflow:hidden;transition:opacity .6s ease;}
 #loading.fade-out{opacity:0;}
 #loading video{width:min(500px,80vw);max-height:72vh;aspect-ratio:1/1;object-fit:cover;border-radius:24px;box-shadow:0 24px 70px rgba(0,0,0,.5);z-index:1;transform:translateY(-5vh);}
 #loading img{width:min(312px,76vw);height:min(312px,76vw);object-fit:contain;animation:pulse 1.5s ease-in-out infinite;transition:opacity .6s ease,transform .6s ease;z-index:1;}
@@ -163,13 +165,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 #loading-renovacao-whats{color:rgba(255,255,255,.8);font-size:13px;text-decoration:underline;}
 /* PS3/A1: "Renovar acesso" abre o Pix por cima do #loading (z 9999) — sem isso o modal
    (z 1000) e o toast de falha do Pix (z 9998) nascem escondidos atrás da tela. */
-#pix-overlay{z-index:10000;}
-body:has(#loading-renovacao.show) .toast{z-index:10001;}
+#pix-overlay{z-index:var(--z-pix);}
+body:has(#loading-renovacao.show) .toast{z-index:var(--z-toast-renov);}
 
 /* SPLASH SCREEN pós-login — painel de quartel */
-#splash-screen{position:fixed;inset:0;background:linear-gradient(170deg,var(--navy-2) 0%,var(--navy-deep) 70%);z-index:9990;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;}
+#splash-screen{position:fixed;inset:0;background:linear-gradient(170deg,var(--navy-2) 0%,var(--navy-deep) 70%);z-index:var(--z-splash);display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;}
 /* S47: gate de onboarding */
-#onboard-gate{position:fixed;inset:0;z-index:9995;display:none;align-items:center;justify-content:center;padding:24px;background:linear-gradient(170deg,var(--navy-2) 0%,var(--navy-deep) 70%);}
+#onboard-gate{position:fixed;inset:0;z-index:var(--z-gate);display:none;align-items:center;justify-content:center;padding:24px;background:linear-gradient(170deg,var(--navy-2) 0%,var(--navy-deep) 70%);}
 #onboard-gate.active{display:flex;}
 .onboard-box{position:relative;max-width:420px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 22px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3);}
 .onboard-fechar{position:absolute;top:12px;right:12px;width:32px;height:32px;border:none;background:var(--paper-2);border-radius:50%;font-size:16px;line-height:1;color:var(--text2);cursor:pointer;}
@@ -222,7 +224,7 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 }
 /* PM1/M6 (C2): carimbo voando, JS controla left/top/transform/opacity direto (posição
    calculada em runtime a partir de dois elementos reais, não dá pra fixar em CSS). */
-.lp-c2-carimbo{position:fixed;z-index:9999;pointer-events:none;left:0;top:0;
+.lp-c2-carimbo{position:fixed;z-index:var(--z-topo);pointer-events:none;left:0;top:0;
   transform:translate(-50%,-50%);opacity:1;transition:transform .6s var(--ease-out),opacity .6s var(--ease-out);
   font-family:var(--font-display);font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
   color:var(--red);border:2px solid var(--red);border-radius:6px;padding:3px 7px;background:rgba(255,255,255,.94);
@@ -461,7 +463,7 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .planos-aviso{font-size:11px;color:var(--text2);line-height:1.55;margin-top:12px;padding:11px 13px;background:var(--paper-2);border-radius:10px;}
 .planos-links{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;margin-top:16px;font-size:12px;}
 /* Documentos (Termos, Privacidade, FAQ, Sobre) — overlay que funciona dentro e fora do app. */
-.doc-overlay{position:fixed;inset:0;background:rgba(11,20,48,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:2500;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s;}
+.doc-overlay{position:fixed;inset:0;background:rgba(11,20,48,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:var(--z-doc);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s;}
 .doc-overlay.hidden{display:none;}
 .doc-box{background:var(--surface);border-radius:24px 24px 0 0;width:100%;max-width:560px;max-height:92vh;display:flex;flex-direction:column;position:relative;overflow:hidden;}
 .doc-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--fire-line);}
@@ -486,7 +488,7 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 #app.active{display:flex;}
 
 /* HEADER — painel navy com linha de fogo */
-.app-header{height:calc(var(--header-h) + env(safe-area-inset-top));background:linear-gradient(160deg,var(--navy-2) 0%,var(--navy) 65%);display:flex;align-items:center;padding:env(safe-area-inset-top) 14px 0;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 6px 24px rgba(11,20,48,.22);}
+.app-header{height:calc(var(--header-h) + env(safe-area-inset-top));background:linear-gradient(160deg,var(--navy-2) 0%,var(--navy) 65%);display:flex;align-items:center;padding:env(safe-area-inset-top) 14px 0;gap:10px;position:sticky;top:0;z-index:var(--z-nav);box-shadow:0 6px 24px rgba(11,20,48,.22);}
 .app-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--fire-line);opacity:.95;}
 .header-logo{width:34px;height:34px;background:transparent;padding:0;object-fit:contain;flex-shrink:0;}
 .header-titles{flex:1;}
@@ -513,7 +515,7 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .app-content{flex:1;overflow-y:auto;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);background:transparent;}
 
 /* BOTTOM NAV — pílula flutuante */
-.bottom-nav{position:fixed;bottom:calc(10px + env(safe-area-inset-bottom));left:12px;right:12px;height:64px;background:rgba(13,21,48,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08);border-radius:22px;display:flex;z-index:100;box-shadow:0 12px 36px rgba(11,20,48,.35);padding:0 4px;}
+.bottom-nav{position:fixed;bottom:calc(10px + env(safe-area-inset-bottom));left:12px;right:12px;height:64px;background:rgba(13,21,48,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08);border-radius:22px;display:flex;z-index:var(--z-nav);box-shadow:0 12px 36px rgba(11,20,48,.35);padding:0 4px;}
 /* P13a (b183): 12px/.02em é o TETO aqui — acima disso "Resumos" (rótulo mais longo)
    pede mais largura que a célula flex:1 e desalinha o grid da barra em telas estreitas
    (medido em 375px/320px). Não subir às cegas sem reconferir o alinhamento das 5 células. */
@@ -528,7 +530,7 @@ body:has(#loading-renovacao.show) .toast{z-index:10001;}
 .nav-item{z-index:1;}
 .nav-badge{position:absolute;top:7px;right:calc(50% - 19px);background:var(--red-solid);color:white;border-radius:10px;font-size:11px;font-weight:800;padding:1px 5px;min-width:16px;text-align:center;box-shadow:0 0 0 2px rgba(13,21,48,.96);}
 /* ── PAINEL "MAIS" (bottom sheet) ── */
-.sheet-overlay{position:fixed;inset:0;z-index:200;background:rgba(11,20,48,.45);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .25s;}
+.sheet-overlay{position:fixed;inset:0;z-index:var(--z-sheet);background:rgba(11,20,48,.45);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .25s;}
 .sheet-overlay.open{opacity:1;pointer-events:auto;}
 .sheet-panel{position:absolute;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:var(--surface);border-radius:22px 22px 0 0;padding:8px 14px calc(18px + env(safe-area-inset-bottom));transform:translateY(101%);transition:transform .34s var(--ease-spring);box-shadow:0 -10px 34px rgba(11,20,48,.30);}
 .sheet-overlay.open .sheet-panel{transform:translateY(0);}
@@ -953,7 +955,7 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
 .chart-bar-label{font-size:11px;color:var(--text3);font-weight:600;margin-top:3px;}
 
 /* Modal meta diária */
-.modal-overlay{position:fixed;inset:0;background:rgba(11,20,48,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:1000;display:flex;align-items:flex-end;justify-content:center;}
+.modal-overlay{position:fixed;inset:0;background:rgba(11,20,48,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:var(--z-modal);display:flex;align-items:flex-end;justify-content:center;}
 .modal-overlay.hidden{display:none;}
 /* == TUTORIAL GUIADO (tour de onboarding) ==================================
    Herda .modal-overlay so pelo display/hidden, z-index e integracao com o Esc.
@@ -964,7 +966,7 @@ html[data-theme="dark"] #treino-badge.badge-feito{color:#46C07A;}
    prefers-reduced-motion ja e tratado globalmente na regra universal acima. */
 #modal-tutorial{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;align-items:stretch;justify-content:stretch;}
 .tour-spot{position:fixed;top:0;left:0;width:0;height:0;border-radius:12px;box-shadow:0 0 0 9999px rgba(11,20,48,.72);pointer-events:none;transition:top .25s var(--ease-out),left .25s var(--ease-out),width .25s var(--ease-out),height .25s var(--ease-out);}
-.tour-box{position:fixed;top:0;left:0;width:calc(100% - 24px);max-width:320px;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto;display:flex;flex-direction:column;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow-lg);z-index:1001;}
+.tour-box{position:fixed;top:0;left:0;width:calc(100% - 24px);max-width:320px;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto;display:flex;flex-direction:column;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow-lg);z-index:var(--z-tour);}
 .tour-progress{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
 .tour-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px;}
 .tour-text{font-size:13px;line-height:1.5;color:var(--text2);overflow-y:auto;min-height:0;}
@@ -1397,7 +1399,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .ring-container{position:relative;display:inline-flex;align-items:center;justify-content:center;isolation:isolate;}
 
 /* Toast */
-.toast{position:fixed;bottom:calc(var(--nav-h) + 20px);left:50%;transform:translateX(-50%) translateY(24px) scale(.95);background:rgba(13,21,48,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:white;border-radius:14px;padding:11px 22px;font-size:13px;font-weight:600;opacity:0;transition:all .3s var(--ease-out);z-index:9998;white-space:nowrap;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:12px;pointer-events:none;}
+.toast{position:fixed;bottom:calc(var(--nav-h) + 20px);left:50%;transform:translateX(-50%) translateY(24px) scale(.95);background:rgba(13,21,48,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:white;border-radius:14px;padding:11px 22px;font-size:13px;font-weight:600;opacity:0;transition:all .3s var(--ease-out);z-index:var(--z-toast);white-space:nowrap;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:12px;pointer-events:none;}
 .toast-action{background:none;border:none;color:var(--ember);font-weight:800;font-size:12.5px;cursor:pointer;white-space:nowrap;padding:0;flex-shrink:0;}
 /* b190: sem isto, o toast fica sempre clicável (mesmo vazio/opacity:0) na sua faixa fixa
    perto do rodapé, bloqueando silenciosamente qualquer botão que caia nela por baixo —
@@ -1414,7 +1416,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .btn-header-menu{background:rgba(255,255,255,.12);border:none;border-radius:9px;padding:6px 8px;display:flex;flex-direction:column;gap:4px;cursor:pointer;width:32px;height:32px;align-items:center;justify-content:center;position:relative;}
 .btn-header-menu::before{content:'';position:absolute;inset:-6px;}
 .btn-header-menu span{display:block;width:14px;height:2px;background:white;border-radius:2px;transition:all .2s;}
-.header-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;box-shadow:var(--shadow-lg);overflow:hidden;min-width:150px;z-index:200;animation:scaleIn .18s var(--ease-out);}
+.header-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;box-shadow:var(--shadow-lg);overflow:hidden;min-width:150px;z-index:var(--z-sheet);animation:scaleIn .18s var(--ease-out);}
 .header-dropdown button{display:block;width:100%;padding:13px 16px;text-align:left;font-size:14px;font-weight:600;color:var(--text);background:none;border:none;cursor:pointer;border-bottom:1px solid var(--line-soft);}
 .dd-icon{display:inline-flex;width:16px;height:16px;vertical-align:-3px;margin-right:8px;}
 .dd-icon svg{width:16px;height:16px;}
@@ -1436,7 +1438,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .info-btn:active{background:rgba(16,27,61,.22);}
 
 /* Info tooltip modal */
-.info-tooltip{position:fixed;inset:0;background:rgba(11,20,48,.55);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .2s;}
+.info-tooltip{position:fixed;inset:0;background:rgba(11,20,48,.55);z-index:var(--z-tooltip);display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .2s;}
 .info-tooltip.hidden{display:none;}
 .info-tooltip-box{background:var(--surface);border-radius:20px;padding:24px;max-width:340px;width:100%;}
 .info-tooltip-title{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);margin-bottom:10px;}
@@ -1540,7 +1542,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 /* b123: banner de instalação — casco fixo + duas formas (CTA de linha × guia vertical) */
 .install-banner{position:fixed;left:12px;right:12px;
   bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));
-  z-index:200;background:var(--navy-2);color:#fff;
+  z-index:var(--z-sheet);background:var(--navy-2);color:#fff;
   border:1px solid var(--glass-border);border-radius:var(--radius);
   box-shadow:0 8px 24px rgba(11,20,48,.4);cursor:default;}
 .install-cta{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;padding:12px 14px;}
@@ -1582,7 +1584,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 /* No passo do banner (tour-ativo SEM tour-oculto) ele sobe acima do #modal-tutorial (fixed, z 1000, onclick=fecharTutorial): antes o
    overlay cobria o banner e engolia o toque em "Instalar" (fechava o tour e gravava tutorialVisto sem chamar prompt()). Nos outros
    passos continua visibility:hidden, como sempre. */
-.install-banner.tour-ativo:not(.tour-oculto){z-index:1001;}
+.install-banner.tour-ativo:not(.tour-oculto){z-index:var(--z-tour);}
 
 /* PAINEL DO DIA + selo salvo */
 /* (S64) CSS do card "Hoje" removido — o painel virou KPI no placar de "Meu progresso". */
@@ -1594,7 +1596,7 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .badge-dom{background:var(--paper-2);color:var(--text2);}
 .fb-caderno{margin-top:8px;font-size:12px;font-weight:600;color:var(--ember-text);}
 html[data-theme="dark"] .fb-caderno{color:var(--ember);}
-#save-flash{position:fixed;left:50%;bottom:80px;transform:translateX(-50%) translateY(8px);background:var(--green);color:#fff;font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,.18);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:9999;}
+#save-flash{position:fixed;left:50%;bottom:80px;transform:translateX(-50%) translateY(8px);background:var(--green);color:#fff;font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,.18);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:var(--z-topo);}
 #save-flash.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
 /* ── Reporte de erros ── */
@@ -1606,7 +1608,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .fim-inline-links{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:16px;margin-top:12px;}
 .fim-inline-link{background:none;border:none;color:var(--text3);font-size:12.5px;font-weight:700;cursor:pointer;padding:4px 2px;text-decoration:underline;text-underline-offset:2px;}
 .fim-inline-link:focus-visible{color:var(--text2);}@media (hover:hover) and (pointer:fine){.fim-inline-link:hover{color:var(--text2);}}
-.rep-overlay{position:fixed;inset:0;background:rgba(11,20,48,.55);display:flex;align-items:flex-end;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s;}
+.rep-overlay{position:fixed;inset:0;background:rgba(11,20,48,.55);display:flex;align-items:flex-end;justify-content:center;z-index:var(--z-modal);opacity:0;pointer-events:none;transition:opacity .2s;}
 .rep-overlay.show{opacity:1;pointer-events:auto;}
 .rep-sheet{background:var(--surface);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -8px 32px rgba(16,27,61,.22);transform:translateY(20px);transition:transform .25s var(--ease-out);max-height:86vh;overflow-y:auto;}
 .rep-overlay.show .rep-sheet{transform:translateY(0);}
@@ -1622,7 +1624,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .rep-send{background:var(--red-solid);color:#fff;box-shadow:0 4px 14px rgba(var(--red-solid-rgb),.28);}
 .rep-send:disabled{opacity:.5;cursor:default;box-shadow:none;}
 /* b267: confirmação destrutiva própria (substitui prompt()). Reaproveita .rep-overlay/.rep-sheet; fica acima do modal de config. */
-#conf-overlay{z-index:10001;}
+#conf-overlay{z-index:var(--z-toast-renov);}
 #conf-overlay .rep-sheet{position:relative;}
 .conf-lbl{display:block;font-size:12px;font-weight:700;color:var(--text2);margin:10px 0 5px;}
 .conf-in{width:100%;border:1px solid var(--border);border-radius:12px;padding:11px;font-size:16px;font-family:inherit;background:var(--surface);color:var(--text);box-sizing:border-box;}
@@ -2130,7 +2132,7 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
 .lp-a2-dica.show{opacity:1;}
 
 /* ═══ PM1/M6.5 — trio do celular: respingo d'água no toque (pointer:coarse) ═══ */
-.lp-agua-gota{position:fixed;z-index:9998;pointer-events:none;width:14px;height:14px;left:0;top:0;
+.lp-agua-gota{position:fixed;z-index:var(--z-toast);pointer-events:none;width:14px;height:14px;left:0;top:0;
   transform:translate(-50%,-50%) scale(0);border-radius:50%;
   background:radial-gradient(circle,rgba(180,222,255,.7),rgba(120,180,240,.18) 60%,transparent 75%);
   animation:lpAguaRespingo .5s var(--ease-out) forwards;}
@@ -9243,7 +9245,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.387';
+const APP_VERSAO='v1.388';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
