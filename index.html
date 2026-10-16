@@ -37,7 +37,7 @@
 <meta name="twitter:title" content="Prontidão: Plataforma de Estudos"/>
 <meta name="twitter:description" content="534 questões autorais, simulado no formato real e diagnóstico automático do seu desempenho."/>
 <meta name="twitter:image" content="https://bomrillaz.github.io/ctsp-estudos/assets/og-image.png"/>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://*.googleapis.com https://*.gstatic.com https://*.firebase.com https://*.firebaseio.com https://*.firebaseapp.com https://www.recaptcha.net https://recaptcha.net https://www.google.com https://www.gstatic.com wss://*.firebaseio.com data: blob:; object-src 'none'; base-uri 'self'; form-action 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com/firebasejs/ https://*.firebaseio.com; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseinstallations.googleapis.com https://fcmregistrations.googleapis.com https://fcm.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; frame-src https://ctsp-estudos.firebaseapp.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none';">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -49,7 +49,7 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{
   /* ── Identidade "Manual Operacional" ── */
-  --red:#D32412;--red-dark:#A51D0E;--red-mid:#BB2010;--red-light:#FBEDE6;
+  --red:#C92211;--red-dark:#A51D0E;--red-mid:#BB2010;--red-light:#FBEDE6;
   /* S4: fundo sólido com texto branco (botão primário) precisa de AA nos dois temas —
      --red sozinho clareia no escuro (#F05B43) pra servir de TEXTO/acento e reprova 4.5:1
      como fundo. --red-solid fica fixo, não muda de tema. */
@@ -9245,7 +9245,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.388';
+const APP_VERSAO='v1.389';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -14968,7 +14968,7 @@ const DOCS={
     <p>Seus dados <b>não são vendidos</b> nem usados para publicidade, e não alimentam perfis comerciais.</p>
 
     <h3>4. Com quem são compartilhados</h3>
-    <p>Apenas com os serviços necessários para a plataforma funcionar, que atuam como operadores: <b>Google Firebase</b> (autenticação, banco de dados, envio do e-mail de confirmação e notificações), <b>GitHub Pages</b> (hospedagem das páginas) e <b>Google Fonts</b> (a fonte dos títulos, carregada dos servidores do Google quando você abre o site, o que expõe seu endereço IP e navegador ao Google). Esses serviços podem processar dados em servidores fora do Brasil; a transferência internacional se apoia nas cláusulas contratuais e nas garantias oferecidas por esses fornecedores. Nenhum outro terceiro recebe seus dados, salvo obrigação legal ou ordem judicial.</p>
+    <p>Apenas com os serviços necessários para a plataforma funcionar, que atuam como operadores: <b>Google Firebase</b> (autenticação, banco de dados, envio do e-mail de confirmação e notificações) e <b>GitHub Pages</b> (hospedagem das páginas). As fontes do site ficam hospedadas na própria plataforma e não são carregadas de servidores de terceiros. Esses serviços podem processar dados em servidores fora do Brasil; a transferência internacional se apoia nas cláusulas contratuais e nas garantias oferecidas por esses fornecedores. Nenhum outro terceiro recebe seus dados, salvo obrigação legal ou ordem judicial.</p>
 
     <h3>5. Por quanto tempo ficam guardados</h3>
     <p>Enquanto sua conta existir. Ao excluir a conta, apagamos seu cadastro, progresso, flashcards e notificações. Mantemos apenas os reportes e pedidos que você enviou, que não trazem seu progresso, pelo tempo necessário para atender obrigações legais e resolver o suporte. Registros que a lei obriga a manter, se houver, são preservados apenas pelo prazo legal e sem uso para outra finalidade.</p>
