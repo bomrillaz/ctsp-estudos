@@ -196,4 +196,9 @@ fi
 echo "harnesses_rodados=$H_RODADOS harnesses_falhas=$H_FALHAS harnesses_excecoes=$H_EXC"
 echo "-- onclick com sanitize( dentro do atributo (esperado 0; b266 SEG-13)"
 echo "onclick_sanitize=$(grep -c 'onclick="[^"]*sanitize(' index.html || true)"
+echo "-- b273: aluno novo consegue se cadastrar e confirmar o e-mail (conta descartavel, apagada no fim; esperado OK)"
+if [ -n "$FIREBASE_SERVICE_ACCOUNT_PATH" ] && [ -d .github/scripts/node_modules ]; then
+  if node .github/scripts/conferir-cadastro.js > .tmp/conferir_cadastro.log 2>&1; then echo "conferir_cadastro=OK"
+  else echo "conferir_cadastro=FALHOU"; grep "FALHA" .tmp/conferir_cadastro.log; fi
+else echo "conferir_cadastro=SKIP (sem credencial local)"; fi
 echo "=== FIM - comparar com o ultimo historico ==="

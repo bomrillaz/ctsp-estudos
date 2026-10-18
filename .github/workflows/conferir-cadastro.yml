@@ -1,0 +1,37 @@
+name: Conferir cadastro de aluno novo
+
+# b273: cadastro -> link de confirmacao -> e-mail confirmado, pelos mesmos dominios do aluno.
+# Roda todo dia e a cada publicacao do index.html. Falhou = e-mail do GitHub + push pro admin.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * *'    # 09:00 (horario de Brasilia)
+  push:
+    branches: [main]
+    paths: ['index.html', '.github/scripts/conferir-cadastro.js', '.github/workflows/conferir-cadastro.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  conferir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências
+        working-directory: .github/scripts
+        run: npm ci --no-audit --no-fund
+
+      # Depois de um push, o GitHub Pages leva ~1 min pra publicar; a conferencia nao depende do
+      # site no ar (fala direto com o Firebase), so da chave lida do index.html do checkout.
+      - name: Conferir cadastro
+        working-directory: .github/scripts
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          ADMIN_UID: ${{ secrets.ADMIN_UID }}
+        run: node conferir-cadastro.js
