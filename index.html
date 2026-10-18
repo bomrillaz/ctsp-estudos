@@ -5634,7 +5634,15 @@ async function _pedirStoragePersistente(){
     if(!jaPersiste)await navigator.storage.persist();
   }catch(e){console.warn('_pedirStoragePersistente:',e.message);}
 }
+// As telas de bloqueio (erro de conteúdo, renovação, confirmar e-mail) vivem DENTRO de #loading.
+// Quem chega pela tela de login já tem #loading escondido (showAuth) — sem reexibir, a tela
+// não aparece e o login "não faz nada" (b273, caso real: cadastro novo sem e-mail confirmado).
+function _reexibirLoading(){
+  const L=document.getElementById('loading');
+  if(L){L.classList.remove('fade-out');L.style.display='';}
+}
 function mostrarErroConteudo(){
+  _reexibirLoading();
   const v=document.getElementById('loading-video'),w=document.getElementById('welcome-text'),
     s=document.getElementById('loading-sub'),er=document.getElementById('loading-erro-conteudo');
   if(v)v.classList.add('hidden');
@@ -5646,6 +5654,7 @@ function mostrarErroConteudo(){
 // convida a "tentar de novo" algo que vai negar de novo. Reaproveita abrirPagamento() (o
 // mesmo Pix/cartão/WhatsApp da Home) e doLogout() (o mesmo fluxo de sair de sempre).
 function mostrarTelaRenovacao(st){
+  _reexibirLoading();
   const v=document.getElementById('loading-video'),w=document.getElementById('welcome-text'),
     s=document.getElementById('loading-sub'),rv=document.getElementById('loading-renovacao'),
     txt=document.getElementById('loading-renovacao-texto'),
@@ -5703,6 +5712,7 @@ function marcarPagamentoInformadoNaRenovacao(){
 // na tela de renovação do A1, que é para quem venceu, não para quem não confirmou).
 let _cooldownReenvio=0;
 function mostrarTelaConfirmarEmail(){
+  _reexibirLoading();
   const v=document.getElementById('loading-video'),w=document.getElementById('welcome-text'),
     s=document.getElementById('loading-sub'),ce=document.getElementById('loading-confirmar-email'),
     txt=document.getElementById('loading-confirmar-email-texto');
@@ -5982,7 +5992,7 @@ auth.onAuthStateChanged(async user=>{
       userProfile._semRede=true;
       if(!isAdmEmail){
         if(await _offlinePermitido(user.uid))userProfile.aprovado=true;
-        else{document.getElementById('loading').style.display='';mostrarErroConteudo();return;} // sem conexão, não "aguardando liberação"
+        else{mostrarErroConteudo();return;} // sem conexão, não "aguardando liberação"
       }
     }
   }
@@ -9245,7 +9255,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.389';
+const APP_VERSAO='v1.390';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
