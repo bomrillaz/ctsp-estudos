@@ -1202,6 +1202,10 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .aulas-origem{font-size:12px;line-height:1.5;color:var(--text3);background:var(--paper-2);border-radius:10px;padding:10px 12px;margin-bottom:4px;}
 .aula-audio-box{margin-bottom:4px;}
 .aula-audio-box audio{display:block;margin-bottom:6px;}
+.aula-vel{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:6px;}
+.aula-vel-rot{font-size:12.5px;font-weight:700;color:var(--text3);margin-right:2px;}
+.aula-vel button{min-height:36px;min-width:52px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;}
+.aula-vel button[aria-pressed="true"]{background:var(--red-solid);border-color:var(--red-solid);color:#fff;}
 .aula-infografico{display:flex;flex-direction:column;gap:14px;}
 .aula-info-bloco-t{font-size:13px;font-weight:800;margin-bottom:8px;}
 .aula-info-cards{display:flex;flex-direction:column;gap:8px;}
@@ -9255,7 +9259,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.390';
+const APP_VERSAO='v1.391';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -12329,8 +12333,28 @@ function _tocarBlobAula(t,blob){
   _aulaAudioUrl=URL.createObjectURL(blob);
   const box=document.getElementById('aula-audio-box');
   if(!box)return;
+  const vel=_aulaVelSalva();
   box.innerHTML=`<audio controls aria-label="Áudio da aula ${sanitize(nomeTopico(t))}" style="width:100%" src="${_aulaAudioUrl}"></audio>
+    <div class="aula-vel" role="group" aria-label="Velocidade do áudio"><span class="aula-vel-rot">Velocidade</span>${AULA_VELOCIDADES.map(v=>`<button type="button" aria-pressed="${v===vel}" onclick="definirVelAula(${v})">${String(v).replace('.',',')}x</button>`).join('')}</div>
     <button class="fim-inline-link" onclick="confirmarRemoverAudioAula('${t}')">Remover do aparelho</button>`;
+  _aplicarVelAula(vel);
+}
+// AULA-VELOCIDADE (b275): até 2x o custo de compreensão é mínimo (Murphy et al. 2022); acima, cai.
+// Preferência por aparelho em localStorage (conveniência; sem ela, volta 1x).
+const AULA_VELOCIDADES=[1,1.25,1.5,2];
+function _aulaVelSalva(){
+  let v=1;try{v=parseFloat(localStorage.getItem('aulaVel'))||1;}catch(e){}
+  return AULA_VELOCIDADES.includes(v)?v:1;
+}
+function _aplicarVelAula(v){
+  const a=document.querySelector('#aula-audio-box audio');
+  if(a){a.defaultPlaybackRate=v;a.playbackRate=v;a.addEventListener('loadedmetadata',()=>{a.playbackRate=v;},{once:true});}
+  document.querySelectorAll('#aula-audio-box .aula-vel button').forEach((b,i)=>b.setAttribute('aria-pressed',String(AULA_VELOCIDADES[i]===v)));
+}
+function definirVelAula(v){
+  if(!AULA_VELOCIDADES.includes(v))return;
+  try{localStorage.setItem('aulaVel',String(v));}catch(e){}
+  _aplicarVelAula(v);
 }
 async function _atualizarBotaoAudio(t){
   const info=(aulasDados()[t]||{}).audio;
