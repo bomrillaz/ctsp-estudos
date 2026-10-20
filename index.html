@@ -1201,11 +1201,62 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .aulas-list{display:flex;flex-direction:column;gap:10px;}
 .aulas-origem{font-size:12px;line-height:1.5;color:var(--text3);background:var(--paper-2);border-radius:10px;padding:10px 12px;margin-bottom:4px;}
 .aula-audio-box{margin-bottom:4px;}
-.aula-audio-box audio{display:block;margin-bottom:6px;}
-.aula-vel{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:6px;}
-.aula-vel-rot{font-size:12.5px;font-weight:700;color:var(--text3);margin-right:2px;}
-.aula-vel button{min-height:36px;min-width:52px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;}
-.aula-vel button[aria-pressed="true"]{background:var(--red-solid);border-color:var(--red-solid);color:#fff;}
+/* b276: player das Aulas (capa tipografica por capitulo, letra sincronizada, controles proprios). Cor da area vem de --apl-acc. */
+.apl{--apl-acc:var(--ember);display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"capa" "letra" "barra" "ctl" "sec";gap:10px;margin-bottom:6px;}
+.apl-capa{grid-area:capa;position:relative;overflow:hidden;border-radius:18px;padding:16px 18px 16px 22px;min-height:132px;display:flex;flex-direction:column;justify-content:flex-end;color:#fff;background:linear-gradient(150deg,var(--navy-2),var(--navy-deep));border:1px solid rgba(255,255,255,.08);}
+.apl-capa::before{content:'';position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--apl-acc);}
+.apl-capa-in{display:flex;flex-direction:column;gap:2px;animation:aplFade .35s var(--ease-out);}
+.apl-capa-n{font-family:var(--font-display);font-size:56px;font-weight:700;line-height:.9;letter-spacing:.02em;color:var(--apl-acc);}
+.apl-capa-rot{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.78);}
+.apl-capa-t{font-family:var(--font-display);font-size:26px;font-weight:700;line-height:1.1;overflow-wrap:anywhere;}
+.apl-capa-aula{font-size:12.5px;line-height:1.35;color:rgba(255,255,255,.78);margin-top:4px;}
+@keyframes aplFade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+.apl-letra{grid-area:letra;position:relative;max-height:min(38vh,300px);overflow-y:auto;overscroll-behavior:contain;padding:14px 0;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 16px,#000 calc(100% - 16px),transparent 100%);mask-image:linear-gradient(to bottom,transparent 0,#000 16px,#000 calc(100% - 16px),transparent 100%);}
+.apl--sem-texto .apl-letra{display:none;}
+.apl-voz{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin:10px 0 0 15px;}
+.apl-fala{display:block;width:100%;min-height:44px;padding:6px 12px;border:none;border-left:3px solid transparent;border-radius:8px;background:none;text-align:left;font:inherit;font-size:17px;line-height:1.5;color:var(--text3);cursor:pointer;transition:color .2s,background .2s,border-color .2s;}
+.apl-fala[data-voz="A"]{padding-left:22px;}
+.apl-fala strong{font-weight:800;color:var(--text);}
+.apl-fala[aria-current="true"]{color:var(--text);font-weight:600;border-left-color:var(--apl-acc);background:var(--paper-2);}
+.apl-barra{grid-area:barra;position:relative;}
+.apl-seek{--pct:0%;-webkit-appearance:none;appearance:none;display:block;width:100%;height:44px;margin:0;background:transparent;cursor:pointer;}
+.apl-seek::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(to right,var(--apl-acc) var(--pct),var(--border) var(--pct));}
+.apl-seek::-moz-range-track{height:6px;border-radius:3px;background:var(--border);}
+.apl-seek::-moz-range-progress{height:6px;border-radius:3px;background:var(--apl-acc);}
+.apl-seek::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-6px;border-radius:50%;background:var(--text);border:2px solid var(--surface);}
+.apl-seek::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--text);border:2px solid var(--surface);}
+.apl-marcas{position:absolute;left:9px;right:9px;top:0;height:44px;pointer-events:none;}
+.apl-marca{position:absolute;top:15px;width:2px;height:14px;margin-left:-1px;border-radius:1px;background:var(--text3);}
+.apl-tempos{display:flex;justify-content:space-between;margin-top:-8px;font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--text2);}
+.apl-ctl{grid-area:ctl;display:flex;align-items:center;justify-content:center;gap:10px;}
+.apl-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border:none;border-radius:50%;background:none;color:var(--text);cursor:pointer;}
+.apl-btn:active{background:var(--paper-2);}
+.apl-play{width:64px;height:64px;background:var(--red-solid);color:#fff;}
+.apl-play:active{background:var(--red-dark);}
+.apl-ic{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.apl-ic--cheio{fill:currentColor;stroke:none;}
+.apl-ic--esp{transform:scaleX(-1);}
+.apl-play .apl-ic{width:30px;height:30px;}
+.apl-pulo-n{position:absolute;top:50%;left:50%;transform:translate(-50%,-44%);font-size:9px;font-weight:800;line-height:1;}
+.apl-oculto{visibility:hidden;}
+.apl [hidden]{display:none!important;}
+.apl-sec{grid-area:sec;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;}
+.apl-chip{display:inline-flex;align-items:center;justify-content:center;min-width:56px;min-height:44px;padding:8px 14px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;}
+.apl-caps-cab{display:flex;align-items:center;justify-content:space-between;}
+.apl-x{width:44px;height:44px;border:none;border-radius:50%;background:none;font-size:22px;line-height:1;color:var(--text2);cursor:pointer;}
+.apl-caps-lista{position:relative;max-height:min(60vh,420px);overflow-y:auto;overscroll-behavior:contain;}
+.apl-cap{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:10px 12px;border:none;border-radius:14px;background:transparent;text-align:left;font:inherit;color:var(--text);cursor:pointer;}
+.apl-cap:active{background:var(--paper-2);}
+.apl-cap[aria-current="true"]{background:var(--red-light);}
+.apl-cap-n{min-width:26px;font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text3);}
+.apl-cap-t{flex:1;font-size:15px;font-weight:700;}
+.apl-cap-tm{font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--text3);}
+@media (min-width:768px){
+  .apl{grid-template-columns:minmax(0,360px) minmax(0,1fr);grid-template-areas:"capa letra" "barra letra" "ctl letra" "sec letra";grid-template-rows:auto auto auto 1fr;column-gap:24px;align-items:start;}
+  .apl--sem-texto{grid-template-columns:minmax(0,420px);grid-template-areas:"capa" "barra" "ctl" "sec";}
+  .apl-letra{max-height:460px;}
+}
+@media (hover:hover){.apl-fala:hover{background:var(--paper-2);}}
 .aula-infografico{display:flex;flex-direction:column;gap:14px;}
 .aula-info-bloco-t{font-size:13px;font-weight:800;margin-bottom:8px;}
 .aula-info-cards{display:flex;flex-direction:column;gap:8px;}
@@ -3463,6 +3514,15 @@ html[data-theme="dark"] .fb-caderno{color:var(--ember);}
     </div>
   </nav>
 
+  <!-- b276: capítulos do player das Aulas — folha (X, Esc via OVERLAYS_ATIVOS, clique fora) -->
+  <div class="sheet-overlay" id="aula-caps-overlay" aria-hidden="true" inert onclick="aplFecharCaps(event)">
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="aula-caps-titulo" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div class="apl-caps-cab"><div class="sheet-title" id="aula-caps-titulo">Capítulos</div><button type="button" class="apl-x" aria-label="Fechar capítulos" onclick="aplFecharCaps()">&times;</button></div>
+      <div class="apl-caps-lista" id="aula-caps-lista"></div>
+    </div>
+  </div>
+
   <!-- PAINEL "MAIS" — bottom sheet com os destinos de uso esporádico -->
   <div class="sheet-overlay" id="mais-overlay" aria-hidden="true" inert onclick="fecharMais(event)">
     <div class="sheet-panel" id="mais-panel" role="dialog" aria-modal="true" aria-labelledby="mais-titulo" onclick="event.stopPropagation()">
@@ -5510,7 +5570,7 @@ async function _limparAudiosObsoletos(){
       rq.onsuccess=()=>res(rq.result||[]);rq.onerror=()=>rej(rq.error);
     });
     const velhas=chaves.filter(k=>{
-      const m=/^(?:p\|)?([^:|]+)[:|](\d+)/.exec(String(k));
+      const m=/^(?:[pm]\|)?([^:|]+)[:|](\d+)/.exec(String(k));
       if(!m||!Object.prototype.hasOwnProperty.call(a,m[1]))return false;
       const av=a[m[1]]&&a[m[1]].audio&&a[m[1]].audio.av;
       return String(av)!==m[2];
@@ -9259,7 +9319,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.391';
+const APP_VERSAO='v1.392';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -12326,35 +12386,346 @@ async function ouvirAula(t){
     if(_aulaAudioBaixando===t)_aulaAudioBaixando=null;
   }
 }
-// Chamada tanto pelo download quanto pelo cache já existente (_atualizarBotaoAudio) —
-// <audio> só nasce com o blob pronto, nunca com `src` de rede (PLANO_aulas_ui.md §3.4).
-function _tocarBlobAula(t,blob){
-  if(_aulaAudioUrl){URL.revokeObjectURL(_aulaAudioUrl);_aulaAudioUrl=null;}
-  _aulaAudioUrl=URL.createObjectURL(blob);
+// ── PLAYER DAS AULAS (b276) ─────────────────────────────────────────────────────────────────────
+// Substitui <audio controls> + botões de velocidade (b275). <audio> sem controls nasce só com o blob pronto
+// (PLANO_aulas_ui.md §3.4, nunca `src` de rede). O `meta` (capítulos + falas com tempo, contrato em
+// PLANO_player_aulas.md) é opcional: sem ele o player não mostra texto nem capítulos. Estado único em `_pa`,
+// que some em _encerrarAudioAula (sair da aula/da tela). Áudio só na tela da aula; segundo plano = Media Session.
+// Chamada tanto pelo download quanto pelo cache já existente (_atualizarBotaoAudio). `metaPronta` só entra em teste/fixture.
+function _tocarBlobAula(t,blob,metaPronta){
   const box=document.getElementById('aula-audio-box');
   if(!box)return;
-  const vel=_aulaVelSalva();
-  box.innerHTML=`<audio controls aria-label="Áudio da aula ${sanitize(nomeTopico(t))}" style="width:100%" src="${_aulaAudioUrl}"></audio>
-    <div class="aula-vel" role="group" aria-label="Velocidade do áudio"><span class="aula-vel-rot">Velocidade</span>${AULA_VELOCIDADES.map(v=>`<button type="button" aria-pressed="${v===vel}" onclick="definirVelAula(${v})">${String(v).replace('.',',')}x</button>`).join('')}</div>
-    <button class="fim-inline-link" onclick="confirmarRemoverAudioAula('${t}')">Remover do aparelho</button>`;
-  _aplicarVelAula(vel);
+  _encerrarAudioAula();
+  _aulaAudioUrl=URL.createObjectURL(blob);
+  box.innerHTML=_playerAulaHTML(t);
+  _aplIniciar(t);
+  if(metaPronta){_aplAplicarMeta(_metaAulaValida(metaPronta));return;}
+  _carregarMetaAula(t).then(m=>{if(m&&_pa&&_pa.t===t)_aplAplicarMeta(m);});
 }
 // AULA-VELOCIDADE (b275): até 2x o custo de compreensão é mínimo (Murphy et al. 2022); acima, cai.
-// Preferência por aparelho em localStorage (conveniência; sem ela, volta 1x).
+// Preferência por aparelho em localStorage (conveniência; sem ela, volta 1x). b276: um botão só, cíclico.
 const AULA_VELOCIDADES=[1,1.25,1.5,2];
+const AULA_PULO=15;
+let _pa=null;
 function _aulaVelSalva(){
   let v=1;try{v=parseFloat(localStorage.getItem('aulaVel'))||1;}catch(e){}
   return AULA_VELOCIDADES.includes(v)?v:1;
 }
+function _proxVelAula(v){return AULA_VELOCIDADES[(AULA_VELOCIDADES.indexOf(v)+1)%AULA_VELOCIDADES.length];}
+function _rotVelAula(v){return String(v).replace('.',',')+'x';}
 function _aplicarVelAula(v){
   const a=document.querySelector('#aula-audio-box audio');
-  if(a){a.defaultPlaybackRate=v;a.playbackRate=v;a.addEventListener('loadedmetadata',()=>{a.playbackRate=v;},{once:true});}
-  document.querySelectorAll('#aula-audio-box .aula-vel button').forEach((b,i)=>b.setAttribute('aria-pressed',String(AULA_VELOCIDADES[i]===v)));
+  if(a){a.defaultPlaybackRate=v;a.playbackRate=v;a.addEventListener('loadedmetadata',()=>{a.playbackRate=_aulaVelSalva();},{once:true});}
+  const b=document.getElementById('apl-vel');
+  if(b){b.textContent=_rotVelAula(v);b.setAttribute('aria-label','Velocidade '+_rotVelAula(v)+'. Toque para mudar');}
 }
 function definirVelAula(v){
   if(!AULA_VELOCIDADES.includes(v))return;
   try{localStorage.setItem('aulaVel',String(v));}catch(e){}
   _aplicarVelAula(v);
+}
+function aplVel(){definirVelAula(_proxVelAula(_aulaVelSalva()));}
+function _fmtTempo(s){
+  s=Math.max(0,Math.floor(Number(s)||0));
+  const h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=String(s%60).padStart(2,'0');
+  return h?`${h}:${String(m).padStart(2,'0')}:${ss}`:`${m}:${ss}`;
+}
+// Última entrada com t0<=t numa lista ordenada por t0 (falas ou capítulos); -1 se ainda não começou.
+function _idxPorTempo(lista,t){
+  let lo=0,hi=lista.length-1,r=-1;
+  while(lo<=hi){const m=(lo+hi)>>1;if(lista[m].t0<=t){r=m;lo=m+1;}else hi=m-1;}
+  return r;
+}
+// Valida e normaliza o `meta` (string JSON já parseada). Qualquer coisa fora do contrato vira null = aula sem texto.
+function _metaAulaValida(m){
+  if(!m||typeof m!=='object'||m.v!==1)return null;
+  const falas=(Array.isArray(m.falas)?m.falas:[])
+    .filter(f=>f&&typeof f.txt==='string'&&f.txt&&Number.isFinite(f.t0)&&Number.isFinite(f.t1)&&f.t1>f.t0&&f.t0>=0)
+    .map(f=>({t0:f.t0,t1:f.t1,voz:f.voz==='A'?'A':'I',txt:f.txt})).sort((x,y)=>x.t0-y.t0);
+  const caps=(Array.isArray(m.capitulos)?m.capitulos:[])
+    .filter(c=>c&&typeof c.titulo==='string'&&c.titulo&&Number.isFinite(c.t0)&&c.t0>=0)
+    .map(c=>({t0:c.t0,titulo:c.titulo})).sort((x,y)=>x.t0-y.t0);
+  if(!falas.length&&!caps.length)return null;
+  return {dur:Number.isFinite(m.dur)&&m.dur>0?m.dur:0,falas,caps};
+}
+// sanitize ANTES de converter: o único HTML que sai daqui é o <strong> gerado pelos pares **...**.
+function _txtFalaHTML(txt){return sanitize(txt).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
+// Meta mora no RTDB ao lado das partes (aulas_audio/<t>/v<av>/meta, string JSON) e no IndexedDB com a mesma versão.
+// Falha de rede/ausência = null (player sem texto); só guarda no cache o que veio e validou.
+function _chaveMetaAula(t,av){return 'm|'+t+'|'+av;}
+async function _carregarMetaAula(t){
+  const info=(aulasDados()[t]||{}).audio;
+  if(!info)return null;
+  try{
+    const ch=_chaveMetaAula(t,info.av);
+    const emCache=await _lerAudioAulaCache(ch);
+    if(typeof emCache==='string'){
+      let m=null;try{m=_metaAulaValida(JSON.parse(emCache));}catch(e){}
+      if(m)return m;
+      _apagarAudioAulaCache(ch);   // gravação truncada/fora do contrato: refaz pelo RTDB em vez de ficar sem texto
+    }
+    const snap=await withTimeout(db.ref(`aulas_audio/${t.replace(/\./g,'_')}/v${info.av}/meta`).get(),15000);
+    const bruto=snap.val();
+    if(typeof bruto!=='string')return null;
+    const m=_metaAulaValida(JSON.parse(bruto));
+    if(m)_gravarAudioAulaCache(ch,bruto);
+    return m;
+  }catch(e){return null;}
+}
+const _APL_IC={
+  play:'<svg class="apl-ic apl-ic--cheio" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5.5v13l11-6.5z"/></svg>',
+  pause:'<svg class="apl-ic apl-ic--cheio" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6.5" y="5" width="3.8" height="14" rx="1"/><rect x="13.7" y="5" width="3.8" height="14" rx="1"/></svg>',
+  volta:'<svg class="apl-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
+  avanca:'<svg class="apl-ic apl-ic--esp" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
+  lista:'<svg class="apl-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><line x1="9" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="9" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>'
+};
+// A letra (centenas de botões) vai por ÚLTIMO no DOM: a ordem de Tab/leitor de tela chega nos controles antes dela;
+// a posição visual vem do grid-template-areas.
+function _playerAulaHTML(t){
+  const area=TOPICOS[t]&&TOPICOS[t].a;
+  const acc=/^AT[1-5]$/.test(area||'')?`var(--${area.toLowerCase()})`:'var(--ember)';
+  return `<div class="apl" id="apl" style="--apl-acc:${acc}">
+    <div class="apl-capa" id="apl-capa"></div>
+    <audio id="apl-audio" preload="metadata" aria-label="Áudio da aula ${sanitize(nomeTopico(t))}" src="${_aulaAudioUrl}"></audio>
+    <div class="apl-barra">
+      <input type="range" class="apl-seek" id="apl-seek" min="0" max="0" step="1" value="0" aria-label="Posição na aula" oninput="aplSeek(this.value)">
+      <div class="apl-marcas" id="apl-marcas" aria-hidden="true"></div>
+      <div class="apl-tempos"><span id="apl-t-dec">0:00</span><span id="apl-t-rest">-0:00</span></div>
+    </div>
+    <div class="apl-ctl">
+      <button type="button" class="apl-chip" id="apl-vel" onclick="aplVel()"></button>
+      <button type="button" class="apl-btn" aria-label="Voltar ${AULA_PULO} segundos" onclick="aplPular(-${AULA_PULO})">${_APL_IC.volta}<span class="apl-pulo-n" aria-hidden="true">${AULA_PULO}</span></button>
+      <button type="button" class="apl-btn apl-play" id="apl-play" aria-label="Tocar" onclick="aplAlternar()">${_APL_IC.play}</button>
+      <button type="button" class="apl-btn" aria-label="Avançar ${AULA_PULO} segundos" onclick="aplPular(${AULA_PULO})">${_APL_IC.avanca}<span class="apl-pulo-n" aria-hidden="true">${AULA_PULO}</span></button>
+      <button type="button" class="apl-btn apl-oculto" id="apl-caps-btn" aria-label="Capítulos" aria-haspopup="dialog" onclick="aplAbrirCaps()">${_APL_IC.lista}</button>
+    </div>
+    <div class="apl-sec"><button type="button" class="apl-chip" id="apl-txt-btn" onclick="aplTexto()" hidden>Ocultar texto</button></div>
+    <div class="apl-letra" id="apl-letra" role="group" aria-label="Texto da aula" hidden></div>
+  </div>
+  <button class="fim-inline-link" onclick="confirmarRemoverAudioAula('${t}')">Remover do aparelho</button>`;
+}
+function _aplIniciar(t){
+  const a=document.getElementById('apl-audio');
+  let oculto=false;try{oculto=localStorage.getItem('aulaTexto')==='0';}catch(e){}
+  _pa={t,a,meta:null,falas:[],caps:[],iFala:-2,iCap:-1,rolarEm:0,oculto,marcasDur:0,tocando:null,seg:-1,durBarra:-1};
+  ['timeupdate','loadedmetadata','durationchange','seeked','ratechange'].forEach(ev=>a.addEventListener(ev,_aplAtualizar));
+  ['play','pause','ended'].forEach(ev=>a.addEventListener(ev,_aplEstado));
+  const L=document.getElementById('apl-letra');
+  ['wheel','touchmove'].forEach(ev=>L.addEventListener(ev,()=>{if(_pa)_pa.rolarEm=Date.now();},{passive:true}));
+  _aplicarVelAula(_aulaVelSalva());
+  _aplTextoAplicar();
+  _aplCapa();
+  _aplEstado();
+  _aplMSHandlers();
+}
+function _aplDur(p){const d=p.a.duration;return isFinite(d)&&d>0?d:(p.meta?p.meta.dur:0);}
+function _aplAplicarMeta(m){
+  const p=_pa;
+  if(!p||!m)return;
+  p.meta=m;p.falas=m.falas;p.caps=m.caps;p.iFala=-2;p.iCap=-1;p.marcasDur=0;
+  let h='',voz='';
+  m.falas.forEach((f,i)=>{
+    if(f.voz!==voz){voz=f.voz;h+=`<span class="apl-voz">${voz==='A'?'Aluna':'Instrutor'}</span>`;}
+    h+=`<button type="button" class="apl-fala" id="apl-f${i}" data-voz="${f.voz}" onclick="aplIrFala(${i})">${_txtFalaHTML(f.txt)}</button>`;
+  });
+  const L=document.getElementById('apl-letra');
+  if(L&&m.falas.length){L.innerHTML=h;L.hidden=false;}
+  const tb=document.getElementById('apl-txt-btn');
+  if(tb)tb.hidden=!m.falas.length;
+  const cb=document.getElementById('apl-caps-btn');
+  if(cb)cb.classList.toggle('apl-oculto',!m.caps.length);
+  _aplTextoAplicar();
+  _aplCapsLista();
+  _aplMSHandlers();
+  _aplAtualizar();
+  if(p.iFala>=0)_aplRolar(p.iFala,true);
+}
+function _aplTextoAplicar(){
+  const p=_pa,r=document.getElementById('apl');
+  if(!p||!r)return;
+  r.classList.toggle('apl--sem-texto',p.oculto||!p.falas.length);
+  const tb=document.getElementById('apl-txt-btn');
+  if(tb)tb.textContent=p.oculto?'Mostrar texto':'Ocultar texto';
+}
+function aplTexto(){
+  const p=_pa;
+  if(!p)return;
+  p.oculto=!p.oculto;
+  try{localStorage.setItem('aulaTexto',p.oculto?'0':'1');}catch(e){}
+  _aplTextoAplicar();
+  if(!p.oculto&&p.iFala>=0)_aplRolar(p.iFala,true);
+}
+function _aplCapa(){
+  const p=_pa,el=document.getElementById('apl-capa');
+  if(!p||!el)return;
+  const aula=sanitize(nomeTopico(p.t)),area=TOPICOS[p.t]&&TOPICOS[p.t].a;
+  const aInfo=AI[area]||{};
+  if(!p.caps.length){
+    el.innerHTML=`<div class="apl-capa-in"><div class="apl-capa-rot">Aula</div><div class="apl-capa-t">${aula}</div>${aInfo.nome?`<div class="apl-capa-aula">${sanitize(area+' · '+aInfo.nome)}</div>`:''}</div>`;
+    return;
+  }
+  const c=Math.max(0,p.iCap);
+  el.innerHTML=`<div class="apl-capa-in"><div class="apl-capa-n" aria-hidden="true">${String(c+1).padStart(2,'0')}</div><div class="apl-capa-rot">Capítulo ${c+1} de ${p.caps.length}</div><div class="apl-capa-t">${sanitize(p.caps[c].titulo)}</div><div class="apl-capa-aula">${aula}${area?' · '+sanitize(area):''}</div></div>`;
+}
+function _aplMarcas(dur){
+  const p=_pa,el=document.getElementById('apl-marcas');
+  if(!p||!el||!dur||p.marcasDur===dur)return;
+  p.marcasDur=dur;
+  el.innerHTML=p.caps.filter(c=>c.t0>0&&c.t0<dur).map(c=>`<span class="apl-marca" style="left:${(c.t0/dur*100).toFixed(2)}%"></span>`).join('');
+}
+// Chamado por timeupdate/seeked/etc. e direto após um seek (feedback imediato, `seeked` pode demorar).
+function _aplAtualizar(e){
+  const p=_pa;
+  if(!p||(e&&e.target&&e.target!==p.a))return;
+  const t=p.a.currentTime||0,dur=_aplDur(p);
+  // Barra e tempos só mudam por segundo (step=1): evita ~12 escritas de DOM/s e anúncio repetido do aria-valuetext.
+  const seg=Math.floor(t);
+  if(seg!==p.seg||dur!==p.durBarra){
+    p.seg=seg;p.durBarra=dur;
+    const seek=document.getElementById('apl-seek');
+    if(seek){
+      if(seek.max!==String(dur))seek.max=String(dur);
+      seek.value=String(t);
+      seek.style.setProperty('--pct',(dur?Math.min(100,t/dur*100):0)+'%');
+      seek.setAttribute('aria-valuetext',_fmtTempo(t)+' de '+_fmtTempo(dur));
+    }
+    const d=document.getElementById('apl-t-dec'),r=document.getElementById('apl-t-rest');
+    if(d)d.textContent=_fmtTempo(t);
+    if(r)r.textContent='-'+_fmtTempo(Math.max(0,dur-t));
+  }
+  _aplMarcas(dur);
+  if(p.caps.length){
+    const c=Math.max(0,_idxPorTempo(p.caps,t));
+    if(c!==p.iCap){p.iCap=c;_aplCapa();_aplCapsMarca();_aplMSMeta();}
+  }
+  if(p.falas.length){
+    const i=_idxPorTempo(p.falas,t);
+    if(i!==p.iFala){
+      const ant=document.getElementById('apl-f'+p.iFala),atu=document.getElementById('apl-f'+i);
+      if(ant)ant.removeAttribute('aria-current');
+      if(atu){atu.setAttribute('aria-current','true');_aplRolar(i,false);}
+      p.iFala=i;
+    }
+  }
+  if(e&&(e.type==='seeked'||e.type==='ratechange'||e.type==='loadedmetadata'||e.type==='durationchange'))_aplPos();
+}
+function _aplRolar(i,forcar){
+  const p=_pa,L=document.getElementById('apl-letra'),el=document.getElementById('apl-f'+i);
+  if(!p||!L||!el||p.oculto)return;
+  if(!forcar&&Date.now()-p.rolarEm<4000)return;
+  const alvo=Math.max(0,el.offsetTop-(L.clientHeight-el.offsetHeight)/2);
+  const reduz=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  try{L.scrollTo({top:alvo,behavior:reduz||forcar?'auto':'smooth'});}catch(e){L.scrollTop=alvo;}
+}
+function _aplEstado(){
+  const p=_pa;
+  if(!p)return;
+  const tocando=!p.a.paused&&!p.a.ended;
+  if(p.tocando!==tocando){
+    p.tocando=tocando;
+    const b=document.getElementById('apl-play');
+    if(b){b.innerHTML=tocando?_APL_IC.pause:_APL_IC.play;b.setAttribute('aria-label',tocando?'Pausar':'Tocar');}
+  }
+  if('mediaSession' in navigator)try{navigator.mediaSession.playbackState=tocando?'playing':'paused';}catch(e){}
+  _aplPos();
+}
+function aplAlternar(){
+  const p=_pa;
+  if(!p)return;
+  if(p.a.paused){const r=p.a.play();if(r&&r.catch)r.catch(()=>{});}
+  else p.a.pause();
+}
+function _aplIr(t){
+  const p=_pa;
+  if(!p||!isFinite(t))return;
+  const d=_aplDur(p);
+  p.a.currentTime=Math.max(0,d?Math.min(t,d):t);
+  _aplAtualizar();
+}
+function aplPular(s){if(_pa)_aplIr(_pa.a.currentTime+s);}
+function aplSeek(v){_aplIr(Number(v));}
+// +0.05: o navegador pode arredondar o seek para um pouco ANTES do t0 e destacar a fala/capítulo anterior.
+function aplIrFala(i){const p=_pa;if(p&&p.falas[i])_aplIr(p.falas[i].t0+0.05);}
+function _aplCapRel(d){
+  const p=_pa;
+  if(!p||!p.caps.length)return;
+  let c=Math.max(0,_idxPorTempo(p.caps,p.a.currentTime));
+  if(!(d<0&&p.a.currentTime-p.caps[c].t0>3))c=Math.min(Math.max(0,c+d),p.caps.length-1);
+  _aplIr(p.caps[c].t0+0.05);
+}
+function aplIrCap(i){
+  const p=_pa;
+  if(!p||!p.caps[i])return;
+  _aplIr(p.caps[i].t0+0.05);
+  aplFecharCaps();
+  if(p.a.paused)aplAlternar();
+}
+function _aplCapsLista(){
+  const p=_pa,el=document.getElementById('aula-caps-lista');
+  if(!el)return;
+  el.innerHTML=p?p.caps.map((c,i)=>`<button type="button" class="apl-cap" id="apl-c${i}" onclick="aplIrCap(${i})"><span class="apl-cap-n">${i+1}</span><span class="apl-cap-t">${sanitize(c.titulo)}</span><span class="apl-cap-tm">${_fmtTempo(c.t0)}</span></button>`).join(''):'';
+  _aplCapsMarca();
+}
+function _aplCapsMarca(){
+  const p=_pa;
+  if(!p)return;
+  p.caps.forEach((c,i)=>{
+    const b=document.getElementById('apl-c'+i);
+    if(!b)return;
+    if(i===p.iCap)b.setAttribute('aria-current','true');
+    else b.removeAttribute('aria-current');
+  });
+}
+function aplAbrirCaps(){
+  const p=_pa,o=document.getElementById('aula-caps-overlay');
+  if(!p||!o||!p.caps.length)return;
+  o.classList.add('open');
+  const l=document.getElementById('aula-caps-lista'),b=document.getElementById('apl-c'+p.iCap);
+  if(l&&b)l.scrollTop=Math.max(0,b.offsetTop-(l.clientHeight-b.offsetHeight)/2);
+}
+function aplFecharCaps(e){
+  if(e&&e.target!==e.currentTarget)return;
+  const o=document.getElementById('aula-caps-overlay');
+  if(o)o.classList.remove('open');
+}
+// Media Session (tela de bloqueio/fone): título do capítulo, ±15 s, capítulo anterior/próximo, posição.
+function _aplMS(acao,fn){try{navigator.mediaSession.setActionHandler(acao,fn);}catch(e){}}
+function _aplMSHandlers(){
+  if(!('mediaSession' in navigator))return;
+  const p=_pa,temCaps=!!(p&&p.caps.length);
+  _aplMS('play',()=>{if(_pa&&_pa.a.paused)aplAlternar();});
+  _aplMS('pause',()=>{if(_pa)_pa.a.pause();});
+  _aplMS('seekbackward',d=>{if(_pa)_aplIr(_pa.a.currentTime-((d&&d.seekOffset)||AULA_PULO));});
+  _aplMS('seekforward',d=>{if(_pa)_aplIr(_pa.a.currentTime+((d&&d.seekOffset)||AULA_PULO));});
+  _aplMS('seekto',d=>{if(_pa&&d&&isFinite(d.seekTime))_aplIr(d.seekTime);});
+  _aplMS('previoustrack',temCaps?()=>_aplCapRel(-1):null);
+  _aplMS('nexttrack',temCaps?()=>_aplCapRel(1):null);
+  _aplMSMeta();
+}
+function _aplMSMeta(){
+  const p=_pa;
+  if(!p||!('mediaSession' in navigator)||typeof MediaMetadata!=='function')return;
+  const cap=p.caps.length?p.caps[Math.max(0,p.iCap)]:null;
+  const icone=n=>new URL('assets/icon-'+n+'.png',location.href).href;
+  try{navigator.mediaSession.metadata=new MediaMetadata({title:cap?cap.titulo:nomeTopico(p.t),artist:cap?nomeTopico(p.t):'Aulas',album:'Prontidão',artwork:[{src:icone(192),sizes:'192x192',type:'image/png'},{src:icone(512),sizes:'512x512',type:'image/png'}]});}catch(e){}
+}
+function _aplPos(){
+  const p=_pa;
+  if(!p||!('mediaSession' in navigator)||!navigator.mediaSession.setPositionState)return;
+  const d=p.a.duration;
+  if(!isFinite(d)||d<=0)return;
+  try{navigator.mediaSession.setPositionState({duration:d,position:Math.min(p.a.currentTime||0,d),playbackRate:p.a.playbackRate||1});}catch(e){}
+}
+function _aplDestruir(){
+  if(_pa&&_pa.a)_pa.a.pause();
+  _pa=null;
+  aplFecharCaps();
+  const l=document.getElementById('aula-caps-lista');
+  if(l)l.innerHTML='';
+  if('mediaSession' in navigator){
+    ['play','pause','seekbackward','seekforward','seekto','previoustrack','nexttrack'].forEach(a=>_aplMS(a,null));
+    try{navigator.mediaSession.metadata=null;navigator.mediaSession.playbackState='none';}catch(e){}
+  }
 }
 async function _atualizarBotaoAudio(t){
   const info=(aulasDados()[t]||{}).audio;
@@ -12373,7 +12744,8 @@ async function removerAudioAulaDoAparelho(t){
   if(!info)return;
   await _apagarAudioAulaCache(_chaveAudioAula(t,info.av));
   await _apagarPartesAula(t,info.av,info.partes);
-  if(_aulaAudioUrl){URL.revokeObjectURL(_aulaAudioUrl);_aulaAudioUrl=null;}
+  await _apagarAudioAulaCache(_chaveMetaAula(t,info.av));
+  _encerrarAudioAula();
   if(aulaAtual===t)renderAulas();
 }
 // Achado do code-review: `.screen`/`.screen.active` só troca `display` (CSS) — o
@@ -12381,6 +12753,7 @@ async function removerAudioAulaDoAparelho(t){
 // continua tocando escondido (revogar a object URL não para mídia já anexada/tocando
 // nos navegadores testados).
 function _encerrarAudioAula(){
+  _aplDestruir();
   const audioEl=document.querySelector('#aula-audio-box audio');
   if(audioEl)audioEl.pause();
   if(_aulaAudioUrl){URL.revokeObjectURL(_aulaAudioUrl);_aulaAudioUrl=null;}
@@ -15633,6 +16006,7 @@ const OVERLAYS_ATIVOS=[
   {id:'conf-overlay',classe:'show',fechar:()=>_confFechar(null)},
   {id:'rep-overlay',classe:'show',fechar:()=>fecharReporte()},
   {id:'pix-overlay',classe:'show',fechar:()=>fecharPagamento()},
+  {id:'aula-caps-overlay',classe:'open',fechar:el=>aplFecharCaps({target:el,currentTarget:el})},
   {id:'mais-overlay',classe:'open',fechar:el=>fecharMais({target:el,currentTarget:el})},
 ];
 function overlayAberto(){
