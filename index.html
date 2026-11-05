@@ -1235,6 +1235,15 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .apl-seek::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--apl-fg);border:2px solid var(--navy-deep);}
 .apl-marcas{position:absolute;left:9px;right:9px;top:0;height:44px;pointer-events:none;}
 .apl-marca{position:absolute;top:15px;width:2px;height:14px;margin-left:-1px;border-radius:1px;background:var(--apl-fraco);}
+/* b281: cada parte da narracao vira uma "faixa" propria: abas com progresso proprio; barra e tempos mostram so a parte atual */
+.apl-partes{display:flex;gap:6px;margin-bottom:2px;}
+.apl-trilho{position:relative;}   /* ancora das marcas de capitulo: so a faixa do seek, nao as abas acima */
+.apl-pt{flex:1;min-width:0;min-height:52px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;padding:6px 10px 8px;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:transparent;color:var(--apl-fraco);font:inherit;text-align:left;cursor:pointer;}
+.apl-pt[aria-current="true"]{background:var(--apl-vidro);border-color:var(--apl-acc);color:var(--apl-fg);}
+.apl-pt-t{font-size:12.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;}
+.apl-pt-d{font-size:12px;font-variant-numeric:tabular-nums;color:var(--apl-fraco);}
+.apl-pt-b{display:block;width:100%;height:3px;border-radius:2px;background:var(--apl-trilha);overflow:hidden;}
+.apl-pt-b i{display:block;width:0;height:100%;background:var(--apl-acc);}
 .apl-tempos{display:flex;justify-content:space-between;margin-top:-8px;font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--apl-fraco);}
 .apl-ctl{grid-area:ctl;display:flex;align-items:center;justify-content:center;gap:10px;}
 .apl-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border:none;border-radius:50%;background:none;color:var(--apl-fg);cursor:pointer;}
@@ -9354,7 +9363,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.395';
+const APP_VERSAO='v1.396';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -12536,8 +12545,9 @@ function _playerAulaHTML(t){
     <div class="apl-capa" id="apl-capa"></div>
     <audio id="apl-audio" preload="metadata" aria-label="Áudio da aula ${sanitize(nomeTopico(t))}" src="${_aulaAudioUrl}"></audio>
     <div class="apl-barra">
-      <input type="range" class="apl-seek" id="apl-seek" min="0" max="0" step="1" value="0" aria-label="Posição na aula" oninput="aplSeek(this.value)">
-      <div class="apl-marcas" id="apl-marcas" aria-hidden="true"></div>
+      <div class="apl-partes" id="apl-partes" role="group" aria-label="Partes da aula" hidden></div>
+      <div class="apl-trilho"><input type="range" class="apl-seek" id="apl-seek" min="0" max="0" step="1" value="0" aria-label="Posição na aula" oninput="aplSeek(this.value)">
+      <div class="apl-marcas" id="apl-marcas" aria-hidden="true"></div></div>
       <div class="apl-tempos"><span id="apl-t-dec">0:00</span><span id="apl-t-rest">-0:00</span></div>
     </div>
     <div class="apl-ctl">
@@ -12562,7 +12572,7 @@ function _playerAulaHTML(t){
 function _aplIniciar(t){
   const a=document.getElementById('apl-audio');
   let oculto=false;try{oculto=localStorage.getItem('aulaTexto')==='0';}catch(e){}
-  _pa={t,a,meta:null,falas:[],caps:[],iFala:-2,iCap:-1,rolarEm:0,oculto,viz:[],marcasDur:0,tocando:null,seg:-1,durBarra:-1,partes:[],cartao:-1,ultT:0};
+  _pa={t,a,meta:null,falas:[],caps:[],iFala:-2,iCap:-1,rolarEm:0,oculto,viz:[],marcasDur:0,tocando:null,seg:-1,durBarra:-1,partes:[],cartao:-1,ultT:0,kBarra:-2,ptDur:0};
   ['timeupdate','loadedmetadata','durationchange','seeked','ratechange'].forEach(ev=>a.addEventListener(ev,_aplAtualizar));
   ['play','pause','ended'].forEach(ev=>a.addEventListener(ev,_aplEstado));
   const L=document.getElementById('apl-letra');
@@ -12577,7 +12587,7 @@ function _aplDur(p){const d=p.a.duration;return isFinite(d)&&d>0?d:(p.meta?p.met
 function _aplAplicarMeta(m){
   const p=_pa;
   if(!p||!m)return;
-  p.meta=m;p.falas=m.falas;p.caps=m.caps;p.partes=m.partes||[];p.iFala=-2;p.iCap=-1;p.marcasDur=0;p.viz=[];p.ultT=p.a.currentTime||0;
+  p.meta=m;p.falas=m.falas;p.caps=m.caps;p.partes=m.partes||[];p.iFala=-2;p.iCap=-1;p.marcasDur=0;p.viz=[];p.kBarra=-2;p.ptDur=0;p.ultT=p.a.currentTime||0;
   _aplCartaoFechar();
   let h='',voz='';
   m.falas.forEach((f,i)=>{
@@ -12620,14 +12630,51 @@ function _aplCapa(){
     el.innerHTML=`<div class="apl-capa-in">${area?`<div class="apl-capa-n" aria-hidden="true">${sanitize(area)}</div>`:''}<div class="apl-capa-tx"><div class="apl-capa-rot">${sanitize(p.t)} · aula</div><div class="apl-capa-t">${aula}</div>${aInfo.nome?`<div class="apl-capa-aula">${sanitize(area+' · '+aInfo.nome)}</div>`:''}</div></div>`;
     return;
   }
-  const c=Math.max(0,p.iCap);
-  el.innerHTML=`<div class="apl-capa-in"><div class="apl-capa-n" aria-hidden="true">${String(c+1).padStart(2,'0')}</div><div class="apl-capa-tx"><div class="apl-capa-rot">${sanitize(p.t)} · aula · cap. ${c+1} de ${p.caps.length}</div><div class="apl-capa-t">${sanitize(p.caps[c].titulo)}</div>${aInfo.nome?`<div class="apl-capa-aula">${sanitize(area+' · '+aInfo.nome)}</div>`:''}</div></div>`;
+  const c=Math.max(0,p.iCap),J=_aplJanela(p.a.currentTime||0);
+  el.innerHTML=`<div class="apl-capa-in"><div class="apl-capa-n" aria-hidden="true">${String(c+1).padStart(2,'0')}</div><div class="apl-capa-tx"><div class="apl-capa-rot">${sanitize(p.t)} · ${J.k>=0?`parte ${J.k+1} de ${J.n}`:'aula'} · cap. ${c+1} de ${p.caps.length}</div><div class="apl-capa-t">${sanitize(p.caps[c].titulo)}</div>${aInfo.nome?`<div class="apl-capa-aula">${sanitize(area+' · '+aInfo.nome)}</div>`:''}</div></div>`;
 }
-function _aplMarcas(dur){
-  const p=_pa,el=document.getElementById('apl-marcas');
-  if(!p||!el||!dur||p.marcasDur===dur)return;
-  p.marcasDur=dur;
-  el.innerHTML=p.caps.filter(c=>c.t0>0&&c.t0<dur).map(c=>`<span class="apl-marca" style="left:${(c.t0/dur*100).toFixed(2)}%"></span>`).join('');
+// b281: janela da barra. Aula em partes = só a parte atual (cada parte parece uma faixa própria); senão, o áudio todo.
+// Com o cartão de fim de parte aberto a janela fica na parte que acabou (mesmo se o áudio voltou para o início da seguinte).
+function _aplJanela(t){
+  const p=_pa,dur=_aplDur(p),n=p.partes.length;
+  if(n<2)return {k:-1,n,ini:0,fim:dur};
+  const k=p.cartao>=0?p.cartao:_aplParteDe(t);
+  return {k,n,ini:p.partes[k],fim:k+1<n?p.partes[k+1]:dur};
+}
+function _aplMarcas(J){
+  const p=_pa,el=document.getElementById('apl-marcas'),len=J.fim-J.ini,ch=J.ini+'|'+J.fim;
+  if(!p||!el||!(len>0)||p.marcasDur===ch)return;
+  p.marcasDur=ch;
+  el.innerHTML=p.caps.filter(c=>c.t0>J.ini&&c.t0<J.fim).map(c=>`<span class="apl-marca" style="left:${((c.t0-J.ini)/len*100).toFixed(2)}%"></span>`).join('');
+}
+function _aplPartesAbas(){
+  const p=_pa,el=document.getElementById('apl-partes');
+  if(!p||!el)return;
+  const n=p.partes.length,dur=_aplDur(p);
+  if(n<2||!dur){if(!el.hidden){el.hidden=true;el.innerHTML='';}p.ptDur=0;return;}
+  if(p.ptDur===dur)return;
+  p.ptDur=dur;p.kBarra=-2;
+  el.innerHTML=p.partes.map((ini,k)=>{
+    const tm=_fmtTempo((k+1<n?p.partes[k+1]:dur)-ini);
+    return `<button type="button" class="apl-pt" id="apl-pt${k}" aria-label="Parte ${k+1} de ${n}, ${tm}" onclick="aplIrParte(${k})"><span class="apl-pt-t">Parte ${k+1}</span><span class="apl-pt-d">${tm}</span><span class="apl-pt-b" aria-hidden="true"><i id="apl-pt${k}-b"></i></span></button>`;
+  }).join('');
+  el.hidden=false;
+}
+function _aplPartesMarca(J,pct){
+  const p=_pa;
+  if(!p||J.k<0)return;
+  for(let k=0;k<J.n;k++){
+    const b=document.getElementById('apl-pt'+k),f=document.getElementById('apl-pt'+k+'-b');
+    if(b){if(k===J.k)b.setAttribute('aria-current','true');else b.removeAttribute('aria-current');}
+    if(f)f.style.width=(k<J.k?100:k>J.k?0:pct)+'%';
+  }
+}
+function aplIrParte(k){
+  const p=_pa;
+  if(!p||!(k>=0&&k<p.partes.length))return;
+  _aplCartaoFechar();
+  _aplIr(p.partes[k]+(k?0.05:0));
+  if(p.a.paused){const r=p.a.play();if(r&&r.catch)r.catch(()=>{});}
 }
 // Chamado por timeupdate/seeked/etc. e direto após um seek (feedback imediato, `seeked` pode demorar).
 function _aplAtualizar(e){
@@ -12636,20 +12683,28 @@ function _aplAtualizar(e){
   const t=p.a.currentTime||0,dur=_aplDur(p);
   // Barra e tempos só mudam por segundo (step=1): evita ~12 escritas de DOM/s e anúncio repetido do aria-valuetext.
   const seg=Math.floor(t);
-  if(seg!==p.seg||dur!==p.durBarra){
-    p.seg=seg;p.durBarra=dur;
+  _aplPartesAbas();
+  const J=_aplJanela(t),len=Math.max(0,J.fim-J.ini),tt=Math.min(Math.max(0,t-J.ini),len);
+  const trocouParte=J.k!==p.kBarra;
+  if(seg!==p.seg||dur!==p.durBarra||trocouParte){
+    p.seg=seg;p.durBarra=dur;p.kBarra=J.k;
+    const pct=len?Math.min(100,tt/len*100):0;
     const seek=document.getElementById('apl-seek');
     if(seek){
-      if(seek.max!==String(dur))seek.max=String(dur);
+      // min/max = limites da parte: o valor continua em segundos ABSOLUTOS do áudio (aplSeek não muda)
+      if(seek.min!==String(J.ini))seek.min=String(J.ini);
+      if(seek.max!==String(J.fim))seek.max=String(J.fim);
       seek.value=String(t);
-      seek.style.setProperty('--pct',(dur?Math.min(100,t/dur*100):0)+'%');
-      seek.setAttribute('aria-valuetext',_fmtTempo(t)+' de '+_fmtTempo(dur));
+      seek.style.setProperty('--pct',pct+'%');
+      seek.setAttribute('aria-valuetext',(J.k>=0?'Parte '+(J.k+1)+' de '+J.n+', ':'')+_fmtTempo(tt)+' de '+_fmtTempo(len));
     }
     const d=document.getElementById('apl-t-dec'),r=document.getElementById('apl-t-rest');
-    if(d)d.textContent=_fmtTempo(t);
-    if(r)r.textContent='-'+_fmtTempo(Math.max(0,dur-t));
+    if(d)d.textContent=_fmtTempo(tt);
+    if(r)r.textContent='-'+_fmtTempo(Math.max(0,len-tt));
+    _aplPartesMarca(J,pct);
+    if(trocouParte&&J.k>=0){_aplCapa();_aplMSMeta();_aplPos();}
   }
-  _aplMarcas(dur);
+  _aplMarcas(J);
   _aplParteVerificar(t);
   if(p.caps.length){
     const c=Math.max(0,_idxPorTempo(p.caps,t));
@@ -12714,6 +12769,7 @@ function _aplCartaoAbrir(k){
   b.setAttribute('aria-label','Continuar para a parte '+(k+2));
   el.hidden=false;
   if(r)r.classList.add('apl--parte');
+  p.seg=-1;_aplAtualizar();   // b281: a barra volta para a parte que acabou (a amostra pode ter caído já na seguinte)
   // não rouba o foco de quem está em outro lugar da página; dentro do player (ou sem foco) vai para o botão
   const f=document.activeElement;
   if(r&&(!f||f===document.body||r.contains(f)))try{b.focus({preventScroll:true});}catch(e){b.focus();}
@@ -12859,7 +12915,7 @@ function _aplMSHandlers(){
   _aplMS('pause',()=>{if(_pa)_pa.a.pause();});
   _aplMS('seekbackward',d=>{if(_pa)_aplIr(_pa.a.currentTime-((d&&d.seekOffset)||AULA_PULO));});
   _aplMS('seekforward',d=>{if(_pa)_aplIr(_pa.a.currentTime+((d&&d.seekOffset)||AULA_PULO));});
-  _aplMS('seekto',d=>{if(_pa&&d&&isFinite(d.seekTime))_aplIr(d.seekTime);});
+  _aplMS('seekto',d=>{if(_pa&&d&&isFinite(d.seekTime))_aplIr(_aplJanela(_pa.a.currentTime||0).ini+d.seekTime);});   // b281: tela de bloqueio mostra só a parte atual
   _aplMS('previoustrack',temCaps?()=>_aplCapRel(-1):null);
   _aplMS('nexttrack',temCaps?()=>_aplCapRel(1):null);
   _aplMSMeta();
@@ -12867,16 +12923,19 @@ function _aplMSHandlers(){
 function _aplMSMeta(){
   const p=_pa;
   if(!p||!('mediaSession' in navigator)||typeof MediaMetadata!=='function')return;
-  const cap=p.caps.length?p.caps[Math.max(0,p.iCap)]:null;
+  const cap=p.caps.length?p.caps[Math.max(0,p.iCap)]:null,J=_aplJanela(p.a.currentTime||0);
   const icone=n=>new URL('assets/icon-'+n+'.png',location.href).href;
-  try{navigator.mediaSession.metadata=new MediaMetadata({title:cap?cap.titulo:nomeTopico(p.t),artist:cap?nomeTopico(p.t):'Aulas',album:'Prontidão',artwork:[{src:icone(192),sizes:'192x192',type:'image/png'},{src:icone(512),sizes:'512x512',type:'image/png'}]});}catch(e){}
+  const artista=(cap?nomeTopico(p.t):'Aulas')+(J.k>=0?' · Parte '+(J.k+1)+' de '+J.n:'');
+  try{navigator.mediaSession.metadata=new MediaMetadata({title:cap?cap.titulo:nomeTopico(p.t),artist:artista,album:'Prontidão',artwork:[{src:icone(192),sizes:'192x192',type:'image/png'},{src:icone(512),sizes:'512x512',type:'image/png'}]});}catch(e){}
 }
 function _aplPos(){
   const p=_pa;
   if(!p||!('mediaSession' in navigator)||!navigator.mediaSession.setPositionState)return;
   const d=p.a.duration;
   if(!isFinite(d)||d<=0)return;
-  try{navigator.mediaSession.setPositionState({duration:d,position:Math.min(p.a.currentTime||0,d),playbackRate:p.a.playbackRate||1});}catch(e){}
+  const J=_aplJanela(p.a.currentTime||0),len=J.fim-J.ini;
+  if(!(len>0))return;
+  try{navigator.mediaSession.setPositionState({duration:len,position:Math.min(Math.max(0,(p.a.currentTime||0)-J.ini),len),playbackRate:p.a.playbackRate||1});}catch(e){}
 }
 function _aplDestruir(){
   const havia=!!_pa;   // b279: sem player aberto (navTo comum) não mexe na Media Session de ninguém
