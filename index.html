@@ -9363,7 +9363,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.396';
+const APP_VERSAO='v1.397';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -12681,6 +12681,8 @@ function _aplAtualizar(e){
   const p=_pa;
   if(!p||(e&&e.target&&e.target!==p.a))return;
   const t=p.a.currentTime||0,dur=_aplDur(p);
+  // b281: o fim de parte é verificado ANTES da janela: se abrir o cartão, J/barra/marcas abaixo já saem com a parte que acabou (sem reentrar em _aplAtualizar).
+  _aplParteVerificar(t);
   // Barra e tempos só mudam por segundo (step=1): evita ~12 escritas de DOM/s e anúncio repetido do aria-valuetext.
   const seg=Math.floor(t);
   _aplPartesAbas();
@@ -12705,7 +12707,6 @@ function _aplAtualizar(e){
     if(trocouParte&&J.k>=0){_aplCapa();_aplMSMeta();_aplPos();}
   }
   _aplMarcas(J);
-  _aplParteVerificar(t);
   if(p.caps.length){
     const c=Math.max(0,_idxPorTempo(p.caps,t));
     if(c!==p.iCap){p.iCap=c;_aplCapa();_aplCapsMarca();_aplMSMeta();}
@@ -12769,7 +12770,7 @@ function _aplCartaoAbrir(k){
   b.setAttribute('aria-label','Continuar para a parte '+(k+2));
   el.hidden=false;
   if(r)r.classList.add('apl--parte');
-  p.seg=-1;_aplAtualizar();   // b281: a barra volta para a parte que acabou (a amostra pode ter caído já na seguinte)
+  p.seg=-1;   // b281: força o redesenho da barra na parte que acabou (a amostra pode ter caído já na seguinte); quem chama (_aplAtualizar) desenha em seguida
   // não rouba o foco de quem está em outro lugar da página; dentro do player (ou sem foco) vai para o botão
   const f=document.activeElement;
   if(r&&(!f||f===document.body||r.contains(f)))try{b.focus({preventScroll:true});}catch(e){b.focus();}
