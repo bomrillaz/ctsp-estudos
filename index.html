@@ -71,7 +71,7 @@
   --radius:18px;--radius-sm:12px;--radius-xs:9px;
   --nav-h:84px;--header-h:60px;
   /* UI-24: escala de camadas (valores efetivos inalterados) */
-  --z-nav:100;--z-sheet:200;--z-modal:1000;--z-tour:1001;--z-tooltip:2000;--z-doc:2500;--z-splash:9990;--z-gate:9995;--z-toast:9998;--z-topo:9999;--z-pix:10000;--z-toast-renov:10001;
+  --z-nav:100;--z-player:150;--z-sheet:200;--z-modal:1000;--z-tour:1001;--z-tooltip:2000;--z-doc:2500;--z-splash:9990;--z-gate:9995;--z-toast:9998;--z-topo:9999;--z-pix:10000;--z-toast-renov:10001;
   --ease-out:cubic-bezier(0.16,1,0.3,1);
   --ease-spring:cubic-bezier(0.34,1.56,0.64,1);
   /* PM1/M0: tokens de duração do plano de movimento. Reaproveitam os --ease-* acima. */
@@ -1201,36 +1201,44 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .aulas-list{display:flex;flex-direction:column;gap:10px;}
 .aulas-origem{font-size:12px;line-height:1.5;color:var(--text3);background:var(--paper-2);border-radius:10px;padding:10px 12px;margin-bottom:4px;}
 .aula-audio-box{margin-bottom:4px;}
-/* b276: player das Aulas (capa tipografica por capitulo, letra sincronizada, controles proprios). Cor da area vem de --apl-acc. */
-.apl{--apl-acc:var(--ember);display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"capa" "letra" "barra" "ctl" "sec";gap:10px;margin-bottom:6px;}
-.apl-capa{grid-area:capa;position:relative;overflow:hidden;border-radius:18px;padding:16px 18px 16px 22px;min-height:132px;display:flex;flex-direction:column;justify-content:flex-end;color:#fff;background:linear-gradient(150deg,var(--navy-2),var(--navy-deep));border:1px solid rgba(255,255,255,.08);}
-.apl-capa::before{content:'';position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--apl-acc);}
-.apl-capa-in{display:flex;flex-direction:column;gap:2px;animation:aplFade .35s var(--ease-out);}
-.apl-capa-n{font-family:var(--font-display);font-size:56px;font-weight:700;line-height:.9;letter-spacing:.02em;color:var(--apl-acc);}
-.apl-capa-rot{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.78);}
-.apl-capa-t{font-family:var(--font-display);font-size:26px;font-weight:700;line-height:1.1;overflow-wrap:anywhere;}
-.apl-capa-aula{font-size:12.5px;line-height:1.35;color:rgba(255,255,255,.78);margin-top:4px;}
+/* b280: player das Aulas = painel escuro unico (estilo media player) + tela cheia (.apl--cheio) no MESMO #apl. Cor da area vem de --apl-acc. */
+.apl{--apl-acc:var(--ember);--apl-fg:#fff;--apl-dim:rgba(255,255,255,.42);--apl-fraco:rgba(255,255,255,.7);--apl-voz:rgba(255,255,255,.55);--apl-trilha:rgba(255,255,255,.25);--apl-vidro:rgba(255,255,255,.12);position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"capa" "letra" "barra" "ctl" "sec";gap:10px;margin-bottom:6px;padding:16px 16px 14px;border-radius:22px;color:var(--apl-fg);background:linear-gradient(150deg,var(--navy-2),var(--navy-deep));border:1px solid rgba(255,255,255,.08);box-shadow:var(--shadow-md);}
+.apl-capa{grid-area:capa;min-width:0;padding-right:52px;}
 @keyframes aplFade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
-.apl-letra{grid-area:letra;position:relative;max-height:min(38vh,300px);overflow-y:auto;overscroll-behavior:contain;padding:14px 0;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 16px,#000 calc(100% - 16px),transparent 100%);mask-image:linear-gradient(to bottom,transparent 0,#000 16px,#000 calc(100% - 16px),transparent 100%);}
+.apl-capa-in{display:flex;align-items:center;gap:12px;animation:aplFade .35s var(--ease-out);}
+.apl-capa-n{flex:none;display:flex;align-items:center;justify-content:center;width:60px;height:60px;border-radius:12px;background:var(--apl-vidro);border-bottom:3px solid var(--apl-acc);font-family:var(--font-display);font-size:28px;font-weight:700;line-height:1;letter-spacing:.02em;color:var(--apl-acc);}
+.apl-capa-tx{min-width:0;display:flex;flex-direction:column;gap:1px;}
+.apl-capa-rot{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--apl-fraco);}
+.apl-capa-t{font-family:var(--font-display);font-size:18px;font-weight:700;line-height:1.15;overflow-wrap:anywhere;}
+.apl-capa-aula{font-size:12px;line-height:1.35;color:var(--apl-fraco);}
+.apl-exp,.apl-fechar{position:absolute;top:8px;right:8px;z-index:2;width:44px;height:44px;border:none;border-radius:50%;background:var(--apl-vidro);color:var(--apl-fg);align-items:center;justify-content:center;cursor:pointer;}
+.apl-exp{display:inline-flex;}
+.apl-fechar{display:none;}
+.apl-exp .apl-ic,.apl-fechar .apl-ic{width:22px;height:22px;}
+.apl-letra{grid-area:letra;position:relative;max-height:min(38vh,300px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;padding:48px 0;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 28px,#000 calc(100% - 28px),transparent 100%);mask-image:linear-gradient(to bottom,transparent 0,#000 28px,#000 calc(100% - 28px),transparent 100%);}
+.apl-letra::-webkit-scrollbar{display:none;}
 .apl--sem-texto .apl-letra{display:none;}
-.apl-voz{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin:10px 0 0 15px;}
-.apl-fala{display:block;width:100%;min-height:44px;padding:6px 12px;border:none;border-left:3px solid transparent;border-radius:8px;background:none;text-align:left;font:inherit;font-size:17px;line-height:1.5;color:var(--text3);cursor:pointer;transition:color .2s,background .2s,border-color .2s;}
+.apl-voz{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--apl-voz);margin:14px 0 0 8px;}
+.apl-fala{display:block;width:100%;min-height:44px;padding:6px 8px;border:none;border-radius:10px;background:none;text-align:left;font:inherit;font-size:22px;font-weight:600;line-height:1.3;color:var(--apl-dim);cursor:pointer;transition:color .25s,filter .25s;}
 .apl-fala[data-voz="A"]{padding-left:22px;}
-.apl-fala strong{font-weight:800;color:var(--text);}
-.apl-fala[aria-current="true"]{color:var(--text);font-weight:600;border-left-color:var(--apl-acc);background:var(--paper-2);}
+.apl-fala strong{font-weight:800;color:var(--apl-fraco);}
+.apl-fala[aria-current="true"]{color:var(--apl-fg);font-weight:700;}
+.apl-fala[aria-current="true"] strong{color:var(--apl-fg);text-decoration:underline;text-decoration-color:var(--apl-acc);text-decoration-thickness:2px;text-underline-offset:4px;}
+.apl-fala.apl-f-v{filter:blur(1.5px);}
+@media (prefers-reduced-motion:reduce),(prefers-reduced-transparency:reduce){.apl-fala.apl-f-v{filter:none;}}
 .apl-barra{grid-area:barra;position:relative;}
 .apl-seek{--pct:0%;-webkit-appearance:none;appearance:none;display:block;width:100%;height:44px;margin:0;background:transparent;cursor:pointer;}
-.apl-seek::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(to right,var(--apl-acc) var(--pct),var(--border) var(--pct));}
-.apl-seek::-moz-range-track{height:6px;border-radius:3px;background:var(--border);}
+.apl-seek::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(to right,var(--apl-acc) var(--pct),var(--apl-trilha) var(--pct));}
+.apl-seek::-moz-range-track{height:6px;border-radius:3px;background:var(--apl-trilha);}
 .apl-seek::-moz-range-progress{height:6px;border-radius:3px;background:var(--apl-acc);}
-.apl-seek::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-6px;border-radius:50%;background:var(--text);border:2px solid var(--surface);}
-.apl-seek::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--text);border:2px solid var(--surface);}
+.apl-seek::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-6px;border-radius:50%;background:var(--apl-fg);border:2px solid var(--navy-deep);}
+.apl-seek::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--apl-fg);border:2px solid var(--navy-deep);}
 .apl-marcas{position:absolute;left:9px;right:9px;top:0;height:44px;pointer-events:none;}
-.apl-marca{position:absolute;top:15px;width:2px;height:14px;margin-left:-1px;border-radius:1px;background:var(--text3);}
-.apl-tempos{display:flex;justify-content:space-between;margin-top:-8px;font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--text2);}
+.apl-marca{position:absolute;top:15px;width:2px;height:14px;margin-left:-1px;border-radius:1px;background:var(--apl-fraco);}
+.apl-tempos{display:flex;justify-content:space-between;margin-top:-8px;font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--apl-fraco);}
 .apl-ctl{grid-area:ctl;display:flex;align-items:center;justify-content:center;gap:10px;}
-.apl-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border:none;border-radius:50%;background:none;color:var(--text);cursor:pointer;}
-.apl-btn:active{background:var(--paper-2);}
+.apl-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border:none;border-radius:50%;background:none;color:var(--apl-fg);cursor:pointer;}
+.apl-btn:active{background:var(--apl-vidro);}
 .apl-play{width:64px;height:64px;background:var(--red-solid);color:#fff;}
 .apl-play:active{background:var(--red-dark);}
 .apl-ic{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
@@ -1240,8 +1248,18 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .apl-pulo-n{position:absolute;top:50%;left:50%;transform:translate(-50%,-44%);font-size:9px;font-weight:800;line-height:1;}
 .apl-oculto{visibility:hidden;}
 .apl [hidden]{display:none!important;}
+.apl :focus-visible{outline:2px solid var(--apl-fg);outline-offset:2px;}
 .apl-sec{grid-area:sec;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;}
-.apl-chip{display:inline-flex;align-items:center;justify-content:center;min-width:56px;min-height:44px;padding:8px 14px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;}
+.apl-chip{display:inline-flex;align-items:center;justify-content:center;min-width:56px;min-height:44px;padding:8px 14px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:var(--apl-vidro);color:var(--apl-fg);font-size:13px;font-weight:700;cursor:pointer;}
+.apl-fundo{display:none;}
+body.apl-trava{overflow:hidden;}
+/* Tela cheia: o mesmo #apl. Celular = pagina inteira; >=768px = janela sobre fundo escuro (clique no fundo fecha). */
+.apl--cheio{position:fixed;inset:0;z-index:var(--z-player);margin:0;border-radius:0;border:none;box-shadow:none;gap:12px;padding:calc(14px + env(safe-area-inset-top)) 18px calc(16px + env(safe-area-inset-bottom));grid-template-rows:auto minmax(0,1fr) auto auto auto;overflow:hidden;}
+.apl--cheio .apl-letra{max-height:none;min-height:0;}
+.apl--cheio .apl-fala{font-size:24px;}
+.apl--cheio .apl-exp{display:none;}
+.apl--cheio .apl-fechar{display:inline-flex;}
+.apl--cheio .apl-exp,.apl--cheio .apl-fechar{top:calc(10px + env(safe-area-inset-top));}
 .apl-caps-cab{display:flex;align-items:center;justify-content:space-between;}
 .apl-x{width:44px;height:44px;border:none;border-radius:50%;background:none;font-size:22px;line-height:1;color:var(--text2);cursor:pointer;}
 .apl-caps-lista{position:relative;max-height:min(60vh,420px);overflow-y:auto;overscroll-behavior:contain;}
@@ -1252,11 +1270,16 @@ mark{background:var(--amber-light);color:inherit;border-radius:3px;padding:0 1px
 .apl-cap-t{flex:1;font-size:15px;font-weight:700;}
 .apl-cap-tm{font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--text3);}
 @media (min-width:768px){
-  .apl{grid-template-columns:minmax(0,360px) minmax(0,1fr);grid-template-areas:"capa letra" "barra letra" "ctl letra" "sec letra";grid-template-rows:auto auto auto 1fr;column-gap:24px;align-items:start;}
+  .apl{padding:20px;grid-template-columns:minmax(0,340px) minmax(0,1fr);grid-template-areas:"capa letra" "barra letra" "ctl letra" "sec letra";grid-template-rows:auto auto auto 1fr;column-gap:24px;align-items:start;}
   .apl--sem-texto{grid-template-columns:minmax(0,420px);grid-template-areas:"capa" "barra" "ctl" "sec";}
-  .apl-letra{max-height:460px;}
+  .apl-letra{max-height:460px;margin-top:40px;}   /* 40px = espaço do botão expandir/fechar (canto superior direito) sobre a coluna da letra */
+  .apl--cheio{inset:auto;left:50%;top:50%;transform:translate(-50%,-50%);width:min(960px,calc(100vw - 48px));height:min(90vh,820px);border-radius:22px;border:1px solid rgba(255,255,255,.1);box-shadow:var(--shadow-lg);padding:28px;column-gap:28px;grid-template-rows:auto auto auto minmax(0,1fr);align-items:start;}
+  .apl--cheio.apl--sem-texto{grid-template-rows:none;justify-content:center;align-content:center;}
+  .apl--cheio .apl-letra{align-self:stretch;}
+  .apl--cheio .apl-exp,.apl--cheio .apl-fechar{top:12px;right:12px;}
+  .apl--cheio+.apl-fundo{display:block;position:fixed;inset:0;z-index:calc(var(--z-player) - 1);background:rgba(11,20,48,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);}
 }
-@media (hover:hover){.apl-fala:hover{background:var(--paper-2);}}
+@media (hover:hover){.apl-fala:hover{background:var(--apl-vidro);}}
 .aula-infografico{display:flex;flex-direction:column;gap:14px;}
 .aula-info-bloco-t{font-size:13px;font-weight:800;margin-bottom:8px;}
 .aula-info-cards{display:flex;flex-direction:column;gap:8px;}
@@ -9319,7 +9342,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.393';
+const APP_VERSAO='v1.394';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -12478,6 +12501,8 @@ const _APL_IC={
   pause:'<svg class="apl-ic apl-ic--cheio" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6.5" y="5" width="3.8" height="14" rx="1"/><rect x="13.7" y="5" width="3.8" height="14" rx="1"/></svg>',
   volta:'<svg class="apl-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
   avanca:'<svg class="apl-ic apl-ic--esp" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
+  expandir:'<svg class="apl-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>',
+  baixo:'<svg class="apl-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polyline points="6 9 12 15 18 9"/></svg>',
   lista:'<svg class="apl-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><line x1="9" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="9" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>'
 };
 // A letra (centenas de botões) vai por ÚLTIMO no DOM: a ordem de Tab/leitor de tela chega nos controles antes dela;
@@ -12486,6 +12511,8 @@ function _playerAulaHTML(t){
   const area=TOPICOS[t]&&TOPICOS[t].a;
   const acc=/^AT[1-5]$/.test(area||'')?`var(--${area.toLowerCase()})`:'var(--ember)';
   return `<div class="apl" id="apl" style="--apl-acc:${acc}">
+    <button type="button" class="apl-fechar" id="apl-fechar" aria-label="Fechar tela cheia" onclick="aplCheio(false)">${_APL_IC.baixo}</button>
+    <button type="button" class="apl-exp" id="apl-exp" aria-label="Abrir em tela cheia" aria-haspopup="dialog" onclick="aplCheio(true)">${_APL_IC.expandir}</button>
     <div class="apl-capa" id="apl-capa"></div>
     <audio id="apl-audio" preload="metadata" aria-label="Áudio da aula ${sanitize(nomeTopico(t))}" src="${_aulaAudioUrl}"></audio>
     <div class="apl-barra">
@@ -12503,12 +12530,13 @@ function _playerAulaHTML(t){
     <div class="apl-sec"><button type="button" class="apl-chip" id="apl-txt-btn" onclick="aplTexto()" hidden>Ocultar texto</button></div>
     <div class="apl-letra" id="apl-letra" role="group" aria-label="Texto da aula" hidden></div>
   </div>
+  <div class="apl-fundo" aria-hidden="true" onclick="aplCheio(false)"></div>
   <button class="fim-inline-link" onclick="confirmarRemoverAudioAula('${t}')">Remover do aparelho</button>`;
 }
 function _aplIniciar(t){
   const a=document.getElementById('apl-audio');
   let oculto=false;try{oculto=localStorage.getItem('aulaTexto')==='0';}catch(e){}
-  _pa={t,a,meta:null,falas:[],caps:[],iFala:-2,iCap:-1,rolarEm:0,oculto,marcasDur:0,tocando:null,seg:-1,durBarra:-1};
+  _pa={t,a,meta:null,falas:[],caps:[],iFala:-2,iCap:-1,rolarEm:0,oculto,viz:[],marcasDur:0,tocando:null,seg:-1,durBarra:-1};
   ['timeupdate','loadedmetadata','durationchange','seeked','ratechange'].forEach(ev=>a.addEventListener(ev,_aplAtualizar));
   ['play','pause','ended'].forEach(ev=>a.addEventListener(ev,_aplEstado));
   const L=document.getElementById('apl-letra');
@@ -12523,11 +12551,11 @@ function _aplDur(p){const d=p.a.duration;return isFinite(d)&&d>0?d:(p.meta?p.met
 function _aplAplicarMeta(m){
   const p=_pa;
   if(!p||!m)return;
-  p.meta=m;p.falas=m.falas;p.caps=m.caps;p.iFala=-2;p.iCap=-1;p.marcasDur=0;
+  p.meta=m;p.falas=m.falas;p.caps=m.caps;p.iFala=-2;p.iCap=-1;p.marcasDur=0;p.viz=[];
   let h='',voz='';
   m.falas.forEach((f,i)=>{
     if(f.voz!==voz){voz=f.voz;h+=`<span class="apl-voz">${voz==='A'?'Aluna':'Instrutor'}</span>`;}
-    h+=`<button type="button" class="apl-fala" id="apl-f${i}" data-voz="${f.voz}" onclick="aplIrFala(${i})">${_txtFalaHTML(f.txt)}</button>`;
+    h+=`<button type="button" class="apl-fala" id="apl-f${i}" data-voz="${f.voz}" tabindex="-1" onclick="aplIrFala(${i})">${_txtFalaHTML(f.txt)}</button>`;
   });
   const L=document.getElementById('apl-letra');
   if(L&&m.falas.length){L.innerHTML=h;L.hidden=false;}
@@ -12562,11 +12590,11 @@ function _aplCapa(){
   const aula=sanitize(nomeTopico(p.t)),area=TOPICOS[p.t]&&TOPICOS[p.t].a;
   const aInfo=AI[area]||{};
   if(!p.caps.length){
-    el.innerHTML=`<div class="apl-capa-in"><div class="apl-capa-rot">Aula</div><div class="apl-capa-t">${aula}</div>${aInfo.nome?`<div class="apl-capa-aula">${sanitize(area+' · '+aInfo.nome)}</div>`:''}</div>`;
+    el.innerHTML=`<div class="apl-capa-in">${area?`<div class="apl-capa-n" aria-hidden="true">${sanitize(area)}</div>`:''}<div class="apl-capa-tx"><div class="apl-capa-rot">${sanitize(p.t)} · aula</div><div class="apl-capa-t">${aula}</div>${aInfo.nome?`<div class="apl-capa-aula">${sanitize(area+' · '+aInfo.nome)}</div>`:''}</div></div>`;
     return;
   }
   const c=Math.max(0,p.iCap);
-  el.innerHTML=`<div class="apl-capa-in"><div class="apl-capa-n" aria-hidden="true">${String(c+1).padStart(2,'0')}</div><div class="apl-capa-rot">Capítulo ${c+1} de ${p.caps.length}</div><div class="apl-capa-t">${sanitize(p.caps[c].titulo)}</div><div class="apl-capa-aula">${aula}${area?' · '+sanitize(area):''}</div></div>`;
+  el.innerHTML=`<div class="apl-capa-in"><div class="apl-capa-n" aria-hidden="true">${String(c+1).padStart(2,'0')}</div><div class="apl-capa-tx"><div class="apl-capa-rot">${sanitize(p.t)} · aula · cap. ${c+1} de ${p.caps.length}</div><div class="apl-capa-t">${sanitize(p.caps[c].titulo)}</div>${aInfo.nome?`<div class="apl-capa-aula">${sanitize(area+' · '+aInfo.nome)}</div>`:''}</div></div>`;
 }
 function _aplMarcas(dur){
   const p=_pa,el=document.getElementById('apl-marcas');
@@ -12603,12 +12631,26 @@ function _aplAtualizar(e){
     const i=_idxPorTempo(p.falas,t);
     if(i!==p.iFala){
       const ant=document.getElementById('apl-f'+p.iFala),atu=document.getElementById('apl-f'+i);
-      if(ant)ant.removeAttribute('aria-current');
-      if(atu){atu.setAttribute('aria-current','true');_aplRolar(i,false);}
+      if(ant){ant.removeAttribute('aria-current');ant.setAttribute('tabindex','-1');}   // só a fala atual entra no Tab (a letra tem centenas de botões)
+      if(atu){atu.setAttribute('aria-current','true');atu.removeAttribute('tabindex');_aplRolar(i,false);}
       p.iFala=i;
+      _aplVizinhas(i);
     }
   }
   if(e&&(e.type==='seeked'||e.type==='ratechange'||e.type==='loadedmetadata'||e.type==='durationchange'))_aplPos();
+}
+// Desfoque só nas falas a 2..APL_BLUR_RAIO de distância da atual, por classe (blur em todas custa GPU em Android fraco).
+// Teto: além do raio a fala fica nítida; se a tela cheia mostrar mais falas que isso, subir a constante.
+const APL_BLUR_RAIO=3;
+function _aplVizinhas(i){
+  const p=_pa;
+  if(!p)return;
+  (p.viz||[]).forEach(e=>e.classList.remove('apl-f-v'));
+  p.viz=[];
+  for(let d=2;d<=APL_BLUR_RAIO;d++)for(const j of [i-d,i+d]){
+    const e=document.getElementById('apl-f'+j);
+    if(e){e.classList.add('apl-f-v');p.viz.push(e);}
+  }
 }
 function _aplRolar(i,forcar){
   const p=_pa,L=document.getElementById('apl-letra'),el=document.getElementById('apl-f'+i);
@@ -12677,6 +12719,19 @@ function _aplCapsMarca(){
     else b.removeAttribute('aria-current');
   });
 }
+// Tela cheia: o MESMO #apl ganha .apl--cheio (sem duplicar DOM nem estado). Fecha por botão, Esc (OVERLAYS_ATIVOS) e fundo (PC).
+function aplCheio(on){
+  const r=document.getElementById('apl');
+  on=!!on;
+  if(!_pa||!r||r.classList.contains('apl--cheio')===on)return;
+  r.classList.toggle('apl--cheio',on);
+  if(document.body)document.body.classList.toggle('apl-trava',on);
+  if(on){r.setAttribute('role','dialog');r.setAttribute('aria-modal','true');r.setAttribute('aria-label','Player da aula');}
+  else{r.removeAttribute('role');r.removeAttribute('aria-modal');r.removeAttribute('aria-label');}
+  const alvo=document.getElementById(on?'apl-fechar':'apl-exp');
+  if(alvo)try{alvo.focus({preventScroll:true});}catch(e){alvo.focus();}
+  if(_pa.iFala>=0)_aplRolar(_pa.iFala,true);
+}
 function aplAbrirCaps(){
   const p=_pa,o=document.getElementById('aula-caps-overlay');
   if(!p||!o||!p.caps.length)return;
@@ -12721,6 +12776,7 @@ function _aplDestruir(){
   const havia=!!_pa;   // b279: sem player aberto (navTo comum) não mexe na Media Session de ninguém
   if(_pa&&_pa.a)_pa.a.pause();
   _pa=null;
+  if(document.body)document.body.classList.remove('apl-trava');   // tela cheia aberta + navTo: destrava o body (o #apl some com o innerHTML)
   aplFecharCaps();
   const l=document.getElementById('aula-caps-lista');
   if(l)l.innerHTML='';
@@ -16009,6 +16065,7 @@ const OVERLAYS_ATIVOS=[
   {id:'rep-overlay',classe:'show',fechar:()=>fecharReporte()},
   {id:'pix-overlay',classe:'show',fechar:()=>fecharPagamento()},
   {id:'aula-caps-overlay',classe:'open',fechar:el=>aplFecharCaps({target:el,currentTarget:el})},
+  {id:'apl',classe:'apl--cheio',fechar:()=>aplCheio(false)},
   {id:'mais-overlay',classe:'open',fechar:el=>fecharMais({target:el,currentTarget:el})},
 ];
 function overlayAberto(){
@@ -16112,7 +16169,7 @@ document.addEventListener('keydown',e=>{
   if(!overlay)return;
   const focaveis=[...(overlay.id==='modal-tutorial'?document.querySelectorAll('#install-banner.tour-ativo:not(.tour-oculto) #install-btn'):[]),   // passo do banner: o "Instalar" fica fora do #modal-tutorial (z 1001), mas entra no ciclo
                   ...overlay.querySelectorAll('button,a[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')]
-    .filter(el=>!el.disabled&&el.offsetParent!==null);
+    .filter(el=>!el.disabled&&el.offsetParent!==null&&el.getAttribute('tabindex')!=='-1');
   if(!focaveis.length)return;
   const primeiro=focaveis[0],ultimo=focaveis[focaveis.length-1];
   if(e.shiftKey&&document.activeElement===primeiro){e.preventDefault();ultimo.focus();}
