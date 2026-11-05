@@ -9319,7 +9319,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.392';
+const APP_VERSAO='v1.393';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -12415,7 +12415,7 @@ function _proxVelAula(v){return AULA_VELOCIDADES[(AULA_VELOCIDADES.indexOf(v)+1)
 function _rotVelAula(v){return String(v).replace('.',',')+'x';}
 function _aplicarVelAula(v){
   const a=document.querySelector('#aula-audio-box audio');
-  if(a){a.defaultPlaybackRate=v;a.playbackRate=v;a.addEventListener('loadedmetadata',()=>{a.playbackRate=_aulaVelSalva();},{once:true});}
+  if(a){a.defaultPlaybackRate=v;a.playbackRate=v;if(!(a.readyState>=1))a.addEventListener('loadedmetadata',()=>{a.playbackRate=_aulaVelSalva();},{once:true});}
   const b=document.getElementById('apl-vel');
   if(b){b.textContent=_rotVelAula(v);b.setAttribute('aria-label','Velocidade '+_rotVelAula(v)+'. Toque para mudar');}
 }
@@ -12452,10 +12452,11 @@ function _metaAulaValida(m){
 function _txtFalaHTML(txt){return sanitize(txt).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
 // Meta mora no RTDB ao lado das partes (aulas_audio/<t>/v<av>/meta, string JSON) e no IndexedDB com a mesma versão.
 // Falha de rede/ausência = null (player sem texto); só guarda no cache o que veio e validou.
+// b279: só busca com `audio.meta` (gravado por publicar_meta_aula.js); aula sem meta não gasta leitura do RTDB a cada abertura.
 function _chaveMetaAula(t,av){return 'm|'+t+'|'+av;}
 async function _carregarMetaAula(t){
   const info=(aulasDados()[t]||{}).audio;
-  if(!info)return null;
+  if(!info||!info.meta)return null;
   try{
     const ch=_chaveMetaAula(t,info.av);
     const emCache=await _lerAudioAulaCache(ch);
@@ -12717,12 +12718,13 @@ function _aplPos(){
   try{navigator.mediaSession.setPositionState({duration:d,position:Math.min(p.a.currentTime||0,d),playbackRate:p.a.playbackRate||1});}catch(e){}
 }
 function _aplDestruir(){
+  const havia=!!_pa;   // b279: sem player aberto (navTo comum) não mexe na Media Session de ninguém
   if(_pa&&_pa.a)_pa.a.pause();
   _pa=null;
   aplFecharCaps();
   const l=document.getElementById('aula-caps-lista');
   if(l)l.innerHTML='';
-  if('mediaSession' in navigator){
+  if(havia&&'mediaSession' in navigator){
     ['play','pause','seekbackward','seekforward','seekto','previoustrack','nexttrack'].forEach(a=>_aplMS(a,null));
     try{navigator.mediaSession.metadata=null;navigator.mediaSession.playbackState='none';}catch(e){}
   }
