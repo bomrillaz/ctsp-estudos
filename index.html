@@ -1269,6 +1269,18 @@ body.apl-trava{overflow:hidden;}
 .apl-cap-n{min-width:26px;font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text3);}
 .apl-cap-t{flex:1;font-size:15px;font-weight:700;}
 .apl-cap-tm{font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--text3);}
+.apl-cap-parte{padding:14px 12px 4px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);}
+.apl-cap-parte:first-child{padding-top:4px;}
+/* b280: cartao de fim de parte. Ocupa a area da letra (ou "sec" sem texto) enquanto aberto; a letra some so enquanto ele esta la. */
+.apl-parte{grid-area:letra;align-self:center;display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 18px;border-radius:18px;background:var(--apl-vidro);border:1px solid rgba(255,255,255,.14);text-align:center;}
+.apl--parte .apl-letra{display:none;}
+.apl--sem-texto .apl-parte{grid-area:sec;}
+.apl--parte.apl--sem-texto .apl-sec{display:none;}
+.apl-parte-k{font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--apl-fraco);}
+.apl-parte-p{font-family:var(--font-display);font-size:19px;font-weight:700;line-height:1.25;color:var(--apl-fg);}
+.apl-parte-p:empty{display:none;}
+.apl-parte-btn{min-width:160px;min-height:48px;margin-top:6px;padding:10px 26px;border:none;border-radius:999px;background:var(--red-solid);color:#fff;font:inherit;font-size:15px;font-weight:800;cursor:pointer;}
+.apl-parte-btn:active{background:var(--red-dark);}
 @media (min-width:768px){
   .apl{padding:20px;grid-template-columns:minmax(0,340px) minmax(0,1fr);grid-template-areas:"capa letra" "barra letra" "ctl letra" "sec letra";grid-template-rows:auto auto auto 1fr;column-gap:24px;align-items:start;}
   .apl--sem-texto{grid-template-columns:minmax(0,420px);grid-template-areas:"capa" "barra" "ctl" "sec";}
@@ -5593,7 +5605,7 @@ async function _limparAudiosObsoletos(){
       rq.onsuccess=()=>res(rq.result||[]);rq.onerror=()=>rej(rq.error);
     });
     const velhas=chaves.filter(k=>{
-      const m=/^(?:[pm]\|)?([^:|]+)[:|](\d+)/.exec(String(k));
+      const m=/^(?:[pm]2?\|)?([^:|]+)[:|](\d+)/.exec(String(k));
       if(!m||!Object.prototype.hasOwnProperty.call(a,m[1]))return false;
       const av=a[m[1]]&&a[m[1]].audio&&a[m[1]].audio.av;
       return String(av)!==m[2];
@@ -9342,7 +9354,7 @@ async function loadFlashcards(){
 // S60: fonte ÚNICA da versão. Aparece nas Configurações e vai no backup exportado.
 // Bumpar SÓ aqui — antes o número vivia solto dentro do payload de exportação e não
 // tinha como o João conferir no aparelho se o deploy havia entrado.
-const APP_VERSAO='v1.394';
+const APP_VERSAO='v1.395';
 
 // ═══════════════════════════════
 // B149 DIAGNÓSTICO NO REPORTE — o app quebrava em silêncio
@@ -12469,14 +12481,22 @@ function _metaAulaValida(m){
     .filter(c=>c&&typeof c.titulo==='string'&&c.titulo&&Number.isFinite(c.t0)&&c.t0>=0)
     .map(c=>({t0:c.t0,titulo:c.titulo})).sort((x,y)=>x.t0-y.t0);
   if(!falas.length&&!caps.length)return null;
-  return {dur:Number.isFinite(m.dur)&&m.dur>0?m.dur:0,falas,caps};
+  const dur=Number.isFinite(m.dur)&&m.dur>0?m.dur:0;
+  // b280: início de cada parte da narração no áudio concatenado ([0, ...]). Sem o campo (ou <2 partes) = aula de 1 parte, player inalterado.
+  let partes=[];
+  if(Array.isArray(m.partes)){
+    for(const x of m.partes.filter(v=>Number.isFinite(v)&&v>0&&(!dur||v<dur)).sort((a,b)=>a-b))if(!partes.length||x-partes[partes.length-1]>=1)partes.push(x);
+    partes=partes.length?[0,...partes]:[];
+  }
+  return {dur,falas,caps,partes};
 }
 // sanitize ANTES de converter: o único HTML que sai daqui é o <strong> gerado pelos pares **...**.
 function _txtFalaHTML(txt){return sanitize(txt).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
 // Meta mora no RTDB ao lado das partes (aulas_audio/<t>/v<av>/meta, string JSON) e no IndexedDB com a mesma versão.
 // Falha de rede/ausência = null (player sem texto); só guarda no cache o que veio e validou.
 // b279: só busca com `audio.meta` (gravado por publicar_meta_aula.js); aula sem meta não gasta leitura do RTDB a cada abertura.
-function _chaveMetaAula(t,av){return 'm|'+t+'|'+av;}
+// b280: 'm2' (era 'm'): o meta ganhou `partes` no mesmo `av`; a chave nova força uma releitura única do RTDB em quem já tinha o meta antigo em cache.
+function _chaveMetaAula(t,av){return 'm2|'+t+'|'+av;}
 async function _carregarMetaAula(t){
   const info=(aulasDados()[t]||{}).audio;
   if(!info||!info.meta)return null;
@@ -12492,7 +12512,7 @@ async function _carregarMetaAula(t){
     const bruto=snap.val();
     if(typeof bruto!=='string')return null;
     const m=_metaAulaValida(JSON.parse(bruto));
-    if(m)_gravarAudioAulaCache(ch,bruto);
+    if(m){_gravarAudioAulaCache(ch,bruto);_apagarAudioAulaCache('m|'+t+'|'+info.av);}   // 'm|' = chave antiga (b276), sem `partes`
     return m;
   }catch(e){return null;}
 }
@@ -12528,6 +12548,12 @@ function _playerAulaHTML(t){
       <button type="button" class="apl-btn apl-oculto" id="apl-caps-btn" aria-label="Capítulos" aria-haspopup="dialog" onclick="aplAbrirCaps()">${_APL_IC.lista}</button>
     </div>
     <div class="apl-sec"><button type="button" class="apl-chip" id="apl-txt-btn" onclick="aplTexto()" hidden>Ocultar texto</button></div>
+    <div class="sr-only" id="apl-parte-live" role="status" aria-live="polite"></div>
+    <div class="apl-parte" id="apl-parte" hidden>
+      <div class="apl-parte-k" id="apl-parte-k"></div>
+      <div class="apl-parte-p" id="apl-parte-p"></div>
+      <button type="button" class="apl-parte-btn" id="apl-parte-btn" onclick="aplContinuar()">Continuar</button>
+    </div>
     <div class="apl-letra" id="apl-letra" role="group" aria-label="Texto da aula" hidden></div>
   </div>
   <div class="apl-fundo" aria-hidden="true" onclick="aplCheio(false)"></div>
@@ -12536,7 +12562,7 @@ function _playerAulaHTML(t){
 function _aplIniciar(t){
   const a=document.getElementById('apl-audio');
   let oculto=false;try{oculto=localStorage.getItem('aulaTexto')==='0';}catch(e){}
-  _pa={t,a,meta:null,falas:[],caps:[],iFala:-2,iCap:-1,rolarEm:0,oculto,viz:[],marcasDur:0,tocando:null,seg:-1,durBarra:-1};
+  _pa={t,a,meta:null,falas:[],caps:[],iFala:-2,iCap:-1,rolarEm:0,oculto,viz:[],marcasDur:0,tocando:null,seg:-1,durBarra:-1,partes:[],cartao:-1,ultT:0};
   ['timeupdate','loadedmetadata','durationchange','seeked','ratechange'].forEach(ev=>a.addEventListener(ev,_aplAtualizar));
   ['play','pause','ended'].forEach(ev=>a.addEventListener(ev,_aplEstado));
   const L=document.getElementById('apl-letra');
@@ -12551,7 +12577,8 @@ function _aplDur(p){const d=p.a.duration;return isFinite(d)&&d>0?d:(p.meta?p.met
 function _aplAplicarMeta(m){
   const p=_pa;
   if(!p||!m)return;
-  p.meta=m;p.falas=m.falas;p.caps=m.caps;p.iFala=-2;p.iCap=-1;p.marcasDur=0;p.viz=[];
+  p.meta=m;p.falas=m.falas;p.caps=m.caps;p.partes=m.partes||[];p.iFala=-2;p.iCap=-1;p.marcasDur=0;p.viz=[];p.ultT=p.a.currentTime||0;
+  _aplCartaoFechar();
   let h='',voz='';
   m.falas.forEach((f,i)=>{
     if(f.voz!==voz){voz=f.voz;h+=`<span class="apl-voz">${voz==='A'?'Aluna':'Instrutor'}</span>`;}
@@ -12623,6 +12650,7 @@ function _aplAtualizar(e){
     if(r)r.textContent='-'+_fmtTempo(Math.max(0,dur-t));
   }
   _aplMarcas(dur);
+  _aplParteVerificar(t);
   if(p.caps.length){
     const c=Math.max(0,_idxPorTempo(p.caps,t));
     if(c!==p.iCap){p.iCap=c;_aplCapa();_aplCapsMarca();_aplMSMeta();}
@@ -12638,6 +12666,74 @@ function _aplAtualizar(e){
     }
   }
   if(e&&(e.type==='seeked'||e.type==='ratechange'||e.type==='loadedmetadata'||e.type==='durationchange'))_aplPos();
+}
+// b280: o roteiro foi escrito em partes (cada uma retoma a anterior), então o player PAUSA no fim de cada parte e mostra um
+// cartão com "Continuar" (segmentação com ritmo do aluno: Rey et al. 2019, meta-análise). `partes` = início de cada parte no áudio;
+// entre elas há ~2 s de silêncio e a pausa cai APL_FIM_PARTE s antes do início da seguinte.
+// Detecta o CRUZAMENTO do limite entre duas amostras (não uma janela): timeupdate espaçado (2x, aba em segundo plano) não o perde.
+// Se a amostra já passou do início da parte seguinte, volta o áudio para esse início antes de pausar.
+// Seek nunca dispara: _aplIr grava ultT com o destino ANTES de verificar, então o salto não vira cruzamento.
+const APL_FIM_PARTE=1.2;
+function _aplParteDe(t){
+  const p=_pa;let k=0;
+  if(p)for(let i=0;i<p.partes.length;i++)if(p.partes[i]<=t+0.01)k=i;
+  return k;
+}
+function _aplParteVerificar(t){
+  const p=_pa;
+  if(!p||p.partes.length<2)return;
+  const ant=p.ultT;p.ultT=t;
+  const ps=p.partes;
+  if(p.cartao>=0){
+    const fim=ps[p.cartao+1];
+    if(t<fim-APL_FIM_PARTE-0.5||t>fim+0.5)_aplCartaoFechar();   // o aluno foi para outro ponto: cartão não faz mais sentido
+    return;
+  }
+  if(p.a.paused||p.a.seeking)return;
+  for(let k=0;k<ps.length-1;k++){
+    const lim=ps[k+1]-APL_FIM_PARTE;
+    if(ant<lim&&t>=lim){
+      if(t>ps[k+1]){p.a.currentTime=ps[k+1];p.ultT=ps[k+1];}   // amostra espaçada passou do início da parte seguinte
+      _aplCartaoAbrir(k);
+      return;
+    }
+  }
+}
+function _aplCartaoAbrir(k){
+  const p=_pa,el=document.getElementById('apl-parte'),r=document.getElementById('apl');
+  if(!p||!el)return;
+  p.cartao=k;
+  p.a.pause();
+  const n=p.partes.length,ini=p.partes[k+1],fim=k+2<n?p.partes[k+2]:Infinity;
+  const prox=p.caps.find(c=>c.t0>=ini-0.01&&c.t0<fim);
+  document.getElementById('apl-parte-k').textContent='Fim da parte '+(k+1)+' de '+n;
+  document.getElementById('apl-parte-p').textContent=prox?'Próxima: '+prox.titulo:'';
+  const live=document.getElementById('apl-parte-live');   // região viva sempre no DOM: o texto só troca aqui (leitor de tela anuncia)
+  if(live)live.textContent='Fim da parte '+(k+1)+' de '+n+(prox?'. Próxima: '+prox.titulo:'')+'. Continuar para a parte '+(k+2)+'.';
+  const b=document.getElementById('apl-parte-btn');
+  b.setAttribute('aria-label','Continuar para a parte '+(k+2));
+  el.hidden=false;
+  if(r)r.classList.add('apl--parte');
+  // não rouba o foco de quem está em outro lugar da página; dentro do player (ou sem foco) vai para o botão
+  const f=document.activeElement;
+  if(r&&(!f||f===document.body||r.contains(f)))try{b.focus({preventScroll:true});}catch(e){b.focus();}
+}
+function _aplCartaoFechar(){
+  const p=_pa,el=document.getElementById('apl-parte'),r=document.getElementById('apl');
+  if(p)p.cartao=-1;
+  if(el)el.hidden=true;
+  const live=document.getElementById('apl-parte-live');
+  if(live)live.textContent='';
+  if(r)r.classList.remove('apl--parte');
+}
+function aplContinuar(){
+  const p=_pa;
+  if(!p||p.cartao<0)return;
+  const alvo=p.partes[p.cartao+1],f=document.activeElement,noCartao=!f||f===document.body||f.id==='apl-parte-btn';   // Safari não foca o botão ao clicar: body também conta
+  _aplCartaoFechar();
+  _aplIr(alvo+0.05);
+  const r=p.a.play();if(r&&r.catch)r.catch(()=>{});
+  if(noCartao){const b=document.getElementById('apl-play');if(b)try{b.focus({preventScroll:true});}catch(e){b.focus();}}
 }
 // Desfoque só nas falas a 2..APL_BLUR_RAIO de distância da atual, por classe (blur em todas custa GPU em Android fraco).
 // Teto: além do raio a fala fica nítida; se a tela cheia mostrar mais falas que isso, subir a constante.
@@ -12675,6 +12771,7 @@ function _aplEstado(){
 function aplAlternar(){
   const p=_pa;
   if(!p)return;
+  if(p.cartao>=0){aplContinuar();return;}   // tocar com o cartão de fim de parte aberto = Continuar
   if(p.a.paused){const r=p.a.play();if(r&&r.catch)r.catch(()=>{});}
   else p.a.pause();
 }
@@ -12682,7 +12779,8 @@ function _aplIr(t){
   const p=_pa;
   if(!p||!isFinite(t))return;
   const d=_aplDur(p);
-  p.a.currentTime=Math.max(0,d?Math.min(t,d):t);
+  p.ultT=Math.max(0,d?Math.min(t,d):t);   // b280: o destino de um seek nunca conta como cruzamento de parte
+  p.a.currentTime=p.ultT;
   _aplAtualizar();
 }
 function aplPular(s){if(_pa)_aplIr(_pa.a.currentTime+s);}
@@ -12706,7 +12804,15 @@ function aplIrCap(i){
 function _aplCapsLista(){
   const p=_pa,el=document.getElementById('aula-caps-lista');
   if(!el)return;
-  el.innerHTML=p?p.caps.map((c,i)=>`<button type="button" class="apl-cap" id="apl-c${i}" onclick="aplIrCap(${i})"><span class="apl-cap-n">${i+1}</span><span class="apl-cap-t">${sanitize(c.titulo)}</span><span class="apl-cap-tm">${_fmtTempo(c.t0)}</span></button>`).join(''):'';
+  let kAnt=-1;
+  const cab=c=>{
+    if(!p.partes.length)return '';
+    const k=_aplParteDe(c.t0);
+    if(k===kAnt)return '';
+    kAnt=k;
+    return `<div class="apl-cap-parte">Parte ${k+1} de ${p.partes.length}</div>`;
+  };
+  el.innerHTML=p?p.caps.map((c,i)=>cab(c)+`<button type="button" class="apl-cap" id="apl-c${i}" onclick="aplIrCap(${i})"><span class="apl-cap-n">${i+1}</span><span class="apl-cap-t">${sanitize(c.titulo)}</span><span class="apl-cap-tm">${_fmtTempo(c.t0)}</span></button>`).join(''):'';
   _aplCapsMarca();
 }
 function _aplCapsMarca(){
@@ -12803,6 +12909,7 @@ async function removerAudioAulaDoAparelho(t){
   await _apagarAudioAulaCache(_chaveAudioAula(t,info.av));
   await _apagarPartesAula(t,info.av,info.partes);
   await _apagarAudioAulaCache(_chaveMetaAula(t,info.av));
+  await _apagarAudioAulaCache('m|'+t+'|'+info.av);   // chave antiga do meta (b276), sem `partes`
   _encerrarAudioAula();
   if(aulaAtual===t)renderAulas();
 }
