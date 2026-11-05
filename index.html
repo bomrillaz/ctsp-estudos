@@ -12840,7 +12840,17 @@ function _aplIr(t){
   _aplAtualizar();
 }
 function aplPular(s){if(_pa)_aplIr(_pa.a.currentTime+s);}
-function aplSeek(v){_aplIr(Number(v));}
+// b281: arrastar até o fim da parte não pode virar a parte seguinte com o dedo na barra (a janela trocaria sob o polegar).
+// Só a barra prende; ±15 s, capítulos e abas cruzam partes normalmente.
+const APL_SEEK_FOLGA=0.5;
+function aplSeek(v){
+  const p=_pa;
+  if(!p)return;
+  let t=Number(v);
+  const J=_aplJanela(p.a.currentTime||0);
+  if(J.k>=0&&J.k<J.n-1)t=Math.min(t,J.fim-APL_SEEK_FOLGA);
+  _aplIr(t);
+}
 // +0.05: o navegador pode arredondar o seek para um pouco ANTES do t0 e destacar a fala/capítulo anterior.
 function aplIrFala(i){const p=_pa;if(p&&p.falas[i])_aplIr(p.falas[i].t0+0.05);}
 function _aplCapRel(d){
@@ -12868,7 +12878,7 @@ function _aplCapsLista(){
     kAnt=k;
     return `<div class="apl-cap-parte">Parte ${k+1} de ${p.partes.length}</div>`;
   };
-  el.innerHTML=p?p.caps.map((c,i)=>cab(c)+`<button type="button" class="apl-cap" id="apl-c${i}" onclick="aplIrCap(${i})"><span class="apl-cap-n">${i+1}</span><span class="apl-cap-t">${sanitize(c.titulo)}</span><span class="apl-cap-tm">${_fmtTempo(c.t0)}</span></button>`).join(''):'';
+  el.innerHTML=p?p.caps.map((c,i)=>cab(c)+`<button type="button" class="apl-cap" id="apl-c${i}" onclick="aplIrCap(${i})"><span class="apl-cap-n">${i+1}</span><span class="apl-cap-t">${sanitize(c.titulo)}</span><span class="apl-cap-tm">${_fmtTempo(p.partes.length?c.t0-p.partes[_aplParteDe(c.t0)]:c.t0)}</span></button>`).join(''):'';
   _aplCapsMarca();
 }
 function _aplCapsMarca(){
